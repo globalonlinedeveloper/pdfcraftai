@@ -11,6 +11,11 @@ export const authConfig = {
   pages: {
     signIn: "/login",
   },
+  // In production we sit behind Apache + Passenger (or any reverse proxy),
+  // so the Host header isn't the bound socket. Auth.js v5 refuses to use
+  // the Host header unless trustHost is set — without this every
+  // /api/auth/* call fails with UntrustedHost.
+  trustHost: true,
   session: {
     strategy: "jwt",
   },
