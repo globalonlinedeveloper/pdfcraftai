@@ -40,7 +40,7 @@ Assume: logged-out visitor, Chrome latest, a ~5-page sample PDF + a 2MB JPG.
 | T1 | Merge | `/tool/merge` → drop 2 PDFs → Merge | Download is a valid PDF with combined pages |
 | T2 | Split | `/tool/split` → drop PDF → choose "every page" → Split | Download is a ZIP of single-page PDFs |
 | T3 | Compress | `/tool/compress` → drop PDF → Compress | Output file size < input, opens cleanly |
-| T4 | Rotate | `/tool/rotate` → drop PDF → rotate 90° | Output pages rotated |
+| T4 | Rotate & Reorder | `/tool/rotate` → drop PDF → try (a) bulk "Rotate all 90° CW" → Apply, (b) row-level rotate CW + row-level delete on page 2 → Apply, (c) reverse-order bulk → Apply, (d) "Undo all edits" after mixing operations | (a) every page rotated 90° CW; (b) page 2 removed, output has N-1 pages, one page rotated; (c) output pages in reversed order; (d) page list snaps back to pristine source order + rotations, button disabled |
 | T5 | Page numbers | `/tool/page-numbers` → drop PDF → pick "Page numbers" → choose format + position + size → Apply | Output PDF has numbers drawn at chosen corner on every page; original content intact |
 | T5b | Watermark | `/tool/page-numbers` → drop PDF → pick "Watermark" → type text → adjust opacity → Apply | Output PDF has semi-transparent diagonal watermark centered on each page |
 | T6 | Protect / Unlock | `/tool/protect` | **Pending.** |

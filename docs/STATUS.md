@@ -3,7 +3,7 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-04-20 (post-image-to-pdf + /api/health ship)
+**Last updated:** 2026-04-20 (post rotate-and-reorder upgrade)
 
 ---
 
@@ -61,6 +61,7 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 - [x] **`/tool/page-numbers` runner live.** New `PageNumbersTool` component ships two modes in one runner: (a) **Page numbers** — 4 formats (`1`, `1 / N`, `Page 1`, `Page 1 of N`) × 6 positions (TL/TC/TR/BL/BC/BR), adjustable font size 8–24pt; (b) **Watermark** — user-entered text (≤40 chars) drawn diagonally at 45° across page center, adjustable font size 24–96pt, adjustable opacity 5–60%. Built on `pdf-lib` with `StandardFonts.Helvetica` / `HelveticaBold`; fully client-side, no server round-trip. Wired into `LIVE_TOOL_IDS` in `app/tool/[id]/page.tsx`. Flips T5 in TEST_PLAN.md from Pending → Ready-to-test. (2026-04-20)
 - [x] **`/tool/to-pdf` runner live.** New `ImageToPdfTool` component accepts JPG + PNG (≤20 MB each), embeds each image as a page, and saves one PDF. Supports three layout modes: fit-to-image (each page sized to source dimensions, capped at 3000pt), US Letter with centered fit, A4 with centered fit. Adjustable page margin (0–72pt) in Letter/A4 modes. Multi-file reorder + remove controls mirror MergePdfTool. Built on `pdf-lib` `embedJpg` / `embedPng`. Brings the live free-tool count to six. (2026-04-20)
+- [x] **`/tool/rotate` upgraded to true "Rotate & Reorder".** Previous runner only rotated. New `RotatePdfTool` is a single-screen flow with three operations: (a) bulk row — "Rotate all 90° CW", "Rotate all 180°", "Rotate all 90° CCW", "Reverse order", "Undo all edits"; (b) per-page row — show page index + "was #N" badge when reordered + accumulated rotation chip + ↑ / ↓ / rotate-CW / rotate-CCW / delete buttons; (c) Apply & download builds the output via `copyPages` in the edited order, applying each page's accumulated rotation. Output filename suffix is chosen per edit kind (`-rotated`, `-reordered`, `-edited`). Edits stored as a delta from source so "Undo all edits" reloads the file cleanly. Lives up to the registry's "Rotate & Reorder" / "Fix orientation and rearrange pages" promise. (2026-04-20)
 
 ### API / monitoring
 
