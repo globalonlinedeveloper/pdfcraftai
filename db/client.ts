@@ -22,19 +22,33 @@ import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
 import * as schema from "./schema";
 
-// Force IPv4 loopback. On Hostinger / managed Node hosts, the MySQL user is
-// frequently granted from `@127.0.0.1` only, but mysql2 resolves `localhost`
+// Connection config. Three sources, in priority order:
+//   1. MYSQL_HOST / MYSQL_USER / MYSQL_PASSWORD / MYSQL_DATABASE / MYSQL_PORT
+//      (cleanest — sidesteps all URL-parsing pitfalls)
+//   2. MYSQL_URL  (legacy / Vercel-style; we parse it manually)
+//   3. Build-time placeholder (`build:build@127.0.0.1`) so `next build`
+//      can finish on machines without real credentials.
+//
+// IPv4-loopback coercion: on Hostinger / managed Node hosts, the MySQL
+// grant is typically `@127.0.0.1` only, but mysql2 resolves `localhost`
 // via Node's DNS which prefers `::1` (IPv6) on this host — producing
 // "Access denied for user '...'@'::1'" even when the password is correct.
-// We also parse the URI manually so percent-encoded characters in the
-// password (e.g. `%40` → `@`) are decoded properly — mysql2's built-in URI
-// parser leaves them literal, which produces spurious "Access denied" errors
-// for any password containing reserved URL characters.
-const rawConnectionString =
-  process.env.MYSQL_URL ?? "mysql://build:build@127.0.0.1:3306/build";
+//
+// Hostinger hPanel quirk: the env-var editor escapes `%` → `\%` when it
+// stores values, so a percent-encoded password like `Cognizant%402026`
+// arrives at the worker as `Cognizant\%402026`. We strip those literal
+// backslashes BEFORE percent-decoding. (Use per-component env vars to
+// avoid this entirely.)
+const stripHpanelBackslashEscapes = (s: string) => s.replace(/\\%/g, "%");
+const safeDecode = (s: string) => {
+  try {
+    return decodeURIComponent(stripHpanelBackslashEscapes(s));
+  } catch {
+    return stripHpanelBackslashEscapes(s);
+  }
+};
 
 function parseMysqlUri(uri: string) {
-  // Expect shape: mysql://user:password@host:port/database
   const m =
     /^mysql:\/\/([^:@\/]+)(?::([^@]*))?@([^:\/]+)(?::(\d+))?\/([^?]+)/.exec(uri);
   if (!m) {
@@ -47,18 +61,34 @@ function parseMysqlUri(uri: string) {
     };
   }
   const [, user, password = "", rawHost, port, database] = m;
-  // IPv4-loopback coercion — see header comment.
   const host = rawHost === "localhost" ? "127.0.0.1" : rawHost;
   return {
     host,
     port: port ? Number(port) : 3306,
-    user: decodeURIComponent(user),
-    password: decodeURIComponent(password),
-    database: decodeURIComponent(database),
+    user: safeDecode(user),
+    password: safeDecode(password),
+    database: safeDecode(database),
   };
 }
 
-const mysqlConfig = parseMysqlUri(rawConnectionString);
+function buildConfig() {
+  // Per-component vars win if set (recommended on Hostinger).
+  if (process.env.MYSQL_HOST && process.env.MYSQL_USER && process.env.MYSQL_DATABASE) {
+    return {
+      host:
+        process.env.MYSQL_HOST === "localhost" ? "127.0.0.1" : process.env.MYSQL_HOST,
+      port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+      user: process.env.MYSQL_USER,
+      password: stripHpanelBackslashEscapes(process.env.MYSQL_PASSWORD ?? ""),
+      database: process.env.MYSQL_DATABASE,
+    };
+  }
+  return parseMysqlUri(
+    process.env.MYSQL_URL ?? "mysql://build:build@127.0.0.1:3306/build"
+  );
+}
+
+const mysqlConfig = buildConfig();
 
 declare global {
   // eslint-disable-next-line no-var
