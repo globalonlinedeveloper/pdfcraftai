@@ -705,9 +705,7 @@ export function FinalCTA() {
             anon={{ href: "/register", label: "Create account" }}
             authed={{ href: "/app/dashboard", label: "Go to dashboard" }}
             className="btn btn-lg btn-ghost"
-          >
-            {(label) => <>{label}</>}
-          </SmartCta>
+          />
         </div>
       </div>
     </section>

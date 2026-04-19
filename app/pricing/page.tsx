@@ -46,13 +46,8 @@ export default function PricingPage() {
               anon={{ href: "/register", label: "Start free — no card" }}
               authed={{ href: "/app/dashboard", label: "Open dashboard" }}
               className="btn btn-lg btn-primary"
-            >
-              {(label) => (
-                <>
-                  {label} <I.ArrowRight size={16} />
-                </>
-              )}
-            </SmartCta>
+              iconAfter={<I.ArrowRight size={16} />}
+            />
             <Link href="/tools" className="btn btn-lg btn-outline">
               Browse tools
             </Link>

@@ -12,34 +12,43 @@ import { useSession } from "next-auth/react";
  * Falls back to the anonymous variant while the session is loading so we
  * don't ship a flicker.
  *
+ * IMPORTANT: All props are React-serializable (strings + ReactNode). Do NOT
+ * change `iconBefore`/`iconAfter` to function-as-children — that would break
+ * Server→Client RSC serialization for every page that consumes this from a
+ * Server Component (pricing, landing FinalCTA, etc.). Lesson learned hard
+ * during the 2026-04-19 deploy stall.
+ *
  * Usage:
  *   <SmartCta
  *     anon={{ href: "/register", label: "Get started free" }}
  *     authed={{ href: "/app/dashboard", label: "Open dashboard" }}
  *     className="btn btn-lg btn-primary"
- *   >
- *     {(label) => <>{label} <I.ArrowRight size={16} /></>}
- *   </SmartCta>
+ *     iconAfter={<I.ArrowRight size={16} />}
+ *   />
  */
 export function SmartCta({
   anon,
   authed,
   className,
   style,
-  children,
+  iconBefore,
+  iconAfter,
 }: {
   anon: { href: string; label: string };
   authed: { href: string; label: string };
   className?: string;
   style?: React.CSSProperties;
-  children?: (label: string) => ReactNode;
+  iconBefore?: ReactNode;
+  iconAfter?: ReactNode;
 }) {
   const { status } = useSession();
   const useAuthed = status === "authenticated";
   const target = useAuthed ? authed : anon;
   return (
     <Link href={target.href} className={className} style={style}>
-      {children ? children(target.label) : target.label}
+      {iconBefore ? <>{iconBefore} </> : null}
+      {target.label}
+      {iconAfter ? <> {iconAfter}</> : null}
     </Link>
   );
 }
