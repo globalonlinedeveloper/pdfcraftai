@@ -12,6 +12,7 @@ import { TranslatePdfTool } from "@/components/tools/TranslatePdfTool";
 import { ComparePdfTool } from "@/components/tools/ComparePdfTool";
 import { OcrPdfTool } from "@/components/tools/OcrPdfTool";
 import { PageNumbersTool } from "@/components/tools/PageNumbersTool";
+import { ImageToPdfTool } from "@/components/tools/ImageToPdfTool";
 
 type Params = { params: { id: string } };
 
@@ -25,6 +26,7 @@ const LIVE_TOOL_IDS = new Set<string>([
   "rotate",
   "compress",
   "page-numbers",
+  "to-pdf",
   "ai-summarize",
   "ai-translate",
   "ai-compare",
@@ -154,6 +156,8 @@ function ToolRunner({ id }: { id: string }) {
       return <CompressPdfTool />;
     case "page-numbers":
       return <PageNumbersTool />;
+    case "to-pdf":
+      return <ImageToPdfTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-translate":

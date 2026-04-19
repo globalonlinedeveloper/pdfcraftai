@@ -3,7 +3,7 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-04-20 (post-page-numbers/watermark runner ship)
+**Last updated:** 2026-04-20 (post-image-to-pdf + /api/health ship)
 
 ---
 
@@ -60,6 +60,15 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 ### Free tools (client-side WASM)
 
 - [x] **`/tool/page-numbers` runner live.** New `PageNumbersTool` component ships two modes in one runner: (a) **Page numbers** — 4 formats (`1`, `1 / N`, `Page 1`, `Page 1 of N`) × 6 positions (TL/TC/TR/BL/BC/BR), adjustable font size 8–24pt; (b) **Watermark** — user-entered text (≤40 chars) drawn diagonally at 45° across page center, adjustable font size 24–96pt, adjustable opacity 5–60%. Built on `pdf-lib` with `StandardFonts.Helvetica` / `HelveticaBold`; fully client-side, no server round-trip. Wired into `LIVE_TOOL_IDS` in `app/tool/[id]/page.tsx`. Flips T5 in TEST_PLAN.md from Pending → Ready-to-test. (2026-04-20)
+- [x] **`/tool/to-pdf` runner live.** New `ImageToPdfTool` component accepts JPG + PNG (≤20 MB each), embeds each image as a page, and saves one PDF. Supports three layout modes: fit-to-image (each page sized to source dimensions, capped at 3000pt), US Letter with centered fit, A4 with centered fit. Adjustable page margin (0–72pt) in Letter/A4 modes. Multi-file reorder + remove controls mirror MergePdfTool. Built on `pdf-lib` `embedJpg` / `embedPng`. Brings the live free-tool count to six. (2026-04-20)
+
+### API / monitoring
+
+- [x] **`/api/health` endpoint shipped.** Pings the DB with `SELECT 1`, returns `{ ok, service, commit, uptimeSec, db: { ok, latencyMs|error }, ts }`. Status code 200 on healthy / 503 on DB failure. `cache-control: no-store` so Cloudflare never serves a stale probe. Consumed by the status page and safe to bind as the Cloudflare origin health check. Error strings sanitized — never echoes DSN fragments. (2026-04-20)
+
+### Legal content audit
+
+- [x] **Privacy + Terms stale-contact audit complete.** Both pages render through `lib/legal-docs.ts` which uses a single `SUPPORT_EMAIL = "support@pdfcraftai.com"` constant. No stray addresses on either page; when the mailbox goes live, the consistent constant makes the cutover a single-line change. (2026-04-20)
 
 ### Theme + testing infrastructure
 
@@ -89,10 +98,9 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ## Pending (Claude can do — pick these up first)
 
-- [ ] **(legal/email) Audit `app/(legal)/privacy/page.tsx` and `terms/page.tsx`** for any `support@pdfcraftai.com` references. Flag any that need updating once that mailbox goes live.
 - [ ] **(quality) Run a Lighthouse / accessibility pass** on home + a few tool pages, surface top-3 fixes.
 - [ ] **(SEO) Verify `metadata.openGraph` and `twitter` cards on key pages** — open `https://pdfcraftai.com` in Twitter/Facebook share validators.
-- [ ] **(monitoring) Add a `/api/health` endpoint** returning DB ping + commit SHA, then point Cloudflare's health check at it.
+- [ ] **(monitoring) Wire Cloudflare origin health check at `/api/health`.** Endpoint is live (see Done above); this is just the last-mile step of pointing CF at it in the dashboard.
 
 ---
 

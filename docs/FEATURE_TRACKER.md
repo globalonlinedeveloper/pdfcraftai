@@ -3,7 +3,7 @@
 _Structured matrix of every feature area in the product: what's Done, what's Partial, what's Pending._
 _Pair this with `STATUS.md` (operational punch list) — this file answers "does the site have X?", STATUS answers "who owns the next step on X?"._
 
-**Last updated:** 2026-04-20 (post-page-numbers-watermark-runner session)
+**Last updated:** 2026-04-20 (post-image-to-pdf + /api/health ship)
 
 ---
 
@@ -58,7 +58,7 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | `POST /api/contact` | Done (stub) | Zod, in-memory rate limit, logs — swaps to SendGrid/Postmark later. |
 | `GET /api/auth/providers` | Done | Exposes Google with apex callback URL. |
 | Google SSO callback | Done | `trustHost: true` fixes Cloudflare → Next.js host trust. |
-| `GET /api/health` | Pending | See STATUS.md pending list. |
+| `GET /api/health` | Done | Returns `ok/service/commit/uptime/db` JSON; 200 on healthy, 503 on DB failure; `no-store`. Shipped 2026-04-20. |
 | Transactional mail send | Pending | Blocks password resets + receipts. |
 
 ## Product / app surface
@@ -72,8 +72,10 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | Free tool: Compress | `/tool/compress` | Done | Client-side pdf-lib pass. |
 | Free tool: Rotate | `/tool/rotate` | Done | 90/180/270° per-page. |
 | Free tool: Page Numbers + Watermark | `/tool/page-numbers` | Done | Two modes in one runner: numbered overlay (4 formats × 6 positions) + diagonal watermark (adjustable opacity/size). Client-side pdf-lib + StandardFonts. Shipped 2026-04-20. |
+| Free tool: Image → PDF | `/tool/to-pdf` | Done | JPG + PNG (≤20 MB each), 3 layout modes (fit/Letter/A4), adjustable margin, multi-file reorder. Shipped 2026-04-20. |
 | Free tool: Protect / Unlock | `/tool/protect` | Pending | Needs client-side crypto wiring. |
-| Free tool: PDF↔Office | `/tool/pdf-to-office`, `/tool/to-pdf` | Pending | Needs LibreOffice conversion worker. |
+| Free tool: PDF → Office | `/tool/pdf-to-office` | Pending | Needs LibreOffice conversion worker. |
+| Free tool: Word → PDF | `/tool/to-pdf` (Word-branch) | Pending | Image branch shipped; Word needs server-side pipeline. |
 | Free tools (other WASM) | `/tool/...` | Partial | Reorder / delete / extract / crop routes exist; runners not yet shipped. |
 | AI tools | `/tools/chat`, `/summarize`, `/translate`, `/ocr`, `/redact` | Partial | UI present; model routing + credit debit logic needs E2E test. |
 
@@ -84,7 +86,7 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | GA4 (`G-2Y8PS0S93F`) | Done | Verified rendering in layout. |
 | Microsoft Clarity (`wcsbv536zv`) | Done | Verified rendering in layout. |
 | Uptime / status page data source | Partial | `/status` renders static `SERVICES` array; no real probe yet. |
-| `/api/health` | Pending | Needed before Cloudflare health check can bind. |
+| `/api/health` | Done | Live; Cloudflare health check just needs binding in the CF dashboard. |
 | Error tracking (Sentry or similar) | Pending | Not wired. |
 
 ## SEO / search

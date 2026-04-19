@@ -44,7 +44,8 @@ Assume: logged-out visitor, Chrome latest, a ~5-page sample PDF + a 2MB JPG.
 | T5 | Page numbers | `/tool/page-numbers` → drop PDF → pick "Page numbers" → choose format + position + size → Apply | Output PDF has numbers drawn at chosen corner on every page; original content intact |
 | T5b | Watermark | `/tool/page-numbers` → drop PDF → pick "Watermark" → type text → adjust opacity → Apply | Output PDF has semi-transparent diagonal watermark centered on each page |
 | T6 | Protect / Unlock | `/tool/protect` | **Pending.** |
-| T7 | PDF ↔ Office | `/tool/pdf-to-office`, `/tool/to-pdf` | **Pending.** |
+| T7a | Image → PDF | `/tool/to-pdf` → drop 2+ JPG/PNG → pick page-size mode → Create PDF | Download combines images into one multi-page PDF; order preserved; Letter/A4 modes respect margin |
+| T7b | PDF → Office | `/tool/pdf-to-office` | **Pending — needs server-side LibreOffice worker.** |
 
 ## P2 — AI tools (credits required)
 
