@@ -1,0 +1,161 @@
+// Pricing data — credit packs, Plus plan, and FAQ.
+// Ported verbatim from prototype pricing.jsx.
+
+export type CreditPackId = "starter" | "creator" | "pro" | "studio";
+
+export type CreditPack = {
+  id: CreditPackId;
+  name: string;
+  credits: number;
+  price: number;
+  pp: number; // price per credit
+  tagline: string;
+  popular?: boolean;
+  bonus?: number;
+  bonusExpires?: number; // days
+  margin: number;
+  features: string[];
+};
+
+export const CREDIT_PACKS: readonly CreditPack[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    credits: 100,
+    price: 5,
+    pp: 0.05,
+    tagline: "Try the AI tools",
+    margin: 88,
+    features: ["100 credits", "Never expire", "All AI tools", "Email support"],
+  },
+  {
+    id: "creator",
+    name: "Creator",
+    credits: 500,
+    price: 19,
+    pp: 0.036,
+    tagline: "Most popular",
+    popular: true,
+    bonus: 25,
+    bonusExpires: 30,
+    margin: 83,
+    features: [
+      "500 credits + 25 bonus",
+      "Paid credits never expire",
+      "Priority processing",
+      "Share with team",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    credits: 2000,
+    price: 59,
+    pp: 0.027,
+    tagline: "For power users",
+    bonus: 200,
+    bonusExpires: 30,
+    margin: 78,
+    features: [
+      "2000 + 200 bonus",
+      "BYOK unlocked (+15% infra fee)",
+      "Priority processing",
+      "API access · 99.9% SLA",
+    ],
+  },
+  {
+    id: "studio",
+    name: "Studio",
+    credits: 6000,
+    price: 149,
+    pp: 0.022,
+    tagline: "For small teams",
+    bonus: 800,
+    bonusExpires: 30,
+    margin: 73,
+    features: [
+      "6000 + 800 bonus",
+      "BYOK unlimited · $49/seat infra",
+      "Team workspace & pooling",
+      "SSO · audit log · DPA",
+    ],
+  },
+] as const;
+
+// --- AI operation costs (Phase 5) -----------------------------------------
+
+/**
+ * Stable ID for every AI operation we charge credits for. Stored against
+ * ledger rows (`credit_ledger.reason` is free-form text, but we match
+ * against these for audit). Add a new entry here BEFORE shipping a new
+ * feature — the route handler imports `AI_OPERATION_COSTS[op]` and a
+ * missing entry is a TS error at build time.
+ */
+export type AIOperationId =
+  | "chat_turn"
+  | "summarize"
+  | "translate"
+  | "ocr"
+  | "compare";
+
+/**
+ * Flat per-operation credit cost. Single number, no metered variant —
+ * the user picked "flat per-op cost" in scoping so a 1-credit chat turn
+ * is always 1 credit whether the response is 50 tokens or 800.
+ *
+ * Rationale:
+ *   - Predictable for users. They can see the count on every button.
+ *   - Implementation simpler: we debit once up front, refund once on
+ *     error. No mid-stream proration.
+ *   - Cost to us averages out over a day of usage. Token-metered
+ *     billing makes sense at scale; for now simplicity wins.
+ *
+ * If we ever want metered billing, swap the value for a function
+ * `(usage) => credits` — the call sites take `AI_OPERATION_COSTS[op]`
+ * as-is, so a number→function change is a narrow refactor.
+ */
+export const AI_OPERATION_COSTS: Record<AIOperationId, number> = {
+  chat_turn: 1,
+  summarize: 3,
+  translate: 5,
+  ocr: 2,
+  // Compare is flat-priced per diff (not per-page) because the work is
+  // bounded by a combined-char budget on the input side and a single
+  // structured prompt on the output side — independent of page count.
+  compare: 15,
+};
+
+export const PRICING_FAQ: ReadonlyArray<{ q: string; a: string }> = [
+  {
+    q: "Do credits expire?",
+    a: "Paid credits never expire. Bonus credits from promotional packs expire 30 days after purchase.",
+  },
+  {
+    q: "Are the free tools actually free?",
+    a: "Yes — they run entirely in your browser via WebAssembly. No signup, no watermarks, no daily limits, no server cost to us, no data leaves your device.",
+  },
+  {
+    q: "How is credit cost calculated?",
+    a: "Each tool has a base credit cost plus metered usage (pages, output tokens). We always round up to the nearest credit, and we apply a small overhead floor to cover pipeline costs. Exact formula shown before every run.",
+  },
+  {
+    q: "Can I bring my own API key?",
+    a: "Yes, from the Pro tier. Pro charges a flat 15% infra fee for the orchestration layer (RAG, chunking, retries, caching, audit log). Studio is $49/seat/mo for unlimited BYOK with no per-call fee.",
+  },
+  {
+    q: "What happens to my files?",
+    a: "Encrypted in transit and at rest, auto-deleted within 60 minutes. Zero-retention AI endpoints — nothing you send is ever used for training.",
+  },
+  {
+    q: "Do you offer refunds?",
+    a: "Unused credits are refundable within 14 days. Consumed credits are non-refundable.",
+  },
+  {
+    q: "Do you have volume discounts?",
+    a: "Yes — accounts spending $500+/mo auto-qualify for Pro pricing. Annual plans save 20%. Enterprise contracts start at $2k/mo.",
+  },
+  {
+    q: "Do you have an API?",
+    a: "REST + webhooks, SDKs for JS/Python/Go. Free tier: 200 calls/month. Paid usage metered in credits, same rates as the web app.",
+  },
+];

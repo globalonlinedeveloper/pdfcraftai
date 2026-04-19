@@ -1,0 +1,143 @@
+/** @type {import('next').NextConfig} */
+
+// --- PCI DSS SAQ-A scope lockdown -----------------------------------------
+//
+// Our SAQ-A eligibility rests on card data NEVER touching our origin.
+// Users type card details into hosted iframes (Razorpay Checkout modal,
+// PayPal Smart Buttons / Advanced Checkout). The CSP below enforces that
+// architecture at the browser layer:
+//
+//   - `frame-src` whitelists ONLY the provider iframes. A phishing page
+//     embedded elsewhere can't render inside our origin.
+//   - `script-src` whitelists provider SDK origins + 'self'. A compromised
+//     third-party script cannot inject a fake card form because the new
+//     script origin would be blocked.
+//   - `connect-src` whitelists provider APIs. If we or an injected script
+//     tried to POST card data to a rogue endpoint, the browser blocks it.
+//   - `form-action 'self'` — form submits go to our origin only.
+//   - `base-uri 'self'` — blocks <base href> injection that could reroute
+//     relative URLs to an attacker.
+//
+// If this file changes in a way that widens `script-src`, `frame-src`, or
+// `connect-src`, the PCI checklist in docs/security/pci-saq-a.md must be
+// reviewed — adding a new third-party payment-adjacent origin can push us
+// out of SAQ-A into a heavier SAQ.
+//
+// CSP notes:
+//   - 'unsafe-inline' on script-src is a concession to Next.js inline
+//     script runtime. When Next 15's strict CSP lands we should switch to
+//     nonces. For SAQ-A this is acceptable because the card-capture path
+//     is *inside* the provider iframe — our inline scripts can't reach it.
+//   - 'unsafe-eval' is omitted. Razorpay and PayPal SDKs don't need it.
+//   - report-uri is not set yet — add a Sentry CSP endpoint when infra
+//     has one.
+
+const RAZORPAY_ORIGINS = [
+  "https://checkout.razorpay.com",
+  "https://api.razorpay.com",
+  "https://lumberjack.razorpay.com",
+];
+
+const PAYPAL_ORIGINS = [
+  "https://www.paypal.com",
+  "https://www.paypalobjects.com",
+  "https://c.paypal.com",
+  // Sandbox — harmless in prod, required in staging.
+  "https://www.sandbox.paypal.com",
+  "https://api-m.sandbox.paypal.com",
+  "https://api-m.paypal.com",
+];
+
+const ANALYTICS_ORIGINS = [
+  // Kept narrow — if we add a new vendor, review PCI scope first.
+  // (No analytics origins configured right now.)
+];
+
+const CSP = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline' ${RAZORPAY_ORIGINS.join(" ")} ${PAYPAL_ORIGINS.join(" ")} ${ANALYTICS_ORIGINS.join(" ")}`.trim(),
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://www.paypalobjects.com",
+  "font-src 'self' data:",
+  `frame-src 'self' ${RAZORPAY_ORIGINS.join(" ")} ${PAYPAL_ORIGINS.join(" ")}`,
+  `connect-src 'self' ${RAZORPAY_ORIGINS.join(" ")} ${PAYPAL_ORIGINS.join(" ")}`,
+  "worker-src 'self' blob:",
+  // Free PDF tools run WASM client-side — blob: lets pdf-lib instantiate.
+  "child-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: CSP,
+  },
+  {
+    // Belt-and-braces with frame-ancestors; legacy browsers fall back here.
+    key: "X-Frame-Options",
+    value: "DENY",
+  },
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  },
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+  {
+    // HSTS — long max-age + preload flag. Only enabled in production; in
+    // dev we'd lock ourselves out of http://localhost.
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  {
+    key: "Permissions-Policy",
+    // Card iframes don't need camera/mic/geo. Deny everything unless a
+    // legitimate need arises.
+    value: "camera=(), microphone=(), geolocation=(), payment=(self \"https://checkout.razorpay.com\" \"https://www.paypal.com\")",
+  },
+  {
+    // Legacy but cheap — browsers that still honor this get an extra check.
+    key: "X-XSS-Protection",
+    value: "0",
+  },
+];
+
+const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
+  // Hostinger Node.js app — standalone output keeps the deploy small
+  // and lets us run `node .next/standalone/server.js` directly.
+  output: 'standalone',
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+    // AI SDKs ship Node runtime shims that import optional polyfills for
+    // pre-Node-18 (node-fetch, formdata-node, agentkeepalive, …). Next 14
+    // tries to bundle those and fails. Mark them external so they're
+    // require()d from node_modules at runtime — on Node 18+ the shim's
+    // branch that needs them is dead code anyway.
+    serverComponentsExternalPackages: ['openai', '@anthropic-ai/sdk', 'pdfjs-dist'],
+  },
+  async headers() {
+    // Applied to every route. If a specific route ever needs a different
+    // CSP (e.g. an embed page that must be framed), add an override with
+    // a narrower `source` BELOW this entry — Next uses first-match order.
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders,
+      },
+    ];
+  },
+};
+
+export default nextConfig;

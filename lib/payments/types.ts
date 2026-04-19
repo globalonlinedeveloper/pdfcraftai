@@ -1,0 +1,237 @@
+// Payment provider types — portable, provider-neutral.
+//
+// Design principles (from the portability review):
+//   1. Internal IDs are primary. Provider refs are metadata.
+//      Every Checkout is anchored to an `internalPaymentId` (UUID) that
+//      outlives any single provider. Migration across gateways re-uses
+//      the same internal ID.
+//   2. `ProviderId` is an open `string`, not a literal union. Adding a
+//      new adapter must not require a type change in callers.
+//   3. Events are normalized at the webhook boundary. Downstream code
+//      (ledger writer, credit granter) never sees provider-specific
+//      shapes — only `NormalizedPaymentEvent`.
+//   4. PCI: we never accept raw PAN/CVV. `CheckoutSession` returns either
+//      a redirect URL or a client-side token the provider's hosted iframe
+//      consumes. The card data never touches our servers.
+
+import type { CreditPackId } from "@/lib/pricing";
+
+// --- Identifiers ----------------------------------------------------------
+
+/**
+ * Open provider identifier. Examples we ship with: "razorpay", "paypal".
+ * Intentionally `string` — adding an adapter is a runtime concern, not a
+ * type-system concern. Call sites that need to branch should use the
+ * registry, not a switch on this value.
+ */
+export type ProviderId = string;
+
+/** ISO 4217 currency code. Extend as we add providers/markets. */
+export type Currency = "INR" | "USD";
+
+/**
+ * Money is always expressed in the currency's smallest unit (paise / cents).
+ * Never pass a float — rounding errors compound across refunds and splits.
+ */
+export type Money = {
+  amountMinor: number;
+  currency: Currency;
+};
+
+// --- Capabilities ---------------------------------------------------------
+
+/**
+ * What a provider can do in *this* installation. Capabilities may be the
+ * same across installs (e.g. Razorpay always supports refunds) or gated
+ * (e.g. PayPal Subscriptions requires a separate product activation).
+ * The registry decides what to expose.
+ */
+export type ProviderCapabilities = {
+  oneTime: boolean;
+  subscriptions: boolean;
+  refunds: boolean;
+  partialRefunds: boolean;
+  webhooks: boolean;
+};
+
+// --- Checkout -------------------------------------------------------------
+
+/**
+ * Input to `createCheckout`. The only thing the caller *must* pick is the
+ * internal payment ID — everything else is derivable from the pack or
+ * plan. We accept both pack (one-time) and plan (subscription) inputs in
+ * one shape; the provider decides which endpoint to hit based on `mode`.
+ */
+export type CheckoutInput =
+  | {
+      mode: "one_time";
+      /**
+       * UUID minted by *us* before calling the provider. This is the
+       * portability anchor: if we migrate providers mid-flight, the user's
+       * retried checkout reuses the same internalPaymentId and we stay
+       * idempotent.
+       */
+      internalPaymentId: string;
+      userId: string;
+      packId: CreditPackId;
+      amount: Money;
+      returnUrl: string;
+      cancelUrl: string;
+      /** Arbitrary metadata we want the provider to echo back. */
+      metadata?: Record<string, string>;
+    }
+  | {
+      mode: "subscription";
+      internalPaymentId: string;
+      userId: string;
+      /** Our internal plan code ("plus-monthly", "plus-annual", ...). */
+      planCode: string;
+      amount: Money;
+      returnUrl: string;
+      cancelUrl: string;
+      metadata?: Record<string, string>;
+    };
+
+/**
+ * How the client should hand off to the provider. Two shapes:
+ *   - "redirect": we navigate the browser to `url` (PayPal Checkout flow,
+ *     some subscription flows).
+ *   - "client": we hand the browser a token/order-id to feed into the
+ *     provider's hosted iframe SDK (Razorpay Checkout modal, PayPal
+ *     Advanced Checkout hosted fields).
+ *
+ * Both shapes keep card data entirely on the provider side — SAQ-A.
+ */
+export type CheckoutSession =
+  | {
+      kind: "redirect";
+      url: string;
+    }
+  | {
+      kind: "client";
+      /** Opaque token/order-id the provider's JS SDK consumes. */
+      clientToken: string;
+      /** Which SDK to load ("razorpay", "paypal", ...). */
+      sdk: ProviderId;
+      /** Extra config the SDK needs (public key, merchant ID, etc.). */
+      publicConfig: Record<string, string>;
+    };
+
+export type CheckoutResult = {
+  /** Provider-side reference (order id, PayPal order id, ...). */
+  providerRef: string;
+  session: CheckoutSession;
+};
+
+// --- Normalized events ----------------------------------------------------
+
+/**
+ * Every webhook, regardless of provider, is translated into one of these
+ * shapes before touching the ledger. Discriminated on `kind` so the
+ * applyPaymentEvent switch is exhaustive.
+ *
+ * `providerRef` is the provider's payment/capture id. `internalPaymentId`
+ * is recovered from the providerRef via our `payments` table lookup. We
+ * write the ledger keyed on `internalPaymentId`, never on providerRef —
+ * that's what makes us migration-safe.
+ */
+export type NormalizedPaymentEvent =
+  | {
+      kind: "payment_captured";
+      providerId: ProviderId;
+      providerRef: string;
+      internalPaymentId: string;
+      amount: Money;
+      occurredAt: Date;
+      /** Raw provider payload, scrubbed of PAN/CVV. Stored for audit. */
+      providerRaw: unknown;
+    }
+  | {
+      kind: "payment_failed";
+      providerId: ProviderId;
+      providerRef: string;
+      internalPaymentId: string;
+      reason: string;
+      occurredAt: Date;
+      providerRaw: unknown;
+    }
+  | {
+      kind: "refund";
+      providerId: ProviderId;
+      providerRef: string;
+      internalPaymentId: string;
+      /** Refund-side reference, distinct from the original payment ref. */
+      providerRefundRef: string;
+      amount: Money;
+      occurredAt: Date;
+      providerRaw: unknown;
+    }
+  | {
+      kind: "subscription_event";
+      providerId: ProviderId;
+      providerRef: string;
+      internalPaymentId: string;
+      /** Subscription lifecycle signal, normalized. */
+      state: "activated" | "renewed" | "cancelled" | "paused" | "failed";
+      occurredAt: Date;
+      providerRaw: unknown;
+    }
+  | {
+      /**
+       * Known event the provider sends that we don't act on. Recorded so
+       * webhook logs aren't lossy but no ledger write happens.
+       */
+      kind: "ignored";
+      providerId: ProviderId;
+      providerRef: string;
+      eventType: string;
+      occurredAt: Date;
+      providerRaw: unknown;
+    };
+
+// --- Reconciliation -------------------------------------------------------
+
+/**
+ * Provider-neutral transaction shape used by the nightly reconciliation
+ * cron. `listTransactionsSince` returns an AsyncIterable so adapters can
+ * page internally without forcing the whole window into memory.
+ */
+export type NormalizedTx = {
+  providerId: ProviderId;
+  providerRef: string;
+  /** May be null if we can't trace back to an internal payment (alerting case). */
+  internalPaymentId: string | null;
+  status: "captured" | "failed" | "refunded" | "pending";
+  amount: Money;
+  occurredAt: Date;
+};
+
+// --- Refunds --------------------------------------------------------------
+
+export type RefundInput = {
+  internalPaymentId: string;
+  /** Omit for full refund. */
+  amount?: Money;
+  reason: string;
+};
+
+export type RefundResult = {
+  providerRefundRef: string;
+};
+
+// --- Webhook verification -------------------------------------------------
+
+/**
+ * Shape we hand the adapter to verify a webhook. Kept minimal and
+ * framework-neutral — the caller (Next.js route handler) is responsible
+ * for extracting headers and raw body before delegating.
+ */
+export type WebhookVerifyInput = {
+  /** Raw request body bytes. Do NOT JSON.parse before signature checks. */
+  rawBody: string;
+  headers: Record<string, string>;
+};
+
+export type WebhookVerifyResult =
+  | { ok: true; event: NormalizedPaymentEvent }
+  | { ok: false; reason: string };

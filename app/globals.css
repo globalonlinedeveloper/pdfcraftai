@@ -1,0 +1,565 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   PDFCraft AI — design tokens (ported verbatim from the prototype styles.css)
+   Dark is default; switch to light by setting [data-theme='light'] on <html>.
+   ========================================================================== */
+
+:root,
+[data-theme="dark"] {
+  --bg: oklch(0.16 0.008 260);
+  --bg-1: oklch(0.19 0.01 260);
+  --bg-2: oklch(0.22 0.012 260);
+  --bg-3: oklch(0.26 0.014 260);
+  --border: oklch(0.30 0.015 260);
+  --border-strong: oklch(0.38 0.02 260);
+  --fg: oklch(0.97 0.005 260);
+  --fg-muted: oklch(0.72 0.01 260);
+  --fg-subtle: oklch(0.55 0.01 260);
+  --accent: oklch(0.74 0.17 35);
+  --accent-fg: oklch(0.20 0.05 35);
+  --accent-soft: oklch(0.30 0.08 35);
+  --blue: oklch(0.72 0.13 240);
+  --blue-soft: oklch(0.28 0.06 240);
+  --green: oklch(0.78 0.15 155);
+  --green-soft: oklch(0.28 0.06 155);
+  --red: oklch(0.68 0.18 25);
+  --yellow: oklch(0.85 0.15 90);
+
+  --radius: 8px;
+  --radius-lg: 14px;
+  --radius-sm: 6px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] {
+  --bg: oklch(0.985 0.003 260);
+  --bg-1: oklch(1 0 0);
+  --bg-2: oklch(0.97 0.004 260);
+  --bg-3: oklch(0.94 0.006 260);
+  --border: oklch(0.90 0.006 260);
+  --border-strong: oklch(0.82 0.008 260);
+  --fg: oklch(0.18 0.008 260);
+  --fg-muted: oklch(0.42 0.01 260);
+  --fg-subtle: oklch(0.58 0.01 260);
+  --accent: oklch(0.66 0.18 35);
+  --accent-fg: oklch(0.99 0.005 35);
+  --accent-soft: oklch(0.95 0.04 35);
+  --blue: oklch(0.56 0.18 240);
+  --blue-soft: oklch(0.95 0.04 240);
+  --green: oklch(0.55 0.15 155);
+  --green-soft: oklch(0.95 0.04 155);
+  --red: oklch(0.55 0.18 25);
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.06);
+  --shadow: 0 4px 24px rgba(20, 24, 40, 0.08);
+  --shadow-lg: 0 20px 60px rgba(20, 24, 40, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  font-feature-settings: "ss01", "cv01";
+}
+
+/* ---------- Typography scale ---------- */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+h1 {
+  font-size: 56px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+h2 {
+  font-size: 36px;
+  line-height: 1.15;
+}
+h3 {
+  font-size: 22px;
+  line-height: 1.25;
+}
+h4 {
+  font-size: 16px;
+  line-height: 1.3;
+}
+.eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- Layout ---------- */
+.container-x {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+.container-narrow {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+.page {
+  min-height: calc(100vh - 57px);
+}
+.section {
+  padding: 80px 0;
+}
+.section-sm {
+  padding: 48px 0;
+}
+
+/* ---------- Nav ---------- */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 28px;
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.topnav .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.topnav .logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), oklch(0.55 0.18 300));
+  display: grid;
+  place-items: center;
+  color: var(--accent-fg);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 13px;
+}
+.topnav nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 16px;
+}
+.topnav nav a {
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  font-size: 14px;
+  transition: color 0.15s, background 0.15s;
+}
+.topnav nav a:hover,
+.topnav nav a.active {
+  color: var(--fg);
+  background: var(--bg-2);
+}
+.topnav .spacer {
+  flex: 1;
+}
+.topnav .actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.btn-sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.btn-lg {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+.btn-primary:hover {
+  background: color-mix(in oklab, var(--fg) 88%, var(--accent));
+}
+.btn-accent {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.btn-accent:hover {
+  filter: brightness(1.07);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--fg-muted);
+}
+.btn-ghost:hover {
+  background: var(--bg-2);
+  color: var(--fg);
+}
+.btn-outline {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--fg);
+}
+.btn-outline:hover {
+  background: var(--bg-2);
+  border-color: var(--fg-subtle);
+}
+.btn-danger {
+  color: var(--red);
+  border: 1px solid var(--border);
+}
+.btn-danger:hover {
+  background: color-mix(in oklab, var(--red) 12%, transparent);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.card-hover {
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+.card-hover:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-2);
+}
+
+/* ---------- Chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  background: var(--bg-2);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+}
+.chip-free {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: transparent;
+}
+.chip-ai {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+.chip-new {
+  color: var(--green);
+  background: var(--green-soft);
+  border-color: transparent;
+}
+
+/* ---------- Inputs ---------- */
+.input,
+.textarea,
+.select {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 14px;
+  transition: border-color 0.15s, background 0.15s;
+  outline: none;
+}
+.textarea {
+  height: auto;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  border-color: var(--accent);
+  background: var(--bg-2);
+}
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--fg-subtle);
+}
+.label-x {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  display: block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* ---------- Decorative ---------- */
+.grid-bg {
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+.placeholder {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--bg-2) 0,
+    var(--bg-2) 10px,
+    var(--bg-1) 10px,
+    var(--bg-1) 20px
+  );
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  color: var(--fg-subtle);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Utilities ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.center {
+  display: grid;
+  place-items: center;
+}
+.muted {
+  color: var(--fg-muted);
+}
+.subtle {
+  color: var(--fg-subtle);
+}
+.divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 10px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.pulse-soft {
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* prose-mini — typography for AI-rendered markdown (Phase 5.1).      */
+/* Used by the SummarizePdfTool result card and /app/files/[id]/preview */
+/* to style the HTML emitted by lib/markdown-mini.ts. Deliberately      */
+/* narrow in scope: only the elements our markdown subset produces.    */
+/* ------------------------------------------------------------------ */
+.prose-mini h2 {
+  font-size: 1.15em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 1.6em 0 0.55em;
+  color: var(--fg);
+}
+.prose-mini h2:first-child {
+  margin-top: 0;
+}
+.prose-mini h3 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 1.3em 0 0.4em;
+  color: var(--fg);
+}
+.prose-mini h4,
+.prose-mini h5,
+.prose-mini h6 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 1.1em 0 0.3em;
+  color: var(--fg-muted);
+}
+.prose-mini p {
+  margin: 0.6em 0;
+  color: var(--fg-muted);
+}
+.prose-mini ul {
+  margin: 0.6em 0;
+  padding-left: 1.25em;
+  list-style: disc outside;
+}
+.prose-mini li {
+  margin: 0.25em 0;
+  color: var(--fg-muted);
+}
+.prose-mini blockquote {
+  margin: 0.9em 0;
+  padding: 0.6em 0.9em;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-2);
+  border-radius: 4px;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+.prose-mini blockquote p {
+  margin: 0;
+}
+.prose-mini code {
+  font-family: var(--font-geist-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.88em;
+  padding: 0.12em 0.38em;
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.prose-mini a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-mini a:hover {
+  color: var(--fg);
+}
+.prose-mini strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+.prose-mini em {
+  font-style: italic;
+}

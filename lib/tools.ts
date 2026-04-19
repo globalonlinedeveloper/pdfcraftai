@@ -1,0 +1,51 @@
+// Canonical tool registry. Ported from the prototype shell.jsx.
+// Each tool's `icon` is a key into components/icons/Icons.tsx (the `I` object).
+
+import type { IconName } from "@/components/icons/Icons";
+
+export type ToolGroup = "AI" | "Organize" | "Convert" | "Optimize" | "Edit" | "Security";
+
+export type Tool = {
+  id: string;
+  name: string;
+  desc: string;
+  icon: IconName;
+  free: boolean;
+  cost?: string;
+  group: ToolGroup;
+};
+
+export const TOOLS: readonly Tool[] = [
+  // ----- Free -----
+  { id: "merge", name: "Merge PDFs", desc: "Combine multiple PDFs into a single document.", icon: "Merge", free: true, group: "Organize" },
+  { id: "split", name: "Split PDF", desc: "Separate pages into independent files.", icon: "Split", free: true, group: "Organize" },
+  { id: "compress", name: "Compress PDF", desc: "Shrink file size without losing quality.", icon: "Compress", free: true, group: "Optimize" },
+  { id: "pdf-to-office", name: "PDF to Word/Excel/PPT", desc: "Convert PDFs into editable Office files.", icon: "Convert", free: true, group: "Convert" },
+  { id: "to-pdf", name: "Word/Image to PDF", desc: "Turn any file into a polished PDF.", icon: "Image", free: true, group: "Convert" },
+  { id: "rotate", name: "Rotate & Reorder", desc: "Fix orientation and rearrange pages.", icon: "Rotate", free: true, group: "Organize" },
+  { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
+  { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
+
+  // ----- AI -----
+  { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "~5 credits / Q", group: "AI" },
+  { id: "ai-summarize", name: "Summarize PDF", desc: "Executive summary + section bullets.", icon: "Summary", free: false, cost: "3 credits / doc", group: "AI" },
+  { id: "ai-translate", name: "Translate PDF", desc: "Preserve layout across 20+ languages.", icon: "Translate", free: false, cost: "5 credits / doc", group: "AI" },
+  { id: "ai-ocr", name: "OCR & Smart Extract", desc: "Turn scans into searchable, structured data.", icon: "Scan", free: false, cost: "~2 credits / page", group: "AI" },
+  { id: "ai-rewrite", name: "Rewrite & Rephrase", desc: "Tone shift, simplify, or expand text.", icon: "Edit", free: false, cost: "~3 credits / page", group: "AI" },
+  { id: "ai-redact", name: "Redact Sensitive Info", desc: "Auto-detect PII and black it out.", icon: "Shield", free: false, cost: "~2 credits / page", group: "AI" },
+  { id: "ai-generate", name: "Generate PDF from Prompt", desc: "Draft reports, contracts, briefs from text.", icon: "Generate", free: false, cost: "~20 credits / doc", group: "AI" },
+  { id: "ai-sign", name: "Sign & Fill Forms", desc: "AI fills fields, you sign and send.", icon: "Pen", free: false, cost: "~10 credits / doc", group: "AI" },
+  { id: "ai-table", name: "AI Table Extract", desc: "Extract tables as CSV or Excel — even multi-page.", icon: "Pages", free: false, cost: "~3 credits / table", group: "AI" },
+  { id: "ai-compare", name: "Compare PDFs", desc: "Redline diff with AI severity analysis.", icon: "Compare", free: false, cost: "15 credits / diff", group: "AI" },
+] as const;
+
+export const GROUP_ORDER: readonly ToolGroup[] = ["AI", "Organize", "Convert", "Optimize", "Edit", "Security"] as const;
+
+export const toolById = (id: string): Tool | undefined => TOOLS.find((t) => t.id === id);
+
+export const toolsByGroup = (): Record<ToolGroup, Tool[]> => {
+  const out = {} as Record<ToolGroup, Tool[]>;
+  for (const g of GROUP_ORDER) out[g] = [];
+  for (const t of TOOLS) out[t.group].push(t);
+  return out;
+};

@@ -1,0 +1,41 @@
+# Local MySQL for development.
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f mysql
+#   docker compose down           # stops, keeps data
+#   docker compose down -v        # stops, wipes data
+#
+# Default creds (dev only — do not reuse in prod):
+#   host: 127.0.0.1  port: 3306
+#   db:   pdfcraft   user: pdfcraft  pass: pdfcraft_dev_password
+#   root password:   root_dev_password
+#
+# MYSQL_URL="mysql://pdfcraft:pdfcraft_dev_password@127.0.0.1:3306/pdfcraft"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: pdfcraft-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_password
+      MYSQL_DATABASE: pdfcraft
+      MYSQL_USER: pdfcraft
+      MYSQL_PASSWORD: pdfcraft_dev_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - pdfcraft_mysql_data:/var/lib/mysql
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_dev_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pdfcraft_mysql_data:
+    driver: local
