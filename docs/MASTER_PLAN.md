@@ -1,6 +1,6 @@
 # pdfcraftai — master plan index
 
-**Date:** 2026-04-20 (consolidation pass — v3, gap-analysis merge). **Purpose:** one door into every active planning document. Anyone picking up this project reads this file first, then the specific plan for the work they're doing.
+**Date:** 2026-04-20 (consolidation pass — v4, Phase-0 foundation merge: Paddle MoR + GST + TAX + GEO). **Purpose:** one door into every active planning document. Anyone picking up this project reads this file first, then the specific plan for the work they're doing.
 
 ---
 
@@ -45,13 +45,21 @@
 
 **Critical unknowns still blocking:**
 1. `ANTHROPIC_API_KEY` not on Hostinger (task #72) — every AI call 503s today.
-2. Razorpay KYC in progress, PayPal business account not yet created (task #81).
-3. **Twelve** founder decisions open (see §4) — D1–D6 on pricing/margin + D7–D9 on cost guardrails + **D10–D12** on geo-scope + transparency (from PLAN_GAP_ANALYSIS).
-4. **11 SEV-0 gaps** identified in PLAN_GAP_ANALYSIS.md must be closed before public launch — including prompt-injection defense, chargeback clawback handling, refund/ToS pages, cookie banner, webhook retry storm, output moderation, malware scan on uploads.
+2. Razorpay KYC in progress, **Paddle** KYC not yet started (task #81; PayPal deprecated by D4 resolution — see below).
+3. **Ten** founder decisions open (see §4) — D1–D6 on pricing/margin + D7–D9 on cost guardrails + **D12** on transparency. **D10 (EU defer) and D11 (US allow via Paddle MoR) are now CLOSED** via `docs/GEO_LAUNCH_POLICY.md`. **D4 (payment stack)** is now **CLOSED** — Razorpay + Paddle per `docs/payments/MOR_EVALUATION.md`.
+4. **11 SEV-0 gaps** identified in PLAN_GAP_ANALYSIS.md must be closed before public launch — including prompt-injection defense, chargeback clawback handling, refund/ToS pages, cookie banner, webhook retry storm, output moderation, malware scan on uploads. **T2-G1 (India GST) and T2-G2 (EU VAT) now have documented remediation plans** in `docs/india/GST_SETUP.md` and `docs/GEO_LAUNCH_POLICY.md` respectively.
 
 **Loss-bounding guarantees added 2026-04-20:** See `COST_GUARDRAILS.md`. A 500-page PDF × 10-turn Sonnet chat goes from −$7.23/session loss to either bounded positive margin or forced BYOK. Max per-turn cost is mathematically capped by Layer 1 (20k input-token gate).
 
 **Gap-analysis audit added 2026-04-20:** See `PLAN_GAP_ANALYSIS.md`. 42 previously-unmapped scenarios across adversarial, regulatory, operational, product, and financial axes — classified SEV-0..SEV-3 and fed back into phase scoping.
+
+**Phase 0 foundation docs added 2026-04-20:** Four docs closing the payments + geography + tax + GST compliance arc:
+- `docs/payments/MOR_EVALUATION.md` — Paddle chosen as international MoR over Lemon Squeezy, FastSpring, Paypro Global, Gumroad, DodoPayments. Razorpay remains on the IN rail. 6-vendor weighted scoring + sandbox validation plan + Plan B/C fallbacks.
+- `docs/GEO_LAUNCH_POLICY.md` — Tier 1 (allow: IN + US + UK + CA + AU + NZ + SG + UAE + rest of APAC + LatAm + MEA), Tier 2 (defer: EU + CH + NO + IS + LI + CN + RU + BY), Tier 3 (block: OFAC-sanctioned). Cloudflare WAF + checkout-gate implementation.
+- `docs/india/TAX_MODEL.md` — 3-regime comparison (44ADA / 44AD / regular books), net-take-home scenarios at $50k / $100k / $250k ARR, multi-year regime-transition roadmap, 7 CA-confirmation questions.
+- `docs/india/GST_SETUP.md` — GSTIN registration runbook, LUT filing, HSN/SAC 998313, invoice templates for IN + export rails, monthly GSTR-1/3B calendar, CA artefact checklist.
+
+These four resolve D4, D10, D11, and provide the Phase 0 legal runbook that was previously enumerated but not documented.
 
 ---
 
@@ -69,9 +77,23 @@
 
 | Doc | Purpose | Size |
 |---|---|---|
-| [`docs/payments/PAYMENT_GATEWAY_PLAN.md`](./payments/PAYMENT_GATEWAY_PLAN.md) | **The** plan — portable `PaymentProvider` adapter, Razorpay + PayPal, 4-week timeline to go-live | 29 KB |
+| [`docs/payments/MOR_EVALUATION.md`](./payments/MOR_EVALUATION.md) | **MoR decision record** — Paddle chosen over Lemon Squeezy / FastSpring / Paypro / Gumroad / Dodo. 6-vendor weighted scoring, India-payout reliability analysis, sandbox validation plan. | 10 KB |
+| [`docs/payments/PAYMENT_GATEWAY_PLAN.md`](./payments/PAYMENT_GATEWAY_PLAN.md) | Portable `PaymentProvider` adapter, Razorpay + ~~PayPal~~ (superseded by Paddle for international), 4-week timeline to go-live | 29 KB |
 | [`docs/payments/migration-playbook.md`](./payments/migration-playbook.md) | How we replace a gateway without migrating user data (the internal-UUID trick) | 16 KB |
 | [`docs/RAZORPAY_READINESS.md`](./RAZORPAY_READINESS.md) | KYC status, merchant underwriting notes, timeline | 12 KB |
+
+### 2.2a India compliance
+
+| Doc | Purpose | Size |
+|---|---|---|
+| [`docs/india/TAX_MODEL.md`](./india/TAX_MODEL.md) | **Income tax model** — 44ADA / 44AD / regular regime comparison, net take-home at $50k/$100k/$250k ARR, multi-year projection, 7 CA confirmation questions. | 15 KB |
+| [`docs/india/GST_SETUP.md`](./india/GST_SETUP.md) | **GST operations runbook** — GSTIN registration, LUT filing, HSN/SAC codes, invoice templates, monthly return calendar, foreign-supplier RCM. | 18 KB |
+
+### 2.2b Geographic launch policy
+
+| Doc | Purpose | Size |
+|---|---|---|
+| [`docs/GEO_LAUNCH_POLICY.md`](./GEO_LAUNCH_POLICY.md) | **Country tiering** — Tier 1 (allow, target) / Tier 2 (defer: EU, CN, RU, BY) / Tier 3 (block: OFAC). Cloudflare WAF + checkout-gate router + compliance prep queue. | 12 KB |
 
 ### 2.3 AI layer
 
@@ -159,11 +181,17 @@ These twelve decisions are blocking the public pricing copy, the A2/A3 builds, a
 | D7 | `MAX_CREDITS_PER_TURN` cap value? | **10 credits (= $0.50 revenue ceiling).** Covers Haiku 100k-token turn; bounds estimate-miss risk. | Phase A2 (Layer 5 reconciliation) |
 | D8 | Margin threshold that auto-flips user to BYOK-required? | **30%** — any user whose 24-hour spend exceeds 70% of their revenue gets moved to BYOK-only. Chronic whales stop costing the platform within 24 hours. | Phase A4 (Layer 7 circuit breaker) |
 | D9 | Trigger threshold for pre-send cost confirmation UI? | **≥ 2 credits** — silent for normal 1-credit turns, explicit confirmation for anything larger. | Phase A2 (Layer 4) |
-| D10 | Serve EU customers at launch (triggers VAT/MOSS + GDPR DSAR)? | **Geo-block EU at launch.** Defer until MRR > $5k to justify MOSS compliance + DPA + DPO appointment cost. | Phase 0 legal; checkout geo-gate |
-| D11 | Serve US customers at launch (risk of sales-tax nexus)? | **Geo-allow US, monitor volume.** Threshold alarm at $90k revenue or 180 txn (below $100k/200 trigger). If breached, pause US sales and enroll in TaxJar/Avalara. | Phase 0 legal; monitoring dashboard |
+| D10 | ~~Serve EU customers at launch?~~ | **CLOSED 2026-04-20 → GEO_LAUNCH_POLICY.md** — Geo-block EU (Tier 2 defer) until MRR > $5k. | Phase 0 legal; checkout geo-gate |
+| D11 | ~~Serve US customers at launch (risk of sales-tax nexus)?~~ | **CLOSED 2026-04-20 → GEO_LAUNCH_POLICY.md + MOR_EVALUATION.md** — Geo-allow US via Paddle MoR. Paddle handles 50-state sales tax registration + remittance, so nexus is Paddle's problem, not ours. | Phase 0 legal; monitoring dashboard |
 | D12 | Publish which model handled each request? | **No.** Disclose provider list generically in ToS ("we route across Anthropic, OpenAI, Google"), but hide per-call model in UI. Protects router.ts as trade secret; users see "AI-powered" not "GPT-4o-mini answered this". | Phase A2 UI; privacy policy |
 
-D1–D6 tracked in task [#87](#). D7–D9 added 2026-04-20 from `COST_GUARDRAILS.md` §8 — they gate Phase A2 Layer 1/3/5/7 implementation. D10–D12 added 2026-04-20 from `PLAN_GAP_ANALYSIS.md` §6 — they gate Phase 0 legal copy and checkout geo-routing.
+**Also newly closed 2026-04-20:**
+
+| # | Decision | Resolution | Closed in |
+|---|---|---|---|
+| D4 | Payment stack for international customers | **CLOSED → Razorpay (IN) + Paddle (RoW).** Paddle was picked over Lemon Squeezy, FastSpring, Paypro Global, Gumroad, Dodo based on India-payout reliability + subscription-feature maturity + tax-jurisdiction coverage. PayPal dropped from plan. | `docs/payments/MOR_EVALUATION.md` |
+
+D1–D6 tracked in task [#87](#). D7–D9 added 2026-04-20 from `COST_GUARDRAILS.md` §8 — they gate Phase A2 Layer 1/3/5/7 implementation. D10–D12 added 2026-04-20 from `PLAN_GAP_ANALYSIS.md` §6; **D10 + D11 closed same day** via GEO_LAUNCH_POLICY.md. D4 reframed and **closed same day** via MOR_EVALUATION.md. Remaining open: D1, D2, D3, D5, D6, D7, D8, D9, D12 (nine decisions).
 
 ---
 
