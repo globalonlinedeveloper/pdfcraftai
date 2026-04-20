@@ -63,6 +63,7 @@
 1. **Platform API key on Hostinger.** `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`) is not in the production env. Every `/api/ai/*` call returns 503 today. This is Task #72.
 2. **Credit top-up has no webhook.** `PAYMENT_GATEWAY_PLAN.md` Phase 1 must land first — otherwise users can't even acquire credits to spend.
 3. **No `ai_usage` table.** We can't compute per-op margin, detect anomalies, or settle BYOK disputes without per-call ledger of provider-side cost_usd_micro, tokens in/out, latency, key_source.
+4. **Three margin-leak gaps identified in `MARGIN_VERIFICATION.md`.** Until these close, the 88/83/78/73% numbers on the pricing page are aspirational, not earned. See §1.3.
 
 **P1 — revenue-leak blockers:**
 
@@ -157,9 +158,11 @@ Phase numbering follows `PAYMENT_GATEWAY_PLAN.md` so the cross-refs are unambigu
 Goal: the platform can earn a single penny.
 
 - [ ] **Task #72** — add `ANTHROPIC_API_KEY` to Hostinger env. Verify `/api/health` reports `ai.configured = true`. (Blocker for everything downstream.)
-- [ ] Optional: add `OPENAI_API_KEY` too, so we have a fallback provider from day one.
+- [ ] **Also add `OPENAI_API_KEY` and `GEMINI_API_KEY`** (recommended, not optional). Margin verification shows Haiku-only routing misses claim on the chat-whale and deep-tier scenarios — cheap routing in A2 needs these keys present. Cost to add: $0 today, one-time key provisioning.
 - [ ] Redeploy, run `/api/ai/chat` smoke against test account with free credits. Expect a response and exactly one `credit_ledger` row with `reason = 'ai_chat_turn'`.
+- [ ] **Fix the `margin:` field in `lib/pricing.ts`**. Today it's AI-only, which is misleading — add a comment line documenting scope, or re-compute to net-of-processor-and-GST. `MARGIN_VERIFICATION.md` §6 item 1 covers options. 15-minute job.
 - [ ] If Pro pack won't launch with BYOK, **edit `lib/pricing.ts:60`** to remove the "BYOK unlocked (+15% infra fee)" feature string. Pricing page must not lie.
+- [ ] **Replace flat "88% margin" copy on pricing page** with "up to 88%" until A4 confirms 7 green days. Same for 83/78/73%.
 
 ### Phase A1 — observability bed (4 days, concurrent with Payments Phase 1)
 
@@ -171,15 +174,19 @@ Goal: every AI call is accounted for, even the failed ones.
 - [ ] **Fix the spend-check race.** Change `spendCredits` pre-flight to a single `UPDATE credits SET balance = balance - ? WHERE user_id = ? AND balance >= ?` returning `affectedRows`. No separate SELECT.
 - [ ] Backfill any existing `chat_messages` rows with `NULL` into `ai_usage` (one-time migration — not required if table is new).
 
-### Phase A2 — harden the request path (4 days)
+### Phase A2 — harden the request path + cheap routing (5 days)
 
-Goal: an abusive client can't drain the platform key.
+Goal: an abusive client can't drain the platform key, AND default routing actually reads the margin-safe policy.
 
 - [ ] **Rate limit `/api/ai/*`** per `(user_id, operation, minute)` and `(user_id, day)`. 60 req/min per op, 5k req/day per user. Use Redis if we have it, MySQL if we don't (LOCK + INSERT…ON DUPLICATE KEY UPDATE). Return 429 with Retry-After.
 - [ ] **Size-limit request bodies.** `app/api/ai/chat/route.ts` already has some guards; lift them into shared middleware in `lib/api/guard.ts`: 1 MB JSON body max, 10 MB multipart. Reject 413 before any AI call.
+- [ ] **Context-token cap per op.** New guard: reject `chat_turn` if input token estimate > 20k (chat whale protection — see margin doc S3). `summarize` > 100k. `ocr` multiplier capped at 50 pages/request. Returns 413 `context_too_large` with an explanation.
 - [ ] **Mint idempotency keys server-side.** For every op, derive from stable request identifiers (session id + turn id for chat; upload id + op for tools). Reject client-supplied keys unless they start with the server-minted prefix.
 - [ ] **Kill switches per op.** Add `ai_op_enabled` row per op in settings table. If false, route returns 503 without touching credits. Default true.
 - [ ] **Timeout every provider call.** Adapter `AbortSignal` wiring — already hinted at in `lib/ai/provider.ts:65`; verify it's plumbed. Default 60s for chat, 120s for OCR, 180s for generate.
+- [ ] **Ship Gemini adapter** (Gap A). `lib/ai/adapters/gemini.ts` + registry row + cost table entry. No UI, no BYOK support yet.
+- [ ] **Ship `lib/ai/router.ts` with `DEFAULT_POLICY`** (Gap B). Hardcoded policy table from §8a. Route handlers call `router.resolve(userId, op)` → returns `{providerId, model, apiKey, keySource}`. BYOK branch stubbed to `keySource='platform'` until A3; `ai_routes` DB table deferred to P2.
+- [ ] **Per-pack processor policy in checkout** (Gap C). Starter renders Razorpay-only. Creator / Pro / Studio render both gateways.
 
 ### Phase A3 — BYOK implementation (6 days, after Payments Phase 1 — because Pro/Studio must be on sale first)
 
@@ -527,6 +534,53 @@ L-14 through L-28 are either covered by the Payments plan or are P3 (post-revenu
 
 ---
 
+## 8a. Margin-leak gaps (from `docs/ai/MARGIN_VERIFICATION.md`)
+
+The 11-scenario sweep in `MARGIN_VERIFICATION.md` surfaced three structural gaps that sit ON TOP of the 28-leak audit. Each has to close before the `margin:` field in `lib/pricing.ts` is truthful.
+
+### Gap A — No Gemini adapter in code (was P3, now **P1**)
+
+`lib/ai/registry.ts` has Anthropic + OpenAI only. Today 100% of OCR defaults to Haiku 4.5 at $0.012/page; Gemini Flash would cost $0.00028/page — **43× cheaper**. In the chat-whale scenario (§S3 of the margin doc), routing chat to GPT-4o-mini turns a negative margin into 76–83%. We cannot claim 88% margin without cheap routing actually being available.
+
+- **Action:** promote the Gemini adapter from Phase A5 to Phase A2. New file `lib/ai/adapters/gemini.ts`, add `computeProviderCost` entry for Gemini, add default-policy rows for `ocr` and `translate`.
+- **Budget:** 1 dev-day.
+- **Test:** S8 on master plan §9 "Adding a third provider" — must still be exactly 7 files touched.
+
+### Gap B — No ops-level routing policy
+
+`selectProvider({capabilityNeeded:'streaming'})` picks the first streamable adapter. A 1-credit `chat_turn` and a 20-credit `generate` both resolve to Anthropic Haiku today. `lib/ai/router.ts` is listed in Phase A3 for BYOK; the margin-routing half has to land in A2 alongside Gemini so default routing actually reads the policy.
+
+- **Action:** Phase A2 ships `DEFAULT_POLICY` from §4.4 with these baseline rows (cheap-routing scenario from margin doc):
+
+  | Operation | Default tier provider | Deep tier provider |
+  |---|---|---|
+  | chat_turn | gpt4omini | haiku |
+  | summarize | haiku | sonnet |
+  | translate | gemini | haiku |
+  | ocr | gemini | haiku |
+  | compare | haiku | sonnet |
+  | rewrite | gpt4omini | haiku |
+  | table | haiku | haiku |
+  | redact | haiku | sonnet |
+  | generate | sonnet | sonnet |
+  | sign | sonnet | sonnet |
+
+- **Test:** margin doc S1 (realistic mix, cheap routing) — every pack hits ≥ claim + 2pp.
+
+### Gap C — PayPal on Starter is a knife-edge
+
+A $5 Starter pack paid via PayPal loses 9.8% of revenue to the $0.49 fixed fee, plus 3.49% + 1.5% cross-border = ~14% processor drag. A PayPal buyer who also happens to be a chat whale (§S3) or a pure-OCR user (worst-case table in margin doc) drops to 71% on that pack.
+
+- **Action:** Payments Phase 1 ships a per-pack processor policy. Starter checkout hides PayPal and routes to Razorpay (INR + USD card). PayPal stays on Creator / Pro / Studio where $0.49 is ≤ 2.6% of sticker.
+- **Alternative if Razorpay-INR isn't approved in time:** raise Starter to $7 OR cap Starter OCR at 30 pages. Option 1 preferred.
+- **Test:** margin doc S6 (region mix) — Starter under any region split stays above 85%.
+
+### Gap D (new in wider sweep) — Starter pack is structurally fragile
+
+Expanded scenario sweep (S3 chat whale, S7 support cost, S11 combined worst case) shows Starter is the common-denominator loser: too small to absorb support cost, fixed-fee processor drag, or one abusive whale. Fixes either raise Starter to $7 to absorb normal variance or **ship an explicit per-pack abuse cap** before A2 closes. See `MARGIN_VERIFICATION.md` §10 decision-point.
+
+---
+
 ## 9. Adding a third AI provider (future-proof check)
 
 Test: adding Google Gemini as a provider should touch **exactly 7 files**:
@@ -547,7 +601,7 @@ Zero changes to: route handlers, `withCreditSpend`, the ledger, the payments lay
 
 | # | Question | Status |
 |---|---|---|
-| Q1 | Do we ship **OpenAI as fallback** from day one, or Anthropic-only? Costs $0 to add the key, but we then own the routing decision. | Decide before Phase A1 |
+| Q1 | Do we ship **OpenAI + Gemini as default routers** from day one? `MARGIN_VERIFICATION.md` says yes — without cheap routing, chat-whale scenarios push Pro/Studio to negative margin. **Recommended answer: ship all three platform keys in Phase A0.** | Decide before Phase A2 |
 | Q2 | What's the daily provider-cost page threshold? ($50? $200?) Affects how we size the budget alerts. | Decide before Phase A4 |
 | Q3 | Do we keep "BYOK unlocked (+15% infra fee)" in the Pro pack copy if BYOK ships 2 weeks later than Pro goes on sale? | **Blocker for Payments Phase 1 if yes.** Fix: edit `lib/pricing.ts:60` to remove the bullet until A3 lands. |
 | Q4 | Studio seat = $49/mo is advertised — but we have no seat table. Does Studio ship as "unlimited BYOK, 0 credits" or as "flat credit refill"? | Decide before Phase A3 |

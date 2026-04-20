@@ -1,8 +1,8 @@
 # Margin verification — claimed vs actual
 
-**Date:** 2026-04-20. **Answers:** "Did you verify max margin profit?"
+**Date:** 2026-04-20 (expanded same day with 11-scenario sweep — §9). **Answers:** "Did you verify max margin profit?" and "analyse all possible scenarios?"
 
-**Short answer:** The 88/83/78/73% margins in `lib/pricing.ts` are **not achieved** under the current code defaults. They are **exceeded** under the intended routing, which isn't built yet. Two leaks (worst-case OCR + PayPal on small pack + Haiku default for everything) require fixes before we can claim those margins truthfully.
+**Short answer:** The 88/83/78/73% margins in `lib/pricing.ts` are **not achieved** under the current code defaults. They are **exceeded** under the intended routing, which isn't built yet. The wider sweep (§9) surfaces three scenarios worse than the v1 pass found: **chat whale** (user pastes 200-page PDF into a 1-credit chat = Pro margin −12.5%), **support cost** (Starter can't absorb $1.50/mo support at $5 sticker), and **combined worst case** (Starter 38% net). Five fixes — Gemini adapter, cheap routing, per-pack processor policy, context-token cap, and a Starter re-pricing decision — are required before the pricing copy is truthful.
 
 ---
 
@@ -128,3 +128,189 @@ The 15% infra fee on Pro BYOK:
 - [ ] Monthly BYOK infra-fee reconciliation shows 15% covers orchestration cost.
 
 Until those six items are green, the pricing copy on the public site should read **"up to"** 88% margin — never flat-claimed.
+
+---
+
+## 9. Wider scenario sweep (v2 — all possible scenarios)
+
+The v1 analysis (§1–§8) looked at two routing options × two usage profiles × one refund / chargeback / region / token-estimate assumption. That was too narrow. §9 runs eleven independent scenarios to find the ones that actually break.
+
+All numbers below come from the deterministic model in `margin_scenarios.py` (archived alongside this doc). Inputs: provider pricing tables as of 2026-04-20, payment processor rate cards, conservative token estimates per op. Every scenario rolls up to **net margin = (revenue − processor − AI − infra − support − chargebacks) / price**.
+
+### 9.1 S1 Baseline re-run (realistic mix, default 50/30/20 currency split)
+
+| Pack | Claim | Haiku-all (today's code) | Cheap routing (intended) |
+|---|---|---|---|
+| Starter | 88% | 84.7% | 88.9% |
+| Creator | 83% | 85.1% | 91.0% |
+| Pro     | 78% | 82.5% | 90.4% |
+| Studio  | 73% | 79.9% | 89.5% |
+
+**Reading:** v1 was slightly pessimistic. Under realistic usage, Haiku-all isn't as bad as the v1 worst-case OCR run suggested — it comes in 3–7pp *above* claim on all packs except Starter (which is 3.3pp below). Cheap routing beats claim by 1–17pp. The claim is roughly defensible under normal usage; the problems are at the edges.
+
+### 9.2 S2 Deep-tier heavy user
+
+User spends 40% on `generate`, 30% on `compare`, 20% on `sign`, 10% on `chat`. Per the master-plan default policy, deep-tier ops route to Sonnet 4.6 ($3/$15 per Mtok — 15× Haiku).
+
+| Pack | Claim | Haiku-all | **Sonnet on deep ops** | Cheap routing |
+|---|---|---|---|---|
+| Starter | 88% | 88.0% | **81.9%** | 84.5% |
+| Creator | 83% | 89.6% | 81.3% | 84.9% |
+| Pro     | 78% | 88.6% | **77.3%** | 82.2% |
+| Studio  | 73% | 87.4% | 73.6% | 79.5% |
+
+**Reading:** Sonnet is ~15× more expensive per token than Haiku. A user who uses the app the way our Pro-tier copy advertises (agents, document generation, signature workflows) pays us Sonnet rates and drops Pro margin to **77.3% — below claim**. Mitigation: the master-plan policy table already routes `generate`/`sign` to Sonnet, so this isn't a bug to fix — it's a fact to accept and price in. Option: charge 25–30 credits for `generate` instead of 20.
+
+### 9.3 S3 Chat whale (the sleeper)
+
+A user on any pack drops a 200-page PDF into chat context and asks follow-up questions. Each `chat_turn` now ingests 15k input tokens instead of the 1.5k we budgeted — **10× estimate**. Output unchanged.
+
+| Pack | Claim | Haiku-all | **GPT-4o-mini (cheap route)** |
+|---|---|---|---|
+| Starter | 88% | 33.7% | 83.0% |
+| Creator | 83% | 14.7% | 82.8% |
+| Pro     | 78% | **−12.5%** | 79.4% |
+| Studio  | 73% | **−36.4%** | 76.1% |
+
+**Reading:** this is the single worst scenario in the entire sweep. With Haiku-all, Pro goes negative and Studio bleeds $54/pack. The mechanism: a 1-credit `chat_turn` doesn't care how big the input is; a user who discovers this can DoS our margin for the cost of the pack. GPT-4o-mini saves it because input tokens are 7× cheaper. **But routing alone isn't enough** — we also need a context-token cap per op (reject chat_turn if input > 20k tokens, which is ~12 pages; force the user to use `summarize` or `chat-with-pdf` instead).
+
+**Fix blocks revenue:** this has to land in Phase A2 alongside the rate limit, not later.
+
+### 9.4 S4 Refund drag
+
+Pricing FAQ promises "unused credits refundable within 14 days." Refund rate assumptions:
+
+| Pack | Claim | 5% refund | 10% refund | 20% refund |
+|---|---|---|---|---|
+| Starter | 88% | 84.0% | 79.2% | 69.5% |
+| Creator | 83% | 86.2% | 81.4% | 71.7% |
+| Pro     | 78% | 85.6% | 80.9% | 71.4% |
+| Studio  | 73% | 84.9% | 80.2% | 70.8% |
+
+**Reading:** processor fees are lost on refunds (gateways don't return the fee). At 10% refund rate every pack is within 1–2pp of claim; at 20% we lose ~10pp everywhere. **Telemetry required:** phase A4 rollup should track `refund_rate_30d` as a pack-level metric. If it trends past 10%, tighten the refund policy (reduce window to 7 days, or refund-of-unused-only).
+
+### 9.5 S5 Chargeback drag
+
+Razorpay ₹1000–2000/dispute, PayPal $15–30/dispute. Modelled as $18/dispute pro-rated across pack purchases:
+
+| Pack | Claim | 0.5% CB | 1% CB | 2% CB |
+|---|---|---|---|---|
+| Starter | 88% | 87.1% | 85.3% | 81.7% |
+| Creator | 83% | 90.5% | 90.0% | 89.1% |
+| Pro     | 78% | 90.2% | 90.1% | 89.8% |
+| Studio  | 73% | 89.5% | 89.4% | 89.3% |
+
+**Reading:** Starter is exposed because $18 dispute fee vs $5 sticker is a 360% one-time wipeout of that customer's LTV. Larger packs absorb the $18 easily. A 2% chargeback rate is 4× typical SaaS — we should be fine below that. Mitigation: friction at checkout (3DS, phone verify) to keep CB rate < 0.5% on INR and < 1% on USD.
+
+### 9.6 S6 Region mix swings
+
+Same realistic ops mix, different processor weightings:
+
+| Pack | Claim | India-heavy (80/10/10) | US-heavy (20/50/30) | Razorpay-only (70/30) |
+|---|---|---|---|---|
+| Starter | 88% | 91.5% | 86.3% | **92.5%** |
+| Creator | 83% | 92.1% | 89.8% | 92.4% |
+| Pro     | 78% | 91.2% | 89.6% | 91.3% |
+| Studio  | 73% | 90.2% | 88.8% | 90.3% |
+
+**Reading:** Razorpay-only wins by 1–6pp across every pack. PayPal on a $5 pack is expensive (S1 already showed that). **Decision supported:** Starter → Razorpay-only at checkout. Creator and up keep PayPal — the $0.49 fixed fee is a much smaller share.
+
+### 9.7 S7 Support cost per paying user
+
+Typical SaaS support runs $0.50–$3/paid-user/month. The margin calc has been ignoring this line item entirely; here's what happens when we add it:
+
+| Pack | Claim | Light ($0.50) | Avg ($1.50) | Heavy ($3) |
+|---|---|---|---|---|
+| Starter | 88% | 78.9% | **58.9%** | **28.9%** |
+| Creator | 83% | 88.3% | 83.1% | 75.2% |
+| Pro     | 78% | 89.5% | 87.8% | 85.3% |
+| Studio  | 73% | 89.2% | 88.5% | 87.5% |
+
+**Reading:** this is the bombshell. Starter's $5 sticker cannot absorb even average support cost — one support ticket per month per Starter customer drops margin to 58.9%. At heavy support (one ticket/week), Starter is a 29%-margin product. **Creator and up are fine** because the fixed support cost is a smaller share of revenue.
+
+**Options:**
+1. **Self-serve-only Starter.** No support channel. Help center + community forum only. Drops support cost toward zero but a bad-review risk.
+2. **Raise Starter to $7 or $9.** Preserves the cheap-entry positioning but widens the buffer. S7 at $9 × $1.50 support: 82% margin — fine.
+3. **Kill the Starter pack.** Creator at $19 becomes the entry tier.
+
+Recommended: option 2 (raise to $7), paired with Razorpay-only routing (S6).
+
+### 9.8 S8 Provider price rise (model upgrade scenario)
+
+Anthropic drops Haiku 4.5 in favour of Haiku 5.0 at 2× price. Current code continues defaulting to whatever `ANTHROPIC_MODEL` is set to:
+
+| Pack | Claim | Haiku-all (doubled) | Cheap routing |
+|---|---|---|---|
+| Starter | 88% | 77.7% | 86.7% |
+| Creator | 83% | 75.5% | 87.9% |
+| Pro     | 78% | 69.5% | 86.3% |
+| Studio  | 73% | 64.0% | 84.5% |
+
+**Reading:** Haiku-all routing takes an 8–15pp hit on a doubling. Cheap routing absorbs it because OCR and chat don't go through Anthropic. **Guardrail:** Phase A4 daily rollup must include a `provider_price_change` alert — if the weighted cost-per-credit rises more than 20% week-over-week without a usage mix change, the rollup pages the operator. The fix is to re-pick `ANTHROPIC_MODEL` (stay on the cheaper tier or switch to a competitor).
+
+### 9.9 S9 Token-estimate miss
+
+Our per-op token estimates are educated guesses. Real telemetry (Phase A1 `ai_usage` table) hasn't landed yet. Model 3× miss on OCR and generate:
+
+| Pack | Claim | Haiku-all | Cheap routing |
+|---|---|---|---|
+| Starter | 88% | 83.1% | 88.1% |
+| Creator | 83% | 82.9% | 89.8% |
+| Pro     | 78% | 79.5% | 88.8% |
+| Studio  | 73% | 76.3% | 87.6% |
+
+**Reading:** a 3× miss on two of the ten ops is absorbable under cheap routing. Haiku-all loses 1–4pp. **Action:** after A1 ships, gate the pricing page live date on "7 consecutive days with actual tokens within 20% of estimate" — if estimates are off, re-price `AI_OPERATION_COSTS` before the 88% copy goes out.
+
+### 9.10 S10 Free-tier abuse
+
+If we grant N free credits per signup, an attacker spawns multiple accounts (disposable emails, VPN) and burns free credits on the cheapest-margin op (OCR with Haiku, which today costs us $0.012/page). Modelled as 5 abusers per paying customer:
+
+| Free credits | Cost bleed per paid signup | Starter cheap-routed margin |
+|---|---|---|
+| 0  | $0.000 | 88.9% (baseline) |
+| 10 | $0.11  | 86.7% |
+| 25 | $0.28  | 83.3% |
+
+**Reading:** 10 free credits is survivable. 25 starts hurting Starter (−5.6pp). Mitigation isn't "remove free tier" — it's **free-tier routing policy**: free credits MUST use Gemini Flash, not Haiku. Reduces abuse cost 43×. Combined with email verification + device fingerprint check on signup, bleed drops to negligible.
+
+### 9.11 S11 Combined realistic-worst case
+
+Everything bad at once: US-heavy region (50% PayPal), 10% refund rate, 1% chargebacks, $1.50/mo support, 3× token miss on OCR, Haiku-all routing (code's default today).
+
+| Pack | Claim | **Combined worst** | Combined best |
+|---|---|---|---|
+| Starter | 88% | **38.0%** | 78.8% |
+| Creator | 83% | 64.4% | 87.3% |
+| Pro     | 78% | 67.9% | 88.2% |
+| Studio  | 73% | 66.9% | 87.8% |
+
+"Best" = India-heavy + 2% refund + 0.2% chargeback + $0.50 support + cheap routing.
+
+**Reading:** the gap between worst and best is 40+pp. The product's margin isn't a number; it's a distribution. We can't claim 88% anywhere until the routing policy is built AND Starter is re-structured AND we have 4+ weeks of telemetry showing actual user behaviour sits closer to "best" than "worst."
+
+---
+
+## 10. Decision points that need founder sign-off
+
+The scenario sweep produces choices that aren't Claude's to make:
+
+| # | Decision | Recommendation | Impact if wrong |
+|---|---|---|---|
+| D1 | Keep Starter at $5 or raise to $7? | Raise to $7; cheaper entry is vanity if it bleeds on support cost (S7). | If keep $5: must ship self-serve-only support channel or accept 58% margin. |
+| D2 | Ship Gemini + GPT-4o-mini keys on day one (Phase A0)? | Yes. Without cheap routing, chat whale (S3) pushes Pro negative. | If no: ship with strict context-token cap + no public margin claim. |
+| D3 | Expose BYOK on Pro at launch or defer to week +2? | Defer. Requires `lib/pricing.ts:60` copy change (drop "+15% infra fee" bullet until A3 lands). | If no defer: we misrepresent pricing until A3 ships. |
+| D4 | Context-token cap on chat_turn? | 20k input tokens (~12 pages). Reject larger — direct user to `summarize` or `chat-with-pdf` (priced at different credits). | If unbounded: chat whale (S3) is a $54 loss per Studio pack. |
+| D5 | Free-tier credit count + routing? | 10 free credits, force Gemini Flash for free accounts. | If Haiku-routed: 25 free credits × 5 abusers drops Starter −5.6pp. |
+| D6 | Public margin copy before A4 ships? | Change to "up to 88%". Revisit after 7 consecutive daily-rollup green days. | If flat-claim: advertising mis-statement risk. |
+
+These six map to task #87 (six fixes) and extend it with the scenario findings.
+
+---
+
+## 11. Limits of v2 analysis (carries forward from §7)
+
+- **Token estimates are still educated guesses.** Phase A1's `ai_usage` table is the only durable fix. All §9 numbers are +/- 20pp sensitivity to real token counts.
+- **No LTV / cohort modelling.** Per-pack net margin is a single-purchase number. A Pro user who buys 12 packs a year is worth 12× our support+infra cost base, which moves the per-pack numbers. Phase A4 must track monthly cohort margin, not per-pack.
+- **No viral-abuse modelling.** If a chat-whale tactic (S3) gets posted to HN/X with code samples, the 5-abusers-per-paid-signup assumption in S10 understates the hit.
+- **No price elasticity.** Raising Starter to $7 (D1) presumes conversion doesn't drop 30%; if it does, net revenue goes down despite the margin improvement.
+- **No cost of capital.** Paypal holds funds for up to 21 days on new merchants; Razorpay settles T+2 domestically, T+5 international. Not modelled — assume zero carrying cost. At scale this becomes a real line item.
