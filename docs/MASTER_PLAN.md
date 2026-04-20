@@ -1,0 +1,244 @@
+# pdfcraftai — master plan index
+
+**Date:** 2026-04-20 (consolidation pass). **Purpose:** one door into every active planning document. Anyone picking up this project reads this file first, then the specific plan for the work they're doing.
+
+---
+
+## 1. The plan, in 90 seconds
+
+**Product:** pdfcraftai.com — Next.js 14 SaaS on Hostinger. 10 AI-powered PDF tools (chat, summarize, translate, OCR, compare, rewrite, table, redact, generate, sign) charged in credits. Credits sold in four packs: Starter $5 / Creator $19 / Pro $59 / Studio $149.
+
+**Revenue pipeline we're building:**
+
+```
+ user  ─┐                                                         ┌──▶  Razorpay (INR + USD card)
+        │   /pricing  ──▶  /checkout  ──▶  PaymentProvider  ──────┤
+        │                                  (portable adapter)     └──▶  PayPal (USD card / balance)
+        │                                      │
+        │                                      ▼
+        │                            webhook signature verify
+        │                                      │
+        │                                      ▼
+        │                            grantCredits(delta=+N, idempotencyKey)
+        │                                      │
+        │                                      ▼
+        └────────▶  /app  ──▶  /api/ai/*  ──▶  withCreditSpend(op, fn)
+                                               │
+                                               ▼
+                                      lib/ai/router.ts
+                                     (cheap routing policy)
+                                               │
+                          ┌────────────────────┼────────────────────┐
+                          ▼                    ▼                    ▼
+                    Anthropic           OpenAI (cheap)        Gemini (cheapest)
+                    (Haiku/Sonnet)      (GPT-4o-mini)         (Flash)
+                          │                    │                    │
+                          └────────────────────┼────────────────────┘
+                                               ▼
+                                     ai_usage row (tokens, cost_usd_micro, latency)
+                                               │
+                                               ▼
+                                     daily margin rollup cron (A4)
+```
+
+**Target go-live:** ~2026-05-17 (AI zero-leak bar + Payments Phase 1 webhooks).
+
+**Critical unknowns still blocking:**
+1. `ANTHROPIC_API_KEY` not on Hostinger (task #72) — every AI call 503s today.
+2. Razorpay KYC in progress, PayPal business account not yet created (task #81).
+3. Six founder decisions open (see §4).
+
+---
+
+## 2. Document map — read in this order
+
+### 2.1 Bootstrap (read first, always)
+
+| Doc | Purpose | Size |
+|---|---|---|
+| [`CLAUDE.md`](../CLAUDE.md) | Session bootstrap — PAT, SSH key, repo IDs, known gotchas | 4 KB |
+| [`docs/STATUS.md`](./STATUS.md) | **Live punch list** — DONE / PENDING, owners, verification evidence | 88 KB |
+| [`docs/DEPLOYMENT_NOTES.md`](./DEPLOYMENT_NOTES.md) | Env vars, integration status, recovery playbook | 4 KB |
+
+### 2.2 Payments layer
+
+| Doc | Purpose | Size |
+|---|---|---|
+| [`docs/payments/PAYMENT_GATEWAY_PLAN.md`](./payments/PAYMENT_GATEWAY_PLAN.md) | **The** plan — portable `PaymentProvider` adapter, Razorpay + PayPal, 4-week timeline to go-live | 29 KB |
+| [`docs/payments/migration-playbook.md`](./payments/migration-playbook.md) | How we replace a gateway without migrating user data (the internal-UUID trick) | 16 KB |
+| [`docs/RAZORPAY_READINESS.md`](./RAZORPAY_READINESS.md) | KYC status, merchant underwriting notes, timeline | 12 KB |
+
+### 2.3 AI layer
+
+Read these in dependency order:
+
+| Order | Doc | Purpose | Size |
+|---|---|---|---|
+| 1 | [`docs/ai/AI_API_MASTER_PLAN.md`](./ai/AI_API_MASTER_PLAN.md) | **The** AI plan — phases A0–A5, zero-leak definition, 6-week timeline, Gemini adapter promoted to Phase A2 | 43 KB |
+| 2 | [`docs/ai/MARGIN_VERIFICATION.md`](./ai/MARGIN_VERIFICATION.md) | 11-scenario margin sweep + decision points needing founder sign-off (§10) | 22 KB |
+| 3 | [`docs/ai/margin_scenarios.py`](./ai/margin_scenarios.py) | Deterministic model behind the margin numbers — reproducible | 14 KB |
+| 4 | [`docs/ai/PROVIDER_STRATEGY.md`](./ai/PROVIDER_STRATEGY.md) | Business case for multi-provider + BYOK | 22 KB |
+| 5 | [`docs/ai/MODELS_AND_MULTI_KEY.md`](./ai/MODELS_AND_MULTI_KEY.md) | Per-op routing matrix (which model handles which tool) | 28 KB |
+| 6 | [`docs/ai/BYOK_DECISION_MATRIX.md`](./ai/BYOK_DECISION_MATRIX.md) | 7-step decision flow for every request: platform key vs user key | 29 KB |
+| 7 | [`docs/ai/REVENUE_LEAK_AUDIT.md`](./ai/REVENUE_LEAK_AUDIT.md) | 28 ways money can leak + mitigations, mapped to phase | 47 KB |
+| 8 | [`docs/ai/architecture.md`](./ai/architecture.md) | Existing system design (pre-BYOK; still authoritative on adapters) | 90 KB |
+
+### 2.4 Verification / ops
+
+| Doc | Purpose | Size |
+|---|---|---|
+| [`docs/TEST_PLAN.md`](./TEST_PLAN.md) | Prioritized E2E checklist (P0 auth → P4 SEO) | 8 KB |
+| [`docs/E2E_SMOKE_2026-04-20.md`](./E2E_SMOKE_2026-04-20.md) | Latest production sweep notes | 22 KB |
+| [`docs/FEATURE_TRACKER.md`](./FEATURE_TRACKER.md) | What's built, what's stubbed | 12 KB |
+| [`docs/security/`](./security/) | CSP, CSRF, rate-limiting notes | varies |
+
+---
+
+## 3. Architecture in one picture — the portability bar
+
+Everything below is tested against one rule: **adding a new provider (payment or AI) must touch ≤ 7 files, zero changes in route handlers, zero changes in UI.**
+
+```
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  Routes (app/api/*)                                                 │
+ │  auth → guard → withPayment / withCreditSpend → provider call       │
+ └──────────┬──────────────────────────────────────┬───────────────────┘
+            ▼                                      ▼
+ ┌────────────────────┐                 ┌────────────────────────────┐
+ │ lib/payments/      │                 │ lib/ai/                    │
+ │   registry.ts      │                 │   registry.ts              │
+ │   providers.ts     │                 │   router.ts   (new, A2)    │
+ │   webhook-handler  │                 │   credits.ts (spend/refund)│
+ └────────┬───────────┘                 │   byok/keystore.ts (A3)    │
+          ▼                             └────────┬───────────────────┘
+ ┌──────────────────────┐                        ▼
+ │ PaymentProvider IFC  │               ┌─────────────────────────┐
+ │   createCheckout     │               │ AIProvider interface    │
+ │   verifyWebhook      │               │   chat / streamChat     │
+ │   refund / cancel    │               │   per-call apiKey arg   │
+ └────────┬─────────────┘               └─────────┬───────────────┘
+          ▼                                       ▼
+ ┌──────────────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────┐  ┌──────────┐
+ │ razorpay.ts      │  │ paypal.ts    │  │ anthropic   │  │ openai   │  │ gemini   │
+ │ (shipped)        │  │ (shipped)    │  │ (shipped)   │  │ (shipped)│  │ (A2)     │
+ └──────────────────┘  └──────────────┘  └─────────────┘  └──────────┘  └──────────┘
+                              │                 │                │            │
+                              ▼                 ▼                ▼            ▼
+                       Normalized webhook event / ChatChunk stream (no SDK types leak past this line)
+                              │
+                              ▼
+                    credit_ledger (+/- delta, idempotencyKey)
+                    ai_usage (tokens, cost_usd_micro, key_source)
+```
+
+**Why this shape survives a gateway change:**
+- Internal payment UUID (`internalPaymentId`) is the portability anchor. Razorpay's `order_id` and PayPal's `resource_id` are stored for lookup, but the ledger uses the internal ID. Migrating gateways is: new adapter, cutover checkout routing. Zero existing-user data changes.
+- `AIProviderId` is an open string type. Adding Gemini = 7 files (per master plan §9). Adding Mistral after that = same 7 files.
+
+---
+
+## 4. Open decisions requiring founder sign-off
+
+These six are blocking the public pricing copy and the A2/A3 builds:
+
+| # | Decision | Recommendation | Blocks |
+|---|---|---|---|
+| D1 | Keep Starter pack at $5 or raise to $7? | **Raise to $7.** Scenario S7 shows $5 can't absorb $1.50/mo support cost — margin collapses to 59%. | Pricing page copy; Payments Phase 1 |
+| D2 | Ship Anthropic + OpenAI + Gemini keys on day one? | **Yes, all three.** Chat-whale scenario (S3) pushes Pro to −12.5% without cheap routing. Cost to provision: $0. | Phase A0 |
+| D3 | BYOK on Pro at launch or defer to week +2? | **Defer.** Remove "+15% infra fee" bullet from `lib/pricing.ts:60` until A3 lands. | `lib/pricing.ts` edit; Payments Phase 1 |
+| D4 | Context-token cap on `chat_turn`? | **20k input tokens (~12 pages).** Larger → redirect to `summarize`. | Phase A2 |
+| D5 | Free-tier credit count + routing? | **10 credits, force Gemini Flash.** Reduces abuse cost 43×. | Phase A2 |
+| D6 | Public margin copy before A4 green? | **"Up to 88%" wording.** Revisit after 7 consecutive daily-rollup green days. | Pricing page deploy |
+
+All six are tracked in task [#87](#) with individual action items.
+
+---
+
+## 5. Phase timeline — one chart
+
+Assuming D1–D6 resolve this week and Razorpay KYC clears by 2026-04-25:
+
+| Week | Phase | Output |
+|---|---|---|
+| W0 (now — 04-20) | Planning complete | This doc + AI_API_MASTER_PLAN + PAYMENT_GATEWAY_PLAN + MARGIN_VERIFICATION — all committed |
+| W1 (04-21 — 04-27) | Payments Phase 0 + AI Phase A0 | KYC docs, legal pages, GSTIN, PayPal business; ANTHROPIC/OPENAI/GEMINI keys on Hostinger; `margin:` field + pricing copy fixed |
+| W2 (04-28 — 05-04) | Payments Phase 1 + AI Phase A1 | Webhook routes + checkout UI with per-pack processor policy; `ai_usage` table + `withCreditSpend`; spend-race fix |
+| W3 (05-05 — 05-11) | AI Phase A2 | Rate limits + body guards + **context-token cap** + **Gemini adapter** + **router.ts with cheap routing** |
+| W4 (05-12 — 05-17) | AI Phase A3 (BYOK) | `user_api_keys` table, `lib/ai/byok/keystore.ts`, `/app/api-keys` UI, Pro/Studio paths |
+| W5 (05-18 — 05-21) | AI Phase A4 | Daily margin rollup cron, `/admin/ai-spend` page, per-provider cost dashboard |
+| W5+ | GA readiness | 7 consecutive green days on margin rollup before "up to" copy becomes flat claim |
+
+**Zero-leak bar:** hit when every row in §12 of AI_API_MASTER_PLAN.md's definition-of-done turns green. Planned for 2026-05-21.
+
+---
+
+## 6. Task list pointer
+
+Active tasks tracked in the cowork task manager (not a repo file — it's the shared state):
+
+| Task # | Owns | Status |
+|---|---|---|
+| #72 | Add `ANTHROPIC_API_KEY` to Hostinger env | PENDING (SEV-1) |
+| #80 | Payments Phase 1: webhooks + checkout + shared handleWebhook | PENDING, blocked by #81, #82 |
+| #81 | Phase 0 legal: KYC + GSTIN + LUT + PayPal business + legal pages | PENDING |
+| #82 | Answer PAYMENT_GATEWAY_PLAN.md §10 Q1–Q7 | PENDING |
+| #83 | AI Phase A1: `ai_usage` + `withCreditSpend` + fix spend race | PENDING, blocked by #72 |
+| #84 | AI Phase A2: rate limits + body guards + **Gemini adapter** + **router.ts** + **context-token cap** + **per-pack checkout** | PENDING, blocked by #83 |
+| #85 | AI Phase A3: BYOK (keystore + router + `/api-keys` UI) | PENDING, blocked by #80, #84 |
+| #86 | AI Phase A4: margin reporting | PENDING, blocked by #83 |
+| #87 | Close margin-leak gaps (6 code fixes + 6 founder decisions) | PENDING, blocks public pricing copy |
+
+---
+
+## 7. What "done" looks like
+
+The site is ready to take real revenue when **all eight** of these are green simultaneously:
+
+1. `ANTHROPIC_API_KEY` + `OPENAI_API_KEY` + `GEMINI_API_KEY` present on Hostinger; `/api/health` reports `ai.configured = true`.
+2. Razorpay merchant live + PayPal business account approved; checkout UI shows per-pack gateway routing.
+3. At least one end-to-end purchase → credit grant → AI call → `ai_usage` row, verified on the test account.
+4. `SUM(credit_ledger.delta) = credits.balance` invariant passes for 100% of users on nightly check.
+5. Phase A2 context-token cap enforced (try to send 50k tokens to `chat_turn` → 413).
+6. `lib/ai/router.ts` routes OCR and translate to Gemini, chat to GPT-4o-mini, generate/sign to Sonnet (verified by `ai_usage.model` distribution on staging).
+7. Daily margin rollup has run 7 consecutive days without breaching the per-op floor set in `PROVIDER_STRATEGY.md`.
+8. Public pricing page displays "up to 88% / 83% / 78% / 73%" (never flat-claimed), and Starter either reads $7 or has self-serve-only support copy.
+
+Until all eight are green, the site is **not** ready to advertise the full margin claim or take high-volume traffic.
+
+---
+
+## 8. Recent commits for the paper trail
+
+| SHA | Title | Files |
+|---|---|---|
+| `f4751af` | docs(ai): expand margin verification to 11 scenarios + wire gaps into master plan | AI_API_MASTER_PLAN, MARGIN_VERIFICATION, margin_scenarios.py |
+| `2264712` | docs(ai): verify claimed margins against provider + processor costs | MARGIN_VERIFICATION (initial) |
+| `24cf61c` | docs(ai): master plan for AI API + BYOK — zero-leak, portable, shippable | AI_API_MASTER_PLAN (initial) |
+| `2002251` | docs(payments): master plan for Razorpay + PayPal, portable for future providers | PAYMENT_GATEWAY_PLAN |
+| `9e5bbda` | docs(ai): correct revenue leak audit — Razorpay + PayPal, not Stripe | REVENUE_LEAK_AUDIT |
+| `7bf191c` | docs(ai): add revenue leak audit — every penny accounted for | REVENUE_LEAK_AUDIT (initial) |
+| `fa6d998` | docs(ai): add BYOK decision matrix — every path pinned | BYOK_DECISION_MATRIX |
+
+---
+
+## 9. How to use this doc
+
+**Starting a new session:**
+1. Read `CLAUDE.md` (credentials + infra IDs).
+2. Read `docs/STATUS.md` (live punch list).
+3. Read this file.
+4. Read the specific plan for the work you're doing.
+
+**Making a planning change:**
+1. Edit the relevant plan doc.
+2. Update this file if the change affects the phase timeline, the decision list, or the "done" definition.
+3. Commit both together so future sessions see a consistent picture.
+
+**Presenting to founders:**
+- §1, §4, §5, §7 are the four sections most suitable for a 5-minute standup.
+- §3 is the architecture diagram if asked "is this portable?"
+- §4 is the decision list that needs their sign-off to unblock the team.
+
+---
+
+*This file is the durable consolidation of every planning decision made in the 2026-04-20 planning sprint. Everything in it is traceable to a commit in `main`; nothing is aspirational.*
