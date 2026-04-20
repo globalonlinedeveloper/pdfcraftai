@@ -170,6 +170,32 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## Zero-issue production readiness sweep (2026-04-20, post-TBT-fix)
+
+Comprehensive live audit after commit `0a5932c9cadf` (the TBT pre-hydration fix) went live. Method: direct `curl` probes against the Cloudflare-proxied apex. **Result: one open SEV-1 (AI provider key in hPanel, blocked on user), everything else clean.**
+
+| Area | Probe | Result |
+|---|---|---|
+| Security headers | `curl -sI /` | Full CSP, HSTS `max-age=63072000`, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy camera/mic/geo denied + payment allowlist — **all present** |
+| Canonical tags | 7 public pages | All public pages carry `<link rel="canonical">` to their apex URL. `/login` correctly omits canonical (page is `robots: noindex, nofollow`) |
+| API contracts | 10 `/api/ai/*` endpoints | All 10 return `POST=401 not_authenticated`, `GET=405` — contracts match |
+| Auth endpoints | 3 NextAuth routes | `/api/auth/session` 200 (null body for anon), `/api/auth/providers` 200, `/api/auth/csrf` 200 |
+| Sitemap | `/sitemap.xml` | 63 URLs listed, application/xml |
+| Robots | `/robots.txt` | Allow: /, Disallow: /api/ /app/ /admin/ /_next/, Sitemap + Host advertised, Cloudflare managed content signals block AI training crawlers (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended, Bytespider, CCBot, etc.) |
+| 404 behavior | `/this-does-not-exist-xyz` | Returns 404 (not a 200 soft-404) |
+| Legal pages | 7 paths | /privacy /terms /dpa /gdpr /security /about /contact — **all 200** |
+| SEO landing pages | 5 paths | /merge-pdf /split-pdf /compress-pdf /pdf-to-word /translate-pdf — **all 200** |
+| Free tool runners | 8 IDs in `lib/tools.ts` | /tool/merge /tool/split /tool/compress /tool/rotate /tool/page-numbers /tool/to-pdf /tool/protect /tool/pdf-to-office — **all 200**. Non-existent IDs (/tool/reorder, /tool/watermark, /tool/unlock) correctly 404 — those features are merged into parent tools (rotate+reorder, page-numbers+watermark, protect+unlock) |
+| AI tool runners | 10 IDs | /tool/ai-summarize /tool/ai-translate /tool/ai-ocr /tool/ai-chat /tool/ai-compare /tool/ai-rewrite /tool/ai-table /tool/ai-redact /tool/ai-generate /tool/ai-sign — **all 200** |
+| Marketing surfaces | 10 paths | /tools /agent /macros /studio /bulk /changelog /careers /status /api /blog — **all 200** |
+| Redirects | /signup → /register | Platform redirect (`redirects()` in `next.config.mjs`) — 307 with `Location: /register` header intact |
+| Auth gate | /app/* paths | 5 routes (/app/dashboard /app/files /app/billing /app/settings /app/account) all return 307 → `/login?callbackUrl=...` with callback properly URL-encoded. /app/nonexistent also redirects (middleware catches before 404 render) |
+| Health probe | 5× `/api/health` | All 5 return `ok: true, commit: 0a5932c9cadf, db.ok: true, latencyMs: 1–36ms` (consistent SHA = single-worker state, no stale workers round-robining) |
+
+**Single remaining open SEV-1:** `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` missing from Hostinger runtime env — all 10 AI routes currently return 503 `ai_provider_not_configured` when reached by an authenticated caller. Blocked on user (hPanel → Websites → pdfcraftai.com → Advanced → Node.js → Environment Variables → Save & Redeploy). Tracked below in Pending (needs the user).
+
+---
+
 ## Pending (needs the user — Claude cannot complete autonomously)
 
 ### Email authentication (only after the user picks an email host)
