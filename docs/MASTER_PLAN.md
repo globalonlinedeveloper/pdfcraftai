@@ -252,6 +252,8 @@ Until all eight are green, the site is **not** ready to advertise the full margi
 
 | SHA | Title | Files |
 |---|---|---|
+| `fbe5fe9` | docs: v3 gap-close — pricing.ts docstring + FX drag model + PAYMENT_GATEWAY supersede | pricing.ts, margin_scenarios.py, MARGIN_VERIFICATION, PAYMENT_GATEWAY_PLAN |
+| `a5d4a71` | docs: MASTER_PLAN paper trail — record 03847ef + 5f52166 commit SHAs | MASTER_PLAN |
 | `03847ef` | docs: v3 refresh — MARGIN + REVENUE_LEAK + AI_API_MASTER_PLAN for Paddle MoR era | MARGIN_VERIFICATION, REVENUE_LEAK_AUDIT, AI_API_MASTER_PLAN, margin_scenarios.py, STATUS |
 | `5f52166` | docs: MASTER_PLAN paper trail — record 89e9775 commit SHA | MASTER_PLAN |
 | `89e9775` | docs: Phase 0 foundation — MoR eval + geo policy + India tax & GST | MOR_EVALUATION, GEO_LAUNCH_POLICY, india/TAX_MODEL, india/GST_SETUP, MASTER_PLAN, STATUS |
