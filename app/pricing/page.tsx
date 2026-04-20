@@ -75,7 +75,7 @@ export default function PricingPage() {
               <div className="eyebrow" style={{ color: "var(--accent)", marginBottom: 8 }}>
                 NEW · MONTHLY PLUS
               </div>
-              <h3 style={{ fontSize: 22, marginBottom: 4 }}>$9/mo · 200 credits every month</h3>
+              <h2 style={{ fontSize: 22, marginBottom: 4 }}>$9/mo · 200 credits every month</h2>
               <p className="muted" style={{ fontSize: 14 }}>
                 Predictable monthly AI quota. Unused credits roll over up to 400. Cancel anytime.
               </p>
@@ -124,7 +124,7 @@ export default function PricingPage() {
                       top: -10,
                       right: 16,
                       background: "var(--accent)",
-                      color: "white",
+                      color: "var(--accent-fg)",
                       letterSpacing: "0.08em",
                     }}
                   >
@@ -195,7 +195,7 @@ export default function PricingPage() {
               <I.Key size={24} />
             </div>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <h3 style={{ fontSize: 18, marginBottom: 6 }}>Bring Your Own Key</h3>
+              <h2 style={{ fontSize: 18, marginBottom: 6 }}>Bring Your Own Key</h2>
               <p className="muted" style={{ fontSize: 14, lineHeight: 1.55 }}>
                 Plug in your OpenAI, Anthropic, or Google key. We handle RAG, chunking, retries,
                 caching, and audit logs — a flat <strong style={{ color: "var(--fg)" }}>15% infra fee</strong> on

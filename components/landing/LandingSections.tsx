@@ -589,7 +589,7 @@ export function Audience() {
                 >
                   <Ic size={16} />
                 </div>
-                <h4 style={{ marginBottom: 8 }}>{a.t}</h4>
+                <h3 style={{ marginBottom: 8, fontSize: 18 }}>{a.t}</h3>
                 <p className="muted" style={{ fontSize: 13, margin: 0 }}>
                   {a.d}
                 </p>
