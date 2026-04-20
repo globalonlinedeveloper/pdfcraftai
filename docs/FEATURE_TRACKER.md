@@ -3,7 +3,7 @@
 _Structured matrix of every feature area in the product: what's Done, what's Partial, what's Pending._
 _Pair this with `STATUS.md` (operational punch list) — this file answers "does the site have X?", STATUS answers "who owns the next step on X?"._
 
-**Last updated:** 2026-04-20 (post rotate-and-reorder upgrade)
+**Last updated:** 2026-04-20 (post password-reset redemption flow)
 
 ---
 
@@ -44,8 +44,8 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | Register | `/register` | Done | Same shell. |
 | Alt signup slug | `/signup` | Done | Same. |
 | Forgot password form | `/forgot-password` | Done | POSTs to `/api/auth/forgot-password`; always-200 anti-enumeration. |
-| Reset-link redemption | `/reset-password/[token]` | Pending | No reset flow yet — needs mail provider. |
-| Magic-link sign-in | — | Pending | Same blocker. |
+| Reset-link redemption | `/reset-password/[token]` | Done (mail blocked) | Full flow shipped 2026-04-20: dynamic page validates the 64-hex token server-side, `ResetPasswordForm` posts to `/api/auth/reset-password`, success → `/login?reset=1` flash. Schema (`password_reset_tokens`), migration, `lib/password-reset.ts` mint/lookup/consume helpers, race-safe single-use UPDATE, sibling-token invalidation, 30-min TTL, hash-at-rest (sha256), per-IP 5/min rate limit, middleware redirect for already-signed-in users. Reset URLs currently log to the Hostinger Node process; one drop-in away from a real provider. |
+| Magic-link sign-in | — | Pending | Blocked on email provider choice. |
 | TopNav session awareness | n/a | Done | Avatar + user menu + mobile hamburger. Click-outside + Escape close. |
 | Middleware guard | `middleware.ts` via `auth.config.ts` | Done | Redirects authed users off `/login`, `/register`, `/signup`, `/forgot-password`. |
 | Sign-in click-test end-to-end | n/a | Pending | Needs a human to complete the Google account round-trip. |
@@ -54,7 +54,8 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 
 | Endpoint | Status | Notes |
 |---|---|---|
-| `POST /api/auth/forgot-password` | Done (stub) | Zod-validated, per-email 60s rate limit, identical ack on success/miss, logs for later wiring. |
+| `POST /api/auth/forgot-password` | Done | Zod-validated, per-email 60s rate limit, identical ack on success/miss, **now mints real `password_reset_tokens` rows and logs the reset URL** until a mail provider lands. |
+| `POST /api/auth/reset-password` | Done | New 2026-04-20. Zod 64-hex token + 8–128 char password; per-IP 5/min bucket; race-safe single-use consume via `lib/password-reset.ts`; 409 (enum-safe) on expired/consumed/missing; 429 on rate limit. |
 | `POST /api/contact` | Done (stub) | Zod, in-memory rate limit, logs — swaps to SendGrid/Postmark later. |
 | `GET /api/auth/providers` | Done | Exposes Google with apex callback URL. |
 | Google SSO callback | Done | `trustHost: true` fixes Cloudflare → Next.js host trust. |

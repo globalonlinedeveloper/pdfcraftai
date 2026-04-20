@@ -85,3 +85,49 @@ export const verificationTokens = mysqlTable(
     pk: primaryKey({ columns: [t.identifier, t.token] }),
   })
 );
+
+// Password reset tokens — single-use, 30-minute TTL, hashed at rest.
+//
+// Flow:
+//   1. /api/auth/forgot-password mints a 32-byte random token, stores its
+//      SHA-256 digest in `tokenHash`, and returns the raw token in the
+//      reset URL that gets mailed (or logged, until mail is wired).
+//   2. /reset-password/[rawToken] looks the row up by the hash of the
+//      path param, confirms `consumedAt IS NULL` and `expiresAt > now`.
+//   3. /api/auth/reset-password POSTs the raw token + new password;
+//      the server re-hashes, matches, writes the new passwordHash,
+//      marks `consumedAt` = now (single-use), and invalidates any
+//      other outstanding tokens for the same user in the same txn.
+//
+// Why hash at rest: tokens are bearer credentials — a DB dump that
+// leaked raw tokens would hand an attacker every live reset link.
+// Storing the SHA-256 is identical in search cost (`WHERE token_hash = ?`)
+// but renders a dump useless.
+//
+// Why not reuse `verificationTokens`: that table is shaped for Auth.js'
+// email-provider flow (composite PK on identifier + token, no user FK).
+// Password resets want a user FK so we can cascade-delete and enforce
+// "one outstanding reset per user at a time" via the index.
+export const passwordResetTokens = mysqlTable(
+  "password_reset_tokens",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // SHA-256 hex of the raw token (64 chars). Unique so a probe query
+    // is a direct index hit, and so we never accidentally insert two
+    // rows with the same hash (cryptographically implausible but cheap
+    // to enforce).
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
+    // Set at redemption time. NULL = unused. Kept (not deleted) so we
+    // have an audit trail of which token hash belonged to which reset.
+    consumedAt: timestamp("consumed_at", { fsp: 3 }),
+    createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("password_reset_tokens_user_idx").on(t.userId),
+    expiresIdx: index("password_reset_tokens_expires_idx").on(t.expiresAt),
+  })
+);

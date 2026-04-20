@@ -32,8 +32,10 @@ export const authConfig = {
       if (isAppRoute) return isLoggedIn;
 
       // Auth pages redirect signed-in users to the dashboard.
-      // This covers /login, /register, /signup (alias), and /forgot-password.
-      if (AUTH_PAGES.includes(pathname) && isLoggedIn) {
+      // This covers /login, /register, /signup (alias), /forgot-password,
+      // and every /reset-password/<token> dynamic child.
+      const isResetChild = pathname.startsWith("/reset-password/");
+      if ((AUTH_PAGES.includes(pathname) || isResetChild) && isLoggedIn) {
         return Response.redirect(new URL("/app/dashboard", request.nextUrl));
       }
 

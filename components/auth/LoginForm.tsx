@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import { loginAction, type LoginState } from "@/lib/auth-actions";
 import { signIn } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
@@ -28,9 +29,39 @@ function SubmitButton() {
 export function LoginForm() {
   const [state, formAction] = useFormState(loginAction, initial);
   const [showPassword, setShowPassword] = useState(false);
+  const search = useSearchParams();
+  // Flash messages arrive as short query strings:
+  //   ?reset=1      → password successfully reset, tell them to sign in
+  //   ?verified=1   → reserved for future email-verify flow
+  const resetFlash = search?.get("reset") === "1";
 
   return (
     <>
+      {resetFlash && (
+        <div
+          role="status"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 8,
+            border:
+              "1px solid color-mix(in oklab, var(--green, #10b981) 30%, transparent)",
+            background:
+              "color-mix(in oklab, var(--green, #10b981) 10%, transparent)",
+            color: "var(--green, #10b981)",
+            fontSize: 13,
+            marginBottom: 14,
+            display: "flex",
+            gap: 10,
+            alignItems: "flex-start",
+          }}
+        >
+          <I.Check size={14} />
+          <span>
+            Password updated. Sign in with your new password to continue.
+          </span>
+        </div>
+      )}
+
       <button
         type="button"
         className="btn btn-outline"

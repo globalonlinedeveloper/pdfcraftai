@@ -3,7 +3,7 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-04-20 (post Help Center depth + a11y-contrast-and-headings pass)
+**Last updated:** 2026-04-20 (post password-reset redemption flow)
 
 ---
 
@@ -94,6 +94,20 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 - [x] **`/api/contact` route** — Zod-validated, in-memory rate-limited, logs submissions until SendGrid/Postmark lands. (2026-04-20)
 - [x] **`/api/auth/forgot-password` route** — acks identically on success/miss (anti-enumeration), per-email rate limited, logs for reset-link wiring. `ForgotPasswordForm` now POSTs here instead of the local `setTimeout` mock. (2026-04-20)
+
+### Password reset redemption flow (end-to-end)
+
+- [x] **Password reset-link redemption shipped end-to-end.** Completes the forgot-password → email-link → new-password loop that was previously stubbed.
+  - **Schema (`db/schema/auth.ts`)** — new `password_reset_tokens` table: `id` (uuid), `user_id` (FK → `users.id` ON DELETE cascade), `token_hash` (sha256-hex, unique), `expires_at` (ts(3)), `consumed_at` (ts(3), nullable), `created_at` (ts(3), default now). Two indexes: `user_id`, `expires_at`.
+  - **Migration (`db/migrations/0001_password_reset_tokens.sql` + `meta/_journal.json`)** — drizzle-kit format, statement-breakpoint-separated, journaled so `pnpm db:push` / `pnpm db:generate` pick it up; also runnable directly via `mysql` CLI on Hostinger as a manual fallback.
+  - **Helper (`lib/password-reset.ts`)** — `mintPasswordResetToken(email)` (silent no-op on unknown email, 32-byte random hex raw token, 30-minute TTL, stores only sha256 hash at rest), `lookupPasswordResetToken(raw)` (cheap-rejects non-64-hex before any DB hit), `consumePasswordResetToken(raw, newPassword)` (race-safe single-use via guarded `UPDATE ... WHERE id=? AND consumed_at IS NULL`, bcrypt-10 the new password, then invalidates sibling outstanding tokens for the same user so reset-twice can't leave a live second link).
+  - **Forgot endpoint (`app/api/auth/forgot-password/route.ts`)** — rewritten: still anti-enumeration 200 on valid payload, still 1/min per-email rate-limited; now mints the token and logs the full reset URL + email + expiry to the Node process log (Hostinger tail) until a transactional mail provider is wired. `NEXT_PUBLIC_SITE_URL` override respected; falls back to the request origin.
+  - **Reset endpoint (`app/api/auth/reset-password/route.ts`)** — new POST. Zod validates 64-hex token + 8–128-char password. Per-IP bucket rate limit (5/min) before the DB. Returns 200 on success, 400 on bad payload, 409 on expired/consumed/missing, 429 on rate limit, 500 on DB error. Same "invalid or expired" message for 409 variants (enumeration-safe).
+  - **Dynamic page (`app/reset-password/[token]/page.tsx`)** — async server component, `dynamic = "force-dynamic"`, verifies token server-side on mount. Invalid → renders `AuthShell` with "This reset link won't work" + `<I.Info>` warning card + CTA back to `/forgot-password`. Valid → renders `<ResetPasswordForm token=... />` under "Choose a new password".
+  - **Client form (`components/auth/ResetPasswordForm.tsx`)** — twin `PasswordField`s (new + confirm) with show/hide toggles, live `PasswordStrength` indicator, disabled-until (length ≥ 8, matches confirm, strength ≥ 2), inline errors, `router.replace("/login?reset=1")` on 200 (replace, not push — keeps the reset URL out of history).
+  - **Middleware (`auth.config.ts`)** — `/reset-password/<token>` added to the "auth page" redirect guard so already-signed-in users bounce to `/app/dashboard` instead of redeeming a token they don't need.
+  - **Login flash (`components/auth/LoginForm.tsx`)** — `useSearchParams` reads `?reset=1`; shows a green `<I.Check>` banner ("Password updated. Sign in with your new password to continue.") above the Google SSO button.
+  - **Typechecked clean** (`./node_modules/.bin/tsc --noEmit` → `EXIT=0`). Swapping in Resend/Postmark once the mailbox is live is a single drop-in around the `console.log` in the forgot endpoint. (2026-04-20)
 
 ### Search engines
 
