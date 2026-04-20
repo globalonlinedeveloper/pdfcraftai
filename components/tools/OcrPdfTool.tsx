@@ -34,6 +34,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PDFDocument } from "pdf-lib";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
@@ -62,6 +63,7 @@ type OcrResult = {
 };
 
 export function OcrPdfTool() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   // Peek state: null while loading, number on success, false on failure.
   // We render "Reading…" during the peek so the CTA can't fire on a
@@ -208,6 +210,15 @@ export function OcrPdfTool() {
               ? body.detail
               : "OCR completed, but the result couldn't be saved to your files. Copy it below before leaving.",
         });
+        return;
+      }
+
+      // Anonymous user → bounce to /login with a callback. See
+      // SummarizePdfTool for the rationale (dead-end error card).
+      if (res.status === 401) {
+        router.push(
+          "/login?callbackUrl=" + encodeURIComponent("/tool/ai-ocr")
+        );
         return;
       }
 

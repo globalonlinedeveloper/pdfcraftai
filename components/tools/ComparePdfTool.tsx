@@ -18,6 +18,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -41,6 +42,7 @@ type CompareResult = {
 };
 
 export function ComparePdfTool() {
+  const router = useRouter();
   const [pdfA, setPdfA] = useState<File | null>(null);
   const [pdfB, setPdfB] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -135,6 +137,15 @@ export function ComparePdfTool() {
               ? body.detail
               : "Comparison generated, but couldn't be saved to your files. Copy it below before leaving.",
         });
+        return;
+      }
+
+      // Anonymous user → bounce to /login with a callback. See
+      // SummarizePdfTool for the rationale (dead-end error card).
+      if (res.status === 401) {
+        router.push(
+          "/login?callbackUrl=" + encodeURIComponent("/tool/ai-compare")
+        );
         return;
       }
 

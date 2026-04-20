@@ -19,6 +19,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -62,6 +63,7 @@ type TranslationResult = {
 };
 
 export function TranslatePdfTool() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   // Default to Spanish — common target for English source docs and it's
   // the second-most-searched "translate PDF to X" query.
@@ -285,6 +287,15 @@ export function TranslatePdfTool() {
               ? body.detail
               : "Translation generated, but couldn't be saved to your files. Copy it below before leaving.",
         });
+        return;
+      }
+
+      // Anonymous user → bounce to /login with a callback. See
+      // SummarizePdfTool for the rationale (dead-end error card).
+      if (res.status === 401) {
+        router.push(
+          "/login?callbackUrl=" + encodeURIComponent("/tool/ai-translate")
+        );
         return;
       }
 

@@ -27,6 +27,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -79,6 +80,7 @@ const DEPTH_OPTIONS: ReadonlyArray<{
 ];
 
 export function SummarizePdfTool() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [depth, setDepth] = useState<Depth>("standard");
   const [busy, setBusy] = useState(false);
@@ -253,6 +255,17 @@ export function SummarizePdfTool() {
               ? body.detail
               : "Summary generated, but couldn't be saved to your files. Copy it below before leaving.",
         });
+        return;
+      }
+
+      // Anonymous user → bounce to /login with a callback that brings
+      // them right back here. We DO NOT show the bare error message
+      // because the user has nothing to do with it: there's no Sign-in
+      // CTA in the error card, so the dead-end is confusing.
+      if (res.status === 401) {
+        router.push(
+          "/login?callbackUrl=" + encodeURIComponent("/tool/ai-summarize")
+        );
         return;
       }
 
