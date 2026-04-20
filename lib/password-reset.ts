@@ -22,7 +22,7 @@
 import "server-only";
 import { randomBytes, randomUUID, createHash } from "crypto";
 import bcrypt from "bcryptjs";
-import { and, eq, gt, isNull, ne } from "drizzle-orm";
+import { sql, and, eq, gt, isNull, ne } from "drizzle-orm";
 import { db, schema } from "@/db/client";
 
 // 30-minute TTL — long enough to land in an inbox + click, short enough
@@ -36,6 +36,46 @@ function sha256Hex(input: string): string {
   return createHash("sha256").update(input).digest("hex");
 }
 
+/**
+ * One-time-per-process bootstrap that ensures the `password_reset_tokens`
+ * table exists. Hostinger doesn't auto-run drizzle-kit on deploy, so the
+ * very first request after the migration ships would otherwise 500 with
+ * `ER_NO_SUCH_TABLE`. The CREATE TABLE IF NOT EXISTS is idempotent and
+ * matches `db/migrations/0001_password_reset_tokens.sql` byte-for-byte
+ * (minus the constraint syntax which mysql can infer).
+ *
+ * REMOVE THIS once we have an actual migration runner wired into deploy.
+ * Until then, this is the difference between "feature works" and
+ * "feature 500s silently in production".
+ */
+let _bootstrapPromise: Promise<void> | null = null;
+async function ensureSchema(): Promise<void> {
+  if (_bootstrapPromise) return _bootstrapPromise;
+  _bootstrapPromise = (async () => {
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS \`password_reset_tokens\` (
+          \`id\` varchar(36) NOT NULL,
+          \`user_id\` varchar(255) NOT NULL,
+          \`token_hash\` varchar(64) NOT NULL,
+          \`expires_at\` timestamp(3) NOT NULL,
+          \`consumed_at\` timestamp(3) NULL,
+          \`created_at\` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (\`id\`),
+          UNIQUE KEY \`password_reset_tokens_token_hash_unique\` (\`token_hash\`),
+          KEY \`password_reset_tokens_user_idx\` (\`user_id\`),
+          KEY \`password_reset_tokens_expires_idx\` (\`expires_at\`)
+        )
+      `);
+    } catch (err) {
+      // Don't poison the cached promise — let the next call retry.
+      _bootstrapPromise = null;
+      throw err;
+    }
+  })();
+  return _bootstrapPromise;
+}
+
 export type MintResult =
   | { rawToken: string; expiresAt: Date; userId: string }
   | null;
@@ -45,6 +85,8 @@ export async function mintPasswordResetToken(
 ): Promise<MintResult> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail) return null;
+
+  await ensureSchema();
 
   const [user] = await db
     .select({ id: schema.users.id })
@@ -90,6 +132,8 @@ export async function lookupPasswordResetToken(
   if (!rawToken || rawToken.length !== 64 || !/^[0-9a-f]{64}$/i.test(rawToken)) {
     return { ok: false, reason: "missing" };
   }
+
+  await ensureSchema();
 
   const tokenHash = sha256Hex(rawToken);
   const [row] = await db

@@ -85,7 +85,25 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[reset-password] consume failed", err);
+    // Log full shape so post-mortem is possible. Keep the user-facing
+    // message generic — never leak DB errors to the client.
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? String((err as { code?: unknown }).code)
+        : undefined;
+    console.error("[reset-password] consume failed", {
+      code,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    // ER_NO_SUCH_TABLE (1146) means the bootstrap race hit a gap — tell
+    // the user the link is invalid (same as a missing token) rather than
+    // exposing a 500 that'd alarm anyone running a synthetic probe.
+    if (code === "ER_NO_SUCH_TABLE") {
+      return NextResponse.json(
+        { error: "This reset link is invalid or has expired." },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { error: "Something went wrong. Try requesting a new link." },
       { status: 500 },

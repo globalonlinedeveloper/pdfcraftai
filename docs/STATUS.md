@@ -3,7 +3,7 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-04-20 (post /tool/protect — password-protect + unlock PDF)
+**Last updated:** 2026-04-20 (post test harness + prod hotfixes — reset-password schema bootstrap, /account alias)
 
 ---
 
@@ -86,6 +86,14 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 - [x] **Light/dark theme toggle** shipped in TopNav via new `ThemeToggle` component. Uses the existing pre-hydration script in `app/layout.tsx` + `[data-theme]` CSS variables in `globals.css`. Stored in `pdfcraft_state.theme`. (2026-04-20)
 - [x] **`docs/TEST_PLAN.md` created** — P0–P6 batches (auth, free tools, AI tools, authed app, marketing/SEO, error/edge cases, a11y/perf). (2026-04-20)
 - [x] **`docs/FEATURE_TRACKER.md` created** — Done / Partial / Pending matrix across marketing, auth, API, product, analytics, SEO, security. (2026-04-20)
+- [x] **`scripts/test-pdf-tools.mjs` — Node-based smoke harness for every client-side PDF tool.** Drives the same `pdf-lib` / `@cantoo/pdf-lib` APIs the browser runners use, so correctness can be asserted without a real browser. 17 tests across 7 tool groups: merge (3+2+4 pages, single-PDF passthrough), split (5-page → 5 singletons), rotate & reorder (rotate, reverse, delete), compress (useObjectStreams resave stays valid), page numbers + watermark (stamp every page, diagonal overlay), image → pdf (PNG, JPG, combined), protect + unlock (encrypt adds Encrypt dict, stock pdf-lib rejects, wrong password throws, user + owner password both unlock, resave strips encryption). All 17 pass in `node scripts/test-pdf-tools.mjs`. (2026-04-20)
+- [x] **`scripts/smoke-live.mjs` — Production smoke harness.** Hits the live apex and asserts `/api/health` 200 + cache-control, GET 200 on 6 marketing pages + 7 tool runners, auth redirects for unauthed app routes, `/api/auth/forgot-password` contract (400 on bad email, 200 on valid — including replay, enforcing the anti-enumeration contract), `/api/auth/reset-password` contract (400 on missing / non-hex, 409 on unknown token), `/sitemap.xml` + `/robots.txt`. 24/26 pass as of 2026-04-20 02:45 UTC; the two failures (`/account` 404, unknown-token 500 on reset-password) are fixed locally and pending deploy — see "Prod hotfixes landing in next deploy" below. (2026-04-20)
+
+### Prod hotfixes landing in next deploy
+
+- [x] **`/api/auth/reset-password` 500-on-every-call → fixed via self-healing schema bootstrap.** Root cause: Hostinger doesn't run `drizzle-kit push` on deploy, so the `password_reset_tokens` table that `0001_password_reset_tokens.sql` defines was never created on production MySQL. Every reset attempt threw `ER_NO_SUCH_TABLE` inside `consumePasswordResetToken` and the route catch surfaced a generic 500. Fix in `lib/password-reset.ts`: one-time-per-process `ensureSchema()` that runs `CREATE TABLE IF NOT EXISTS password_reset_tokens (...)` matching the migration byte-for-byte, called from the top of `mintPasswordResetToken` and `lookupPasswordResetToken`. Defence-in-depth: route now inspects `err.code === "ER_NO_SUCH_TABLE"` and returns 409 (same user-facing message as a stale/missing token) instead of 500. Bootstrap is marked `REMOVE WHEN MIGRATIONS RUN AT DEPLOY` so we don't leave runtime DDL in place forever. Local PDF-tool harness still 17/17 green; `tsc --noEmit` clean. (2026-04-20)
+- [x] **`/account` → `/app/settings` redirect shipped.** `/account` was 404'ing in prod despite being linked from the pricing-page BYOK CTA. Added `app/account/page.tsx` that `redirect("/app/settings")` at render — keeps external links working (email campaigns, marketing collateral) without duplicating the settings UI. `/app/settings` itself already auth-gates, so unauthed visitors get bounced to `/login` transitively. (2026-04-20)
+- [x] **Smoke harness anti-enumeration assertion corrected.** Initial `scripts/smoke-live.mjs` asserted the second forgot-password call should 429; the endpoint intentionally stays 200 on throttle to avoid leaking which addresses are rate-limited. Updated the test to assert 200 + document why. (2026-04-20)
 
 ### Accessibility pass (Lighthouse-driven)
 

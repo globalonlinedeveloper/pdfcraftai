@@ -3,7 +3,7 @@
 _Structured matrix of every feature area in the product: what's Done, what's Partial, what's Pending._
 _Pair this with `STATUS.md` (operational punch list) — this file answers "does the site have X?", STATUS answers "who owns the next step on X?"._
 
-**Last updated:** 2026-04-20 (post password-reset redemption + /tool/protect)
+**Last updated:** 2026-04-20 (post test harness + reset-password schema bootstrap + /account alias)
 
 ---
 
@@ -55,7 +55,7 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | Endpoint | Status | Notes |
 |---|---|---|
 | `POST /api/auth/forgot-password` | Done | Zod-validated, per-email 60s rate limit, identical ack on success/miss, **now mints real `password_reset_tokens` rows and logs the reset URL** until a mail provider lands. |
-| `POST /api/auth/reset-password` | Done | New 2026-04-20. Zod 64-hex token + 8–128 char password; per-IP 5/min bucket; race-safe single-use consume via `lib/password-reset.ts`; 409 (enum-safe) on expired/consumed/missing; 429 on rate limit. |
+| `POST /api/auth/reset-password` | Done | New 2026-04-20. Zod 64-hex token + 8–128 char password; per-IP 5/min bucket; race-safe single-use consume via `lib/password-reset.ts`; 409 (enum-safe) on expired/consumed/missing; 429 on rate limit. **Hotfix 2026-04-20**: was 500-on-every-call in prod because Hostinger never ran the migration; `lib/password-reset.ts` now self-heals via a one-time-per-process `CREATE TABLE IF NOT EXISTS` bootstrap; route also classifies `ER_NO_SUCH_TABLE` as 409 for defence-in-depth. |
 | `POST /api/contact` | Done (stub) | Zod, in-memory rate limit, logs — swaps to SendGrid/Postmark later. |
 | `GET /api/auth/providers` | Done | Exposes Google with apex callback URL. |
 | Google SSO callback | Done | `trustHost: true` fixes Cloudflare → Next.js host trust. |
@@ -67,7 +67,8 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | Area | Route | Status | Notes |
 |---|---|---|---|
 | App dashboard | `/app/dashboard` | Partial | Layout ships; data plumbing depends on logged-in DB reads. |
-| Account | `/account` | Partial | BYOK configure UI stub; needs wiring. |
+| Account | `/account` | Done | Redirects to `/app/settings` (real settings surface with profile / password / delete). Kept as a 302 alias so external BYOK / marketing links don't 404. Shipped 2026-04-20. |
+| App settings | `/app/settings` | Done | Profile, password, delete. Auth-gated (redirects to `/login` if unauthed). |
 | Free tool: Merge | `/tool/merge` | Done | Client-side pdf-lib runner. |
 | Free tool: Split | `/tool/split` | Done | Client-side; per-page ZIP. |
 | Free tool: Compress | `/tool/compress` | Done | Client-side pdf-lib pass. |
@@ -116,7 +117,9 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 
 | Check | Status | Evidence |
 |---|---|---|
-| `tsc --noEmit` | Clean | 0 errors (2026-04-20, after `Bolt` → `Zap` fix). |
+| `tsc --noEmit` | Clean | 0 errors (2026-04-20, post reset-password bootstrap + /account alias). |
+| PDF tools smoke harness | Green | `node scripts/test-pdf-tools.mjs` → 17/17 across merge, split, rotate, compress, page-numbers, to-pdf, protect+unlock (2026-04-20). |
+| Live production smoke | 24/26 | `node scripts/smoke-live.mjs` → 24 passed; 2 fixed-pending-deploy (`/account` 404, reset-password 500) (2026-04-20). |
 | Lighthouse pass | Pending | STATUS.md item. |
 | OG / Twitter validators | Pending | STATUS.md item. |
 
