@@ -33,8 +33,8 @@ _Pair this with `STATUS.md` (operational punch list) — this file answers "does
 | GDPR | `/gdpr` | Done | Rights, categories, sub-processors, DPO. |
 | Privacy | `/privacy` | Done | Needs audit for any stale `support@` references (see STATUS.md). |
 | Terms | `/terms` | Done | Same audit pending. |
-| Help center | `/help` | Partial | Index exists; article depth is thin. |
-| API docs landing | `/api` | Partial | Landing page exists but reference tables are placeholder. |
+| Help center | `/help` | Done | 24 articles across 6 topics, each routed at `/help/[slug]` with full body, breadcrumb, related-articles list, cross-topic browse, OG/Twitter cards. Sitemap fans out to all 24 URLs. Shipped 2026-04-20. |
+| API docs landing | `/api` | Done | Full reference: on-page nav, quickstart, auth guide (pk_live/pk_test/sk), eight endpoints with per-endpoint request/response cards + notes, rate-limit tier table + response headers, error-code table (10 codes), HMAC webhook receiver + event types, idempotency. Shipped 2026-04-20. |
 
 ## Auth surface
 

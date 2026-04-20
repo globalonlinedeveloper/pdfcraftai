@@ -75,6 +75,11 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 - [x] **Privacy + Terms stale-contact audit complete.** Both pages render through `lib/legal-docs.ts` which uses a single `SUPPORT_EMAIL = "support@pdfcraftai.com"` constant. No stray addresses on either page; when the mailbox goes live, the consistent constant makes the cutover a single-line change. (2026-04-20)
 
+### Content depth
+
+- [x] **Help Center — 24 articles routed at `/help/[slug]`.** `lib/help-topics.ts` rewritten with 6 topics (getting-started / ai-tools / security-privacy / billing / api-developers / troubleshooting) × 4 articles each; every article ships a ~3-paragraph body. New dynamic route `app/help/[slug]/page.tsx` renders breadcrumb, topic-icon header, summary lede, paragraph body, "still stuck?" support card, related-articles list (siblings), cross-topic browse chips. `generateStaticParams` emits all 24 slugs. `generateMetadata` includes per-article OG (`type: "article"`, siteName) + Twitter summary cards + keywords. `HelpSearch` now searches `title + summary + body + topic.name`, results route to the detail page with a topic + summary preview line. Sitemap fans out `helpRoutes` (priority 0.5). Verified: `tsc --noEmit` clean; `next build` shows `/help/[slug]` generating 24 paths. (2026-04-20)
+- [x] **API reference — `/api` upgraded from placeholder to real docs.** `lib/api-endpoints.ts` extended with rate-limit tiers (Sandbox / Free / Pro / Scale), rate-limit response headers, 10 error codes (400/401/402/413/415/422/429/500/503), per-endpoint request + response examples with notes for all 8 endpoints, HMAC-signed webhook receiver snippet + 4 event types, idempotency snippet. Page rebuilt with on-page nav, quickstart, auth guide (pk_live / pk_test / sk), endpoints summary table + 8 detail cards with request/response side-by-side, rate-limit tables, error code table, webhook section, idempotency section, footer CTA. Removed "Phase 2" placeholder copy. Verified: `tsc --noEmit` clean; `next build` ok. (2026-04-20)
+
 ### Theme + testing infrastructure
 
 - [x] **Light/dark theme toggle** shipped in TopNav via new `ThemeToggle` component. Uses the existing pre-hydration script in `app/layout.tsx` + `[data-theme]` CSS variables in `globals.css`. Stored in `pdfcraft_state.theme`. (2026-04-20)
@@ -109,7 +114,6 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 - [ ] **(quality) Home-page Performance is still 88.** Biggest outstanding levers (from the post-fix Lighthouse): LCP 2.8s and TBT 500–600ms. Likely culprits: GA4 + Clarity scripts loaded without `strategy="lazyOnload"` in `app/layout.tsx`, hero image not marked `priority` / correctly sized, and the landing-page client components. A focused perf session could probably clear 95+.
 - [ ] **(quality) Wire a `commit` env var on Hostinger** so `/api/health` returns the deployed SHA. Currently `commit:null`, which forces us to verify deploys by grepping CSS bundles instead of polling the health endpoint.
-- [ ] **(cleanup) Workspace has uncommitted `SmartCta` render-prop edits** in `app/pricing/page.tsx` and `components/landing/LandingSections.tsx` (a render-prop `children={(label) => ...}` pattern replacing the `iconAfter` prop). The a11y commit deliberately excluded these. Decide whether `SmartCta`'s API actually accepts children and ship — or revert the workspace copy.
 - [ ] **(SEO) Verify `metadata.openGraph` and `twitter` cards on key pages** — open `https://pdfcraftai.com` in Twitter/Facebook share validators.
 - [ ] **(monitoring) Wire Cloudflare origin health check at `/api/health`.** Endpoint is live (see Done above); this is just the last-mile step of pointing CF at it in the dashboard.
 
