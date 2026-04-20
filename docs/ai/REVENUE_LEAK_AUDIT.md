@@ -14,12 +14,20 @@ scenarios here **before** shipping.
 
 ## 0. Prime directive
 
-> For every dollar Stripe deposits to our bank, we know exactly where it
-> goes: Stripe fee, provider invoice, infrastructure cost, tax remittance,
-> margin. The `ai_usage` table plus the credit ledger plus the Stripe
-> ledger must reconcile to the penny at any point in time. If they don't,
-> that delta is either a bug or a leak, and we stop shipping until we find
-> which.
+> For every rupee or dollar a payment processor (Razorpay or PayPal)
+> deposits to our bank, we know exactly where it goes: processor fee
+> + GST on the fee, AI provider invoice, infrastructure cost, tax
+> remittance, margin. The `ai_usage` table plus the credit ledger plus
+> the `payments_ledger` (one row per Razorpay/PayPal webhook) must
+> reconcile to the penny at any point in time. If they don't, that delta
+> is either a bug or a leak, and we stop shipping until we find which.
+
+> **Payment processors in scope:** Razorpay (primary — Indian merchant,
+> domestic + international) and PayPal (secondary — international
+> fallback, USD/EUR/GBP). Stripe is **not** integrated. Any fee math
+> below that says "processor fee" substitutes Razorpay's or PayPal's
+> actual published rate at the time the webhook fires; do not hardcode
+> Stripe-style "2.9% + $0.30".
 
 Corollary: every AI call must leave an audit row whose arithmetic is
 independently verifiable. No "lossy" paths. No rounding that doesn't
@@ -40,9 +48,9 @@ At any instant, for any user account, and in aggregate across the company:
 
   credits_spent_usd
 - provider_cost_usd             (what we paid the upstream, from ai_usage)
-- stripe_fee_on_purchase_usd    (2.9% + $0.30 on the matching credit pack)
+- processor_fee_on_purchase_usd (Razorpay 2%/3%+GST OR PayPal 3.49%+$0.49)
 - infra_cost_allocated_usd      (Hostinger + Cloudflare + storage amortized)
-- tax_remitted_usd              (VAT/GST/sales tax, if collected)
+- tax_remitted_usd              (GST on the gateway fee; VAT/GST on the sale if collected)
 = gross_margin_usd              (what we keep)
 ```
 
@@ -51,15 +59,33 @@ And for BYOK:
 ```
   infra_fee_charged_usd         (15% of base credits at list rate)
 - 0                             (we pay nothing upstream — user's key)
-- stripe_fee_on_purchase_usd    (allocated proportionally)
+- processor_fee_on_purchase_usd (allocated proportionally)
 - infra_cost_allocated_usd
 - tax_remitted_usd
-= gross_margin_usd              (near 100% before infra/Stripe)
+= gross_margin_usd              (near 100% before infra + processor fee)
 ```
 
-Every row in `ai_usage` contributes to the top-left side. Every Stripe
-charge row contributes to `credits_purchased_usd`. Every provider invoice
-line item (monthly, from Anthropic/OpenAI/Google consoles) must sum to
+**Published processor rates we model against** (2026-04, subject to
+change — the monthly reconciliation reads actual fees from the webhook
+payload, not from this table):
+
+| Processor | Instrument | Headline rate | Fixed fee | GST on fee |
+|-----------|-----------|---------------|-----------|------------|
+| Razorpay | Domestic cards / UPI / netbanking (INR) | 2.00% | ₹0 | 18% on fee |
+| Razorpay | International cards (INR) | 3.00% | ₹0 | 18% on fee |
+| Razorpay | EMI / wallets / bank transfer | 2.00% | ₹0 | 18% on fee |
+| PayPal | Commercial card payment (US, USD) | 3.49% | $0.49 | — |
+| PayPal | Cross-border add-on | +1.50% | — | — |
+| PayPal | Currency conversion spread | ~3–4% vs. wholesale | — | — |
+
+For Razorpay domestic: effective cost = 2.00% × 1.18 = **2.36%** of the
+gross — no fixed fee. For PayPal US commercial: effective cost = **3.49%
++ $0.49** (higher for cross-border and on non-USD settlement).
+
+Every row in `ai_usage` contributes to the left side of the identity.
+Every Razorpay/PayPal webhook (`payment.captured` / `CHECKOUT.ORDER.APPROVED`)
+contributes to `credits_purchased_usd`. Every AI provider invoice line
+item (monthly, from Anthropic/OpenAI/Google consoles) must sum to
 `provider_cost_usd` within rounding tolerance (typically ≤ $0.01/month
 due to token-count edge cases on the provider side).
 
@@ -183,15 +209,20 @@ platform key cached as default. Without care, the retry layer uses it.
 Default `fallback_to_platform = false`. Audit row says `key_source =
 'byok'` and `outcome = 'failed:auth'`. Infra fee refunded.
 
-**L-3.3 — Stripe chargeback on credit pack after BYOK infra fees used.**
+**L-3.3 — Processor chargeback/dispute on credit pack after BYOK infra fees used.**
 User buys a credit pack (100 credits = $5), uses them exclusively on BYOK
-(15% infra fee paid from credits = 0.15 × spend). Then chargebacks. We
+(15% infra fee paid from credits = 0.15 × spend). Then disputes. We
 already spent provider budget? **No — BYOK means user's provider budget.**
 So we lose only the credits we refunded as infra fee (marginal), plus
-Stripe's $15 chargeback fee (significant on $5 purchase).
-**Mitigation:** Stripe Radar rules flag disposable-email + BYOK + within
-72h of purchase. Reject or require 3DS. Track and cap chargeback exposure
-per account.
+the processor's dispute fee. **Razorpay charges ₹1000 per domestic
+dispute and ₹2000 per international** (subject to change); **PayPal
+charges up to $15–30 per case** depending on resolution path. Either
+dwarfs a $5 purchase's revenue.
+**Mitigation:** Razorpay risk rules (available to merchants via the
+Razorpay dashboard: velocity rules, country allow/deny, BIN filter) +
+PayPal Fraud Protection rules. Flag disposable-email + BYOK + <72h-old
+account. Require re-auth (3DS / PayPal 2-step) on purchase. Track
+`chargeback_exposure` per account and cap it.
 
 **L-3.4 — BYOK key decrypted but provider charges us anyway.**
 Should never happen — if we pass `apiKey: user_byok` in the SDK call,
@@ -302,10 +333,12 @@ We grant 10 free credits on signup. Attacker creates 10k accounts with
 disposable emails, runs `generate_deep` (20 credits each? No — capped at
 10). Still 100k free credits = $500 of upstream spend.
 **Mitigation:** (a) require email verification before free credits.
-(b) Stripe's payment-method-required trial (user enters card, no charge,
-but Radar signals are gathered). (c) Rate-limit signups per IP /ASN /
-email domain via Cloudflare Turnstile. (d) Free credit cap per account:
-5 credits, only for ops ≤ 3 credits each (no `generate_deep`).
+(b) Optional "card on file" trial via Razorpay's authorize-then-capture
+flow or PayPal's Reference Transactions — user enters payment method,
+no charge, but we collect device/card fingerprint. (c) Rate-limit
+signups per IP / ASN / email domain via Cloudflare Turnstile. (d) Free
+credit cap per account: 5 credits, only for ops ≤ 3 credits each (no
+`generate_deep`).
 
 **L-6.2 — High-credit op spam.**
 `compare` (15 credits) on two tiny PDFs. Operator pays $0.005×15 = $0.075;
@@ -326,16 +359,23 @@ provider-reported `error`, `overloaded`, `rate_limit`, or
 been sent count as partial use (no refund).
 
 **L-6.4 — Chargeback-after-use ("friendly fraud").**
-User buys 6000-credit pack ($149), uses 5800 credits, disputes the
-charge with Stripe.
-**Mitigation:** (a) Stripe Radar with custom rules flagging high-usage +
-<72h-old accounts + mismatched billing geography. (b) Dispute evidence
-packet auto-assembled from `ai_usage` rows + IP logs + `signed_tos_at`
-timestamp. (c) chargeback_exposure_usd per account tracked; accounts with
->$50 exposure require 3DS re-auth before the next pack purchase.
-**Note:** we cannot block chargebacks; we can only win them with
-evidence. Typical win rate: 40%. Budget L-14 assumes 60% loss rate on
-disputed large packs.
+User buys 6000-credit pack ($149), uses 5800 credits, disputes via
+their card network (Razorpay receives the dispute from the acquirer;
+PayPal receives it via resolution center).
+**Mitigation:** (a) Razorpay Risk Engine / PayPal Fraud Protection rules
+flagging high-usage + <72h-old accounts + mismatched billing geography.
+(b) Dispute evidence packet auto-assembled from `ai_usage` rows + IP logs
++ `signed_tos_at` timestamp, formatted for each processor's evidence
+upload schema. (c) `chargeback_exposure_usd` per account tracked;
+accounts with >$50 exposure require re-auth (Razorpay 3DS step-up /
+PayPal 2-step) before the next pack purchase. (d) For India-issued
+cards, RBI-mandated e-mandate/OTP covers most fraud cases pre-capture —
+rely on that first line of defense.
+**Note:** we cannot block disputes; we can only win them with evidence.
+Typical win rate on "product delivered" disputes: 40–60% (Razorpay
+India slightly better due to OTP trail; PayPal US typically worse due
+to aggressive buyer-friendly stance). Budget L-14 assumes 50% loss
+rate on disputed large packs.
 
 **L-6.5 — Promo-code stacking.**
 Two codes: WELCOME10 (10 free) + LAUNCH5 (5 free). Meant to be
@@ -388,14 +428,33 @@ affected ops to compensate. Alerts in §8.
 
 ### 2.8 Accounting / ledger leaks
 
-**L-8.1 — Stripe fee not subtracted pre-margin.**
-User buys Starter $5. Stripe takes 2.9% + $0.30 = $0.445. We book $5 in
-revenue, report 88% margin on spend, but real margin is
-($5 - $0.445 - provider) / $5 = ~78%.
-**Mitigation:** every margin report in admin dashboard computes
-**net** margin post-Stripe and post-tax. `stripe_ledger.fee_usd` column
-fed from Stripe webhook `charge.succeeded`. Projections in
-`PROVIDER_STRATEGY.md` should note: "before Stripe fees."
+**L-8.1 — Processor fee not subtracted pre-margin.**
+User buys Starter $5. If paid via **Razorpay domestic**: 2% + 18% GST
+on fee = ~2.36% = $0.118. If paid via **Razorpay international**: ~3.54%
+= $0.177. If paid via **PayPal** in USD: 3.49% + $0.49 = $0.6645. We
+book $5 in revenue but real net depends on which processor captured it.
+**Mitigation:** every margin report in admin dashboard computes **net**
+margin post-processor-fee and post-tax. `payments_ledger.fee_usd_micro`
++ `payments_ledger.gst_on_fee_usd_micro` columns populated from the
+Razorpay `payment.captured` webhook (`fee` + `tax` fields) and the
+PayPal `PAYMENT.CAPTURE.COMPLETED` webhook (`seller_receivable_breakdown`
+block). Margin table in `PROVIDER_STRATEGY.md` must note: "before
+processor fees — the 2–5% range applies depending on geography."
+
+Worked examples (per $5 Starter pack on chat-heavy usage, 100 turns at
+GPT-4o-mini $0.0021/call):
+
+| Processor | Fee | Provider | Infra | Net margin | Net % |
+|-----------|-----|----------|-------|------------|-------|
+| Razorpay domestic INR | $0.118 | $0.21 | $0.05 | $4.622 | 92.4% |
+| Razorpay international | $0.177 | $0.21 | $0.05 | $4.563 | 91.3% |
+| PayPal USD | $0.664 | $0.21 | $0.05 | $4.076 | 81.5% |
+
+Net: **Razorpay is ~10 percentage points better than PayPal on small
+packs because of PayPal's $0.49 fixed fee.** That fixed fee dominates
+Starter economics. On Studio ($149), the gap closes: PayPal
+$149 × 3.49% + $0.49 = $5.69 (3.8%) vs Razorpay intl $149 × 3.54% =
+$5.27 (3.5%) — roughly a wash.
 
 **L-8.2 — Credit expiration on paid packs.**
 Starter credits "expire in 12 months." User buys a pack, uses 50, leaves
@@ -405,38 +464,56 @@ violate consumer protection (Germany, UK treat prepaid as money
 equivalent). Legal review before launch in EU. Default policy: paid
 credits **do not expire**; only promo credits expire. Update ToS.
 
-**L-8.3 — Refund to credit balance vs Stripe refund mismatch.**
-Provider outage refunds 5 credits to user's balance. Two weeks later
-user Stripe-refunds the pack those 5 credits came from. Ledger drifts:
-user has 5 "phantom" credits with no corresponding purchase.
-**Mitigation:** Stripe refund event → revoke unused credits from
-balance at FIFO pack order. If user has already spent them, credit
+**L-8.3 — Refund to credit balance vs processor refund mismatch.**
+AI provider outage refunds 5 credits to user's balance. Two weeks later
+the user initiates a refund via Razorpay/PayPal on the pack those 5
+credits came from. Ledger drifts: user has 5 "phantom" credits with no
+corresponding purchase.
+**Mitigation:** Razorpay `refund.processed` + PayPal
+`PAYMENT.CAPTURE.REFUNDED` webhook handlers → revoke **unused** credits
+from balance in FIFO pack order. If user has already spent them, credit
 balance goes negative (disallowed — clamp to 0) and margin takes the
 hit. Flag to support for manual review.
 
-**L-8.4 — EU VAT / GST not collected.**
-UK VAT 20%, Germany 19%, Australia GST 10%. Selling digital services
-cross-border triggers VAT registration thresholds in several
-jurisdictions.
-**Mitigation:** use Stripe Tax (automated). Thresholds tracked per
-country. When any country nears threshold ($10k/yr typical), register
-VAT number. Credits sold pre-threshold are taxable at origin rate.
-Legal review before scaling beyond ~$50k ARR.
+**L-8.4 — Cross-border VAT / GST not collected.**
+UK VAT 20%, Germany 19%, Australia GST 10%, India GST 18% on B2C
+digital services. Selling digital services cross-border triggers VAT
+registration thresholds in several jurisdictions. For the Indian
+merchant entity, GST applies on **every** domestic sale once turnover
+exceeds ₹20L/yr (digital services threshold) — the Indian GST number
+must be collected on the application and remittances filed via GSTR-1
+/ GSTR-3B.
+**Mitigation:** Razorpay can be configured to **collect GST on the sale
+amount** (not only on its own fee) and remit with its settlement
+reports. For PayPal USD sales to US customers, no VAT. For
+cross-border EU/UK sales, use a dedicated tax service (Taxamo,
+Quaderno, or manual quarterly filings per destination). When any
+country nears threshold, register VAT/GST number. Legal review before
+scaling beyond ~₹20L or $50k ARR.
 
 **L-8.5 — Failed payment but credits already granted.**
-Stripe webhook delivery retries. We credit the user on
-`checkout.session.completed`. Chargeback 90 days later.
-**Mitigation:** credit grant is keyed to `payment_intent.succeeded`,
-not session completion. Stripe retries make the ledger idempotent via
-`stripe_event_id` unique key.
+Razorpay/PayPal webhook delivery retries. We credit the user on
+webhook receipt (not on redirect-back). Dispute 90 days later.
+**Mitigation:** credit grant is keyed to the **captured** event —
+Razorpay `payment.captured` (not `order.paid` or redirect-back from
+checkout.js) and PayPal `PAYMENT.CAPTURE.COMPLETED`. Retries made
+idempotent via unique constraint on `payments_ledger.processor_event_id`
+(Razorpay `x-razorpay-event-id` header / PayPal `id` field). Payment
+signature verified via `X-Razorpay-Signature` (HMAC-SHA256 of raw body
+with webhook secret) and PayPal WebHook-Id + Transmission-Sig chain.
 
 **L-8.6 — Currency conversion float.**
-User pays £4.99 (our GBP-priced Starter), we collect in GBP, provider
-bills us in USD. FX swings cut into margin.
-**Mitigation:** Stripe converts at daily rate; we book revenue in
-account currency (USD), provider invoice in USD. FX difference lives in
-Stripe balance. Monitor FX exposure monthly; accept it as noise up to
-2%. Above that, consider dynamic repricing.
+User pays ₹420 (our INR-priced Starter on Razorpay) or £4.99 (GBP-priced
+on PayPal), but our AI provider bills us in USD. FX swings cut into
+margin.
+**Mitigation:** Razorpay settles in INR; we book Razorpay revenue in
+INR, convert at month-end closing rate (RBI reference rate) for USD
+reporting. PayPal settles in the payment currency by default; enable
+"hold in account currency" to avoid PayPal's 3–4% FX spread and convert
+via our bank. AI provider invoices in USD. FX difference lives in the
+processor balance + bank conversion fee. Monitor FX exposure monthly;
+accept it as noise up to 2%. Above that, consider dynamic repricing or
+a USD-denominated INR tier (Razorpay supports this).
 
 ### 2.9 Caching / batching leaks
 
@@ -624,11 +701,11 @@ I-1 through I-10 for correctness). These are **financial** invariants:
 | I-L4 | `ai_usage.key_source = adapter_reported_key_origin` on every row. | Adapter assertion + audit row. |
 | I-L5 | `credit_ledger.sum = credits_purchased + credits_granted − credits_spent + credits_refunded` for every user, computed at rest. | Nightly reconciliation job. |
 | I-L6 | `sum(ai_usage.provider_cost_micro_usd) ± 1% = provider_invoice_total` per month per provider. | Monthly reconciliation. |
-| I-L7 | `stripe_ledger.net_received = sum(credit_packs.gross) − sum(stripe_fee) − sum(refunds)`. | Daily Stripe webhook reconciliation. |
+| I-L7 | `payments_ledger.net_received = sum(credit_packs.gross) − sum(processor_fee) − sum(gst_on_fee) − sum(refunds)` per processor per day. | Daily Razorpay + PayPal webhook reconciliation. |
 | I-L8 | No `ai_usage` row has `provider_cost_micro_usd > 0` AND `key_source = 'byok'`. (BYOK is the user's bill.) | Data-level check. |
 | I-L9 | No `ai_usage` row has `credits_charged = 0` UNLESS `op = internal_qa` OR `key_source = 'byok' AND infra_fee_waived = true`. | Data-level check. |
 | I-L10 | Admin grants + promo grants + referral credits = `sum(credit_ledger WHERE kind != 'purchase')`. | Monthly journal entry. |
-| I-L11 | `chargeback_exposure` per account never exceeds `lifetime_paid × 1.0`. | Stripe Radar + ledger check. |
+| I-L11 | `chargeback_exposure` per account never exceeds `lifetime_paid × 1.0`. | Razorpay Risk Engine + PayPal Fraud Protection + ledger check. |
 | I-L12 | Free-trial accounts cannot invoke ops with `base_credits > 3`. | Plan gate in router. |
 
 ---
@@ -643,7 +720,7 @@ I-1 through I-10 for correctness). These are **financial** invariants:
 - L-3.2: BYOK-to-platform silent fallback is impossible by default.
 - L-3.4: adapter refactor for per-call apiKey, with assertion on origin.
 - L-5.1: always use provider-reported token counts, not local estimates.
-- L-8.5: credit grant keyed to `payment_intent.succeeded` + `stripe_event_id` unique.
+- L-8.5: credit grant keyed to `payment.captured` / `PAYMENT.CAPTURE.COMPLETED` webhooks + unique `processor_event_id` per processor.
 - L-15.3: admin credit grants are ledger entries with mandatory reason.
 - L-16.4: no API keys in logs; CI scan for key patterns.
 
@@ -651,19 +728,25 @@ I-1 through I-10 for correctness). These are **financial** invariants:
 
 - L-1.3, L-1.4: multi-modal synthetic tokens; OCR only on Gemini.
 - L-2.3: partial-stream refund policy.
-- L-3.3: Stripe Radar rules for BYOK + new-account combinations.
+- L-3.3: Razorpay Risk Engine + PayPal Fraud Protection rules for BYOK
+  + new-account combinations (velocity, new-card-first-BYOK pattern).
 - L-3.6: BYOK pre-flight budget check.
 - L-4.1, L-4.2: weekly provider-price diff job; pin explicit model versions.
 - L-6.1: free-credit cap + op-restriction.
-- L-6.4: chargeback evidence auto-assembly.
-- L-8.1: net margin reporting post-Stripe, post-tax.
+- L-6.4: chargeback / dispute evidence auto-assembly (Razorpay + PayPal
+  each have different evidence windows — 7 days for Razorpay, 10 days
+  for PayPal Seller Protection).
+- L-8.1: net margin reporting post-processor-fee, post-GST/tax, with
+  per-processor breakdown (Razorpay domestic vs. international vs.
+  PayPal USD).
 - L-10.3: background worker for >25s ops.
 
 ### P2 — monitor, address before $50k ARR
 
 - L-5.4: embeddings indexing deferral + caching.
 - L-7.1, L-7.2: bandwidth + log storage optimization.
-- L-8.4: Stripe Tax full activation, VAT registration planning.
+- L-8.4: GST registration (India digital services, ₹20L/yr threshold)
+  + cross-border VAT planning for EU/UK customers routed through PayPal.
 - L-12.3: EU AI Act compliance review.
 - L-16.2: envelope encryption / KMS for BYOK key storage.
 
@@ -681,13 +764,13 @@ I-1 through I-10 for correctness). These are **financial** invariants:
 | T-L6 | BYOK key saved; hash matches platform-key hash. | Reject at save time. |
 | T-L7 | BYOK key returns 401; `fallback_to_platform = false`. | Request fails; no platform call; infra fee refunded. |
 | T-L8 | BYOK key returns 401; `fallback_to_platform = true`; user has credits. | Platform key used; full credits charged (not infra fee); ai_usage shows two rows (failed BYOK + platform success). |
-| T-L9 | Stripe webhook `payment_intent.succeeded` delivered twice. | Credits granted once; second delivery idempotent. |
+| T-L9 | Razorpay `payment.captured` / PayPal `PAYMENT.CAPTURE.COMPLETED` webhook delivered twice (same `processor_event_id`). | Credits granted once; second delivery idempotent. |
 | T-L10 | Client aborts stream after 10% output. | No refund; charged in full (partial-output policy). |
 | T-L11 | Provider returns error mid-stream at 30% output. | Refund per partial-stream policy (full if <80%). |
 | T-L12 | Admin grants 100 credits with no reason. | Rejected at API; mandatory `reason`. |
 | T-L13 | Free-trial account invokes `generate_deep`. | Rejected; plan gate. |
 | T-L14 | Logs scanned for `sk-` or `gsk-` prefix in last 1000 log lines. | No match. |
-| T-L15 | Monthly reconciliation job run against fake Stripe/provider data. | Ledger matches; identity in §1 holds to $0.01. |
+| T-L15 | Monthly reconciliation job run against fake processor (Razorpay + PayPal) and LLM-provider data. | Ledger matches; identity in §1 holds to $0.01. |
 | T-L16 | Provider price-diff job run with a mock price bump. | Alert fires; `ai_routes` not auto-mutated. |
 | T-L17 | User deletes BYOK key mid-request. | In-flight completes; next request fails (no key). |
 | T-L18 | User exercises GDPR deletion; rerun monthly reconciliation. | Still balances (rows anonymized, not deleted). |
@@ -703,7 +786,7 @@ I-1 through I-10 for correctness). These are **financial** invariants:
 | Hourly op margin < 50% for any op on platform key | Two consecutive hours | Auto-disable op; alert admin. |
 | Provider daily spend > 2× 7-day rolling avg | Any single day | Freeze affected provider; alert admin. |
 | `credit_ledger` integrity check fails (sum ≠ purchased − spent + refunded + granted) | Any user, any time | Freeze user's credit ops; alert support. |
-| Stripe chargeback opened on an account with > $50 usage | Event received | Auto-pause account; queue dispute evidence. |
+| Razorpay `payment.dispute.created` / PayPal `CUSTOMER.DISPUTE.CREATED` on an account with > $50 usage | Event received | Auto-pause account; queue dispute evidence (invoice, IP log, ai_usage extract). |
 | BYOK key 401 rate > 10% over 1 hour | Rolling window | User notified via email; key marked `degraded`. |
 | Platform daily spend approaching cap | 80% of `AI_DAILY_BUDGET_USD_*` | Alert admin; at 100%, return 503 on ops. |
 | Log line matches API-key regex | Any hit in last hour | Page on-call; rotate leaked key. |
@@ -721,15 +804,29 @@ Run first business day of each month, for the prior month:
    key_source='platform' GROUP BY provider_id, month`.
 3. **Reconcile** each provider_id: `abs(invoice − ai_usage_sum) < $1 or
    < 1% (whichever is greater)`. Document every exception.
-4. **Export Stripe payouts + fees + refunds + chargebacks** for the month.
-5. **Pull credit_ledger purchases** for the month. Reconcile to Stripe
-   `payment_intent.succeeded` webhook records.
+4. **Export processor settlements** for the month:
+   - **Razorpay**: Dashboard → Reports → Settlement report (CSV).
+     Columns needed: `amount`, `fee`, `tax` (18% GST on fee),
+     `settlement_utr`, `refunds`, `disputes`.
+   - **PayPal**: Business → Reports → Transactions (CSV).
+     Columns needed: `gross`, `fee`, `net`, `currency_conversion_fee`,
+     `cross_border_fee`, `disputes`.
+5. **Pull credit_ledger purchases** for the month. Reconcile to the
+   processor webhook records: Razorpay `payment.captured` events and
+   PayPal `PAYMENT.CAPTURE.COMPLETED` events, matched by
+   `processor_event_id`. Every credit grant must trace to exactly one
+   webhook.
 6. **Compute gross margin** using the §1 identity. Compare to forecasted
-   margin by plan; any deviation > 10% is investigated.
+   margin by plan and by processor (margin differs ~10pp between
+   Razorpay domestic and PayPal USD — see §1). Any deviation > 10% is
+   investigated.
 7. **Post journal entries**:
    - Breakage (expired promo credits) → revenue.
-   - Provider invoice → COGS.
-   - Stripe fees → payment processing expense.
+   - LLM provider invoice → COGS.
+   - Razorpay fee + 18% GST on fee → payment processing expense + GST
+     input credit (recoverable if GST-registered).
+   - PayPal fee + cross-border fee + currency conversion spread →
+     payment processing expense.
    - Chargebacks → chargeback loss.
 8. **Write the reconciliation report** to `docs/ops/recon-YYYY-MM.md`.
    Required sections: identities balanced (Y/N), exceptions, actions.
@@ -783,10 +880,15 @@ Any code change that touches:
   key — the seat user or the workspace admin? **Likely: workspace admin
   owns and chooses whether to share; seat users can also add personal
   keys that override workspace-level.**
-- **Q6.** Chargeback policy for Stripe disputes: auto-accept or auto-dispute?
-  Likely: **auto-dispute with assembled evidence** for transactions >$50;
+- **Q6.** Chargeback / dispute policy for Razorpay + PayPal disputes:
+  auto-accept or auto-dispute?
+  Likely: **auto-dispute with assembled evidence** (invoice, IP log,
+  email verification, ai_usage extract) for transactions >$50;
   auto-accept + block account for transactions <$10 (dispute economics
-  are adverse).
+  are adverse — PayPal dispute fee $15–30, Razorpay ₹1000–2000).
+  Evidence windows differ: Razorpay 7 days, PayPal 10 days — tooling
+  must auto-assemble within 48 hours of the dispute webhook to leave
+  headroom.
 
 ---
 
