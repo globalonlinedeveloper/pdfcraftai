@@ -27,7 +27,10 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    // summary_large_image matches the rest of the site. `/api` was the only
+    // route shipping `summary` — standardising it avoids a jarring smaller
+    // card when someone shares the API reference on Twitter/X.
+    card: "summary_large_image",
     title: "API reference — pdfcraft ai",
     description: "REST endpoints, typed SDKs, webhooks, rate limits, and error codes.",
   },

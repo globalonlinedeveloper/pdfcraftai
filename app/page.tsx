@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { HeroDemo } from "@/components/landing/HeroDemo";
@@ -10,6 +11,14 @@ import {
   Security,
   FinalCTA,
 } from "@/components/landing/LandingSections";
+
+// Title + description + OG/twitter come from the root layout's metadata
+// (it sets the site-level defaults). We only need to pin the canonical to
+// `/` here — without this, `/` is the only route in the app that ships no
+// `<link rel="canonical">`, which the 2026-04-20 audit flagged as SEV-3.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (
