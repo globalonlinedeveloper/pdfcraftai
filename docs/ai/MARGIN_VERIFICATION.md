@@ -340,14 +340,16 @@ These six map to task #87 (six fixes) and extend it with the scenario findings.
 
 Assumes the post-launch volume mix that §12.3 argues for: **40% INR domestic via Razorpay / 60% international via Paddle**. Formula: `weighted_fee = 0.40 × (2% × 1.18) + 0.60 × (5% + $0.50/price)`.
 
-| Pack | Price | v1 DEFAULT_MIX drag | v3 PADDLE_DEFAULT drag | Change |
-|---|---|---|---|---|
-| Starter | $5   | 8.3%  | **8.7%** | +0.4pp worse |
-| Creator | $19  | 4.8%  | **5.0%** | +0.2pp worse |
-| Pro     | $59  | 3.9%  | **4.1%** | +0.2pp worse |
-| Studio  | $149 | 3.7%  | **3.9%** | +0.2pp worse |
+| Pack | Price | v1 DEFAULT_MIX drag | v3 PADDLE_DEFAULT drag (processor only) | + FX drag (0.5% on paddle slice) | Total v3 drag |
+|---|---|---|---|---|---|
+| Starter | $5   | 8.3%  | **8.7%** | +0.3% | **9.0%** |
+| Creator | $19  | 4.8%  | **5.0%** | +0.3% | **5.3%** |
+| Pro     | $59  | 3.9%  | **4.1%** | +0.3% | **4.4%** |
+| Studio  | $149 | 3.7%  | **3.9%** | +0.3% | **4.2%** |
 
 Starter is the most exposed because the $0.50 Paddle flat fee is 10% of revenue by itself — the same structural problem PayPal had at $0.49. The decision from §6 (action #4: route Starter to Razorpay-only in markets where we can) still applies, with Paddle substituted for PayPal.
+
+**FX spread footnote.** The AD bank (ICICI / HDFC / Axis / SBI) converts Paddle's USD SWIFT payout to INR at a retail spread of 0.3–0.8% above interbank mid-market. Modelled here at 0.5% on the 60% Paddle slice (0.3% blended across the pack). This is a real 0.3pp deduction from every v3 scenario in §12.3 — the numbers there are **processor-only** and should be adjusted down ~0.3pp for apples-to-apples net margin. The `fx_drag_usd()` helper in `margin_scenarios.py` computes this cleanly for future reruns. Replace `FX_SPREAD_PADDLE` with the measured number after 30 days of real Paddle payouts (first line item of Task #4's 30-day processor-drag reconciliation).
 
 ### 12.3 Updated baseline scenarios (S1, S5, S6, S7 refresh)
 
@@ -405,7 +407,18 @@ Not visible in the margin numbers but decisive for operational sanity:
 
 3. **Chargeback liability shift** — At 1% dispute rate, the old model cost Starter 3pp of margin. Post-Paddle, we face no fee from Paddle disputes, no fraud loss, and no reserve holds from a PSP tightening requirements. The only exposure left is on the Razorpay-INR slice.
 
-4. **Customer refund handling** — Paddle's customer support inbox handles "I want a refund" tickets directly, reducing the $1.50 support-cost assumption on the intl slice. Not modelled in S7 numbers above; realistic effect is another 0.3–0.5pp lift on packs ≥ $19.
+4. **Customer refund handling** — Paddle's customer support inbox handles "I want a refund", "charge me again", "wrong card" tickets directly on the intl slice (they're legally the seller), so those tickets never hit our inbox. That reduces the $1.50/mo blended support-cost assumption on the 60% Paddle slice. Modelled as a second pass on S7 below.
+
+   **S7-refined: Starter with Paddle refund absorption.** If we assume 40% of refund-flavoured support tickets disappear on the Paddle slice, and that those tickets represent ~30% of total Starter support load (billing-related is a huge share of low-price-point support), the blended Starter cost drops from $1.50/mo → $1.50 × (1 − 0.4 × 0.6 × 0.3) = $1.39/mo on the 60% intl slice, $1.50 on the 40% INR slice, weighted avg $1.43/mo. Re-run with the Paddle-60 baseline:
+
+   | Pack | v3 S7 ($1.50, unrefined) | v3 S7 ($1.43, Paddle-absorb) | Δ |
+   |---|---|---|---|
+   | Starter | **57.9%** | **59.3%** | +1.4pp |
+   | Creator | 82.1% | 82.4% | +0.3pp |
+   | Pro     | 86.8% | 86.9% | +0.1pp |
+   | Studio  | 87.5% | 87.5% | +0.0pp |
+
+   **Reading:** the Paddle refund-handling benefit is real but small and concentrated at the Starter tier (where support cost is the biggest share of a $5 sticker). It does NOT rescue Starter on its own — the $7 price raise from D1 remains the recommended fix. The benefit also compounds with D1: Starter at $7 + Paddle-absorbed support (est. $1.43/mo) hits ~69% realistic margin vs. ~68% without the Paddle support lift. Not a decision changer; logged for completeness and to justify why a future Paddle-heavy mix (S5-style, 80% Paddle) could marginally improve Starter-tier economics.
 
 ### 12.5 What Paddle newly exposes (risks to monitor)
 
@@ -413,7 +426,7 @@ Not visible in the margin numbers but decisive for operational sanity:
 
 2. **Reserves on new merchants.** Paddle typically holds 5–10% rolling reserve for the first 6 months on new accounts. Cash-flow impact: ~$300–600 held back per $10k of Paddle-processed volume in the early period. Not a margin hit, but a working-capital constraint.
 
-3. **Payout FX spread.** Paddle pays in USD via SWIFT to our Indian bank (per CLAUDE.md + MOR_EVALUATION.md §4 deep dive). The Indian AD bank's retail USD→INR conversion typically carries 0.3–0.8% spread above interbank. On $100k annual Paddle volume that's $300–800/yr — not modelled above, effectively another 0.5pp drag on the Paddle slice. The `margin_scenarios.py` model currently ignores this.
+3. **Payout FX spread.** Paddle pays in USD via SWIFT to our Indian bank (per CLAUDE.md + MOR_EVALUATION.md §4 deep dive). The Indian AD bank's retail USD→INR conversion typically carries 0.3–0.8% spread above interbank. On $100k annual Paddle volume that's $300–800/yr. Now modelled explicitly in `margin_scenarios.py` via `FX_SPREAD_PADDLE = 0.005` (mid-point 0.5%) and the `fx_drag_usd(price, mix)` helper; see §12.2 "+ FX drag" column. Monitor against actual bank statements in Task #4's 30-day reconciliation — if the AD bank's effective spread trends above 0.7% on our booked volume, the first mitigation is switching the payout currency to INR direct (Paddle supports it at a fixed 1% spread, which is worse than a well-priced AD bank but caps the tail).
 
 4. **Subscription pricing constraints.** Paddle supports one-time packs cleanly (our current model) but has opinions on how subscription/trial flows look. If the product pivots toward subscriptions later, friction increases.
 

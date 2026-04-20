@@ -1,6 +1,31 @@
 # Payment Gateway Plan — Razorpay + PayPal, Portable Forever
 
-**Date:** 2026-04-20
+> ## ⚠️ SUPERSEDED (2026-04-20) — PayPal half of this plan is obsolete
+>
+> **Decision D4 closed 2026-04-20.** International processing moved from PayPal to **Paddle (Merchant of Record)**. See `docs/payments/MOR_EVALUATION.md` for the 6-vendor weighted scoring that drove this change.
+>
+> **What's still valid in this doc:**
+> - §Razorpay (domestic INR rail) — fully applicable, unchanged.
+> - §Portable architecture — the abstraction layer still applies; substitute "Paddle" wherever "PayPal" appears in the adapter interfaces.
+> - §Webhook idempotency, ledger invariants, refund flows — conceptually unchanged, just point at Paddle event names.
+>
+> **What's obsolete:**
+> - Every "PayPal" section (signup, KYC, adapter, webhook routes, fee math) — replaced by Paddle equivalents in `MOR_EVALUATION.md` §7 "Integration scope".
+> - "Per-pack processor policy" Q1 in §10 — answer is now: INR buyers → Razorpay; all others → Paddle (no per-pack split needed because Paddle absorbs US-state nexus + EU VAT).
+> - PayPal dispute evidence workflow — Paddle absorbs disputes as part of MoR wrap; see `docs/ai/REVENUE_LEAK_AUDIT.md` §11.2.
+>
+> **Where to go for current guidance:**
+> - `docs/payments/MOR_EVALUATION.md` — Paddle decision + sandbox checklist + integration scope
+> - `docs/GEO_LAUNCH_POLICY.md` — which countries Paddle routes for (Tier 1), which are deferred/blocked
+> - `docs/ai/MARGIN_VERIFICATION.md` §12 — v3 margin numbers with Paddle
+> - `docs/ai/REVENUE_LEAK_AUDIT.md` §11 — v3 leak register with Paddle substitution table
+> - `docs/MASTER_PLAN.md` §4 — D4 decision log
+>
+> This doc is retained for historical context (shows the alternatives considered before Paddle) and for the portions that still apply (Razorpay + portable architecture).
+
+---
+
+**Date:** 2026-04-20 (v1 written; v2 superseded intl half 2026-04-20 per D4)
 **Status:** Master plan, ordered by dependency. Every section is either a
 checklist or a spec. Do not skip sections.
 **Owner:** project lead (not Claude); Claude implements under direction.

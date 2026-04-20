@@ -13,6 +13,34 @@ export type CreditPack = {
   popular?: boolean;
   bonus?: number;
   bonusExpires?: number; // days
+  /**
+   * Claimed gross margin percentage shown on the /pricing page.
+   *
+   * IMPORTANT: This number is an AI-cost-only headline figure under
+   * "cheap routing" (Gemini Flash for OCR+translate, GPT-4o-mini for
+   * chat+rewrite, Haiku for mid-tier, Sonnet for deep-tier). It does
+   * NOT yet subtract:
+   *   - processor fees (Razorpay INR 2%×1.18 on IN volume;
+   *     Paddle MoR 5% + $0.50 on intl volume — per D4, 2026-04-20,
+   *     see docs/payments/MOR_EVALUATION.md)
+   *   - support cost amortisation (~$0.50–$1.50/paid-user/month)
+   *   - refund / chargeback drag
+   *   - FX spread on USD→INR payout
+   *   - GST or income tax (pass-through, not cost)
+   *
+   * Actual net margin post-Paddle under realistic ops mix
+   * (docs/ai/MARGIN_VERIFICATION.md §12.3 S1):
+   *   Starter: 88.5% / Creator: 90.8% / Pro: 90.2% / Studio: 89.3%
+   *
+   * Until the routing policy + Gemini adapter ship (tasks #80 / A5 in
+   * master plan), cheap routing is aspirational and Haiku-all routing
+   * hits Starter ~84.7% / Creator ~85.1% / Pro ~82.5% / Studio ~79.9%
+   * on realistic mix, dropping sharply under worst-case scenarios
+   * (S3 chat whale, S7 support-heavy Starter — see §9 and §12).
+   *
+   * Public pricing copy MUST read "up to" this % until Phase A4 daily
+   * margin rollup shows 7 consecutive green days at claim-or-better.
+   */
   margin: number;
   features: string[];
 };

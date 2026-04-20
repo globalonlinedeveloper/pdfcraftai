@@ -77,6 +77,24 @@ def processor_weighted(price_usd: float, mix: dict) -> float:
     """Weighted processor cost. `mix` sums to 1.0."""
     return sum(w * processor_fee(price_usd, s) for s, w in mix.items())
 
+# ─── FX spread (USD→INR payout) ────────────────────────────────────────
+# Paddle pays us in USD via SWIFT; our AD bank (ICICI / HDFC / Axis / SBI)
+# converts to INR at a retail spread of 0.3–0.8% above interbank mid-market.
+# Applies ONLY to the paddle slice — Razorpay INR settles domestically with
+# no FX. Estimated conservatively at 0.5% until Paddle sandbox + 30-day
+# real-payout measurement refines the number.
+FX_SPREAD_PADDLE = 0.005  # 0.5% of gross on paddle slice
+
+def fx_drag_usd(price_usd: float, mix: dict) -> float:
+    """FX conversion spread on USD→INR, weighted by mix.
+
+    Only applies to slices paid in USD by a foreign entity (currently: paddle).
+    razorpay_inr settles domestically — no FX. razorpay_usd settles in USD
+    too but through the same AD bank path, so treat it identically.
+    """
+    usd_slice = mix.get("paddle", 0) + mix.get("razorpay_usd", 0) + mix.get("paypal", 0)
+    return price_usd * FX_SPREAD_PADDLE * usd_slice
+
 # v1/v2 mixes (PayPal-era — retained for historical comparison)
 DEFAULT_MIX = {"razorpay_inr": 0.50, "paypal": 0.30, "razorpay_usd": 0.20}
 INDIA_HEAVY = {"razorpay_inr": 0.80, "paypal": 0.10, "razorpay_usd": 0.10}
