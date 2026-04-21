@@ -372,6 +372,12 @@ export async function POST(req: Request): Promise<Response> {
       let finalStopReason: StopReason = "end_turn";
       let tokensIn = 0;
       let tokensOut = 0;
+      // Task #10: Anthropic prompt-cache token buckets. Undefined when the
+      // provider didn't report them (non-Anthropic, or Anthropic without
+      // cache_control). Kept undefined (not 0) on purpose so the usage row
+      // persists NULL in the new nullable DB columns — see migration 0007.
+      let cacheReadTokens: number | undefined;
+      let cacheWriteTokens: number | undefined;
       let terminal: "done" | "error" = "done";
       let errorMessage: string | undefined;
       let errorCode: Extract<ChatChunk, { kind: "error" }>["code"] | undefined;
@@ -395,6 +401,8 @@ export async function POST(req: Request): Promise<Response> {
               finalStopReason = chunk.stopReason;
               tokensIn = chunk.usage?.inputTokens ?? 0;
               tokensOut = chunk.usage?.outputTokens ?? 0;
+              cacheReadTokens = chunk.usage?.cachedInputTokens;
+              cacheWriteTokens = chunk.usage?.cacheCreationInputTokens;
               terminal = "done";
               break;
             case "error":
@@ -490,6 +498,11 @@ export async function POST(req: Request): Promise<Response> {
             model,
             inputTokens: tokensIn,
             outputTokens: tokensOut,
+            // Task #10: forward Anthropic prompt-cache token counts when
+            // present. Undefined passes through to the recorder, which
+            // writes NULL — preserving "cache not applicable".
+            cachedInputTokens: cacheReadTokens,
+            cacheCreationInputTokens: cacheWriteTokens,
             latencyMs: Date.now() - providerStartedAt,
             creditsSpent: creditCost,
             costMicros: null,
@@ -545,6 +558,11 @@ export async function POST(req: Request): Promise<Response> {
             model,
             inputTokens: tokensIn,
             outputTokens: tokensOut,
+            // Task #10: preserve any cache tokens the provider managed to
+            // report before erroring — typically 0 on errors but honest
+            // data is cheap to record.
+            cachedInputTokens: cacheReadTokens,
+            cacheCreationInputTokens: cacheWriteTokens,
             latencyMs: Date.now() - providerStartedAt,
             creditsSpent: 0,
             costMicros: null,

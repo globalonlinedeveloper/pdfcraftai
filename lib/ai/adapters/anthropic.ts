@@ -200,14 +200,42 @@ export class AnthropicProvider implements AIProvider {
     // on `done`.
     let inputTokens = 0;
     let outputTokens = 0;
+    let cachedInputTokens = 0;
+    let cacheCreationInputTokens = 0;
     // `message_delta.delta.stop_reason` lands before `message_stop`.
     let stopReason: StopReason = "end_turn";
+
+    // Prompt-cache wiring (Task #10 / Phase A).
+    // -----------------------------------------
+    // Anthropic accepts `system` as EITHER a plain string OR an array of
+    // content blocks where any block can carry `cache_control`. When the
+    // caller sets `cacheSystemPrompt: true` we switch to the block form
+    // and anchor an ephemeral cache breakpoint on the final system block
+    // — subsequent requests with the same prefix re-use cached input
+    // tokens at 10% of base rate. Minimum cacheable prefix is enforced
+    // server-side (~1024/~2048 tokens); shorter prompts silently skip.
+    //
+    // Output:
+    //   - `usage.cache_read_input_tokens` → tokens served from cache.
+    //   - `usage.cache_creation_input_tokens` → tokens WRITTEN to cache
+    //      on this call (1.25× premium, charged once per prefix).
+    //   - `usage.input_tokens` → uncached input tokens only.
+    // We surface all three via `TokenUsage` so the cost calculator
+    // prices each bucket at its own rate.
+    const cacheSystem = input.cacheSystemPrompt === true && !!system;
+    const systemField: string | Array<{
+      type: "text";
+      text: string;
+      cache_control?: { type: "ephemeral" };
+    }> | undefined = cacheSystem
+      ? [{ type: "text", text: system!, cache_control: { type: "ephemeral" } }]
+      : system;
 
     try {
       const stream = await this.client.messages.create({
         model,
         max_tokens: maxTokens,
-        ...(system ? { system } : {}),
+        ...(systemField ? { system: systemField } : {}),
         ...(input.temperature != null ? { temperature: input.temperature } : {}),
         messages,
         stream: true,
@@ -216,11 +244,26 @@ export class AnthropicProvider implements AIProvider {
       for await (const event of stream) {
         switch (event.type) {
           case "message_start": {
-            // Input tokens arrive here; capture and move on.
+            // Input + cache-token buckets arrive here; capture and move on.
+            // Anthropic reports four input-side numbers on message_start:
+            //   - input_tokens              → uncached input (billed @ base)
+            //   - cache_read_input_tokens   → served from cache (billed @ 0.1×)
+            //   - cache_creation_input_tokens → written to cache on this call (1.25×)
+            // The sum is the true prompt size; the cost calculator prices each
+            // bucket separately and falls back to the legacy shape (just
+            // inputTokens) when cache fields are undefined.
             const u = event.message.usage;
             if (u) {
               inputTokens = u.input_tokens ?? 0;
               outputTokens = u.output_tokens ?? 0;
+              // SDK types these as `number | null`; coerce to 0 so arithmetic
+              // elsewhere doesn't need null-guards.
+              cachedInputTokens =
+                (u as { cache_read_input_tokens?: number | null })
+                  .cache_read_input_tokens ?? 0;
+              cacheCreationInputTokens =
+                (u as { cache_creation_input_tokens?: number | null })
+                  .cache_creation_input_tokens ?? 0;
             }
             break;
           }
@@ -252,7 +295,15 @@ export class AnthropicProvider implements AIProvider {
       yield {
         kind: "done",
         stopReason,
-        usage: { inputTokens, outputTokens },
+        usage: {
+          inputTokens,
+          outputTokens,
+          // Emit cache fields only when the provider reported non-zero values.
+          // Keeping undefined (not zero) for the no-cache path preserves the
+          // "cache not applicable" semantics documented on TokenUsage.
+          ...(cachedInputTokens > 0 ? { cachedInputTokens } : {}),
+          ...(cacheCreationInputTokens > 0 ? { cacheCreationInputTokens } : {}),
+        },
         model,
         providerId: this.id,
       };

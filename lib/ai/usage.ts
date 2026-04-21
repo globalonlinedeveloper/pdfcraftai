@@ -112,26 +112,60 @@ export function lookupModelRate(modelId: string): ModelRate | null {
 }
 
 /**
+ * Anthropic prompt-cache multipliers (Task #10). These apply ONLY to the
+ * two cache-tagged buckets that arrive in `usage.cache_read_input_tokens`
+ * and `usage.cache_creation_input_tokens`. Uncached input tokens are
+ * priced at 1× base.
+ *
+ *   - Cache READ  — 0.10× base input rate (huge savings when prefix hits).
+ *   - Cache WRITE — 1.25× base input rate (small premium on first write).
+ *
+ * Other providers don't report cache tokens, so the multipliers never
+ * apply to them.
+ */
+const CACHE_READ_MULTIPLIER = 0.1;
+const CACHE_WRITE_MULTIPLIER = 1.25;
+
+/**
  * Compute provider cost in micros (USD × 1e6) given token counts and a
  * model id. Returns null if the model isn't in the rate card — callers
  * pass that null straight to the `cost_micros` column, which the rollup
  * treats as "unknown cost" (distinct from zero).
+ *
+ * Cache pricing (Task #10):
+ *   - `inputTokens` is UNCACHED input only (Anthropic's
+ *     `usage.input_tokens` already excludes cache reads/writes).
+ *   - `cachedInputTokens` (cache reads) bill at 0.1× the input rate.
+ *   - `cacheCreationInputTokens` (cache writes) bill at 1.25× the input
+ *     rate; charged once per prefix, then subsequent calls hit cache-read
+ *     prices for 5 minutes on the ephemeral tier.
+ *   - Non-Anthropic callers pass undefined for both; math collapses to
+ *     the legacy two-bucket formula and the result is bit-identical to
+ *     the pre-cache code path.
  */
 export function computeCostMicros(
   modelId: string,
   inputTokens: number,
-  outputTokens: number
+  outputTokens: number,
+  cachedInputTokens?: number,
+  cacheCreationInputTokens?: number
 ): number | null {
   const rate = lookupModelRate(modelId);
   if (!rate) return null;
   const inTok = Math.max(0, Math.floor(inputTokens || 0));
   const outTok = Math.max(0, Math.floor(outputTokens || 0));
+  const cacheReadTok = Math.max(0, Math.floor(cachedInputTokens || 0));
+  const cacheWriteTok = Math.max(0, Math.floor(cacheCreationInputTokens || 0));
   // USD per token = usdPerMtok / 1_000_000.
   // Cost in micros  = tokens * usdPerToken * 1_000_000
   //                 = tokens * usdPerMtok.
   // Round to integer micros — sub-cent precision is already far below
   // the per-call scale, so rounding drift is invisible at rollup time.
-  const cost = inTok * rate.inputUsdPerMtok + outTok * rate.outputUsdPerMtok;
+  const cost =
+    inTok * rate.inputUsdPerMtok +
+    outTok * rate.outputUsdPerMtok +
+    cacheReadTok * rate.inputUsdPerMtok * CACHE_READ_MULTIPLIER +
+    cacheWriteTok * rate.inputUsdPerMtok * CACHE_WRITE_MULTIPLIER;
   return Math.max(0, Math.round(cost));
 }
 
@@ -144,6 +178,18 @@ export type RecordAiUsageInput = {
   model: string;
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Anthropic prompt-cache tokens (Task #10). When set, `computeCostMicros`
+   * prices cache reads at 0.1× base and cache writes at 1.25× base. Both
+   * are persisted into their own columns so the rollup cron (and the
+   * admin margin view) can measure cache-hit rate per op.
+   *
+   * Undefined for non-Anthropic providers. Zero is distinct from
+   * undefined: a caller that passes 0 explicitly says "cache applied,
+   * nothing hit"; undefined says "cache not applicable".
+   */
+  cachedInputTokens?: number | null;
+  cacheCreationInputTokens?: number | null;
   latencyMs: number;
   /**
    * Credits debited for this call. Should match what `spendCredits`
@@ -194,11 +240,25 @@ export async function recordAiUsage(
   // incurred some provider cost, but without a usage record from the
   // provider we can't attribute it accurately. The rollup treats those
   // as "unknown cost" which is honest.
+  const cachedIn =
+    input.cachedInputTokens != null
+      ? Math.max(0, Math.floor(input.cachedInputTokens))
+      : null;
+  const cacheWriteIn =
+    input.cacheCreationInputTokens != null
+      ? Math.max(0, Math.floor(input.cacheCreationInputTokens))
+      : null;
   const enrichedCostMicros =
     input.costMicros !== undefined && input.costMicros !== null
       ? input.costMicros
       : input.success
-        ? computeCostMicros(input.model, input.inputTokens, input.outputTokens)
+        ? computeCostMicros(
+            input.model,
+            input.inputTokens,
+            input.outputTokens,
+            cachedIn ?? 0,
+            cacheWriteIn ?? 0
+          )
         : null;
 
   try {
@@ -210,6 +270,10 @@ export async function recordAiUsage(
       model: input.model,
       inputTokens: Math.max(0, Math.floor(input.inputTokens || 0)),
       outputTokens: Math.max(0, Math.floor(input.outputTokens || 0)),
+      // New columns (migration 0007) — nullable so back-compat writes
+      // from non-Anthropic adapters and legacy code paths work unchanged.
+      cachedInputTokens: cachedIn,
+      cacheCreationInputTokens: cacheWriteIn,
       latencyMs: Math.max(0, Math.floor(input.latencyMs || 0)),
       creditsSpent: Math.max(0, Math.floor(input.creditsSpent || 0)),
       costMicros: enrichedCostMicros,

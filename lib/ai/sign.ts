@@ -482,6 +482,10 @@ async function runChat(
     messages: [{ role: "user", content: opts.userPrompt }],
     maxTokens: opts.maxTokens,
     temperature: 0.1,
+    // Task #10: Anthropic prompt caching. Sign analysis has a stable
+    // structured-output system prompt (field-extraction JSON schema +
+    // safety preamble) across every run. Non-Anthropic adapters ignore.
+    cacheSystemPrompt: true,
   });
   if (result.stopReason === "error") {
     throw new Error("AI provider returned an error stop reason");

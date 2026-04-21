@@ -242,6 +242,12 @@ export async function POST(req: Request): Promise<Response> {
     model: summary.model,
     inputTokens: summary.usage.inputTokens,
     outputTokens: summary.usage.outputTokens,
+    // Task #10: forward Anthropic prompt-cache token fields. Undefined is
+    // passed through unchanged for non-Anthropic calls — the DB column is
+    // nullable and we want "cache not applicable" (null) kept distinct
+    // from "cache configured, nothing hit" (explicit 0).
+    cachedInputTokens: summary.usage.cachedInputTokens,
+    cacheCreationInputTokens: summary.usage.cacheCreationInputTokens,
     latencyMs: Date.now() - providerStartedAt,
     creditsSpent: creditCost,
     costMicros: null,

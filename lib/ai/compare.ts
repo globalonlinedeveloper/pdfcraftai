@@ -295,6 +295,10 @@ async function runChat(
     // 0.1 — we want deterministic structure and faithful quoting. Any
     // higher and the model starts paraphrasing the verbatim blocks.
     temperature: 0.1,
+    // Task #10: Anthropic prompt caching. Compare's system prompt is
+    // stable across every call (safety preamble + structured-output spec
+    // + fidelity rules). Non-Anthropic adapters ignore this flag.
+    cacheSystemPrompt: true,
   });
   if (result.stopReason === "error") {
     throw new Error("AI provider returned an error stop reason");

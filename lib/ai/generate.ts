@@ -303,6 +303,11 @@ async function runChat(
     // 0.4 — a notch above rewrite's 0.3. Document generation benefits
     // from a little variety so successive runs don't feel like templates.
     temperature: 0.4,
+    // Task #10: Anthropic prompt caching. Generate's system prompt is
+    // long and depth-parameterised but STABLE per depth, and most calls
+    // in a given hour share a depth — perfect cache target. Non-Anthropic
+    // adapters ignore the flag.
+    cacheSystemPrompt: true,
   });
   if (result.stopReason === "error") {
     throw new Error("AI provider returned an error stop reason");

@@ -264,6 +264,14 @@ async function runChat(
     // 0.2 — mildly creative prose, deterministic-ish structure. Higher
     // drifts off the requested sections; lower reads like a template.
     temperature: 0.2,
+    // Task #10: Anthropic prompt caching. The summarize system prompt is
+    // stable across every call at a given depth — buildSafetyPreamble +
+    // fidelity rules + depth line add up to a repeatable prefix. Setting
+    // this hints Anthropic to attach a 5-minute ephemeral cache breakpoint.
+    // Non-Anthropic adapters ignore the flag. If the prefix is below the
+    // ~1024/~2048 token minimum, Anthropic silently skips with no error
+    // — we eat zero overhead on misses, so this is safe-on.
+    cacheSystemPrompt: true,
   });
   if (result.stopReason === "error") {
     // Adapters should emit error chunks from streamChat and wrap .chat()

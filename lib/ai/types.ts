@@ -120,6 +120,28 @@ export type ChatMessage = {
 export type TokenUsage = {
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Tokens served from Anthropic's prompt-cache. Present only when the
+   * request set `cacheSystemPrompt: true` (or the adapter added its own
+   * cache breakpoints) AND the prefix matched an existing cache entry.
+   * Anthropic bills these at 0.1× the base input rate — the cost
+   * calculator in `lib/ai/usage.ts` picks this up automatically.
+   *
+   * Undefined (not zero) when the provider didn't report the field:
+   *   - Non-Anthropic providers never set this — we treat "undefined"
+   *     as "cache not applicable" rather than "cache missed".
+   *   - Anthropic calls without cache_control set never populate this.
+   *   - A cached-miss-because-cache-entry-expired returns 0 here while
+   *     populating `cacheCreationInputTokens` with the write cost.
+   */
+  cachedInputTokens?: number;
+  /**
+   * Tokens written to Anthropic's prompt-cache on THIS call. Billed at
+   * 1.25× the base input rate for the 5-minute ephemeral tier. A warm
+   * cache returns 0 here and non-zero in `cachedInputTokens`; a cold
+   * cache reverses it.
+   */
+  cacheCreationInputTokens?: number;
 };
 
 export type StopReason =
@@ -153,6 +175,24 @@ export type ChatInput = {
    * knowledge into app code.
    */
   model?: string;
+  /**
+   * Anthropic-only hint: when `true`, the adapter adds a `cache_control`
+   * ephemeral breakpoint on the `system` block so the next call within
+   * ~5 minutes with the same system prefix re-uses it at 10% of the
+   * base-input cost. Other providers ignore this flag.
+   *
+   * Callers should set this ONLY when the system prompt is stable across
+   * many requests (summarize/compare/generate/sign all qualify — they
+   * encode a depth-parameterised prompt that repeats). For ops with
+   * per-call-varying system prompts (translate target-lang) leave it
+   * off — cache entries that never hit are pure overhead (1.25× write
+   * premium with no read payoff).
+   *
+   * Minimum cacheable prefix is ~1024 tokens for Sonnet/Opus and ~2048
+   * tokens for Haiku — smaller prompts get a silent-skip from Anthropic
+   * (no error, no cached tokens reported). Safe default.
+   */
+  cacheSystemPrompt?: boolean;
 };
 
 export type ChatResult = {

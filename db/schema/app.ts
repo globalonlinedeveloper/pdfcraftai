@@ -506,6 +506,15 @@ export const aiUsage = mysqlTable(
     model: varchar("model", { length: 128 }).notNull(),
     inputTokens: int("input_tokens").notNull().default(0),
     outputTokens: int("output_tokens").notNull().default(0),
+    // Anthropic prompt-cache token buckets (Task #10).
+    // Nullable because: (a) non-Anthropic providers never report these,
+    // and (b) historical rows pre-migration 0007 have no data. Null ≠ 0:
+    // null means "cache not applicable"; 0 means "cache applied, nothing
+    // hit". The margin rollup and admin dashboard both depend on that
+    // distinction to measure cache-hit rate honestly.
+    // Migration: `db/migrations/0007_ai_usage_cache_cols.sql`.
+    cachedInputTokens: int("cached_input_tokens"),
+    cacheCreationInputTokens: int("cache_creation_input_tokens"),
     latencyMs: int("latency_ms").notNull().default(0),
     creditsSpent: int("credits_spent").notNull().default(0),
     // USD * 1e6. Nullable until per-model rate cards are wired (Phase A4).

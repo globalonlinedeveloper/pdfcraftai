@@ -1,0 +1,49 @@
+-- 0007_ai_usage_cache_cols.sql
+-- Phase A / Task #10 — Anthropic prompt caching observability.
+--
+-- Background
+-- ----------
+-- Anthropic's Messages API reports three input-side token buckets on every
+-- message_start event:
+--   1. usage.input_tokens               → uncached input (billed at 1× base)
+--   2. usage.cache_read_input_tokens    → served from cache (billed at 0.1× base)
+--   3. usage.cache_creation_input_tokens → written to cache this call (1.25× base)
+-- Our ai_usage table (migration 0005) only stored bucket #1, which means:
+--   - The margin rollup mispriced every cached call (overcounting cost).
+--   - We had no way to measure cache-hit rate per-op or per-user.
+--   - Admin dashboard (Phase B task #18) couldn't surface cache efficacy.
+-- This migration adds two nullable columns for buckets #2 and #3, so every
+-- future call can record its true cache mix and the margin math upstream
+-- can price each bucket at its own rate.
+--
+-- Why nullable (not DEFAULT 0)
+-- ----------------------------
+-- Non-Anthropic providers never report these fields — a hard 0 would be a
+-- lie that pollutes analytics ("Gemini has 100% cache miss rate"). Null
+-- means "cache not applicable to this provider/call"; explicit 0 means
+-- "Anthropic ran cache_control but nothing hit". Preserving that
+-- distinction is the whole reason this column exists.
+--
+-- Back-compat for historical rows
+-- -------------------------------
+-- Rows inserted before this migration have NULL in both columns. The
+-- margin rollup (lib/ai/margin-rollup.ts) will treat NULL as 0 for
+-- summation purposes — mathematically identical to the pre-migration
+-- behaviour — but the per-op cache-hit-rate dashboard filters on
+-- IS NOT NULL to measure only Anthropic calls that actually set
+-- cache_control.
+--
+-- No index needed: both columns are read exclusively via slice aggregates
+-- (SUM(...) GROUP BY provider_id, operation, date) which are already
+-- served by ai_usage_provider_created_idx + ai_usage_created_idx.
+--
+-- Rollout note
+-- ------------
+-- Additive ALTER with NULL default → zero write amplification, no
+-- downtime risk on the managed MySQL instance at Hostinger. Safe to
+-- apply before the code that populates the columns ships (nullable
+-- columns with no code writing to them stay NULL forever, no-op).
+
+ALTER TABLE `ai_usage`
+  ADD COLUMN `cached_input_tokens` int NULL AFTER `output_tokens`,
+  ADD COLUMN `cache_creation_input_tokens` int NULL AFTER `cached_input_tokens`;
