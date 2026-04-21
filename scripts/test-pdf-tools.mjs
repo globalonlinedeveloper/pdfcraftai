@@ -84,20 +84,50 @@ async function makePdf(pageCount) {
   return doc.save({ useObjectStreams: true });
 }
 
-/** Tiny 1×1 red PNG. */
+/**
+ * Tiny 1×1 red PNG.
+ *
+ * NOTE: We return a freshly-allocated `Uint8Array` (via `Uint8Array.from`)
+ * rather than a Node `Buffer` on purpose. `Buffer.from(base64, 'base64')`
+ * returns a Buffer whose underlying `ArrayBuffer` is Node's internal slab
+ * allocator — `buf.byteOffset` can be nonzero, meaning the image bytes do
+ * NOT start at offset 0 of `buf.buffer`. pdf-lib's `JpegEmbedder.for`
+ * (v1.17.1 `cjs/core/embedders/JpegEmbedder.js`) does
+ * `new DataView(imageData.buffer); dataView.getUint16(0)` — reading at
+ * offset 0 of the underlying slab, not at `byteOffset`. On Node 22 the
+ * slab layout happens to place tiny Buffers at offset 0 (so the sandbox
+ * passes), but on Node 18/20 in GitHub Actions runners the byteOffset is
+ * nonzero and the SOI check reads the wrong two bytes → `Error: SOI not
+ * found in JPEG`. `Uint8Array.from(iterable)` iterates and copies into a
+ * brand-new ArrayBuffer, so `byteOffset === 0` is guaranteed on every
+ * Node version. Production code (`components/tools/ImageToPdfTool.tsx`)
+ * already sidesteps this bug because it uses
+ * `new Uint8Array(await file.arrayBuffer())`, which gets a fresh
+ * byteOffset-0 buffer from the File API — only the base64-decoded test
+ * fixtures needed this fix.
+ */
 function makeRedPng() {
-  return Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-    "base64",
+  return Uint8Array.from(
+    Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+      "base64",
+    ),
   );
 }
 
-/** Tiny 2×2 JPEG. */
+/**
+ * Tiny 2×2 JPEG. See `makeRedPng` for why this returns a Uint8Array
+ * rather than a Buffer — same pdf-lib byteOffset issue, more acute for
+ * JPEG because `JpegEmbedder.for` reads from offset 0 of the underlying
+ * ArrayBuffer without accounting for `imageData.byteOffset`.
+ */
 function makeBlueJpg() {
   // minimal valid JPEG (1x1 blue-ish) encoded by ChatGPT fixture generator
-  return Buffer.from(
-    "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==",
-    "base64",
+  return Uint8Array.from(
+    Buffer.from(
+      "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==",
+      "base64",
+    ),
   );
 }
 
