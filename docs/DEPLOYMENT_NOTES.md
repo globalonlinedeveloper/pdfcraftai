@@ -1,13 +1,13 @@
 # pdfcraftai.com — Deployment & Session Notes
 
-_Last updated: 2026-04-21_
+_Last updated: 2026-04-21 (Task #20 — Phase A2 token-cap)_
 
 ## Production environment
 
 - **Host:** Hostinger (managed Next.js hosting, hPanel)
 - **CDN / Proxy:** Cloudflare (proxy enabled — confirmed via `cf-ray`, `server: cloudflare`, `cf-cache-status: DYNAMIC`)
 - **Domain:** https://pdfcraftai.com (apex + www redirect)
-- **Current commit at last successful deploy:** `037f6ea` (2026-04-21, Phase A1 `ai_usage` per-call audit table — Task #19. **Deploy gotcha: `db/migrations/0005_ai_usage.sql` must be applied manually to Hostinger MySQL BEFORE the code lands**, otherwise every `INSERT INTO ai_usage` silently fails until the table exists. See STATUS.md § "AI observability (Phase A1)". Previous: `5f70cd7` CF-IPCountry auto-preselect on `/launch-notify` Task #3 sub-item 4d; code shipped in `00615d2`.)
+- **Current commit at last successful deploy:** `e882eed` (2026-04-21, Phase A2 token-level input-context cap on `/api/ai/chat` — Task #20. Replaces old 16k-char byte-level `message_too_long` guard with a proper 20k-token ceiling per MASTER_PLAN §4 D4 + §7 gate #5. Three-file bundle: new `lib/ai/tokens.ts` (char-based heuristic, 3.5 chars/token Latin + 1:1 CJK + 4-token role-framing), restructured `app/api/ai/chat/route.ts` (cap check runs after PDF extract, before user-message INSERT; refund-before-413 on overflow), new `scripts/test-chat-context-cap.mjs` (33 assertions across 5 sections: static / behavioral / route-wiring / drift / spec-pin). Also wired ai-usage + chat-context-cap suites into the aggregator and fixed the Task #19 retrospective gap. `npm test` now runs 6 suites / 526 assertions / ~1.0s, all green. **No deploy gotcha this time** — pure code change, no migration. Previous: `037f6ea` Phase A1 `ai_usage` per-call audit table — Task #19. **Deploy gotcha for that one: `db/migrations/0005_ai_usage.sql` was applied manually to Hostinger MySQL 2026-04-21 ~11:00 UTC via SSH — verified via `SHOW CREATE TABLE ai_usage` showing all 15 columns + 5 indexes + FK to users.id ON DELETE CASCADE.** See STATUS.md § "AI observability (Phase A1/A2)". Before that: `5f70cd7` CF-IPCountry auto-preselect on `/launch-notify` Task #3 sub-item 4d; code shipped in `00615d2`.)
 
 ## Hostinger environment variables (production)
 
