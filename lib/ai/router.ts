@@ -79,6 +79,7 @@
 
 import "server-only";
 
+import { isProviderKilled } from "./kill-switches";
 import type { AIProvider } from "./provider";
 import { getProvider, listConfiguredProviderIds } from "./registry";
 import type { AICapabilities, AIProviderId } from "./types";
@@ -255,6 +256,16 @@ export async function route(
   const ladder = resolveLadder(op, opts.preferredId);
 
   for (const id of ladder) {
+    // Task #12 — provider kill switch. An operator-flipped env var
+    // (`AI_KILL_{PROVIDER}=true`) removes a provider from consideration
+    // for every op until the var is unflipped + redeployed. Skipping
+    // silently here means the router falls through to the next ladder
+    // entry exactly as if the provider were unconfigured. If every
+    // entry is killed, the loop exits and we throw
+    // `NoRoutableProviderError` — handled by route handlers as 503
+    // `no_ai_provider_configured`, which is the right caller-visible
+    // posture ("we can't serve this right now").
+    if (isProviderKilled(id)) continue;
     const provider = await getProvider(id);
     if (!provider) continue;
     if (!provider.capabilities[capability]) continue;

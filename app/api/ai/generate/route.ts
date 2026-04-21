@@ -33,6 +33,7 @@ import {
   type GenerateTone,
 } from "@/lib/ai/generate";
 import { findAiOutputByIdempotencyKey } from "@/lib/ai/idempotency";
+import { guardAiRoute } from "@/lib/ai/route-guards";
 
 // Node runtime — pdf-lib + AI SDKs + mysql2 don't run on Edge.
 export const dynamic = "force-dynamic";
@@ -67,6 +68,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!userId) {
     return json(401, { error: "not_authenticated" });
   }
+
+  // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
+  const gate = await guardAiRoute("generate", userId);
+  if (gate) return gate;
 
   // -- 2. Parse body ---------------------------------------------------
   // Accept either JSON or multipart. In practice the client posts JSON;

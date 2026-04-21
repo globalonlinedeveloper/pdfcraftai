@@ -40,6 +40,7 @@ import {
   type SignUserInfo,
 } from "@/lib/ai/sign";
 import { findAiOutputByIdempotencyKey } from "@/lib/ai/idempotency";
+import { guardAiRoute } from "@/lib/ai/route-guards";
 
 // Node runtime — pdfjs-dist legacy + pdf-lib + mysql2 + AI SDKs don't
 // run on Edge.
@@ -58,6 +59,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!userId) {
     return json(401, { error: "not_authenticated" });
   }
+
+  // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
+  const gate = await guardAiRoute("sign", userId);
+  if (gate) return gate;
 
   // -- 2. Parse multipart body -----------------------------------------
   let form: FormData;

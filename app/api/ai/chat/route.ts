@@ -48,6 +48,7 @@ import { isTruncatedStopReason, recordAiUsage } from "@/lib/ai/usage";
 import type { AIProvider } from "@/lib/ai/provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "@/lib/ai/prompt-safety";
 import { NoRoutableProviderError, route } from "@/lib/ai/router";
+import { guardAiRoute } from "@/lib/ai/route-guards";
 import { estimatePromptTokens, OP_MAX_INPUT_TOKENS } from "@/lib/ai/tokens";
 import type {
   AIProviderId,
@@ -93,6 +94,14 @@ export async function POST(req: Request): Promise<Response> {
   if (!userId) {
     return json(401, { error: "not_authenticated" });
   }
+
+  // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
+  // Gate runs BEFORE the session ownership lookup / idempotency replay /
+  // spendCredits. Same posture as every other op: a killed op or a
+  // capped user gets a JSON error, not an SSE stream — the client
+  // handles 503/429 identically across ops.
+  const gate = await guardAiRoute("chat", userId);
+  if (gate) return gate;
 
   // -- 2. Parse multipart body -----------------------------------------
   let form: FormData;

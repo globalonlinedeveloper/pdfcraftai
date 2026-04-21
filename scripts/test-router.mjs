@@ -75,6 +75,29 @@ const TABLE_PATH = resolve(ROOT, "lib", "ai", "table.ts");
 const REDACT_PATH = resolve(ROOT, "lib", "ai", "redact.ts");
 const CHAT_ROUTE_PATH = resolve(ROOT, "app", "api", "ai", "chat", "route.ts");
 const PACKAGE_JSON_PATH = resolve(ROOT, "package.json");
+// Task #12 (2026-04-22): kill switches + per-user daily cost ceiling.
+const KILL_SWITCHES_PATH = resolve(ROOT, "lib", "ai", "kill-switches.ts");
+const RATE_LIMIT_PATH = resolve(ROOT, "lib", "ai", "rate-limit.ts");
+const ROUTE_GUARDS_PATH = resolve(ROOT, "lib", "ai", "route-guards.ts");
+const SCHEMA_APP_PATH = resolve(ROOT, "db", "schema", "app.ts");
+const MIGRATION_0009_PATH = resolve(
+  ROOT,
+  "db",
+  "migrations",
+  "0009_user_rate_limits.sql",
+);
+const OP_ROUTE_PATHS = {
+  ocr: resolve(ROOT, "app", "api", "ai", "ocr", "route.ts"),
+  translate: resolve(ROOT, "app", "api", "ai", "translate", "route.ts"),
+  chat: resolve(ROOT, "app", "api", "ai", "chat", "route.ts"),
+  summarize: resolve(ROOT, "app", "api", "ai", "summarize", "route.ts"),
+  compare: resolve(ROOT, "app", "api", "ai", "compare", "route.ts"),
+  generate: resolve(ROOT, "app", "api", "ai", "generate", "route.ts"),
+  sign: resolve(ROOT, "app", "api", "ai", "sign", "route.ts"),
+  rewrite: resolve(ROOT, "app", "api", "ai", "rewrite", "route.ts"),
+  table: resolve(ROOT, "app", "api", "ai", "table", "route.ts"),
+  redact: resolve(ROOT, "app", "api", "ai", "redact", "route.ts"),
+};
 
 const TYPES_SRC = readFileSync(TYPES_PATH, "utf8");
 const ROUTER_SRC = readFileSync(ROUTER_PATH, "utf8");
@@ -89,6 +112,15 @@ const TABLE_SRC = readFileSync(TABLE_PATH, "utf8");
 const REDACT_SRC = readFileSync(REDACT_PATH, "utf8");
 const CHAT_SRC = readFileSync(CHAT_ROUTE_PATH, "utf8");
 const PACKAGE_JSON_SRC = readFileSync(PACKAGE_JSON_PATH, "utf8");
+// Task #12 — kill switches + rate limit module sources.
+const KILL_SWITCHES_SRC = readFileSync(KILL_SWITCHES_PATH, "utf8");
+const RATE_LIMIT_SRC = readFileSync(RATE_LIMIT_PATH, "utf8");
+const ROUTE_GUARDS_SRC = readFileSync(ROUTE_GUARDS_PATH, "utf8");
+const SCHEMA_APP_SRC = readFileSync(SCHEMA_APP_PATH, "utf8");
+const MIGRATION_0009_SRC = readFileSync(MIGRATION_0009_PATH, "utf8");
+const OP_ROUTE_SRCS = Object.fromEntries(
+  Object.entries(OP_ROUTE_PATHS).map(([op, p]) => [op, readFileSync(p, "utf8")]),
+);
 
 let pass = 0;
 let fail = 0;
@@ -673,6 +705,291 @@ assert(
   /"@google\/generative-ai"\s*:\s*"[^"]+"/.test(PACKAGE_JSON_SRC),
   "package.json must list @google/generative-ai under dependencies"
 );
+
+// =============================================================================
+// SECTION G — Task #12 kill switches (lib/ai/kill-switches.ts)
+// =============================================================================
+//
+// Pins the env-var naming scheme (so a rename breaks here, not in
+// production when an operator flips a stale var name), the truthy
+// vocabulary, the public reader surface, and the router's ladder-walk
+// integration. Matches the "Test story" block in kill-switches.ts.
+
+assert(
+  "G1 kill-switches.ts declares server-only boundary",
+  /^import\s+"server-only"/m.test(KILL_SWITCHES_SRC),
+  'lib/ai/kill-switches.ts must import "server-only" — env reads must never run on the client'
+);
+
+assert(
+  "G2 kill-switches.ts exports PROVIDER_KILL_ENV_VAR",
+  /export const PROVIDER_KILL_ENV_VAR\b/.test(KILL_SWITCHES_SRC),
+  "PROVIDER_KILL_ENV_VAR map must be exported so admin page + tests see the same names"
+);
+
+assert(
+  "G2 kill-switches.ts exports OP_KILL_ENV_VAR",
+  /export const OP_KILL_ENV_VAR\b/.test(KILL_SWITCHES_SRC),
+  "OP_KILL_ENV_VAR map must be exported"
+);
+
+// Provider env-var names follow the AI_KILL_<UPPER_PROVIDER> scheme.
+for (const prov of ["ANTHROPIC", "OPENAI", "GEMINI"]) {
+  assert(
+    `G3 kill-switches.ts declares AI_KILL_${prov}`,
+    new RegExp(`"AI_KILL_${prov}"`).test(KILL_SWITCHES_SRC),
+    `AI_KILL_${prov} env var name missing from kill-switches.ts`
+  );
+}
+
+// Op env-var names follow the AI_KILL_<UPPER_OP> scheme, one per shipped op.
+for (const op of OPS) {
+  assert(
+    `G4 kill-switches.ts declares AI_KILL_${op.toUpperCase()}`,
+    new RegExp(`"AI_KILL_${op.toUpperCase()}"`).test(KILL_SWITCHES_SRC),
+    `AI_KILL_${op.toUpperCase()} env var name missing — every AIOp needs a kill switch`
+  );
+}
+
+// Reader function exports — these are the public surface that router.ts,
+// route-guards.ts, and the admin page depend on.
+for (const exp of [
+  "isKillValueTruthy",
+  "isProviderKilled",
+  "isOpKilled",
+  "killedProviders",
+  "killedOps",
+  "killSwitchSnapshot",
+  "assertOpNotKilled",
+]) {
+  assert(
+    `G5 kill-switches.ts exports ${exp}`,
+    new RegExp(`export (async )?function ${exp}\\b`).test(KILL_SWITCHES_SRC),
+    `${exp} must be exported from lib/ai/kill-switches.ts`
+  );
+}
+
+assert(
+  "G5 kill-switches.ts exports OpKilledError",
+  /export class OpKilledError\b/.test(KILL_SWITCHES_SRC),
+  "OpKilledError class must be exported so route-guards.ts can instanceof-check it"
+);
+
+// Truthy vocabulary — must accept "true"/"1"/"yes"/"on" (the operator-
+// facing affirmatives). If a future refactor silently drops "yes" or
+// "on", ops runbooks become lies — this test catches that.
+for (const truthy of ["true", "1", "yes", "on"]) {
+  assert(
+    `G6 isKillValueTruthy accepts "${truthy}"`,
+    new RegExp(`normalized === "${truthy}"`).test(KILL_SWITCHES_SRC),
+    `isKillValueTruthy must accept "${truthy}" (case-insensitive) — operator vocabulary`
+  );
+}
+
+// Router integration — route() must skip killed providers during the
+// ladder walk. Matches the "router skips killed providers" assertion in
+// kill-switches.ts's test-story comment.
+assert(
+  "G7 router.ts imports isProviderKilled",
+  /\bisProviderKilled\b[\s\S]{0,120}from\s*"\.\/kill-switches"/.test(
+    ROUTER_SRC,
+  ),
+  "router.ts must import isProviderKilled from ./kill-switches"
+);
+
+assert(
+  "G7 router.ts skips killed providers in ladder walk",
+  /if\s*\(\s*isProviderKilled\s*\(\s*id\s*\)\s*\)\s*continue/.test(ROUTER_SRC),
+  "router.ts route() must `continue` past any id where isProviderKilled(id) === true"
+);
+
+// =============================================================================
+// SECTION H — Task #12 per-user daily cost ceiling (lib/ai/rate-limit.ts)
+// =============================================================================
+//
+// Pins the cap-resolution contract (row → env → default), the default
+// value (so nobody silently 100x's it to $50/day in a refactor), the
+// public API surface, the error class, the UTC-day math, and the 10
+// route-handler wiring via the shared route-guards helper.
+
+assert(
+  "H1 rate-limit.ts declares server-only boundary",
+  /^import\s+"server-only"/m.test(RATE_LIMIT_SRC),
+  'lib/ai/rate-limit.ts must import "server-only"'
+);
+
+assert(
+  "H2 rate-limit.ts exports DEFAULT_DAILY_COST_CAP_MICROS",
+  /export const DEFAULT_DAILY_COST_CAP_MICROS\b/.test(RATE_LIMIT_SRC),
+  "DEFAULT_DAILY_COST_CAP_MICROS constant must be exported"
+);
+
+assert(
+  "H2 DEFAULT_DAILY_COST_CAP_MICROS === 500_000 ($0.50/day)",
+  /DEFAULT_DAILY_COST_CAP_MICROS\s*=\s*500[_]?000\b/.test(RATE_LIMIT_SRC),
+  "Default cap must stay 500000 µUSD until we have distribution data — do not raise silently"
+);
+
+assert(
+  "H2 rate-limit.ts exports DAILY_COST_CAP_ENV_VAR",
+  /export const DAILY_COST_CAP_ENV_VAR\s*=\s*"USER_DAILY_COST_MICROS_CAP"/.test(
+    RATE_LIMIT_SRC,
+  ),
+  "DAILY_COST_CAP_ENV_VAR must be exported as the literal 'USER_DAILY_COST_MICROS_CAP'"
+);
+
+for (const exp of [
+  "resolveDailyCapMicros",
+  "utcDayBounds",
+  "secondsUntilNextUtcMidnight",
+  "checkUserDailyCost",
+  "assertWithinDailyCap",
+]) {
+  assert(
+    `H3 rate-limit.ts exports ${exp}`,
+    new RegExp(`export (async )?function ${exp}\\b`).test(RATE_LIMIT_SRC),
+    `${exp} must be exported from lib/ai/rate-limit.ts`
+  );
+}
+
+assert(
+  "H3 rate-limit.ts exports DailyCostCeilingExceededError",
+  /export class DailyCostCeilingExceededError\b/.test(RATE_LIMIT_SRC),
+  "DailyCostCeilingExceededError class must be exported"
+);
+
+// Cap resolution: override → env → default. The ordered branches in
+// resolveDailyCapMicros must be present — a refactor that accidentally
+// swaps "env before override" changes the security posture silently.
+assert(
+  "H4 resolveDailyCapMicros prefers override when non-null",
+  /if\s*\(\s*override\s*!==\s*null\s*\)\s*return\s+override/.test(
+    RATE_LIMIT_SRC,
+  ),
+  "resolveDailyCapMicros must return override first if present"
+);
+
+assert(
+  "H4 resolveDailyCapMicros falls back to env then default",
+  /parseEnvCap\(\)[\s\S]{0,120}DEFAULT_DAILY_COST_CAP_MICROS/.test(
+    RATE_LIMIT_SRC,
+  ),
+  "resolveDailyCapMicros must fall through to env then the hard-coded default"
+);
+
+// Strict >= comparison (the comment in rate-limit.ts explains why).
+assert(
+  "H5 assertWithinDailyCap uses strict used >= cap semantics (allowed = used < cap)",
+  /allowed\s*=\s*used\s*<\s*capMicros/.test(RATE_LIMIT_SRC),
+  "checkUserDailyCost must compare used < cap (strict) so a tied used === cap refuses the NEXT call"
+);
+
+assert(
+  "H5 assertWithinDailyCap throws DailyCostCeilingExceededError on !allowed",
+  /if\s*\(\s*!allowed\s*\)[\s\S]{0,200}throw new DailyCostCeilingExceededError/.test(
+    RATE_LIMIT_SRC,
+  ),
+  "assertWithinDailyCap must throw DailyCostCeilingExceededError when allowed === false"
+);
+
+// Schema + migration exist — a missing table blows up at runtime only,
+// which is too late. Catch it here.
+assert(
+  "H6 db/schema/app.ts declares userRateLimits table",
+  /export const userRateLimits\s*=\s*mysqlTable\(\s*"user_rate_limits"/.test(
+    SCHEMA_APP_SRC,
+  ),
+  "userRateLimits Drizzle table must be declared in db/schema/app.ts"
+);
+
+assert(
+  "H6 userRateLimits declares dailyCostCapMicros column",
+  /dailyCostCapMicros:\s*bigint\(\s*"daily_cost_cap_micros"/.test(
+    SCHEMA_APP_SRC,
+  ),
+  "userRateLimits must have a dailyCostCapMicros bigint column"
+);
+
+assert(
+  "H6 migration 0009 creates user_rate_limits table",
+  /CREATE TABLE[\s\S]{0,60}user_rate_limits/.test(MIGRATION_0009_SRC),
+  "db/migrations/0009_user_rate_limits.sql must CREATE TABLE user_rate_limits"
+);
+
+// Route-guards consolidation — every op must route through it.
+assert(
+  "H7 route-guards.ts imports OpKilledError + assertOpNotKilled",
+  /OpKilledError[\s\S]{0,80}assertOpNotKilled/.test(ROUTE_GUARDS_SRC) &&
+    /from\s*"\.\/kill-switches"/.test(ROUTE_GUARDS_SRC),
+  "route-guards.ts must pull OpKilledError and assertOpNotKilled from ./kill-switches"
+);
+
+assert(
+  "H7 route-guards.ts imports DailyCostCeilingExceededError + assertWithinDailyCap",
+  /DailyCostCeilingExceededError[\s\S]{0,80}assertWithinDailyCap/.test(
+    ROUTE_GUARDS_SRC,
+  ) && /from\s*"\.\/rate-limit"/.test(ROUTE_GUARDS_SRC),
+  "route-guards.ts must pull DailyCostCeilingExceededError and assertWithinDailyCap from ./rate-limit"
+);
+
+assert(
+  "H7 route-guards.ts exports guardAiRoute",
+  /export async function guardAiRoute\s*\(/.test(ROUTE_GUARDS_SRC),
+  "guardAiRoute must be the exported entry point for route handlers"
+);
+
+assert(
+  "H7 route-guards.ts maps OpKilledError → status 503 with op_disabled",
+  /instanceof OpKilledError[\s\S]{0,400}status:\s*503[\s\S]{0,200}op_disabled/.test(
+    ROUTE_GUARDS_SRC,
+  ) ||
+    /op_disabled[\s\S]{0,400}status:\s*503/.test(ROUTE_GUARDS_SRC),
+  "route-guards.ts must return HTTP 503 with error:'op_disabled' for OpKilledError"
+);
+
+assert(
+  "H7 route-guards.ts maps DailyCostCeilingExceededError → status 429",
+  /instanceof DailyCostCeilingExceededError[\s\S]{0,800}status:\s*429/.test(
+    ROUTE_GUARDS_SRC,
+  ) ||
+    /daily_cost_ceiling_exceeded[\s\S]{0,400}status:\s*429/.test(
+      ROUTE_GUARDS_SRC,
+    ),
+  "route-guards.ts must return HTTP 429 for DailyCostCeilingExceededError"
+);
+
+assert(
+  "H7 route-guards.ts sets Retry-After from err.retryAfterSeconds",
+  /"Retry-After":\s*String\(\s*err\.retryAfterSeconds\s*\)/.test(
+    ROUTE_GUARDS_SRC,
+  ),
+  "route-guards.ts must set Retry-After to the error's retryAfterSeconds value"
+);
+
+// Route handler wiring — every one of the 10 ops must call guardAiRoute
+// with its op string. This is the test that catches the "added a new op
+// but forgot to wire the gate" drift.
+for (const [op, src] of Object.entries(OP_ROUTE_SRCS)) {
+  assert(
+    `H8 /api/ai/${op}/route.ts imports guardAiRoute`,
+    /import\s*\{\s*guardAiRoute\s*\}\s*from\s*"@\/lib\/ai\/route-guards"/.test(
+      src,
+    ),
+    `app/api/ai/${op}/route.ts must import guardAiRoute from @/lib/ai/route-guards`
+  );
+  assert(
+    `H8 /api/ai/${op}/route.ts calls guardAiRoute("${op}", userId)`,
+    new RegExp(
+      `guardAiRoute\\(\\s*"${op}"\\s*,\\s*userId\\s*\\)`,
+    ).test(src),
+    `app/api/ai/${op}/route.ts must call guardAiRoute("${op}", userId)`
+  );
+  assert(
+    `H8 /api/ai/${op}/route.ts early-returns when gate trips`,
+    /if\s*\(\s*gate\s*\)\s*return\s+gate/.test(src),
+    `app/api/ai/${op}/route.ts must return the gate Response when guardAiRoute yields non-null`
+  );
+}
 
 // =============================================================================
 // Report

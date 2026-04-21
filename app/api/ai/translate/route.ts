@@ -35,6 +35,7 @@ import {
   translatePdf,
 } from "@/lib/ai/translate";
 import { findAiOutputByIdempotencyKey } from "@/lib/ai/idempotency";
+import { guardAiRoute } from "@/lib/ai/route-guards";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -65,6 +66,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!userId) {
     return json(401, { error: "not_authenticated" });
   }
+
+  // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
+  const gate = await guardAiRoute("translate", userId);
+  if (gate) return gate;
 
   // -- 2. Parse multipart ----------------------------------------------
   let form: FormData;

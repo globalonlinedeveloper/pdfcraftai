@@ -44,6 +44,7 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
 import { findAiOutputByIdempotencyKey } from "@/lib/ai/idempotency";
+import { guardAiRoute } from "@/lib/ai/route-guards";
 import {
   MAX_OCR_PAGES,
   NoOcrProviderConfiguredError,
@@ -65,6 +66,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!userId) {
     return json(401, { error: "not_authenticated" });
   }
+
+  // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
+  const gate = await guardAiRoute("ocr", userId);
+  if (gate) return gate;
 
   // -- 2. Parse multipart body -----------------------------------------
   let form: FormData;

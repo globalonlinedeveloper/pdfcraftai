@@ -761,6 +761,63 @@ export const geoWaitlist = mysqlTable(
  *
  * Migration: `db/migrations/0006_ai_daily_margin.sql`.
  */
+/**
+ * Phase A / Task #12 — per-user daily cost ceiling override.
+ *
+ * Rows are OPT-IN: only users who need a non-default cap (either raised
+ * for an enterprise pilot or lowered/zero'd for fraud review) get a
+ * row here. Every other user reads the global default from
+ * `process.env.USER_DAILY_COST_MICROS_CAP` (currently $0.50/user/day
+ * = 500000 µUSD in production).
+ *
+ * Semantics:
+ *   - `dailyCostCapMicros = 0`  → hard block (all AI ops 429).
+ *   - `dailyCostCapMicros > 0`  → soft cap; user is served until
+ *                                  SUM(cost_micros) for today >= cap.
+ *
+ * The cap check lives in `lib/ai/rate-limit.ts → checkUserDailyCost`,
+ * which is called from every op route handler BEFORE `spendCredits`.
+ *
+ * Operator workflow for Phase A (MVP):
+ *   - INSERT / UPDATE via raw SQL against the production database.
+ *   - Admin UI at `/app/admin/kill-switches` is read-only — it shows
+ *     the global env cap + the count of overridden users but never
+ *     mutates. Task #25 (Phase D) upgrades this to a full admin CRUD
+ *     surface with audit logging.
+ *
+ * Why `notes` is stored here instead of an audit table:
+ *   - Phase A needs a place to record WHY an override exists so the
+ *     next operator reading the table understands the context ("temp
+ *     zero — suspected credit-card fraud 2026-04-23"). A proper audit
+ *     trail lands with Task #25.
+ *
+ * Migration: `db/migrations/0009_user_rate_limits.sql`.
+ */
+export const userRateLimits = mysqlTable(
+  "user_rate_limits",
+  {
+    userId: varchar("user_id", { length: 255 })
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // USD × 1e6. Same unit as ai_usage.cost_micros so the cap check's
+    // SUM aggregate compares apples-to-apples without unit conversion.
+    // NOT NULL on purpose: an override row with a null cap has no
+    // semantics; operators who want to "remove override" should DELETE
+    // the row rather than null the value. 0 is a valid cap (= hard block).
+    dailyCostCapMicros: bigint("daily_cost_cap_micros", {
+      mode: "number",
+    }).notNull(),
+    // Free-form operator note. Shown in the admin page's overridden-user
+    // list so the next operator understands why this row exists.
+    notes: varchar("notes", { length: 256 }),
+    createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  }
+);
+
 export const aiDailyMargin = mysqlTable(
   "ai_daily_margin",
   {
