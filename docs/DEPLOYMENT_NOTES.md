@@ -1,13 +1,13 @@
 # pdfcraftai.com — Deployment & Session Notes
 
-_Last updated: 2026-04-20_
+_Last updated: 2026-04-21_
 
 ## Production environment
 
 - **Host:** Hostinger (managed Next.js hosting, hPanel)
 - **CDN / Proxy:** Cloudflare (proxy enabled — confirmed via `cf-ray`, `server: cloudflare`, `cf-cache-status: DYNAMIC`)
 - **Domain:** https://pdfcraftai.com (apex + www redirect)
-- **Current commit at last successful deploy:** `36034eb` (2026-04-20, GA4 + Clarity)
+- **Current commit at last successful deploy:** `5f70cd7` (2026-04-21, STATUS.md paper-trail for CF-IPCountry auto-preselect on `/launch-notify` — Task #3 sub-item 4d; code shipped in `00615d2`)
 
 ## Hostinger environment variables (production)
 
