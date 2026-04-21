@@ -34,6 +34,7 @@ import "server-only";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -231,7 +232,11 @@ function buildSystemPrompt(opts: {
     ? `The document title is "${opts.title.trim()}". Begin with this as an H1 (# ${opts.title.trim()}).`
     : "Begin with an H1 heading (#) that names the document.";
 
+  // Task #26: prepend safety preamble so the model treats the wrapped
+  // user prompt as untrusted data. See lib/ai/prompt-safety.ts.
   return [
+    buildSafetyPreamble("generate"),
+    "",
     "You are the PDFCraft AI document generator. The user will send a prompt describing what they want written. Produce the document in clean markdown.",
     "",
     docFrame,
@@ -252,7 +257,13 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(opts: { prompt: string }): string {
-  return `Write the document per the system instructions. The user's prompt follows.\n\n${opts.prompt}`;
+  // Task #26: wrap the user's free-form prompt in sentinel tags so the
+  // model treats its contents strictly as subject-matter, not as
+  // instructions that could override the system prompt.
+  return (
+    `Write the document per the system instructions. The user's prompt is inside the untrusted_input tag.\n\n` +
+    wrapUntrustedInput(opts.prompt, { sourceLabel: "user_prompt" })
+  );
 }
 
 // --- adapter invocation -----------------------------------------------

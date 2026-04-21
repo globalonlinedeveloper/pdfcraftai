@@ -34,6 +34,7 @@
 import "server-only";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -181,7 +182,10 @@ function buildSystemPrompt(opts: {
     }
   })();
 
+  // Task #26: prepend the safety preamble so the model treats the
+  // wrapped PDF text as data, not instructions. See prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("summarize")}\n\n` +
     `You are the PDFCraft AI summarizer. The user has attached ${title} ` +
     `(${opts.pageCount} page${opts.pageCount === 1 ? "" : "s"}). ` +
     `Pages are delimited by \\f in the source text.\n\n` +
@@ -196,7 +200,11 @@ function buildSystemPrompt(opts: {
 
 function buildUserPrompt(opts: { depth: SummarizeDepth; text: string }): string {
   const verb = opts.depth === "tldr" ? "Summarize" : "Summarize in full per the instructions above";
-  return `${verb}. The document text follows between the markers.\n\n===== BEGIN PDF TEXT =====\n${opts.text}\n===== END PDF TEXT =====`;
+  // Task #26: wrap untrusted PDF text in sentinel tags. See prompt-safety.ts.
+  return (
+    `${verb}. The document text follows inside the untrusted_input tag.\n\n` +
+    wrapUntrustedInput(opts.text, { sourceLabel: "pdf_text" })
+  );
 }
 
 // --- adapter invocation ----------------------------------------------

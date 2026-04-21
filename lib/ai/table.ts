@@ -29,6 +29,7 @@
 import "server-only";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -160,7 +161,9 @@ function buildSystemPrompt(opts: {
       "flags it to the user.\n"
     : "";
 
+  // Task #26: prepend safety preamble. See lib/ai/prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("table")}\n\n` +
     `You are the PDFCraft AI table extractor. The user has attached ${title} ` +
     `(${opts.pageCount} page${opts.pageCount === 1 ? "" : "s"}). ` +
     `Pages are delimited by \\f in the source text.\n\n` +
@@ -197,9 +200,10 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(opts: { text: string }): string {
+  // Task #26: wrap untrusted PDF text in sentinel tags.
   return (
-    "Extract all tables from the document below. Return the JSON envelope.\n\n" +
-    `===== BEGIN PDF TEXT =====\n${opts.text}\n===== END PDF TEXT =====`
+    "Extract all tables from the document inside the untrusted_input tag. Return the JSON envelope.\n\n" +
+    wrapUntrustedInput(opts.text, { sourceLabel: "pdf_text" })
   );
 }
 

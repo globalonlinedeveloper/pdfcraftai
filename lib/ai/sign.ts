@@ -45,6 +45,7 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -392,7 +393,9 @@ function buildSystemPrompt(opts: {
     .map(({ key, hint }) => `- \`${key}\` — ${hint}`)
     .join("\n");
 
+  // Task #26: prepend safety preamble. See lib/ai/prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("sign")}\n\n` +
     `You are the PDFCraft AI form-filler. The user has attached ${title} ` +
     `(${opts.pageCount} page${opts.pageCount === 1 ? "" : "s"}) and asked ` +
     `you to fill in every field you can spot using the info they've ` +
@@ -437,10 +440,11 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(opts: { text: string; info: NormalizedInfo }): string {
+  // Task #26: wrap untrusted PDF text in sentinel tags.
   return (
-    `Fill every form field you can spot in the document below. Return ` +
+    `Fill every form field you can spot in the document inside the untrusted_input tag. Return ` +
     `the JSON envelope.\n\n` +
-    `===== BEGIN PDF TEXT =====\n${opts.text}\n===== END PDF TEXT =====`
+    wrapUntrustedInput(opts.text, { sourceLabel: "pdf_text" })
   );
 }
 

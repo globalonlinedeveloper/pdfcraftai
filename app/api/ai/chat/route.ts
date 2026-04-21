@@ -44,6 +44,7 @@ import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
 import { recordAiUsage } from "@/lib/ai/usage";
 import type { AIProvider } from "@/lib/ai/provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "@/lib/ai/prompt-safety";
 import { NoRoutableProviderError, route } from "@/lib/ai/router";
 import { estimatePromptTokens, OP_MAX_INPUT_TOKENS } from "@/lib/ai/tokens";
 import type {
@@ -586,7 +587,10 @@ function buildSystemPrompt({
 }: {
   pdfSystemContext: string | null;
 }): string {
+  // Task #26: prepend safety preamble so the model treats the attached
+  // PDF text (wrapped below) as untrusted data. See lib/ai/prompt-safety.ts.
   const base =
+    `${buildSafetyPreamble("chat")}\n\n` +
     "You are the PDFCraft AI assistant. Answer clearly and concisely. " +
     "When a document is attached, ground every factual claim in its text " +
     "and cite page numbers where you can. If the answer isn't in the " +
@@ -611,10 +615,12 @@ function buildPdfSystemPrompt(opts: {
     ? "\n(PDF truncated to fit context — if a question references later " +
       "pages and the answer isn't below, say the excerpt ends before that point.)\n"
     : "";
+  // Task #26: PDF text is untrusted — wrap in sentinel tags so the model
+  // can't be hijacked by instructions embedded in the document body.
   return (
     `The user has attached a PDF titled "${opts.filename}" (${opts.pageCount} pages). ` +
-    `The full extracted text follows. Pages are separated by \\f.${ocr}${truncation}\n` +
-    `===== BEGIN PDF TEXT =====\n${opts.text}\n===== END PDF TEXT =====`
+    `The full extracted text follows inside the untrusted_input tag. Pages are separated by \\f.${ocr}${truncation}\n` +
+    wrapUntrustedInput(opts.text, { sourceLabel: "pdf_attachment" })
   );
 }
 

@@ -53,6 +53,7 @@ import "server-only";
 import { PDFDocument } from "pdf-lib";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
 import type {
   AIProviderId,
@@ -240,7 +241,12 @@ function buildSystemPrompt(opts: {
   filename?: string;
 }): string {
   const title = opts.filename ? `"${opts.filename}"` : "an untitled PDF";
+  // Task #26: prepend safety preamble. OCR is uniquely vulnerable —
+  // the PDF image can contain instructions visually rendered into it
+  // that the model will OCR and then be tempted to follow. See
+  // lib/ai/prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("ocr")}\n\n` +
     `You are the PDFCraft AI OCR engine. The user has attached one page ` +
     `from ${title} (page ${opts.pageNumber} of ${opts.totalPageCount}). ` +
     `Your job is to transcribe the visible text into clean markdown.\n\n` +

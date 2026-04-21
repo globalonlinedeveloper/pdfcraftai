@@ -108,6 +108,22 @@ const SUITES = [
   // column rename in ai_usage breaks both, and this harness pins the
   // aggregate-side consumer of those columns.
   { name: "ai-margin-rollup", file: "test-ai-margin-rollup.mjs" },
+  // prompt-safety pins Task #26 / PLAN_GAP_ANALYSIS SEV-0 — the
+  // defense-in-depth layer against prompt injection on PDF→AI flows.
+  // Covers: the lib/ai/prompt-safety.ts module contract (exports,
+  // PromptSafetyOp superset of AIOp, XML sentinel constants), wrap/
+  // escape semantics (source-label sanitization, U+200B break-out escape
+  // for tags + legacy === markers), safety-preamble coverage of every
+  // op (ocr/translate/chat/summarize/compare/generate/sign/rewrite/
+  // table/redact), jailbreak pattern library (13 patterns spanning
+  // high/medium/low severity) with positive/negative cases, and
+  // call-site integration (every lib/ai/*.ts op module + the chat
+  // route imports from prompt-safety and actually wraps user input).
+  // Placed after ai-margin-rollup because it pins the same lib/ai/*.ts
+  // surface — a file-level rewrite (e.g. deleting summarize.ts) breaks
+  // both, and this harness surfaces "prompt-safety call-site missing"
+  // at the right granularity.
+  { name: "prompt-safety", file: "test-prompt-safety.mjs" },
   // dev-hooks pins the pre-push hook's contract + DEV_SETUP.md install
   // instructions. Ordered last because it's not a subsystem gate —
   // it's a self-consistency gate on the repo's own dev tooling. If

@@ -42,6 +42,7 @@
 import "server-only";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -242,7 +243,9 @@ function buildSystemPrompt(opts: {
         "line after the final paragraph.\n"
       : "";
 
+  // Task #26: prepend safety preamble. See lib/ai/prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("translate")}\n\n` +
     `You are the PDFCraft AI translator. Translate the provided text into ${langSpec}. ` +
     `The source is ${title} (${opts.pageCount} page${opts.pageCount === 1 ? "" : "s"}).\n\n` +
     "Rules:\n" +
@@ -266,7 +269,11 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(text: string): string {
-  return `Translate the text between the markers. Output the translation only.\n\n===== BEGIN SOURCE =====\n${text}\n===== END SOURCE =====`;
+  // Task #26: wrap untrusted source text in sentinel tags.
+  return (
+    `Translate the text inside the untrusted_input tag. Output the translation only.\n\n` +
+    wrapUntrustedInput(text, { sourceLabel: "source_text" })
+  );
 }
 
 // --- adapter invocation ----------------------------------------------

@@ -46,6 +46,7 @@
 import "server-only";
 
 import type { AIProvider } from "./provider";
+import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
 import type { AIProviderId, TokenUsage } from "./types";
 
@@ -203,7 +204,10 @@ function buildSystemPrompt(opts: {
       "Summary section.\n"
     : "";
 
+  // Task #26: prepend safety preamble so the model treats both wrapped
+  // documents as untrusted data. See lib/ai/prompt-safety.ts.
   return (
+    `${buildSafetyPreamble("compare")}\n\n` +
     `You are the PDFCraft AI diff engine. The user has given you two PDFs to compare:\n` +
     `  A (original): "${nameA}" — ${pagesA} page${pagesA === 1 ? "" : "s"}\n` +
     `  B (revised):  "${nameB}" — ${pagesB} page${pagesB === 1 ? "" : "s"}\n\n` +
@@ -251,10 +255,11 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(opts: { originalText: string; revisedText: string }): string {
+  // Task #26: wrap both untrusted documents in distinct sentinel tags.
   return (
     `Compare these two documents per the instructions above.\n\n` +
-    `===== BEGIN DOCUMENT A (ORIGINAL) =====\n${opts.originalText}\n===== END DOCUMENT A =====\n\n` +
-    `===== BEGIN DOCUMENT B (REVISED) =====\n${opts.revisedText}\n===== END DOCUMENT B =====`
+    `Document A (original):\n${wrapUntrustedInput(opts.originalText, { sourceLabel: "document_a_original" })}\n\n` +
+    `Document B (revised):\n${wrapUntrustedInput(opts.revisedText, { sourceLabel: "document_b_revised" })}`
   );
 }
 
