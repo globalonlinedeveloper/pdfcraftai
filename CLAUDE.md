@@ -76,6 +76,7 @@ HOSTINGER_SSH_PRIVATE_KEY_PATH=/sessions/gifted-funny-franklin/mnt/pdfcraftai.co
 ## 5. Known operational gotchas
 
 - **503 after deploy** → hPanel → Resource Usage → **Stop running process** → app auto-restarts → 503 clears.
+  - **Faster alternative via SSH** (verified 2026-04-21): if SSH is reachable (section 2b creds), `ssh ... 'ps aux | grep next-server | grep -v grep'` — if you see > 3 concurrent `next-server (v14.2.35)` processes plus `bash: fork: retry: Resource temporarily unavailable` on any shell command, that's the process-table-exhaustion 503 signature. Fix: `ssh ... 'pkill -f "next-server"'` — supervisor respawns one clean worker in ~15s. Fall back to hPanel if SSH is throttled ("Connection closed by remote host" is the throttle symptom, seen earlier same day).
 - **Do NOT push-force to main** — Hostinger's GitHub App treats it as a normal push and may redeploy mid-state.
 - **Env var changes require "Save and redeploy"** in Hostinger → this restarts the runtime but doesn't pull new code; pushing to main pulls new code AND restarts.
 
