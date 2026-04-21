@@ -87,6 +87,17 @@ const SUITES = [
   // before dev-hooks so that a router regression is surfaced as a
   // subsystem failure rather than as a tooling failure.
   { name: "ai-router", file: "test-router.mjs" },
+  // health-ai pins Task #18 (code-side) — the /api/health ai.{configured,
+  // providers, defaults} block. Covers: import of the router+registry
+  // introspection helpers, probeAi() try/catch degrade path, response-body
+  // wiring, DB-gated 200/503 posture (AI state never flips `ok`), sibling
+  // posture with /api/payments/probe (no-store cache, no SDK imports, no
+  // env-var value echoes). Placed right after ai-router because it layers
+  // on top of the same router surface — a router export removal breaks
+  // both, and test-health-ai pins exactly that surface (currentPolicySnapshot
+  // + AIOp type export + listConfiguredProviderIds) so the failure shows
+  // up at the right granularity.
+  { name: "health-ai", file: "test-health-ai.mjs" },
   // dev-hooks pins the pre-push hook's contract + DEV_SETUP.md install
   // instructions. Ordered last because it's not a subsystem gate —
   // it's a self-consistency gate on the repo's own dev tooling. If

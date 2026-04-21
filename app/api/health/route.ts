@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
+import { listConfiguredProviderIds } from "@/lib/ai/registry";
+import { currentPolicySnapshot } from "@/lib/ai/router";
+import type { AIOp } from "@/lib/ai/router";
+import type { AIProviderId } from "@/lib/ai/types";
 
 /**
  * Liveness + readiness health probe.
@@ -12,6 +16,11 @@ import { db } from "@/db/client";
  *     commit: string | null,    // short SHA, if injected at build time
  *     uptimeSec: number,         // process uptime
  *     db: { ok: boolean, latencyMs?: number, error?: string },
+ *     ai: {
+ *       configured: boolean,          // at least one AI provider has env set
+ *       providers: AIProviderId[],    // configured provider IDs (no secrets)
+ *       defaults: Record<AIOp, AIProviderId[]>, // resolved router ladder per op
+ *     },
  *     ts: string                  // ISO timestamp
  *   }
  *
@@ -19,13 +28,25 @@ import { db } from "@/db/client";
  *   - Cloudflare health-check rule targets this endpoint.
  *   - Internal status page at `/status` calls this to tint the Core API row.
  *   - Deploy verification: curl and confirm `ok: true` + new commit SHA.
+ *   - Post-deploy verification of AI env-var propagation (Task #18 /
+ *     MASTER_PLAN §7 gate #1): after setting `ANTHROPIC_API_KEY` /
+ *     `OPENAI_API_KEY` / `GEMINI_API_KEY` / `AI_ROUTER_*` in hPanel, curl
+ *     this endpoint and confirm `ai.providers` reflects the new state and
+ *     `ai.defaults` shows the expected per-op ladder. No SSH required,
+ *     same posture as `/api/payments/probe`.
  *
  * Notes:
  *   - Always returns 200 so the response body is inspectable — we set
  *     `ok: false` + status 503 only when the DB ping actually fails. This
  *     mirrors Kubernetes readiness probe semantics (non-2xx = unready).
+ *   - AI state is metadata-only — it never flips `ok`. Missing providers
+ *     are a deployment state, not a failure (pre-launch sandboxes, budget
+ *     freeze, future rotation windows). DB is the only real-health signal
+ *     this probe gates on.
  *   - Never logs secrets or DB credentials. Error strings are short
- *     and sanitized (error.code + message only).
+ *     and sanitized (error.code + message only). AI block carries only
+ *     provider IDs + routing snapshot — zero env-var values, zero API keys,
+ *     zero adapter paths.
  */
 
 export const runtime = "nodejs";
@@ -49,6 +70,47 @@ const COMMIT_SHA = RAW_SHA && RAW_SHA.length > 0 ? RAW_SHA : null;
 const SERVICE = "pdfcraftai";
 const STARTED_AT = Date.now();
 
+/**
+ * AI introspection — metadata-only probe over the provider registry and
+ * router policy. Mirrors `/api/payments/probe` in posture: reads env to
+ * enumerate configured adapters, asks the router for the resolved ladder
+ * per op, NEVER hits a provider API.
+ *
+ * Safe to expose publicly:
+ *   - `providers` is provider IDs only (e.g. "anthropic"), which the
+ *     CSP allowlist already leaks.
+ *   - `defaults` is the compile-time routing policy plus any
+ *     `AI_ROUTER_*` env pins — no keys, no fragments, no URLs.
+ *
+ * Exceptions are swallowed into `configured: false` + empty shapes so a
+ * misconfigured registry row can never take /api/health down. DB
+ * liveness is the ONLY signal this probe gates `ok` on.
+ */
+function probeAi(): {
+  configured: boolean;
+  providers: AIProviderId[];
+  defaults: Record<AIOp, AIProviderId[]>;
+} {
+  try {
+    const providers = listConfiguredProviderIds();
+    const defaults = currentPolicySnapshot();
+    return { configured: providers.length > 0, providers, defaults };
+  } catch (err) {
+    // Introspection itself threw — shouldn't happen (both helpers are
+    // pure env-read + policy-walk), but log-and-degrade rather than
+    // flip /api/health to 503 on an orthogonal concern.
+    console.error("[health] ai probe threw:", err);
+    return {
+      configured: false,
+      providers: [],
+      // Empty object is a legal Record<AIOp, …> value; callers (status
+      // page, smoke tests) should treat missing keys as "unknown ladder"
+      // not "no ladder configured".
+      defaults: {} as Record<AIOp, AIProviderId[]>,
+    };
+  }
+}
+
 export async function GET() {
   const ts = new Date().toISOString();
   const dbStart = Date.now();
@@ -67,6 +129,8 @@ export async function GET() {
     dbError = sanitizeError(err);
   }
 
+  const ai = probeAi();
+
   const body = {
     ok: dbOk,
     service: SERVICE,
@@ -75,6 +139,7 @@ export async function GET() {
     db: dbOk
       ? { ok: true, latencyMs: dbLatency }
       : { ok: false, error: dbError ?? "unknown" },
+    ai,
     ts,
   };
 
