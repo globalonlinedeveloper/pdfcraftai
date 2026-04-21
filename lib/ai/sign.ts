@@ -44,6 +44,8 @@ import { pathToFileURL } from "node:url";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
@@ -150,6 +152,14 @@ export interface SignResult {
   model: string;
   usage: TokenUsage;
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict on the summary markdown.
+   * The signed PDF draws user-provided values (name, email, etc) at
+   * located anchors — deterministic, no model-generated body text —
+   * so the moderation surface here is the summary markdown, which
+   * echoes the user's bundle values + the model's `reason` strings.
+   */
+  moderation: ModerationResult;
 }
 
 export class NoAIProviderConfiguredError extends Error {
@@ -248,6 +258,13 @@ export async function signPdf(input: SignInput): Promise<SignResult> {
     wasTruncated,
   });
 
+  // Task #28: moderate the summary markdown. The drawn PDF itself is
+  // deterministic (we locate anchors + draw user bundle values), so
+  // the moderation surface is the human-visible summary. Critical
+  // findings throw via assertOutputSafe → route handler refunds + 502.
+  const moderation = moderateOutput(markdown, { op: "sign" });
+  assertOutputSafe(moderation, "sign");
+
   return {
     pdfBytes,
     signedPdfFilename: deriveSignedFilename(input.filename),
@@ -260,6 +277,7 @@ export async function signPdf(input: SignInput): Promise<SignResult> {
     model: chat.model,
     usage: chat.usage,
     wasTruncated,
+    moderation,
   };
 }
 

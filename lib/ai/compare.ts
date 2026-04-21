@@ -45,6 +45,8 @@
 
 import "server-only";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
@@ -83,6 +85,8 @@ export interface CompareResult {
   /** Per-side post-truncation char count — useful for the preview/meta. */
   originalChars: number;
   revisedChars: number;
+  /** Task #28: output moderation verdict on the diff markdown. */
+  moderation: ModerationResult;
 }
 
 /**
@@ -153,14 +157,24 @@ export async function comparePdfs(input: CompareInput): Promise<CompareResult> {
     maxTokens: COMPARE_MAX_OUTPUT_TOKENS,
   });
 
+  const markdown = postProcessMarkdown(result.text);
+
+  // Task #28: output moderation on the diff markdown. Diffs can
+  // surface the exact per-line contents of both documents — if
+  // either side contained PII the model faithfully echoed, we catch
+  // it here before the diff is persisted.
+  const moderation = moderateOutput(markdown, { op: "compare" });
+  assertOutputSafe(moderation, "compare");
+
   return {
-    markdown: postProcessMarkdown(result.text),
+    markdown,
     providerId: result.providerId,
     model: result.model,
     usage: result.usage,
     wasTruncated,
     originalChars: originalText.length,
     revisedChars: revisedText.length,
+    moderation,
   };
 }
 

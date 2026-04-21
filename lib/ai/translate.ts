@@ -41,6 +41,8 @@
 
 import "server-only";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
@@ -93,6 +95,8 @@ export interface TranslateResult {
   wasChunked: boolean;
   /** True if we hit the hard upper bound on total input size. */
   wasTruncated: boolean;
+  /** Task #28: output moderation verdict on the joined translation. */
+  moderation: ModerationResult;
 }
 
 /**
@@ -192,8 +196,17 @@ export async function translatePdf(input: TranslateInput): Promise<TranslateResu
     throw new Error("translate: no chunks produced output (unreachable)");
   }
 
+  const markdown = joinChunks(chunkOutputs);
+
+  // Task #28: moderate the joined translation. Running per-chunk would
+  // miss findings that straddle chunk boundaries (e.g. an API key split
+  // across two paragraphs); the concatenated output is the canonical
+  // surface the route handler will persist and return to the user.
+  const moderation = moderateOutput(markdown, { op: "translate" });
+  assertOutputSafe(moderation, "translate");
+
   return {
-    markdown: joinChunks(chunkOutputs),
+    markdown,
     providerId: providerIdUsed,
     model: modelUsed,
     usage: {
@@ -202,6 +215,7 @@ export async function translatePdf(input: TranslateInput): Promise<TranslateResu
     },
     chunkCount: chunks.length,
     wasChunked: chunks.length > 1,
+    moderation,
     wasTruncated,
   };
 }

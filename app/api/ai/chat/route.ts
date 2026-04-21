@@ -42,6 +42,7 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
+import { moderateOutput } from "@/lib/ai/output-moderation";
 import { recordAiUsage } from "@/lib/ai/usage";
 import type { AIProvider } from "@/lib/ai/provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "@/lib/ai/prompt-safety";
@@ -410,6 +411,34 @@ export async function POST(req: Request): Promise<Response> {
         terminal = "error";
         errorCode = "unknown";
         errorMessage = err instanceof Error ? err.message : "stream_failed";
+      }
+
+      // Task #28: output moderation on the assembled assistant text.
+      //
+      // ADVISORY ONLY — deltas are already on the wire by the time we
+      // get here. Unlike every other AI op (summarize/rewrite/ocr/etc),
+      // chat uses streamChat() which emits text_delta chunks to the
+      // client as they arrive at line 391 above. We cannot retract
+      // bytes the client already rendered, so we do NOT throw on
+      // critical findings for streaming chat.
+      //
+      // What we DO do: log the finding to stderr so it surfaces in
+      // server logs / Sentry (when Task #24 is wired). A future
+      // migration can add an `ai_usage.moderation_severity` column,
+      // at which point this block can stop logging and start writing.
+      if (terminal === "done" && assistantText.length > 0) {
+        const mod = moderateOutput(assistantText, { op: "chat" });
+        if (!mod.safe || mod.severity !== "none") {
+          // eslint-disable-next-line no-console
+          console.warn("[/api/ai/chat] output moderation flagged", {
+            sessionId,
+            assistantMessageId,
+            severity: mod.severity,
+            reasons: mod.reasonsPublic,
+            // `findings` includes redacted samples — safe to log.
+            findings: mod.findings,
+          });
+        }
       }
 
       try {

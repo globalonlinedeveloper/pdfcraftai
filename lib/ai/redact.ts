@@ -49,6 +49,8 @@ import { pathToFileURL } from "node:url";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { PDFDocument, rgb } from "pdf-lib";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
@@ -141,6 +143,14 @@ export interface RedactResult {
   model: string;
   usage: TokenUsage;
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict on the SUMMARY markdown.
+   * Redact's PDF output is deterministic (black rectangles over
+   * located spans) so no text leak is possible there — but the
+   * summary markdown can echo category names and counts, and we
+   * moderate it for completeness.
+   */
+  moderation: ModerationResult;
 }
 
 export class NoAIProviderConfiguredError extends Error {
@@ -239,6 +249,14 @@ export async function redactPdf(input: RedactInput): Promise<RedactResult> {
     wasTruncated,
   });
 
+  // Task #28: moderate the summary markdown. The redacted PDF itself
+  // can't leak — it has rectangles over the matched spans — but the
+  // summary text names categories and counts, and a malicious doc
+  // could cause the model to echo names/emails verbatim in the
+  // reason field. Critical findings refund + 502.
+  const moderation = moderateOutput(markdown, { op: "redact" });
+  assertOutputSafe(moderation, "redact");
+
   return {
     pdfBytes,
     redactedPdfFilename: deriveRedactedFilename(input.filename),
@@ -251,6 +269,7 @@ export async function redactPdf(input: RedactInput): Promise<RedactResult> {
     model: chat.model,
     usage: chat.usage,
     wasTruncated,
+    moderation,
   };
 }
 

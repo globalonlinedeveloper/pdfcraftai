@@ -33,6 +33,8 @@
 
 import "server-only";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
@@ -70,6 +72,15 @@ export interface SummarizeResult {
   usage: TokenUsage;
   /** True if the source text was truncated before sending to the model. */
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict. `severity === "none"` on a
+   * clean response; higher severities attach findings for the route
+   * handler to log into `ai_usage.meta`. A `critical` finding throws
+   * `OutputModerationBlockedError` from inside this helper before it
+   * ever returns, so callers observing `moderation` see severities
+   * `none | low | medium | high`.
+   */
+  moderation: ModerationResult;
 }
 
 /**
@@ -131,12 +142,22 @@ export async function summarizePdf(input: SummarizeInput): Promise<SummarizeResu
     maxTokens: MAX_TOKENS_BY_DEPTH[input.depth],
   });
 
+  const markdown = postProcessMarkdown(result.text, input.depth);
+
+  // Task #28: output moderation. Scan the post-processed markdown (the
+  // exact bytes we're about to persist to ai_outputs) for PII leaks,
+  // credential-shaped strings, and jailbreak echoes. `assertOutputSafe`
+  // throws on critical severity — the route handler catches + refunds.
+  const moderation = moderateOutput(markdown, { op: "summarize" });
+  assertOutputSafe(moderation, "summarize");
+
   return {
-    markdown: postProcessMarkdown(result.text, input.depth),
+    markdown,
     providerId: result.providerId,
     model: result.model,
     usage: result.usage,
     wasTruncated,
+    moderation,
   };
 }
 

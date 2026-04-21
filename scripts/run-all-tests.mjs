@@ -124,6 +124,26 @@ const SUITES = [
   // both, and this harness surfaces "prompt-safety call-site missing"
   // at the right granularity.
   { name: "prompt-safety", file: "test-prompt-safety.mjs" },
+  // output-moderation pins Task #28 — the OUTPUT-side defense-in-depth
+  // companion to prompt-safety's input-side defense. Covers: the
+  // lib/ai/output-moderation.ts module contract (ModerationOp aliased
+  // to PromptSafetyOp so the two op sets stay in lockstep,
+  // SEVERITY_RANK ladder, moderateOutput/assertOutputSafe/
+  // OutputModerationBlockedError exports), the pattern library (10
+  // secret subtypes, 5 PII subtypes, 3 jailbreak-echo subtypes with
+  // correct severities), positive/negative runtime checks for
+  // critical-severity secrets and PII, severity aggregation +
+  // redactSample masking, and call-site integration: all 9
+  // non-streaming op modules (summarize/translate/compare/generate/
+  // rewrite/table/redact/sign/ocr) import moderateOutput +
+  // assertOutputSafe and block on critical; the chat route calls
+  // moderateOutput advisory-only (console.warn, no
+  // assertOutputSafe) because deltas are already on the wire. Placed
+  // right after prompt-safety because the two form a defense-in-depth
+  // pair and a regression in either module surface typically breaks
+  // both harnesses — surfacing as "output-moderation" vs "prompt-safety"
+  // gives the right granularity when debugging which side broke.
+  { name: "output-moderation", file: "test-output-moderation.mjs" },
   // dev-hooks pins the pre-push hook's contract + DEV_SETUP.md install
   // instructions. Ordered last because it's not a subsystem gate —
   // it's a self-consistency gate on the repo's own dev tooling. If

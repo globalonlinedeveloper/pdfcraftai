@@ -52,6 +52,8 @@ import "server-only";
 
 import { PDFDocument } from "pdf-lib";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble } from "./prompt-safety";
 import { NoRoutableProviderError, route } from "./router";
@@ -93,6 +95,14 @@ export interface OcrResult {
   processedPageCount: number;
   /** True when the source exceeded MAX_OCR_PAGES and was clipped. */
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict on the FINAL joined markdown.
+   * We deliberately moderate once at the end rather than per-page
+   * because (a) per-page would 10x the regex cost on a 50-page doc
+   * and (b) findings that span page boundaries (a redacted address
+   * broken across a page break) would be missed.
+   */
+  moderation: ModerationResult;
 }
 
 export class NoOcrProviderConfiguredError extends Error {
@@ -152,6 +162,12 @@ export async function ocrPdf(input: OcrInput): Promise<OcrResult> {
 
   const markdown = pageMarkdowns.join("\n\n");
 
+  // Task #28: moderate the FINAL joined markdown. OCR is the op most
+  // likely to echo verbatim PII from a scanned document (IDs, phone
+  // numbers, SSNs on tax forms). Critical findings refund + 502.
+  const moderation = moderateOutput(markdown, { op: "ocr" });
+  assertOutputSafe(moderation, "ocr");
+
   return {
     markdown,
     providerId: provider.id,
@@ -159,6 +175,7 @@ export async function ocrPdf(input: OcrInput): Promise<OcrResult> {
     usage: { inputTokens: totalInput, outputTokens: totalOutput },
     processedPageCount,
     wasTruncated,
+    moderation,
   };
 }
 

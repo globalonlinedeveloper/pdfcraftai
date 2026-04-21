@@ -28,6 +28,8 @@
 
 import "server-only";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
@@ -65,6 +67,12 @@ export interface TableResult {
   usage: TokenUsage;
   /** True if the source text was truncated before the model call. */
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict on the rendered table markdown
+   * (NOT on the raw CSV payload — we only moderate the human-visible
+   * surface the model actually generated).
+   */
+  moderation: ModerationResult;
 }
 
 /**
@@ -131,6 +139,12 @@ export async function extractTables(input: TableInput): Promise<TableResult> {
 
   const { tables, markdown } = parseTablesFromResponse(result.text);
 
+  // Task #28: moderate the rendered table markdown. Tabular data from
+  // HR/finance PDFs frequently contains PII (SSNs, account numbers,
+  // salaries), so this op is a high-priority moderation surface.
+  const moderation = moderateOutput(markdown, { op: "table" });
+  assertOutputSafe(moderation, "table");
+
   return {
     markdown,
     tables,
@@ -138,6 +152,7 @@ export async function extractTables(input: TableInput): Promise<TableResult> {
     model: result.model,
     usage: result.usage,
     wasTruncated,
+    moderation,
   };
 }
 

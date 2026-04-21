@@ -27,6 +27,8 @@
 
 import "server-only";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
@@ -56,6 +58,8 @@ export interface RewriteResult {
   usage: TokenUsage;
   /** True if the source text was truncated before the model call. */
   wasTruncated: boolean;
+  /** Task #28: output moderation verdict on the rewritten markdown. */
+  moderation: ModerationResult;
 }
 
 /**
@@ -120,12 +124,21 @@ export async function rewritePdf(input: RewriteInput): Promise<RewriteResult> {
     maxTokens: MAX_TOKENS_BY_MODE[input.mode],
   });
 
+  const markdown = postProcessMarkdown(result.text);
+
+  // Task #28: output moderation. Rewrites echo the source closely so
+  // any PII or credential in the source is very likely to appear in
+  // the output. Critical findings refund + 502 via the route handler.
+  const moderation = moderateOutput(markdown, { op: "rewrite" });
+  assertOutputSafe(moderation, "rewrite");
+
   return {
-    markdown: postProcessMarkdown(result.text),
+    markdown,
     providerId: result.providerId,
     model: result.model,
     usage: result.usage,
     wasTruncated,
+    moderation,
   };
 }
 

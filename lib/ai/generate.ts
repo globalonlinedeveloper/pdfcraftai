@@ -33,6 +33,8 @@ import "server-only";
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
+import type { ModerationResult } from "./output-moderation";
+import { assertOutputSafe, moderateOutput } from "./output-moderation";
 import type { AIProvider } from "./provider";
 import { buildSafetyPreamble, wrapUntrustedInput } from "./prompt-safety";
 import { selectProvider } from "./registry";
@@ -87,6 +89,14 @@ export interface GenerateResult {
   usage: TokenUsage;
   /** True if the model's max-tokens was hit (output probably truncated). */
   wasTruncated: boolean;
+  /**
+   * Task #28: output moderation verdict on the generated markdown.
+   * We moderate the MARKDOWN (not the rendered PDF bytes) because
+   * the PDF is a deterministic render of the markdown — any leak
+   * originates in the model text, and moderating here lets us block
+   * BEFORE the (expensive) pdf-lib render pass runs.
+   */
+  moderation: ModerationResult;
 }
 
 /**
@@ -151,6 +161,13 @@ export async function generatePdf(input: GenerateInput): Promise<GenerateResult>
   // generated markdown doesn't start with `#`, prepend the title.
   const normalizedMd = ensureLeadingH1(markdown, input.title);
 
+  // Task #28: moderate the generated markdown BEFORE the pdf render.
+  // A critical finding throws → we skip the render and refund via the
+  // route handler. Moderating before render also keeps a leaked key
+  // from being baked into PDF bytes we'd then have to regenerate.
+  const moderation = moderateOutput(normalizedMd, { op: "generate" });
+  assertOutputSafe(moderation, "generate");
+
   const renderTitle = input.title?.trim() || extractFirstHeading(normalizedMd) || "Generated document";
   const pdfBytes = await renderMarkdownToPdf({
     markdown: normalizedMd,
@@ -171,6 +188,7 @@ export async function generatePdf(input: GenerateInput): Promise<GenerateResult>
     model: chat.model,
     usage: chat.usage,
     wasTruncated: chat.wasTruncated,
+    moderation,
   };
 }
 
