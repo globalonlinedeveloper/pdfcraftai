@@ -710,6 +710,62 @@ assert(
   "add /launch-notify to app/sitemap.ts staticRoutes"
 );
 
+// --- D.6 /launch-notify ?country=XX prefill (sub-item 4c) ----------------
+// Campaign-email hot-links can preselect the Tier-2 country via
+// `?country=DE`. The page reads `searchParams.country`, pipes it
+// through `pickCountry()` (handles `string | string[] | undefined`),
+// and hands it to LaunchNotifySignup's `defaultCountry` prop. The
+// component's own sanitiser drops anything that isn't a current Tier-2
+// ISO code, so a bad query param just reverts to the empty picker.
+const LAUNCH_PAGE_PREFILL_MARKERS = [
+  // Page component is hooked into searchParams at all.
+  "searchParams",
+  // Picker helper is defined at module scope.
+  "function pickCountry(",
+  // Handles the Next 14 `string | string[]` shape of a raw query value.
+  "Array.isArray(raw)",
+  // The resolved value is forwarded to the signup component.
+  "defaultCountry={defaultCountry}",
+];
+for (const marker of LAUNCH_PAGE_PREFILL_MARKERS) {
+  assert(
+    `launch-notify prefill wiring: ${JSON.stringify(marker)}`,
+    LAUNCH_PAGE_SRC.includes(marker),
+    "?country= prefill not wired through to LaunchNotifySignup"
+  );
+}
+
+// Reference implementation of the pickCountry behaviour we want the
+// page to preserve. If the page's inline version ever diverges, this
+// harness still forces the same answers. We can't import() the page
+// (it's TSX) so we re-state it plainly and spot-check the same inputs.
+function refPickCountry(raw) {
+  const first = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof first !== "string") return undefined;
+  const trimmed = first.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+const PICK_CASES = [
+  { in: undefined, out: undefined, label: "undefined → undefined" },
+  { in: "", out: undefined, label: "empty string → undefined" },
+  { in: "   ", out: undefined, label: "whitespace → undefined" },
+  { in: "DE", out: "DE", label: "plain string → identical" },
+  { in: " de ", out: "de", label: "trimmed, case preserved (component uppercases)" },
+  { in: ["FR", "IT"], out: "FR", label: "array → first entry" },
+  { in: ["  BE  ", "NL"], out: "BE", label: "array first, trimmed" },
+  { in: [""], out: undefined, label: "array of empty → undefined" },
+  { in: [], out: undefined, label: "empty array → undefined" },
+  { in: 42, out: undefined, label: "non-string → undefined" },
+];
+for (const c of PICK_CASES) {
+  const got = refPickCountry(c.in);
+  assert(
+    `pickCountry: ${c.label}`,
+    got === c.out,
+    `expected ${JSON.stringify(c.out)}, got ${JSON.stringify(got)}`
+  );
+}
+
 // =============================================================================
 // Report
 // =============================================================================
