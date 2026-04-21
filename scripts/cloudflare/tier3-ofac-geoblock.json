@@ -1,0 +1,25 @@
+{
+  "_comment_1": "Version-controlled source of truth for the pdfcraftai.com Tier-3 geo-block WAF Custom Rule.",
+  "_comment_2": "Apply via Cloudflare dashboard (Security -> WAF -> Custom rules) or via the API -- see docs/ops/CLOUDFLARE_GEOBLOCK_SETUP.md for both paths.",
+  "_comment_3": "The _comment_* keys are ignored by the Cloudflare API (which rejects unknown top-level fields cleanly); they exist only for git-readability.",
+  "_comment_4": "When applying via API: strip the _comment_* keys first, or feed only the 'rule' object to the POST body.",
+  "_comment_5": "Authoritative policy source: docs/GEO_LAUNCH_POLICY.md sec 3.1. ISO subdivision legend: UA-43 Crimea, UA-40 Sevastopol, UA-14 Donetsk, UA-09 Luhansk, UA-65 Kherson, UA-23 Zaporizhzhia.",
+  "_comment_6": "Regulatory basis: OFAC EO 13685 (Crimea + Sevastopol, 2014); OFAC EO 14065 (DPR/LPR Feb 2022; Kherson + Zaporizhzhia Sept 2022).",
+  "_comment_7": "Review cadence: quarterly (next scheduled 2026-07-21). If OFAC delists or adds a sanctioned region, edit the expression and redeploy.",
+
+  "rule": {
+    "description": "tier3-ofac-geoblock",
+    "expression": "(ip.src.country in {\"IR\" \"SY\" \"KP\" \"CU\"}) or (ip.src.subdivision_1_iso_code in {\"UA-43\" \"UA-40\" \"UA-14\" \"UA-09\" \"UA-65\" \"UA-23\"})",
+    "action": "block",
+    "enabled": true
+  },
+
+  "_curl_example": [
+    "# Scrub _comment_* keys before posting:",
+    "jq '{rule}.rule' scripts/cloudflare/tier3-ofac-geoblock.json \\",
+    "  | curl -sX POST \"https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/rulesets/$CF_RULESET_ID/rules\" \\",
+    "    -H \"Authorization: Bearer $CF_API_TOKEN\" \\",
+    "    -H \"Content-Type: application/json\" \\",
+    "    --data @-"
+  ]
+}

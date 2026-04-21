@@ -2,7 +2,7 @@
 
 _Which countries we serve at launch, which we defer, and which we block. Drives the customer-geography mix used in `TAX_MODEL.md`, `GST_SETUP.md`, and `docs/payments/MOR_EVALUATION.md`._
 
-**Last updated:** 2026-04-20
+**Last updated:** 2026-04-21 (§3.1 expression corrected to OFAC-current subdivisions — adds UA-40 Sevastopol, UA-65 Kherson, UA-23 Zaporizhzhia; switches deprecated `ip.geoip.*` → canonical `ip.src.*` fields; adds free-plan 403-vs-451 note. See `docs/ops/CLOUDFLARE_GEOBLOCK_SETUP.md` for the paste-ready ops runbook.)
 **Status:** Draft v1 — pending founder sign-off on D10 (EU launch posture) and D11 (US launch posture).
 
 ---
@@ -56,7 +56,8 @@ The driver is **compliance cost per incremental dollar of revenue**, not TAM. A 
 | Country / Region | Why blocked |
 |---|---|
 | **OFAC-sanctioned countries** (Iran, Syria, North Korea, Cuba) | US-affiliated MoR (Paddle operates US entity) cannot legally transact. Must geo-block at edge. |
-| **Crimea, Donetsk, Luhansk (Ukraine occupied territories)** | Sanctions overlay. |
+| **Crimea (UA-43), Sevastopol (UA-40)** | OFAC Executive Order 13685 (2014). Sevastopol is paired with Crimea in US sanctions; omission in earlier draft corrected 2026-04-21. |
+| **Donetsk (UA-14), Luhansk (UA-09), Kherson (UA-65), Zaporizhzhia (UA-23) oblasts** | OFAC Executive Order 14065. DPR + LPR from Feb 2022; Kherson + Zaporizhzhia added in the Sept 2022 annexation-response expansion. |
 | **Any future sanctioned state** | Monitor OFAC + UK HMT + EU sanctions lists quarterly. |
 
 ---
@@ -65,18 +66,21 @@ The driver is **compliance cost per incremental dollar of revenue**, not TAM. A 
 
 ### 3.1 Cloudflare geo-block (Tier 3)
 
-Use Cloudflare WAF custom rule:
+Use Cloudflare WAF custom rule. Single-line expression (Ruleset Engine does not accept inline comments inside the expression body):
 
 ```
-(ip.geoip.country in {"IR" "SY" "KP" "CU"}) or
-(ip.geoip.subdivision_1_iso_code in {"UA-43"}) or  # Crimea
-(ip.geoip.subdivision_1_iso_code in {"UA-14" "UA-09"})  # Donetsk, Luhansk oblasts
+(ip.src.country in {"IR" "SY" "KP" "CU"}) or (ip.src.subdivision_1_iso_code in {"UA-43" "UA-40" "UA-14" "UA-09" "UA-65" "UA-23"})
 → Action: Block
 ```
 
-- Response: 451 "Unavailable For Legal Reasons"
-- Logged, not silently dropped
-- Updated quarterly from OFAC list
+ISO subdivision legend: UA-43 Crimea, UA-40 Sevastopol, UA-14 Donetsk, UA-09 Luhansk, UA-65 Kherson, UA-23 Zaporizhzhia. Field names migrated from deprecated `ip.geoip.*` aliases to the current canonical `ip.src.*` family.
+
+- **Desired response:** 451 "Unavailable For Legal Reasons"
+- **Actual free-plan response:** HTTP 403 with the default Cloudflare 1020 block page. Custom block response bodies + custom status codes are a Pro-plan feature; the 451 surrogate is achievable on free tier via a Cloudflare Worker (free up to 100k req/day). See `docs/ops/CLOUDFLARE_GEOBLOCK_SETUP.md` §5 for the Worker alternative. The 403 surrogate is adequate for v1 launch; revisit if a legal reviewer insists on strict 451.
+- Logged, not silently dropped (Cloudflare Security Events retains for 72 h on free plan; Workers Logs retains 2 years if Worker path is used)
+- Updated quarterly from OFAC + UK HMT + EU sanctions lists
+
+**Paste-ready ops runbook:** `docs/ops/CLOUDFLARE_GEOBLOCK_SETUP.md` carries the 6-click dashboard walkthrough, equivalent `curl` API flow, Worker script, verification plan, and quarterly review checklist.
 
 ### 3.2 Checkout geo-gate (Tier 2)
 
@@ -104,6 +108,11 @@ const EU_COUNTRIES = new Set([
   'SI', 'ES', 'SE'
 ]);
 
+// Country-level block only. Subdivision-level blocks (Crimea / Sevastopol /
+// Donetsk / Luhansk / Kherson / Zaporizhzhia) are handled at the Cloudflare
+// edge per §3.1 — they never reach this router because the WAF rule rejects
+// them with HTTP 403 before the origin sees the request. So this set is
+// intentionally the 4 comprehensive-sanctioned countries only.
 const TIER_3_COUNTRIES = new Set(['IR', 'SY', 'KP', 'CU']);
 
 function routeCheckout(country: string) {
