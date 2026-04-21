@@ -98,6 +98,16 @@ const SUITES = [
   // + AIOp type export + listConfiguredProviderIds) so the failure shows
   // up at the right granularity.
   { name: "health-ai", file: "test-health-ai.mjs" },
+  // ai-margin-rollup pins Task #22 / MASTER_PLAN §7 gate #7 — the Phase
+  // A4 daily margin rollup cron + 7-day green streak metric. Covers:
+  // migration 0006 column + index contract, Drizzle schema alignment,
+  // the lib/ai/margin-rollup.ts public surface (constants, pure math,
+  // streak semantics, Slack emitter gating), and the cron route's
+  // auth/backfill shape. Placed right after health-ai because it
+  // layers on the same ai_usage schema the Phase A1 suite pins — a
+  // column rename in ai_usage breaks both, and this harness pins the
+  // aggregate-side consumer of those columns.
+  { name: "ai-margin-rollup", file: "test-ai-margin-rollup.mjs" },
   // dev-hooks pins the pre-push hook's contract + DEV_SETUP.md install
   // instructions. Ordered last because it's not a subsystem gate —
   // it's a self-consistency gate on the repo's own dev tooling. If

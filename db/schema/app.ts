@@ -35,6 +35,7 @@ import {
   text,
   mediumtext,
   timestamp,
+  date,
   index,
   uniqueIndex,
   mysqlEnum,
@@ -691,3 +692,101 @@ export const geoWaitlist = mysqlTable(
 // If a future Smart-mode runner returns, copy the original schema from
 // git history (commit before 2026-04-20) rather than reconstructing.
 // -----------------------------------------------------------------------
+
+/**
+ * Phase A4 (MASTER_PLAN §7 gate #7 / task #22). Daily AI margin rollup.
+ *
+ * Why it's separate from aiUsage (0005):
+ *   - aiUsage is per-call audit — great for "what did user X do on 2026-04-21?"
+ *     and for provider-cost reconciliation. Bad for trend analysis: a green-
+ *     streak query over millions of rows would scan the full table every
+ *     time the admin dashboard refreshed.
+ *   - This table is the daily aggregate, keyed by (date, provider_id, model,
+ *     operation). The cron at `/api/cron/ai-margin-rollup` reads yesterday's
+ *     ai_usage slice, sums cost_micros / credits_spent / call_count per
+ *     slice, computes margin_bps vs. OP_MARGIN_FLOOR_BPS, and upserts here.
+ *   - Gate #7 closes when this table shows 7 consecutive days where EVERY
+ *     slice has is_green = 1. The streak reset logic lives in
+ *     lib/ai/margin-rollup.ts → computeGreenStreak().
+ *
+ * Revenue-micros methodology:
+ *   We don't actually know per-call revenue — users buy credit packs at
+ *   different per-credit rates (Starter $0.050, Creator $0.036, Pro
+ *   $0.027, Studio $0.022). To keep the rollup tractable without joining
+ *   each ai_usage row to the pack it was spent from, we use a fleet-wide
+ *   proxy price of 30,000 µUSD/credit (midpoint of Creator + Pro, the
+ *   two highest-traffic tiers). The floor_bps thresholds are tuned
+ *   against this proxy, so a "green" slice still holds up under the
+ *   real per-tier margin math. Documented in margin-rollup.ts.
+ *
+ * Uniqueness: UNIQUE(date, provider_id, model, operation) means the
+ * cron can safely re-run the same day — ON DUPLICATE KEY UPDATE
+ * overwrites rather than insert-duplicating. The `id` PK exists
+ * separately so the table is still UUID-addressable (useful for
+ * linking audit comments from the admin dashboard to a specific
+ * rollup row).
+ *
+ * Indexes:
+ *   - (date) — daily dashboard range scans.
+ *   - (date, is_green) — the green-streak query's exact shape.
+ *   - (provider_id, date) — per-provider monthly cost slice.
+ *
+ * Migration: `db/migrations/0006_ai_daily_margin.sql`.
+ */
+export const aiDailyMargin = mysqlTable(
+  "ai_daily_margin",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    // MySQL DATE — the day being summarised (UTC). Storing as DATE (not
+    // DATETIME) makes dedup on the uniqueness constraint predictable
+    // across re-runs of the same day.
+    date: date("date", { mode: "string" }).notNull(),
+    providerId: varchar("provider_id", { length: 32 }).notNull(),
+    model: varchar("model", { length: 128 }).notNull(),
+    operation: varchar("operation", { length: 32 }).notNull(),
+    callCount: int("call_count").notNull().default(0),
+    successCount: int("success_count").notNull().default(0),
+    errorCount: int("error_count").notNull().default(0),
+    // bigint sums — a single high-volume day can exceed int32 range in
+    // token counts or micro-dollars.
+    inputTokensSum: bigint("input_tokens_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    outputTokensSum: bigint("output_tokens_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    latencyMsSum: bigint("latency_ms_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    creditsSpentSum: bigint("credits_spent_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    costMicrosSum: bigint("cost_micros_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    revenueMicrosSum: bigint("revenue_micros_sum", { mode: "number" })
+      .notNull()
+      .default(0),
+    // (revenue - cost) / revenue * 10_000 clamped to [-10_000, +10_000].
+    // If revenue_micros_sum = 0 the slice is unambiguously red (margin_bps
+    // = -10_000 by convention).
+    marginBps: int("margin_bps").notNull(),
+    floorBps: int("floor_bps").notNull(),
+    isGreen: int("is_green").notNull().default(0),
+    createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+  },
+  (t) => ({
+    sliceIdx: uniqueIndex("ai_daily_margin_slice_idx").on(
+      t.date,
+      t.providerId,
+      t.model,
+      t.operation
+    ),
+    dateIdx: index("ai_daily_margin_date_idx").on(t.date),
+    dateGreenIdx: index("ai_daily_margin_date_green_idx").on(t.date, t.isGreen),
+    providerDateIdx: index("ai_daily_margin_provider_date_idx").on(
+      t.providerId,
+      t.date
+    ),
+  })
+);
