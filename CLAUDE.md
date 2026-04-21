@@ -80,13 +80,14 @@ HOSTINGER_SSH_PRIVATE_KEY_PATH=/sessions/gifted-funny-franklin/mnt/pdfcraftai.co
 - **Do NOT push-force to main** — Hostinger's GitHub App treats it as a normal push and may redeploy mid-state.
 - **Env var changes require "Save and redeploy"** in Hostinger → this restarts the runtime but doesn't pull new code; pushing to main pulls new code AND restarts.
 
-## 6. Current integration status (as of 2026-04-20)
+## 6. Current integration status (as of 2026-04-22)
 
 - Cloudflare proxy: ACTIVE
 - Sitemap (`/sitemap.xml`): serving 200 — **but old submissions in GSC + Bing point at stale URLs; needs re-submission after latest redeploy**
 - Google OAuth: env vars deployed, consent verified (branding page, 2026-04-19) — **end-to-end sign-in test still pending**
 - Microsoft Clarity: committed + pushed in `36034eb` (2026-04-20); Hostinger redeploy in flight
 - GA4: committed + pushed in `36034eb` (2026-04-20); Hostinger redeploy in flight
+- **Net Margin Roadmap / Phase A progress:** Task #10 (Anthropic prompt caching, `f2420a8`) CLOSED. Task #11 (output-cap centralization + truncation observability, `9a9d455`) CLOSED — migration 0008 applied to prod MySQL, `lib/ai/output-caps.ts` is single source of truth for all 10 ops' `max_output_tokens`, `ai_usage.{stop_reason,response_truncated}` columns + covering index live, 12 suites / 1128 assertions all green. Next: Task #12 (per-user daily cost ceiling + kill switches).
 
 ## 7. Files to ALWAYS consult
 
