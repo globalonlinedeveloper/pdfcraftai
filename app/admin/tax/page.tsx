@@ -30,7 +30,10 @@
 // ---------------------
 // This is the primary input to the CA's GSTR-1 / GSTR-3B filing, and
 // the operator-side view of "are we over-collecting under MoR or
-// under-remitting under forward". Task #23 sprouts a CSV export.
+// under-remitting under forward". Task #23 added the "Download CSV"
+// link at top of the page — hits /api/admin/tax/export.csv?days={days}
+// and emits a four-section CSV (headline + by_treatment + by_currency
+// + daily) ready to paste into a spreadsheet for GSTR filing.
 
 import { getTaxSnapshot } from "@/lib/admin/queries";
 import {
@@ -97,8 +100,31 @@ export default async function AdminTaxPage({
           (Paddle) — collected but remittable = 0. Forward rows (Razorpay IN)
           — collected and fully owed to GST. Kept = collected − remittable.
         </p>
-        <div style={{ marginTop: 12 }}>
+        <div
+          style={{
+            marginTop: 12,
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <DayPicker current={days} base="/admin/tax" />
+          <a
+            href={`/api/admin/tax/export.csv?days=${days}`}
+            style={{
+              fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid var(--border)",
+              textDecoration: "none",
+              color: "var(--accent)",
+              background: "var(--bg-2)",
+            }}
+            title={`Download the past ${days} days of tax data as CSV (four sections: headline, by_treatment, by_currency, daily).`}
+          >
+            Download CSV
+          </a>
         </div>
       </header>
 

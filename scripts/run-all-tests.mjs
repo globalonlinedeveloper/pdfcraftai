@@ -356,6 +356,46 @@ const SUITES = [
     name: "paddle-webhook-financials",
     file: "test-paddle-webhook-financials.mjs",
   },
+  // invoicing pins Task #23 / Phase D — the receipt/invoice PDF generator
+  // + admin tax CSV export. Covers: lib/invoicing/gstin.ts module surface
+  // (INDIAN_STATE_CODES 01–38, validateGstin with Mod-36 checksum,
+  // computeGstinCheckDigit determinism + round-trip, classifyGst branch
+  // table spanning export / intra_state / inter_state / reverse_charge,
+  // describeClassification), deriveInvoiceNumber FY boundary (IN-FY runs
+  // Apr 1 → Mar 31, so Jan 2026 → INV-2025-, Apr 1 2026 → INV-2026-,
+  // Mar 31 2026 → INV-2025-), lib/invoicing/seller.ts env-driven
+  // SellerIdentity (all 7 INVOICE_SELLER_* vars with "Rajasekar Selvam"
+  // / "pdfcraftai" / "998313" defaults), lib/invoicing/assemble.ts
+  // buildTaxBreakdown (Math.round(micros/10_000) minor conversion,
+  // Math.ceil(taxMinor/2) for CGST so CGST absorbs odd paisa per CA
+  // convention), lib/invoicing/renderer.ts purity (no DB reads, no
+  // env var reads, no network I/O — reads enforced by static grep
+  // assertions) + pdf-lib dependency + A4 page 595.28×841.89 pt +
+  // "pending registration" fallback when seller.gstin null + branch-
+  // specific footer compliance lines (export → LUT, reverse_charge →
+  // recipient-pays, registered → remit, pre-reg → below threshold),
+  // app/api/invoices/[paymentId]/route.ts authz (401 on no session,
+  // 404 — NOT 403 — on mismatched userId so row existence doesn't
+  // leak, 409 on pre-capture status) + Content-Disposition attachment
+  // + Cache-Control private+no-store + X-Content-Type-Options nosniff
+  // + runtime=nodejs pin, app/api/admin/tax/export.csv/route.ts
+  // requireAdmin gate + clampDays 1–90 + four-section CSV (HEADLINE /
+  // BY_TREATMENT / BY_CURRENCY / DAILY) + CRLF for Excel, and page
+  // wiring (app/app/receipts/page.tsx links to /api/invoices/${row.id}
+  // with "Download PDF" text — no more mailto: fallback; app/admin/tax
+  // /page.tsx adds "Download CSV" anchor next to DayPicker pointing at
+  // /api/admin/tax/export.csv?days=${days}). Placed right after paddle-
+  // webhook-financials because the invoice renderer consumes the
+  // credit_ledger tax columns that Task #15 / #16 populate — a refactor
+  // that renames tax_collected_micros / tax_treatment / tax_remittable_
+  // micros breaks all three suites in lockstep, and surfacing as
+  // "invoicing" vs "credit-ledger-financials" vs "paddle-webhook-
+  // financials" gives the right granularity when debugging which
+  // layer (schema vs write-path vs render-path) broke.
+  {
+    name: "invoicing",
+    file: "test-invoicing.mjs",
+  },
   // degradation-ux pins Task #22 part 2 — the shared AI-degradation
   // classifier (lib/ai/degradation.ts) + the nine /api/ai/* tool
   // components' call-sites + the dunning scaffold

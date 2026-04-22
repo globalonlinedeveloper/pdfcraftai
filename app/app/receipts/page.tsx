@@ -11,12 +11,15 @@
 //   - net_revenue_micros (admin-only)
 //   - card fingerprint (PCI surface)
 //
-// Does NOT offer PDF receipt downloads yet — that's Task #23 (Phase D).
-// The page is set up with a placeholder "Request receipt" link that
-// currently mailto:'s our support address; when Task #23 lands, that
-// becomes a real download button.
+// PDF receipt downloads landed in Task #23 (Phase D). Each captured
+// payment row has a "Download PDF" link that hits
+// /api/invoices/[paymentId] and streams back a single-page A4 PDF
+// invoice with the seller's legal name, GSTIN posture (pending or
+// registered), and the right GST split (CGST+SGST intra-state / IGST
+// inter-state / zero-rated export / reverse-charge). Buyer GSTIN
+// collection (PART 2) lands with the /app/account migration.
 //
-// Phase B/5 — Task #19.
+// Phase B/5 — Task #19; Phase D — Task #23.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -131,15 +134,15 @@ export default async function ReceiptsPage() {
                   </Td>
                   <Td>
                     <a
-                      href={`mailto:support@pdfcraftai.com?subject=Receipt%20request%20${encodeURIComponent(row.id)}`}
+                      href={`/api/invoices/${encodeURIComponent(row.id)}`}
                       style={{
                         color: "var(--accent)",
                         textDecoration: "none",
                         fontSize: 12,
                       }}
-                      title="PDF receipts are rolling out — email support for now."
+                      title="Download a PDF invoice for this payment."
                     >
-                      Request
+                      Download PDF
                     </a>
                   </Td>
                 </tr>
@@ -151,8 +154,9 @@ export default async function ReceiptsPage() {
 
       <footer className="muted" style={{ fontSize: 12 }}>
         Amounts shown are the exact charge that appeared on your statement.
-        Downloadable PDF receipts with GSTIN/VAT fields are rolling out
-        soon — for anything urgent, email{" "}
+        Each row has a downloadable PDF invoice with tax treatment and
+        (if registered) seller GSTIN. Buyer GSTIN entry for input-tax
+        credit ships next. For anything urgent, email{" "}
         <a
           href="mailto:support@pdfcraftai.com"
           style={{ color: "var(--accent)" }}
