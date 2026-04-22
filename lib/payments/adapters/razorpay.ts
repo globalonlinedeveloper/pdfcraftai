@@ -94,10 +94,22 @@ export class RazorpayProvider implements PaymentProvider {
         kind: "client",
         clientToken: order.id,
         sdk: "razorpay",
+        // Field name MUST be `key` — Razorpay's checkout.js SDK reads
+        // `new Razorpay({ key })` and the only client-side caller
+        // (components/billing/CheckoutButton.tsx) reads
+        // `session.publicConfig.key`. We previously shipped this as
+        // `keyId` (matching our internal config naming) which caused
+        // the SDK to throw "Authentication key was missing during
+        // initialization" — the order was created server-side but the
+        // browser couldn't open the modal. publicConfig is typed as
+        // Record<string, string> so TypeScript can't catch this drift;
+        // tests in scripts/test-paddle-webhook-financials.mjs pin it.
         publicConfig: {
-          keyId: this.config.keyId,
+          key: this.config.keyId,
           amount: String(input.amount.amountMinor),
           currency: input.amount.currency,
+          name: "pdfcraft ai",
+          description: `Credit pack — ${input.packId}`,
         },
       },
     };

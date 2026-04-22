@@ -442,6 +442,23 @@ const SUITES = [
     name: "paddle-webhook-financials",
     file: "test-paddle-webhook-financials.mjs",
   },
+  // razorpay-handoff pins the property-name contract between the
+  // Razorpay adapter's CheckoutSession.publicConfig and the
+  // client-side CheckoutButton modal launch. Why a dedicated suite:
+  // on 2026-04-22 a paying user hit "Buy pack" and Razorpay's hosted
+  // modal threw "Authentication key was missing during initialization"
+  // because the adapter wrote `publicConfig: { keyId: ... }` while
+  // the client read `.key`. publicConfig is typed as
+  // Record<string,string> (the union has to absorb Paddle's
+  // clientToken/environment/sellerId), so TypeScript can't catch the
+  // drift. These regex pins make the contract explicit on both sides
+  // and on the env-source linkage (process.env.RAZORPAY_KEY_ID →
+  // registry.ts → adapter constructor → publicConfig.key → client).
+  // 7 assertions, runs in <100ms.
+  {
+    name: "razorpay-handoff",
+    file: "test-razorpay-handoff.mjs",
+  },
   // invoicing pins Task #23 / Phase D — the receipt/invoice PDF generator
   // + admin tax CSV export. Covers: lib/invoicing/gstin.ts module surface
   // (INDIAN_STATE_CODES 01–38, validateGstin with Mod-36 checksum,
