@@ -10,6 +10,7 @@ const NAV = [
   { href: "/app/dashboard", label: "Dashboard", icon: "Layers" as const },
   { href: "/app/files", label: "Files", icon: "File" as const },
   { href: "/app/chat", label: "Chat", icon: "Chat" as const },
+  { href: "/app/usage", label: "Usage", icon: "Clock" as const },
   { href: "/app/api-keys", label: "API Keys", icon: "Key" as const },
   { href: "/app/billing", label: "Billing", icon: "Receipt" as const },
   { href: "/app/settings", label: "Settings", icon: "Settings" as const },

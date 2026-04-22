@@ -189,6 +189,27 @@ const SUITES = [
   // "admin-margin" vs "admin-dashboard" gives the right granularity
   // when debugging which side broke.
   { name: "admin-dashboard", file: "test-admin-dashboard.mjs" },
+  // user-dashboard-v2 pins Task #19 — the Phase B /app/app user-facing
+  // surface that complements the admin dashboard. Where admin-dashboard
+  // proves "admin can see cost/margin/MoR splits", this suite proves
+  // "users CANNOT". Three walls are enforced:
+  //   (A) PII wall: every lib/user/queries.ts export takes userId as first
+  //       positional arg; every page-level consumer derives it from auth()
+  //       and never from searchParams/params/props.
+  //   (B) Cost/margin/MoR-split wall: the column name set
+  //       {cost_micros, net_revenue_micros, processor_fee_micros,
+  //        tax_remittable_micros, fx_rate_used, fx_slippage_micros,
+  //        infra_amortized_*, refund_reserve_*, gross_charge_micros}
+  //       (in both snake and camel case) is forbidden across lib/user/**
+  //       AND app/app/**/page.tsx. A regression that leaks a cost column
+  //       into a user page is exactly the kind of thing that doesn't
+  //       crash at runtime but does open an angry email thread.
+  //   (C) Surface wall: no app/app page imports @/lib/admin/* or
+  //       @/components/admin/* — those primitives are admin-only.
+  // Placed adjacent to admin-dashboard because the two harnesses test
+  // opposite sides of the same wall, and a refactor of the ledger/usage
+  // projection touches both.
+  { name: "user-dashboard-v2", file: "test-user-dashboard-v2.mjs" },
   // prompt-safety pins Task #26 / PLAN_GAP_ANALYSIS SEV-0 — the
   // defense-in-depth layer against prompt injection on PDF→AI flows.
   // Covers: the lib/ai/prompt-safety.ts module contract (exports,

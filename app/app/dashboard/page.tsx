@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { eq, desc } from "drizzle-orm";
 import { I } from "@/components/icons/Icons";
+import { getSpendSummary } from "@/lib/user/queries";
+import { formatCredits, formatCount } from "@/lib/user/format";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -18,6 +20,12 @@ export default async function DashboardPage() {
 
   let balance = 0;
   let recent: Array<{ id: string; name: string; createdAt: Date }> = [];
+  let spend = {
+    last7dCredits: 0,
+    last30dCredits: 0,
+    last7dCalls: 0,
+    last30dCalls: 0,
+  };
 
   if (userId) {
     const [creditRow] = await db
@@ -37,6 +45,9 @@ export default async function DashboardPage() {
       .where(eq(schema.files.userId, userId))
       .orderBy(desc(schema.files.createdAt))
       .limit(5);
+
+    const summary = await getSpendSummary(userId);
+    spend = summary.data;
   }
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
@@ -53,27 +64,34 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         <StatCard
           icon="Coin"
           label="Credit balance"
-          value={balance.toLocaleString()}
-          hint="AI tool credits"
-          cta={{ href: "/app/billing", text: "Buy credits" }}
+          value={formatCredits(balance)}
+          hint="credits"
+          cta={{ href: "/app/credits", text: "See history" }}
         />
         <StatCard
-          icon="File"
-          label="Files"
-          value={recent.length.toString()}
-          hint="Recent uploads"
-          cta={{ href: "/app/files", text: "View all" }}
+          icon="Clock"
+          label="Last 7 days"
+          value={formatCredits(spend.last7dCredits)}
+          hint={`${formatCount(spend.last7dCalls)} calls`}
+          cta={{ href: "/app/usage?days=7", text: "Usage" }}
         />
         <StatCard
-          icon="Key"
-          label="API Keys"
-          value="0"
-          hint="Active keys"
-          cta={{ href: "/app/api-keys", text: "Create key" }}
+          icon="Layers"
+          label="Last 30 days"
+          value={formatCredits(spend.last30dCredits)}
+          hint={`${formatCount(spend.last30dCalls)} calls`}
+          cta={{ href: "/app/usage?days=30", text: "Usage" }}
+        />
+        <StatCard
+          icon="Receipt"
+          label="Receipts"
+          value="→"
+          hint="Your paid charges"
+          cta={{ href: "/app/receipts", text: "View" }}
         />
       </div>
 

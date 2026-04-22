@@ -408,7 +408,7 @@ assert(
 
 assert(
   "G1 admin-margin suite still runs before dev-hooks",
-  /"admin-margin"[\s\S]{0,3000}"dev-hooks"/.test(AGG_SRC),
+  /"admin-margin"[\s\S]{0,8000}"dev-hooks"/.test(AGG_SRC),
   "dev-hooks must remain last — it's the tooling gate, not a subsystem gate"
 );
 
