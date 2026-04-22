@@ -1400,13 +1400,58 @@ export function clampAdminDays(raw: string | number | null | undefined): number 
  * Exported so the test harness can pin the parse semantics without
  * importing the route.
  */
+/**
+ * Normalize an email for admin-allowlist comparison.
+ *
+ * Why this exists
+ * ---------------
+ * Gmail (and Google Workspace) ignore everything between `+` and `@`
+ * for delivery, so `rajasekarjavaee@gmail.com`, `+admin@gmail.com`,
+ * `+1@gmail.com`, etc. all land in the same inbox. NextAuth, however,
+ * treats each as a distinct identity (different `email` claim from
+ * Google → different `users` row → different session.user.email).
+ *
+ * Without normalization, the founder who tested sign-up with five
+ * `+suffix` aliases (visible in the Hostinger users table on
+ * 2026-04-22) gets a 404 from /admin under any variant other than the
+ * bare email — even though all five resolve to the same human and
+ * the same inbox.
+ *
+ * Scope: gmail.com + googlemail.com only
+ * --------------------------------------
+ * Other providers vary on `+suffix` handling — Outlook treats the
+ * whole local-part literally, FastMail strips, ProtonMail is
+ * configurable. We only normalize where the rule is guaranteed-correct
+ * (Google's documented inbox-routing behavior). Non-Google addresses
+ * are returned lower-cased but otherwise untouched.
+ *
+ * Dot-folding (Gmail also ignores `.` in the local-part) is NOT done
+ * here — it's a much more aggressive normalization and the founder
+ * doesn't currently use it. Add it later if needed; the helper is the
+ * one place to change.
+ *
+ * Exported so the test harness can pin the contract.
+ */
+export function normalizeAdminEmail(email: string): string {
+  const lower = email.trim().toLowerCase();
+  const atIdx = lower.lastIndexOf("@");
+  if (atIdx <= 0) return lower;
+  const local = lower.slice(0, atIdx);
+  const domain = lower.slice(atIdx + 1);
+  if (domain !== "gmail.com" && domain !== "googlemail.com") return lower;
+  const plusIdx = local.indexOf("+");
+  if (plusIdx === -1) return lower;
+  return `${local.slice(0, plusIdx)}@${domain}`;
+}
+
 export function parseAdminEmails(raw: string | undefined): Set<string> {
   const FOUNDER_FALLBACK = "rajasekarjavaee@gmail.com";
   if (!raw || !raw.trim()) return new Set([FOUNDER_FALLBACK]);
   const emails = raw
     .split(",")
     .map((s) => s.trim().toLowerCase())
-    .filter((s) => s.length > 0 && s.includes("@"));
+    .filter((s) => s.length > 0 && s.includes("@"))
+    .map((s) => normalizeAdminEmail(s));
   if (emails.length === 0) return new Set([FOUNDER_FALLBACK]);
   return new Set(emails);
 }
@@ -1414,13 +1459,17 @@ export function parseAdminEmails(raw: string | undefined): Set<string> {
 /**
  * Is `email` allowed to hit admin-only endpoints? Case-insensitive.
  * Returns false on null/undefined.
+ *
+ * Both sides of the comparison go through `normalizeAdminEmail`, so
+ * Gmail `+suffix` aliases collapse to the bare address before the
+ * Set.has() lookup. See `normalizeAdminEmail` for scope and rationale.
  */
 export function isAdminEmail(
   email: string | null | undefined,
   raw: string | undefined
 ): boolean {
   if (!email) return false;
-  return parseAdminEmails(raw).has(email.toLowerCase());
+  return parseAdminEmails(raw).has(normalizeAdminEmail(email));
 }
 
 /**

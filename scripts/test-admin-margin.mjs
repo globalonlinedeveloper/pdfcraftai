@@ -296,11 +296,57 @@ assert(
 );
 
 assert(
-  "E1 isAdminEmail delegates to parseAdminEmails",
-  /return\s+parseAdminEmails\(\s*raw\s*\)\.has\(\s*email\.toLowerCase\(\)\s*\)/.test(
+  "E1 isAdminEmail delegates to parseAdminEmails (via normalizeAdminEmail)",
+  /return\s+parseAdminEmails\(\s*raw\s*\)\.has\(\s*normalizeAdminEmail\(\s*email\s*\)\s*\)/.test(
     ROLLUP_SRC
   ),
-  "Set membership check must go through parseAdminEmails so parse semantics stay centralised"
+  "Set membership check must go through parseAdminEmails — and both sides of the comparison must run through normalizeAdminEmail so Gmail +suffix aliases collapse"
+);
+
+// =============================================================================
+// SECTION E2: normalizeAdminEmail (Gmail +suffix folding)
+//
+// Why these tests exist
+// ---------------------
+// The founder hit /admin signed in as `rajasekarjavaee+5@gmail.com` and
+// got a 404. The DB had 6 sign-ups, all the same human, all routed to
+// the same Gmail inbox via `+suffix` aliasing. NextAuth treats each
+// alias as a distinct identity, so the exact-string allowlist match
+// was the culprit. These tests pin the normalization contract so a
+// future refactor can't re-introduce the lockout.
+// =============================================================================
+
+assert(
+  "E2 normalizeAdminEmail is exported from the library",
+  /export\s+function\s+normalizeAdminEmail\s*\(/.test(ROLLUP_SRC),
+  "`export function normalizeAdminEmail` missing — without it the test harness can't pin the helper's contract"
+);
+
+assert(
+  "E2 normalizeAdminEmail strips Gmail +suffix",
+  /const\s+plusIdx\s*=\s*local\.indexOf\(\s*"\+"\s*\)/.test(ROLLUP_SRC) &&
+    /local\.slice\(\s*0\s*,\s*plusIdx\s*\)/.test(ROLLUP_SRC),
+  "Must look up '+' in the local-part and slice it off — that's the whole point of the helper"
+);
+
+assert(
+  "E2 normalizeAdminEmail is scoped to Google domains",
+  /domain\s*!==\s*"gmail\.com"\s*&&\s*domain\s*!==\s*"googlemail\.com"/.test(
+    ROLLUP_SRC
+  ),
+  "Must scope the +suffix strip to gmail.com / googlemail.com — other providers (Outlook etc.) treat +suffix literally"
+);
+
+assert(
+  "E2 normalizeAdminEmail extracts domain via lastIndexOf('@')",
+  /lower\.lastIndexOf\(\s*"@"\s*\)/.test(ROLLUP_SRC),
+  "Must use lastIndexOf('@') so quoted local-parts containing '@' don't trip the split"
+);
+
+assert(
+  "E2 parseAdminEmails feeds entries through normalizeAdminEmail",
+  /\.map\(\s*\(s\)\s*=>\s*normalizeAdminEmail\(\s*s\s*\)\s*\)/.test(ROLLUP_SRC),
+  "If the configured allowlist contains a +suffix variant (e.g. ADMIN_EMAILS=user+admin@gmail.com), parseAdminEmails must collapse it so a bare-email session still matches"
 );
 
 // =============================================================================
