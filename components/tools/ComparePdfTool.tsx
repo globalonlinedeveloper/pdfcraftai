@@ -24,6 +24,7 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { classifyAiError } from "@/lib/ai/degradation";
 
 type CompareResult = {
   fileId?: string;
@@ -515,6 +516,13 @@ function mapErrorBody(
   status: number,
   body: Record<string, unknown>
 ): string {
+  // Shared AI-degradation band (401 / 429 / 502 / 503). See
+  // lib/ai/degradation.ts for the full rationale.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "the comparator",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
   const which = typeof body.which === "string" ? body.which : "";
@@ -527,8 +535,6 @@ function mapErrorBody(
   };
 
   switch (status) {
-    case 401:
-      return "Sign in to compare PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 15;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -569,13 +575,6 @@ function mapErrorBody(
       return detail || "Couldn't process this pair of PDFs.";
     case 400:
       return detail || "Those files don't look like valid PDFs.";
-    case 502:
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Compare failed (status ${status}).`;
   }

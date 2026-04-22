@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { classifyAiError } from "@/lib/ai/degradation";
 
 // Keep in sync with VALID_DOC_TYPES / VALID_LENGTHS / VALID_TONES in the
 // route handler.
@@ -608,12 +609,17 @@ function mapErrorBody(
   status: number,
   body: Record<string, unknown>
 ): string {
+  // Shared AI-degradation band (401 / 429 / 502 / 503). See
+  // lib/ai/degradation.ts for the full rationale.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "the generator",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
   switch (status) {
-    case 401:
-      return "Sign in to generate PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 20;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -633,13 +639,6 @@ function mapErrorBody(
       return "Payload too large.";
     case 400:
       return detail || "Couldn't understand the request.";
-    case 502:
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Generation failed (status ${status}).`;
   }

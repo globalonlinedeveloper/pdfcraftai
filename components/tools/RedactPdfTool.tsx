@@ -33,6 +33,7 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { classifyAiError } from "@/lib/ai/degradation";
 
 type PiiCategory =
   | "EMAIL"
@@ -571,9 +572,24 @@ function mapErrorBody(
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
+  // Tool-specific 502 — takes precedence over the shared classifier
+  // because `redact_parse_failed` is a parse-layer issue, not an
+  // upstream provider outage; copy differs.
+  if (status === 502 && code === "redact_parse_failed") {
+    return (
+      detail ||
+      "The AI returned output we couldn't parse. We've refunded your credits — please retry."
+    );
+  }
+
+  // Shared AI-degradation band (401 / 429 / 502 / 503). See
+  // lib/ai/degradation.ts for the full rationale.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "the redactor",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   switch (status) {
-    case 401:
-      return "Sign in to redact PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 5;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -596,19 +612,6 @@ function mapErrorBody(
       return detail || "Couldn't process this PDF.";
     case 400:
       return detail || "That file doesn't look like a valid PDF.";
-    case 502:
-      if (code === "redact_parse_failed") {
-        return (
-          detail ||
-          "The AI returned output we couldn't parse. We've refunded your credits — please retry."
-        );
-      }
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Redaction failed (status ${status}).`;
   }

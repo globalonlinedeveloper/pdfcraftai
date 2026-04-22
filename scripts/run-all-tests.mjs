@@ -356,6 +356,25 @@ const SUITES = [
     name: "paddle-webhook-financials",
     file: "test-paddle-webhook-financials.mjs",
   },
+  // degradation-ux pins Task #22 part 2 — the shared AI-degradation
+  // classifier (lib/ai/degradation.ts) + the nine /api/ai/* tool
+  // components' call-sites + the dunning scaffold
+  // (lib/payments/dunning.ts). Forms a pair with admin-phase-c which
+  // pins Task #22 part 1 (chargeback ingestion + /admin/chargebacks
+  // drift banner). The two suites together pin the full Phase D
+  // "Degradation UX + self-serve refund UI + dunning" surface: a
+  // regression in the shared classifier (say, a kind enum rename)
+  // breaks one harness, a regression in a single tool's call-site
+  // (somebody re-adds the stale 503 copy) breaks only this one, and
+  // a regression in the chargeback adapter surfaces in admin-phase-c.
+  // Placed last alongside the paddle-webhook-financials + credit-
+  // ledger-financials + dev-hooks cluster because this harness is
+  // pure static-parse (no route imports, no DB) and the degradation
+  // band is orthogonal to the AI + admin clusters above.
+  {
+    name: "degradation-ux",
+    file: "test-degradation-ux.mjs",
+  },
 ];
 
 /**

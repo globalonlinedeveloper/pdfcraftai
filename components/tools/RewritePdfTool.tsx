@@ -28,6 +28,7 @@ import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { classifyAiError } from "@/lib/ai/degradation";
 import { renderMarkdown } from "@/lib/markdown-mini";
 
 // Keep in sync with VALID_MODES in /api/ai/rewrite/route.ts.
@@ -537,9 +538,13 @@ function mapErrorBody(
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
+  // Task #22 — shared degradation classifier (401/429/502/503).
+  const degraded = classifyAiError(status, body, {
+    opLabel: "the rewriter",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   switch (status) {
-    case 401:
-      return "Sign in to rewrite PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 3;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -565,13 +570,6 @@ function mapErrorBody(
         return detail;
       }
       return detail || "That file doesn't look like a valid PDF.";
-    case 502:
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Rewrite failed (status ${status}).`;
   }

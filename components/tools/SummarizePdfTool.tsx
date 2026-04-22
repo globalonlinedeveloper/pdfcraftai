@@ -28,6 +28,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
@@ -662,9 +663,18 @@ function mapErrorBody(status: number, body: Record<string, unknown>): string {
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
+  // Task #22 — shared degradation classifier handles the 401 /
+  // 429 / 502 / 503 band consistently across every AI tool. We
+  // still keep tool-specific branches for 402 / 409 / 413 / 422
+  // because those carry domain-specific numbers (required vs
+  // balance, file size, OCR suggestion) that the shared layer
+  // can't know about.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "the summarizer",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   switch (status) {
-    case 401:
-      return "Sign in to summarize PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 3;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -687,13 +697,6 @@ function mapErrorBody(status: number, body: Record<string, unknown>): string {
       return detail || "Couldn't process this PDF.";
     case 400:
       return detail || "That file doesn't look like a valid PDF.";
-    case 502:
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Summarize failed (status ${status}).`;
   }

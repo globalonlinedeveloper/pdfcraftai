@@ -36,6 +36,7 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { classifyAiError } from "@/lib/ai/degradation";
 
 type SignFilling = {
   label: string;
@@ -861,9 +862,24 @@ function mapErrorBody(
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
+  // Tool-specific 502 — takes precedence over the shared classifier
+  // because `sign_parse_failed` is a parse-layer issue with distinct
+  // user copy ("retry" rather than "upstream is down").
+  if (status === 502 && code === "sign_parse_failed") {
+    return (
+      detail ||
+      "The AI returned output we couldn't parse. We've refunded your credits — please retry."
+    );
+  }
+
+  // Shared AI-degradation band (401 / 429 / 502 / 503). See
+  // lib/ai/degradation.ts for the full rationale.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "fill & sign",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   switch (status) {
-    case 401:
-      return "Sign in to fill & sign PDFs — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 10;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -892,19 +908,6 @@ function mapErrorBody(
       return detail || "Couldn't process this PDF.";
     case 400:
       return detail || "Check your inputs — something doesn't look right.";
-    case 502:
-      if (code === "sign_parse_failed") {
-        return (
-          detail ||
-          "The AI returned output we couldn't parse. We've refunded your credits — please retry."
-        );
-      }
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
     default:
       return detail || `Fill & sign failed (status ${status}).`;
   }

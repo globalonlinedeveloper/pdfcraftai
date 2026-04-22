@@ -41,6 +41,7 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { classifyAiError } from "@/lib/ai/degradation";
 
 // Keep in sync with server-side `MAX_OCR_PAGES` in lib/ai/ocr.ts.
 // We can't import the server module (it's "server-only"), so the
@@ -604,9 +605,24 @@ function mapErrorBody(status: number, body: Record<string, unknown>): string {
   const code = typeof body.error === "string" ? body.error : "";
   const detail = typeof body.detail === "string" ? body.detail : "";
 
+  // OCR has a tool-specific "no provider with PDF-vision" message
+  // because OCR uniquely needs a document-blocks-capable provider
+  // (Anthropic). Handle before the shared classifier.
+  if (status === 503 && code === "no_provider_configured") {
+    return (
+      detail ||
+      "No AI provider with PDF-vision support is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY (OCR needs a provider that accepts document blocks)."
+    );
+  }
+
+  // Shared AI-degradation band (401 / 429 / 502 / 503). See
+  // lib/ai/degradation.ts for the full rationale.
+  const degraded = classifyAiError(status, body, {
+    opLabel: "OCR",
+  });
+  if (degraded.kind !== "unknown") return degraded.userMessage;
+
   switch (status) {
-    case 401:
-      return "Sign in to run OCR — credits are per-user.";
     case 402: {
       const required = typeof body.required === "number" ? body.required : 0;
       const balance = typeof body.balance === "number" ? body.balance : 0;
@@ -629,13 +645,6 @@ function mapErrorBody(status: number, body: Record<string, unknown>): string {
       return detail || "Couldn't process this PDF.";
     case 400:
       return detail || "That file doesn't look like a valid PDF.";
-    case 502:
-      return (
-        detail ||
-        "The AI provider errored — we've refunded your credits. Try again in a moment."
-      );
-    case 503:
-      return "No AI provider with PDF-vision support is configured on this deployment. Ask the admin to set ANTHROPIC_API_KEY (OCR needs a provider that accepts document blocks).";
     default:
       return detail || `OCR failed (status ${status}).`;
   }
