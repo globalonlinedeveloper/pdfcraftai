@@ -70,6 +70,10 @@ import {
   NewsletterPdfTool,
   VideoScriptPdfTool,
 } from "@/components/tools/SummarizeVariantTool";
+import {
+  FlashcardsPdfTool,
+  QuizPdfTool,
+} from "@/components/tools/StructuredVariantTool";
 
 type Params = { params: { id: string } };
 
@@ -142,6 +146,8 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-proofread",
   "ai-newsletter",
   "ai-video-script",
+  "ai-flashcards",
+  "ai-quiz",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -405,6 +411,10 @@ function ToolRunner({ id }: { id: string }) {
       return <NewsletterPdfTool />;
     case "ai-video-script":
       return <VideoScriptPdfTool />;
+    case "ai-flashcards":
+      return <FlashcardsPdfTool />;
+    case "ai-quiz":
+      return <QuizPdfTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

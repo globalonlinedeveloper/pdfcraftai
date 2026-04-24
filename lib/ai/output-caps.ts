@@ -192,6 +192,9 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     // Task #57:
     newsletter: 1800, // Subject + preheader + 3-5 sections + sign-off.
     "video-script": 2400, // 3-5 × 90s segments with stage cues.
+    // Task #58 — JSON-in-fence variants.
+    flashcards: 2500, // 10-30 Q&A pairs, each concise.
+    quiz: 2500, // 6-12 MCQs with 4 options + explanation each.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

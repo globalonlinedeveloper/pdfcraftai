@@ -77,6 +77,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "ai-proofread", name: "Proofread PDF", desc: "Error table — page, quote, type, suggested fix. Spelling + grammar + agreement.", icon: "Edit", free: false, cost: "5 credits / doc", group: "AI" },
   { id: "ai-newsletter", name: "PDF to Email Newsletter", desc: "Subject + preheader + sections + sign-off. Publish-ready draft.", icon: "Send", free: false, cost: "8 credits / doc", group: "AI" },
   { id: "ai-video-script", name: "PDF to Video Script", desc: "Talking-head script with 90s segments, hook, stage cues, closing CTA.", icon: "Play", free: false, cost: "10 credits / doc", group: "AI" },
+  { id: "ai-flashcards", name: "PDF to Flashcards", desc: "10–30 Anki-compatible Q&A cards, downloadable CSV.", icon: "Book", free: false, cost: "10 credits / doc", group: "AI" },
+  { id: "ai-quiz", name: "PDF to Quiz (MCQ)", desc: "6–12 multiple-choice questions with 4 options, answer key, and explanations.", icon: "Help", free: false, cost: "10 credits / doc", group: "AI" },
   { id: "ai-translate", name: "Translate PDF", desc: "Preserve layout across 20+ languages.", icon: "Translate", free: false, cost: "5 credits / doc", group: "AI" },
   { id: "ai-ocr", name: "OCR & Smart Extract", desc: "Turn scans into searchable, structured data.", icon: "Scan", free: false, cost: "~2 credits / page", group: "AI" },
   { id: "ai-rewrite", name: "Rewrite & Rephrase", desc: "Tone shift, simplify, or expand text.", icon: "Edit", free: false, cost: "~3 credits / page", group: "AI" },

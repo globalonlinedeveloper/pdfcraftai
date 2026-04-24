@@ -95,7 +95,13 @@ export type SummarizeDepth =
   //   newsletter   §2.4 P2 — email-newsletter format (8c)
   //   video-script §2.4 P2 — intro + segments + outro (10c)
   | "newsletter"
-  | "video-script";
+  | "video-script"
+  // Task #58 — structured-output variants. The model returns JSON
+  // inside a ```json code fence; the dedicated UI parses + renders.
+  //   flashcards §2.4 P1 — 10-30 Q&A pairs (10c)
+  //   quiz       §2.4 P1 — 6-12 MCQs with answer key (10c)
+  | "flashcards"
+  | "quiz";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -629,6 +635,35 @@ function buildSystemPrompt(opts: {
           "verbatim; no invented quotes or statistics even in the " +
           "narrator's voice."
         );
+      case "flashcards":
+        // §2.4 Flashcards (Anki). JSON-in-fence output so the
+        // dedicated UI can parse + render + export as Anki CSV.
+        return (
+          "Generate study flashcards from this document. Output " +
+          "ONLY a ```json fenced code block containing an array of " +
+          "10–30 objects, each shaped {\"q\": \"question string\", " +
+          "\"a\": \"answer string\", \"page\": integer}. Questions " +
+          "test single facts or concepts ideal for active recall. " +
+          "Answers are concise (one sentence or fragment) and " +
+          "grounded in the source. Do not include any other " +
+          "commentary, preamble, or postamble — just the code " +
+          "fence. The UI parses the JSON and offers Anki-CSV export."
+        );
+      case "quiz":
+        // §2.4 Quiz / MCQ. JSON-in-fence output for rendering
+        // as an interactive quiz with answer reveals.
+        return (
+          "Generate a multiple-choice quiz from this document. " +
+          "Output ONLY a ```json fenced code block containing an " +
+          "array of 6–12 objects, each shaped {\"question\": " +
+          "\"question string\", \"options\": [\"A…\", \"B…\", " +
+          "\"C…\", \"D…\"] (exactly 4 options), \"correct\": 0–3 " +
+          "(zero-based index of the correct option), \"explanation\": " +
+          "\"one sentence why this is correct, with page ref\", " +
+          "\"page\": integer}. Distractors must be plausible " +
+          "(not obviously wrong) and not too similar to the correct " +
+          "answer. No preamble or postamble."
+        );
     }
   })();
 
@@ -710,6 +745,10 @@ function buildUserPrompt(opts: { depth: SummarizeDepth; text: string }): string 
         return "Reformat as a newsletter";
       case "video-script":
         return "Turn this into a video script";
+      case "flashcards":
+        return "Generate flashcards";
+      case "quiz":
+        return "Generate a multiple-choice quiz";
       case "standard":
       case "detailed":
       default:
