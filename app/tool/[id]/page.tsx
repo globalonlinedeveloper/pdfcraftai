@@ -35,6 +35,9 @@ import { RemoveMetadataTool } from "@/components/tools/RemoveMetadataTool";
 import { ImageWatermarkTool } from "@/components/tools/ImageWatermarkTool";
 import { AddTextBoxTool } from "@/components/tools/AddTextBoxTool";
 import { HighlightPdfTool } from "@/components/tools/HighlightPdfTool";
+import { RedactFreeTool } from "@/components/tools/RedactFreeTool";
+import { ExtractAttachmentsTool } from "@/components/tools/ExtractAttachmentsTool";
+import { InvoiceGeneratorTool } from "@/components/tools/InvoiceGeneratorTool";
 
 type Params = { params: { id: string } };
 
@@ -73,6 +76,9 @@ const LIVE_TOOL_IDS = new Set<string>([
   "image-watermark",
   "add-text-box",
   "highlight-pdf",
+  "redact-free",
+  "extract-attachments",
+  "invoice-generator",
   "ai-summarize",
   "ai-translate",
   "ai-compare",
@@ -269,6 +275,12 @@ function ToolRunner({ id }: { id: string }) {
       return <AddTextBoxTool />;
     case "highlight-pdf":
       return <HighlightPdfTool />;
+    case "redact-free":
+      return <RedactFreeTool />;
+    case "extract-attachments":
+      return <ExtractAttachmentsTool />;
+    case "invoice-generator":
+      return <InvoiceGeneratorTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-translate":

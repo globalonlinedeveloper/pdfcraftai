@@ -29,7 +29,10 @@ export type SeoPageSlug =
   | "remove-pdf-metadata"
   | "add-logo-to-pdf"
   | "add-text-to-pdf"
-  | "highlight-pdf";
+  | "highlight-pdf"
+  | "redact-pdf-free"
+  | "extract-pdf-attachments"
+  | "gst-invoice-generator";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -600,6 +603,63 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Is it really free?", a: "Yes, unlimited. No signup, no watermarks on your output." },
     ],
     related: ["highlight-pdf", "add-text-box", "ai-redact", "flatten-pdf"],
+  },
+
+  "redact-pdf-free": {
+    tool: "redact-free",
+    h1: "Redact PDF free — black out sensitive info in your browser",
+    sub: "Drag black boxes over anything you need to hide. Multi-page. Visual-cover MVP; cryptographic stream-level redaction is the paid upgrade.",
+    canonical: "/redact-pdf-free",
+    howTo: [
+      { t: "Drop your PDF", d: "Rendered on your device — nothing uploaded." },
+      { t: "Drag over sensitive regions", d: "Each drag becomes a fully-opaque black rectangle. Navigate multi-page docs with Prev / Next." },
+      { t: "Apply and download", d: "Rectangles get baked in. Form fields are flattened on save for extra metadata cleanup." },
+    ],
+    faq: [
+      { q: "Is this truly redacted?", a: "Visually yes — every reasonable viewer, print, and screenshot shows a black box. But the original text objects remain in the content stream; a determined attacker can extract them with `pdftotext`. For everyday sharing (screenshots, printing, non-adversarial review), this is what you need. For legal discovery / adversarial review, use a stream-level redaction tool (that's the paid AI · Redact upgrade)." },
+      { q: "Why is this free but AI · Redact costs credits?", a: "Manual redaction — you tell us where — is free. AI · Redact automatically detects PII / sensitive patterns for you, which uses an AI call. Both produce the same output format." },
+      { q: "Does it remove annotations / form fields?", a: "Yes — we flatten the form on save so annotation-carried metadata gets baked into static content. For extra scrubbing of /Author, /Title, /Producer fields, run Remove Metadata first." },
+      { q: "Privacy?", a: "100% client-side. Your PDF never leaves your browser." },
+    ],
+    related: ["redact-free", "ai-redact", "remove-metadata", "flatten-pdf"],
+  },
+
+  "extract-pdf-attachments": {
+    tool: "extract-attachments",
+    h1: "Extract PDF attachments — save embedded files to your disk",
+    sub: "Some PDFs carry embedded files (invoices, data, supporting docs). List them all and download the ones you want.",
+    canonical: "/extract-pdf-attachments",
+    howTo: [
+      { t: "Drop your PDF", d: "We read the /EmbeddedFiles name tree locally." },
+      { t: "See the list", d: "Every attachment with its filename, description, and size." },
+      { t: "Save what you need", d: "One-click download per attachment, correct MIME inferred from extension." },
+    ],
+    faq: [
+      { q: "What if there are no attachments?", a: "Most PDFs don't carry attachments — they're a specific authoring feature. You'll see a clear message telling you the /EmbeddedFiles tree is empty." },
+      { q: "Does it include images on the pages?", a: "No — this is for files embedded via /EmbeddedFiles, not images drawn on the page. For image extraction, use Extract Images." },
+      { q: "Privacy?", a: "Everything is parsed and saved in your browser — nothing is uploaded." },
+    ],
+    related: ["extract-attachments", "extract-images", "pdf-metadata", "page-count"],
+  },
+
+  "gst-invoice-generator": {
+    tool: "invoice-generator",
+    h1: "Free GST invoice generator — one-page PDF in seconds",
+    sub: "Fill the form, get a clean A4 invoice PDF. CGST+SGST or IGST tax modes. INR default; USD / EUR / GBP also supported.",
+    canonical: "/gst-invoice-generator",
+    howTo: [
+      { t: "Enter business + customer info", d: "Name, address, optional GSTIN for both sides." },
+      { t: "Add line items", d: "Description, quantity, unit price. Totals recalculate live." },
+      { t: "Pick tax mode", d: "No tax, CGST+SGST (intra-state), or IGST (inter-state). Default rate 18% — change to 5 / 12 / 28 as needed." },
+      { t: "Generate and download", d: "A4 single-page PDF. No watermarks. Ready to email or print." },
+    ],
+    faq: [
+      { q: "Is this GSTR-compliant?", a: "It produces the fields mandated by the CGST rules — invoice number, date, parties, GSTIN, item breakdown, tax split. For official filing, check with your CA. This is a document generator, not a tax filing service." },
+      { q: "Can I save templates?", a: "Not yet — the form resets on reload. Save the generated PDF as your template and start from there. Multi-template save is on the paid roadmap." },
+      { q: "Does it support partial payments / advances?", a: "No, single-payment invoices only. Partial / advance handling is in-scope for the paid Pro Invoice tool." },
+      { q: "Is it really free?", a: "Yes, unlimited. No signup, no per-invoice limit." },
+    ],
+    related: ["invoice-generator", "ai-generate", "to-pdf", "page-numbers"],
   },
 };
 

@@ -160,12 +160,25 @@ export function AuthShell({
             }}
           >
             {[
-              ["Sparkle", "AI Chat, Summarize, Translate, OCR, Redact"],
+              // Conversion-focused bullets — put concrete value up
+              // front. "25 AI credits" > vague "AI Chat available";
+              // explicit "free forever" counters the common worry
+              // that free tier is a trial.
+              [
+                "Coin",
+                sidePanel === "register"
+                  ? "25 AI credits on signup — worth ~₹125 / $1.50 of usage"
+                  : "AI credits on signup — 25 free for new accounts",
+              ],
+              [
+                "Sparkle",
+                "AI Chat, Summarize, Translate, OCR, Redact — all on one balance",
+              ],
               ["Flow", "Workflow Studio + Agent for multi-step tasks"],
               ["Shield", "Private mode · DPA available · Zero training on your data"],
               [
                 "Check",
-                `${TOOL_STATS.total} tools. ${TOOL_STATS.free} free forever. No credit card.`,
+                `${TOOL_STATS.total} tools · ${TOOL_STATS.free} free forever · No credit card required`,
               ],
             ].map(([icon, text]) => {
               const Ic = I[icon as keyof typeof I];

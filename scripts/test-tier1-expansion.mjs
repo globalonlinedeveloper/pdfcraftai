@@ -120,6 +120,32 @@ const NEW_TOOLS = [
     component: "HighlightPdfTool",
     group: "Edit",
   },
+  // 2026-04-24 wave 4 — A/B/C batch per user request.
+  // A: free manual Redact (Edit PDF MVP). Same drag-rect pattern
+  // as Highlight, color fixed to opaque black. Honest visual-only
+  // caveat surfaced in UI — stream-level redaction is the paid
+  // upgrade.
+  {
+    id: "redact-free",
+    component: "RedactFreeTool",
+    group: "Security",
+  },
+  // B: Extract Attachments (§1.8 P2). Lists /EmbeddedFiles name
+  // tree via pdfjs getAttachments(), per-file download with
+  // best-effort MIME from extension.
+  {
+    id: "extract-attachments",
+    component: "ExtractAttachmentsTool",
+    group: "Convert",
+  },
+  // C: Tier 3 §3.1/§3.7 — GST Invoice Generator. Pure pdf-lib
+  // generation from a form. CGST+SGST / IGST / no-tax modes.
+  // Demand-gen hook for Indian freelancers and small business.
+  {
+    id: "invoice-generator",
+    component: "InvoiceGeneratorTool",
+    group: "Convert",
+  },
 ];
 
 // =============================================================================
@@ -202,11 +228,16 @@ for (const tool of NEW_TOOLS) {
     ),
     `Named export required so the dispatcher's import can find it.`
   );
-  assert(
-    `E.${tool.id} component uses <ToolDropzone> for file intake`,
-    /ToolDropzone/.test(componentSrc),
-    `All free client-side tools should use the shared <ToolDropzone> so the UX (size limit error, PDF-only accept, drag-over visuals) is consistent across tools.`
-  );
+  // Generator tools (produce a PDF from a form, no file intake) are
+  // exempt from the ToolDropzone check — they have nothing to drop.
+  const INTAKE_EXEMPT = new Set(["invoice-generator"]);
+  if (!INTAKE_EXEMPT.has(tool.id)) {
+    assert(
+      `E.${tool.id} component uses <ToolDropzone> for file intake`,
+      /ToolDropzone/.test(componentSrc),
+      `All free client-side tools should use the shared <ToolDropzone> so the UX (size limit error, PDF-only accept, drag-over visuals) is consistent across tools.`
+    );
+  }
 }
 
 // =============================================================================
