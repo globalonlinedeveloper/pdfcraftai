@@ -1843,19 +1843,40 @@ export type DeploySnapshot = {
 };
 
 export function getDeploySnapshot(): DeploySnapshot {
-  // Commit SHA: Hostinger populates VERCEL_GIT_COMMIT_SHA when wired via
-  // their GitHub App; falling back to GIT_COMMIT / process.env.COMMIT_SHA
-  // for parity with cron jobs that stamp it manually.
+  // Commit SHA resolution (Task #32). Priority order:
+  //   1. BUILD_COMMIT_SHA — baked in at build time by next.config.mjs
+  //      via `git rev-parse --short=12 HEAD`. This is the most reliable
+  //      source because it doesn't depend on Hostinger env-var wiring.
+  //      /api/health uses this SAME path first, so keeping them
+  //      aligned means "whatever /api/health reports is what
+  //      /admin/deploy shows."
+  //   2. COMMIT_SHA / GIT_COMMIT — manually-stamped env vars for
+  //      cron jobs and legacy deploys.
+  //   3. VERCEL_GIT_COMMIT_SHA — set by Hostinger's GitHub App when
+  //      wired through (currently unset — which is why before Task
+  //      #32 this page rendered "unknown").
   const sha =
+    (process.env.BUILD_COMMIT_SHA && process.env.BUILD_COMMIT_SHA.length > 0
+      ? process.env.BUILD_COMMIT_SHA
+      : null) ??
     process.env.COMMIT_SHA ??
     process.env.GIT_COMMIT ??
     process.env.VERCEL_GIT_COMMIT_SHA ??
+    null;
+  // Deploy timestamp — BUILD_TIMESTAMP is baked at build time by
+  // next.config.mjs (ISO-8601). Fall back to DEPLOY_TIMESTAMP env var
+  // for compatibility with older wiring.
+  const deployedAt =
+    (process.env.BUILD_TIMESTAMP && process.env.BUILD_TIMESTAMP.length > 0
+      ? process.env.BUILD_TIMESTAMP
+      : null) ??
+    process.env.DEPLOY_TIMESTAMP ??
     null;
   return {
     commitSha: sha,
     nodeVersion: process.version,
     nextRuntime: process.env.NEXT_RUNTIME ?? "nodejs",
-    deployedAt: process.env.DEPLOY_TIMESTAMP ?? null,
+    deployedAt,
     infraMonthlyUsdMicros: INFRA_MONTHLY_USD_MICROS,
     refundReserveBps: REFUND_RESERVE_BPS,
     referenceUsdMicrosPerCredit: REFERENCE_USD_MICROS_PER_CREDIT,

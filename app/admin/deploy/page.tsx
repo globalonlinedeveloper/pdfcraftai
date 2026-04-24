@@ -55,7 +55,7 @@ export default async function AdminDeployPage() {
           hint={
             snap.commitSha
               ? `Full SHA: ${snap.commitSha}`
-              : "No COMMIT_SHA / GIT_COMMIT env var set"
+              : "No BUILD_COMMIT_SHA / COMMIT_SHA env var available"
           }
         />
         <StatCard label="Node" value={snap.nodeVersion} />

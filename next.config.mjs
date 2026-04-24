@@ -154,11 +154,16 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  // Bake the deploy commit SHA into the runtime env so `/api/health` can
-  // report it without depending on hPanel env-var wiring. See the
-  // execSync block at the top of this file.
+  // Bake the deploy commit SHA + build timestamp into the runtime env
+  // so `/api/health` and `/admin/deploy` can report them without
+  // depending on hPanel env-var wiring. See the execSync block at the
+  // top of this file for the SHA source. BUILD_TIMESTAMP is ISO-8601
+  // capturing when THIS build ran — unlike Node process.uptime, it
+  // survives LSAPI worker recycling so ops can see "code last built"
+  // rather than "worker booted".
   env: {
     BUILD_COMMIT_SHA: BUILD_COMMIT_SHA ?? "",
+    BUILD_TIMESTAMP: new Date().toISOString(),
   },
   // Hostinger Node.js app — standalone output keeps the deploy small
   // and lets us run `node .next/standalone/server.js` directly.

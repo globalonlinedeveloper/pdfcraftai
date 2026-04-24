@@ -29,6 +29,7 @@ export const TOOLS: readonly Tool[] = [
   { id: "extract-images", name: "Extract Images", desc: "Pull every embedded image out of a PDF.", icon: "Image", free: true, group: "Convert" },
   { id: "page-count", name: "Page & Word Count", desc: "Instant stats for any PDF.", icon: "Pages", free: true, group: "Edit" },
   { id: "pdf-metadata", name: "PDF Metadata Editor", desc: "Read, edit, or strip title / author / subject.", icon: "Edit", free: true, group: "Edit" },
+  { id: "flatten-pdf", name: "Flatten PDF", desc: "Bake forms + annotations into static content.", icon: "Shield", free: true, group: "Optimize" },
   { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
   { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
 
