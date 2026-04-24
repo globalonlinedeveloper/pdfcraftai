@@ -68,8 +68,15 @@ type PreviewState = null | PreviewOk | PreviewErr;
 function formatMinor(minor: number, currency: PanelCurrency): string {
   const units = minor / 100;
   const symbol = currency === "INR" ? "₹" : "$";
+  // Task #29 — always show 2 decimals for currency-looking output.
+  // The prior threshold (`units < 100 ? 2 : 0`) produced inconsistent
+  // annual prices like "$48.00" vs "$182.4" vs "$1,430.4". Standard
+  // currency display uses 2 decimals regardless of magnitude. INR
+  // typically doesn't show paise for whole-rupee amounts, but our
+  // pack prices can be e.g. ₹1,499.40 after 20% off, so the same
+  // rule applies.
   return `${symbol}${units.toLocaleString("en-US", {
-    minimumFractionDigits: units < 100 ? 2 : 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
 }
@@ -229,7 +236,7 @@ export function PackUpsellPanel({
             type="text"
             value={promoInput}
             onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-            placeholder="WELCOME10"
+            placeholder="Enter code"
             disabled={isPending}
             className="input"
             style={{
