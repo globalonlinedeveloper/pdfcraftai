@@ -459,6 +459,18 @@ const SUITES = [
     name: "razorpay-handoff",
     file: "test-razorpay-handoff.mjs",
   },
+  // billing-pending-ageout pins Task #23 — /app/billing shows "Expired"
+  // (muted) for payments.status="pending" rows older than 30 min. Razorpay
+  // doesn't fire webhooks for orders that never had a payment attempt;
+  // the row sits at pending forever otherwise. Presentational only — the
+  // DB stays pending until reconcile.ts catches up (Task #24, blocked on
+  // CRON_SECRET). 11 assertions across 5 sections pinning the helper
+  // shape, STATUS map entries, render-site wiring, nowMs hoisting, and
+  // the invariant that quoteRefund still trusts the raw DB status.
+  {
+    name: "billing-pending-ageout",
+    file: "test-billing-pending-ageout.mjs",
+  },
   // razorpay-retry-promotion pins Task #21 — lib/payments/ledger.ts
   // handleCaptured MUST promote status from pending OR failed to
   // captured (retry flow: card fails, user pivots to netbanking, same

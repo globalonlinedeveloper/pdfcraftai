@@ -33,6 +33,8 @@ const STATUS_LABEL: Record<string, string> = {
   refunded: "Refunded",
   partial_refund: "Partial refund",
   cancelled: "Cancelled",
+  // Presentational-only (never stored in DB). See effectivePaymentStatus.
+  expired: "Expired",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -42,7 +44,40 @@ const STATUS_COLOR: Record<string, string> = {
   refunded: "var(--fg-subtle)",
   partial_refund: "var(--fg-subtle)",
   cancelled: "var(--fg-subtle)",
+  expired: "var(--fg-subtle)",
 };
+
+// Razorpay orders expire on their side after ~15 min if no payment
+// attempt is made. After that, no webhook fires, and the pending row
+// sits in our DB indefinitely — no payment ever arrived, so neither
+// payment_captured nor payment_failed runs. This is pure UX wallpaper:
+// don't lie to the user by saying "Pending" for an abandoned cart from
+// 2 days ago.
+//
+// Why 30 minutes (not 15): Razorpay's 15-min TTL is a rough floor;
+// some UPI flows can chug for longer, and we don't want to flip a
+// genuinely-mid-flight row to "Expired" just because the user is
+// slow through a bank's 2FA page. 30 min is comfortably past any real
+// payment flow duration.
+//
+// This is PRESENTATIONAL ONLY — the DB row stays status="pending"
+// until the reconciliation cron (lib/payments/reconcile.ts) confirms
+// the order's true Razorpay-side state and writes it back. That cron
+// currently short-circuits on CRON_SECRET-not-set (Hostinger env var
+// pending); once wired, stale rows will be resolved server-side via
+// Razorpay's Orders API and this client-side age-out becomes a
+// belt-and-braces fallback for any gap in the cron's sweep window.
+const STALE_PENDING_THRESHOLD_MIN = 30;
+
+function effectivePaymentStatus(
+  status: string,
+  createdAt: Date,
+  nowMs: number
+): string {
+  if (status !== "pending") return status;
+  const ageMin = (nowMs - createdAt.getTime()) / 60_000;
+  return ageMin > STALE_PENDING_THRESHOLD_MIN ? "expired" : "pending";
+}
 
 export default async function BillingPage({
   searchParams,
@@ -227,6 +262,13 @@ export default async function BillingPage({
             )}
           </div>
         ) : (
+          (() => {
+            // Capture wall-clock ONCE so every row's effectivePaymentStatus
+            // call uses the same reference point. Otherwise a slow render
+            // could flip one row from pending→expired mid-loop, confusing
+            // reproducers ("I saw X but the page now shows Y").
+            const nowMs = Date.now();
+            return (
           <div>
             {payments.map((p, i) => {
               const pack = p.packId
@@ -236,6 +278,19 @@ export default async function BillingPage({
                 p.currency === "USD"
                   ? `$${(p.amountMinor / 100).toFixed(2)}`
                   : `${(p.amountMinor / 100).toFixed(2)} ${p.currency}`;
+
+              // Age-out abandoned carts. Razorpay doesn't fire webhooks
+              // for orders that never had a payment attempt, so the DB
+              // row stays "pending" indefinitely even though the order
+              // expired ~15 min ago on the provider side. This is
+              // presentational only — DB stays status="pending" until
+              // the reconciliation cron (once CRON_SECRET is wired)
+              // resolves the true state via Razorpay's Orders API.
+              const effStatus = effectivePaymentStatus(
+                p.status,
+                p.createdAt,
+                nowMs
+              );
 
               // Inline refund eligibility — we render the button only
               // when (status=captured, within 14-day window, pack is
@@ -308,11 +363,11 @@ export default async function BillingPage({
                     <div
                       style={{
                         fontSize: 12,
-                        color: STATUS_COLOR[p.status] ?? "var(--fg-subtle)",
+                        color: STATUS_COLOR[effStatus] ?? "var(--fg-subtle)",
                         textAlign: "right",
                       }}
                     >
-                      {STATUS_LABEL[p.status] ?? p.status}
+                      {STATUS_LABEL[effStatus] ?? effStatus}
                     </div>
                     {refundQuote && pack && (
                       <RefundButton
@@ -329,6 +384,8 @@ export default async function BillingPage({
               );
             })}
           </div>
+            );
+          })()
         )}
       </div>
 
