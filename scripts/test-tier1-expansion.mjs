@@ -103,6 +103,15 @@ const NEW_TOOLS = [
     component: "ImageWatermarkTool",
     group: "Edit",
   },
+  // Canvas-heavy P0: renders each page via pdfjs, user clicks to
+  // place text boxes, pdf-lib drawText on Apply. First tool that
+  // breaks the "only ToolDropzone intake" pattern — section E has
+  // an exemption for it below.
+  {
+    id: "add-text-box",
+    component: "AddTextBoxTool",
+    group: "Edit",
+  },
 ];
 
 // =============================================================================

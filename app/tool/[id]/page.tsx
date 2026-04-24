@@ -33,6 +33,7 @@ import { PdfToTextTool } from "@/components/tools/PdfToTextTool";
 import { ResizePdfTool } from "@/components/tools/ResizePdfTool";
 import { RemoveMetadataTool } from "@/components/tools/RemoveMetadataTool";
 import { ImageWatermarkTool } from "@/components/tools/ImageWatermarkTool";
+import { AddTextBoxTool } from "@/components/tools/AddTextBoxTool";
 
 type Params = { params: { id: string } };
 
@@ -69,6 +70,7 @@ const LIVE_TOOL_IDS = new Set<string>([
   "resize-pdf",
   "remove-metadata",
   "image-watermark",
+  "add-text-box",
   "ai-summarize",
   "ai-translate",
   "ai-compare",
@@ -261,6 +263,8 @@ function ToolRunner({ id }: { id: string }) {
       return <RemoveMetadataTool />;
     case "image-watermark":
       return <ImageWatermarkTool />;
+    case "add-text-box":
+      return <AddTextBoxTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-translate":

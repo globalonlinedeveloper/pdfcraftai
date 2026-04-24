@@ -27,7 +27,8 @@ export type SeoPageSlug =
   | "pdf-to-text"
   | "resize-pdf"
   | "remove-pdf-metadata"
-  | "add-logo-to-pdf";
+  | "add-logo-to-pdf"
+  | "add-text-to-pdf";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -556,6 +557,27 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Is it really free?", a: "Yes, unlimited. No signup, no output watermarks, no per-file limits." },
     ],
     related: ["image-watermark", "page-numbers", "flatten-pdf", "protect"],
+  },
+
+  "add-text-to-pdf": {
+    tool: "add-text-box",
+    h1: "Add text to a PDF — type directly on any page, free",
+    sub: "Click anywhere on a PDF page to drop a text box. Navigate multi-page docs, adjust font size, preview before applying. No signup.",
+    canonical: "/add-text-to-pdf",
+    howTo: [
+      { t: "Drop your PDF", d: "Rendered in your browser — never uploaded." },
+      { t: "Type your text + pick a font size", d: "Helvetica, black, 6 to 96 pt. Color + custom fonts coming in a later release." },
+      { t: "Click on the page where you want it", d: "A highlighted preview appears at the click point. Navigate with Prev / Next to add text across pages." },
+      { t: "Apply and download", d: "All placed text boxes get written in one pass. The list below the canvas shows everything staged before you commit." },
+    ],
+    faq: [
+      { q: "Can I edit existing text in the PDF?", a: "No — this tool adds new text boxes on top of the existing content. Editing existing text needs a full PDF editor (we're building that as Edit PDF)." },
+      { q: "Which fonts and colors?", a: "Current version uses Helvetica in black at sizes 6–96 pt. Font family and color are next up." },
+      { q: "Does the preview match the final output exactly?", a: "Position is accurate; the on-canvas font size preview is approximate because pdf-lib and browser-font metrics differ slightly. The final PDF uses pdf-lib's drawText which is precise." },
+      { q: "Privacy?", a: "100% client-side. The PDF never leaves your browser." },
+      { q: "Is it really free?", a: "Yes, unlimited. No watermarks, no signup." },
+    ],
+    related: ["add-text-box", "page-numbers", "image-watermark", "fill-forms"],
   },
 };
 
