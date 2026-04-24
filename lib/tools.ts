@@ -32,6 +32,9 @@ export const TOOLS: readonly Tool[] = [
   { id: "flatten-pdf", name: "Flatten PDF", desc: "Bake forms + annotations into static content.", icon: "Shield", free: true, group: "Optimize" },
   { id: "crop-pdf", name: "Crop PDF", desc: "Trim margins from every page.", icon: "Edit", free: true, group: "Edit" },
   { id: "fill-forms", name: "Fill PDF Forms", desc: "Fill AcroForm fields and save the PDF.", icon: "Pen", free: true, group: "Edit" },
+  { id: "pdf-to-text", name: "PDF to Text", desc: "Extract every page's text as a plain .txt file.", icon: "Convert", free: true, group: "Convert" },
+  { id: "resize-pdf", name: "Resize Pages", desc: "Change page size to A4, Letter, Legal, A3, A5, or Tabloid.", icon: "Pages", free: true, group: "Edit" },
+  { id: "remove-metadata", name: "Remove Metadata", desc: "Scrub title, author, creator, and XMP data before sharing.", icon: "Shield", free: true, group: "Security" },
   { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
   { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
 

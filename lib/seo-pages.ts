@@ -20,7 +20,13 @@ export type SeoPageSlug =
   | "pdf-to-powerpoint"
   | "extract-pdf-pages"
   | "delete-pdf-pages"
-  | "pdf-page-count";
+  | "pdf-page-count"
+  // 2026-04-24 wave 2: Tier 1 ships for PDF → TXT, Resize Pages, and
+  // Remove Metadata. All three target high-intent Google queries where
+  // iLovePDF / Smallpdf rank on the first page — long-tail money.
+  | "pdf-to-text"
+  | "resize-pdf"
+  | "remove-pdf-metadata";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -471,6 +477,63 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Privacy?", a: "Entirely browser-side. Your PDF is never uploaded." },
     ],
     related: ["page-count", "ai-summarize", "pdf-metadata", "ai-ocr"],
+  },
+
+  "pdf-to-text": {
+    tool: "pdf-to-text",
+    h1: "PDF to Text — extract plain text from any PDF",
+    sub: "Pull every word out of a text-based PDF and download it as a plain .txt file. Free, unlimited, in your browser.",
+    canonical: "/pdf-to-text",
+    howTo: [
+      { t: "Drop your PDF", d: "Parsed in your browser — never uploaded." },
+      { t: "We extract", d: "Every page's text is read in reading order with page-break markers between pages." },
+      { t: "Download .txt", d: "Plain UTF-8 text file. Paste into Word, Google Docs, or any editor." },
+    ],
+    faq: [
+      { q: "Does it work for scanned PDFs?", a: "No — scans are images, so there's no extractable text. Use AI · OCR first to convert the scan into a searchable PDF, then come back here." },
+      { q: "Is formatting preserved?", a: "Layout is flattened to reading order. Columns, tables, and decorative positioning will read sequentially. If you need layout, use PDF → Word instead." },
+      { q: "Any size limit?", a: "Up to 100MB per file. Runs fully on your device, so longer docs just take a bit longer to parse." },
+      { q: "Is it really free?", a: "Yes, unlimited. No watermarks, no signup." },
+    ],
+    related: ["pdf-to-text", "pdf-to-office", "ai-summarize", "ai-ocr"],
+  },
+
+  "resize-pdf": {
+    tool: "resize-pdf",
+    h1: "Resize PDF pages — change to A4, Letter, Legal, A3, A5, or Tabloid",
+    sub: "Convert any PDF to a standard paper size. Preserve aspect ratio, stretch to fit, or crop — your call.",
+    canonical: "/resize-pdf",
+    howTo: [
+      { t: "Drop your PDF", d: "Processed client-side — never leaves your browser." },
+      { t: "Pick a target size", d: "Six presets: A4, A3, A5, US Letter, US Legal, US Tabloid." },
+      { t: "Choose a fit mode", d: "Scale preserves aspect ratio. Stretch fills the new size. Crop keeps content at 1:1 and trims to fit." },
+    ],
+    faq: [
+      { q: "Does it change the file size?", a: "Usually modestly — the content streams aren't re-encoded, only the page dimensions change. For drastic size shrinks, run Compress PDF afterwards." },
+      { q: "What if my pages are mixed sizes?", a: "All pages are converted to the selected target. The first page's dimensions are shown when you load the file so you know your starting point." },
+      { q: "Aspect ratio?", a: "Scale mode always preserves aspect ratio and adds letterbox space if needed. Stretch distorts. Crop clips." },
+      { q: "Privacy?", a: "100% client-side. Your PDF is never uploaded." },
+    ],
+    related: ["resize-pdf", "crop-pdf", "compress", "rotate"],
+  },
+
+  "remove-pdf-metadata": {
+    tool: "remove-metadata",
+    h1: "Remove PDF metadata — scrub author, title, dates before sharing",
+    sub: "Uploaded PDFs routinely carry the author's name, the original filename, and the authoring app. Strip them before you share.",
+    canonical: "/remove-pdf-metadata",
+    howTo: [
+      { t: "Drop your PDF", d: "We read the metadata fields without uploading the file." },
+      { t: "See what's there", d: "Title, Author, Subject, Keywords, Creator, Producer, creation + modification dates, and any XMP metadata stream." },
+      { t: "Scrub and download", d: "Every field cleared. Content streams untouched." },
+    ],
+    faq: [
+      { q: "What exactly gets removed?", a: "The /Info dictionary (Title, Author, Subject, Keywords, Creator, Producer, dates) and the XMP metadata stream if present. Content — text, images, annotations — is never touched." },
+      { q: "Does redacting content still need this?", a: "Yes. Redacting text is pointless if the metadata still says 'Prepared by Jane Smith, C:\\Users\\jane\\Documents\\confidential.docx'." },
+      { q: "Annotations and form fields?", a: "Those can carry their own author metadata. For a truly clean document, flatten first (Flatten PDF tool), then scrub metadata." },
+      { q: "Privacy?", a: "Your PDF is processed entirely in your browser — nothing is uploaded or stored." },
+    ],
+    related: ["remove-metadata", "pdf-metadata", "flatten-pdf", "ai-redact"],
   },
 };
 

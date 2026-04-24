@@ -74,6 +74,24 @@ const NEW_TOOLS = [
     component: "PdfMetadataTool",
     group: "Edit",
   },
+  // 2026-04-24 wave 2 — Tier 1 §1.4 P1 (PDF → TXT) + §1.5 P1 (Resize
+  // Pages) + §1.8 P1 (Remove Metadata). All three are client-side
+  // pdf-lib / pdfjs ships with no canvas overlays.
+  {
+    id: "pdf-to-text",
+    component: "PdfToTextTool",
+    group: "Convert",
+  },
+  {
+    id: "resize-pdf",
+    component: "ResizePdfTool",
+    group: "Edit",
+  },
+  {
+    id: "remove-metadata",
+    component: "RemoveMetadataTool",
+    group: "Security",
+  },
 ];
 
 // =============================================================================

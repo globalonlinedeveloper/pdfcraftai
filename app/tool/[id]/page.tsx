@@ -29,6 +29,9 @@ import { PdfMetadataTool } from "@/components/tools/PdfMetadataTool";
 import { FlattenPdfTool } from "@/components/tools/FlattenPdfTool";
 import { CropPdfTool } from "@/components/tools/CropPdfTool";
 import { FillFormsTool } from "@/components/tools/FillFormsTool";
+import { PdfToTextTool } from "@/components/tools/PdfToTextTool";
+import { ResizePdfTool } from "@/components/tools/ResizePdfTool";
+import { RemoveMetadataTool } from "@/components/tools/RemoveMetadataTool";
 
 type Params = { params: { id: string } };
 
@@ -61,6 +64,9 @@ const LIVE_TOOL_IDS = new Set<string>([
   "flatten-pdf",
   "crop-pdf",
   "fill-forms",
+  "pdf-to-text",
+  "resize-pdf",
+  "remove-metadata",
   "ai-summarize",
   "ai-translate",
   "ai-compare",
@@ -245,6 +251,12 @@ function ToolRunner({ id }: { id: string }) {
       return <CropPdfTool />;
     case "fill-forms":
       return <FillFormsTool />;
+    case "pdf-to-text":
+      return <PdfToTextTool />;
+    case "resize-pdf":
+      return <ResizePdfTool />;
+    case "remove-metadata":
+      return <RemoveMetadataTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-translate":
