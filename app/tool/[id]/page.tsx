@@ -27,6 +27,8 @@ import { ExtractImagesTool } from "@/components/tools/ExtractImagesTool";
 import { PageCountTool } from "@/components/tools/PageCountTool";
 import { PdfMetadataTool } from "@/components/tools/PdfMetadataTool";
 import { FlattenPdfTool } from "@/components/tools/FlattenPdfTool";
+import { CropPdfTool } from "@/components/tools/CropPdfTool";
+import { FillFormsTool } from "@/components/tools/FillFormsTool";
 
 type Params = { params: { id: string } };
 
@@ -57,6 +59,8 @@ const LIVE_TOOL_IDS = new Set<string>([
   "page-count",
   "pdf-metadata",
   "flatten-pdf",
+  "crop-pdf",
+  "fill-forms",
   "ai-summarize",
   "ai-translate",
   "ai-compare",
@@ -237,6 +241,10 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfMetadataTool />;
     case "flatten-pdf":
       return <FlattenPdfTool />;
+    case "crop-pdf":
+      return <CropPdfTool />;
+    case "fill-forms":
+      return <FillFormsTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-translate":
