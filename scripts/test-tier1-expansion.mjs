@@ -155,6 +155,14 @@ const NEW_TOOLS = [
     component: "EditPdfTool",
     group: "Edit",
   },
+  // Free Sign PDF — last Tier 1 P0 remaining after Edit PDF. Three
+  // signature input modes (draw / type / upload) with click-to-place
+  // on multi-page. pdf-lib embedPng + drawImage per placement.
+  {
+    id: "sign-pdf-free",
+    component: "SignPdfFreeTool",
+    group: "Security",
+  },
 ];
 
 // =============================================================================

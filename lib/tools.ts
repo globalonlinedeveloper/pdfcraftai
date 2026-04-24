@@ -42,6 +42,7 @@ export const TOOLS: readonly Tool[] = [
   { id: "extract-attachments", name: "Extract Attachments", desc: "List and download files embedded inside a PDF.", icon: "File", free: true, group: "Convert" },
   { id: "invoice-generator", name: "GST Invoice Generator", desc: "Generate a clean GST-compliant invoice PDF from a form. INR/USD/EUR/GBP.", icon: "Receipt", free: true, group: "Convert" },
   { id: "edit-pdf", name: "Edit PDF (Text)", desc: "Click any text on a page to replace it. Preserves font and position.", icon: "Edit", free: true, group: "Edit" },
+  { id: "sign-pdf-free", name: "Sign PDF (free)", desc: "Draw, type, or upload your signature and place it on any page.", icon: "Pen", free: true, group: "Security" },
   { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
   { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
 

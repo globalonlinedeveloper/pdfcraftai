@@ -33,7 +33,8 @@ export type SeoPageSlug =
   | "redact-pdf-free"
   | "extract-pdf-attachments"
   | "gst-invoice-generator"
-  | "edit-pdf";
+  | "edit-pdf"
+  | "sign-pdf-free";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -683,6 +684,28 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Privacy?", a: "100% client-side. Your PDF never leaves your browser." },
     ],
     related: ["edit-pdf", "add-text-box", "redact-free", "ai-rewrite"],
+  },
+
+  "sign-pdf-free": {
+    tool: "sign-pdf-free",
+    h1: "Sign PDF online free — draw, type, or upload your signature",
+    sub: "Place your signature on any PDF page in three clicks. No signup, no watermarks. Multi-page, multi-placement.",
+    canonical: "/sign-pdf-free",
+    howTo: [
+      { t: "Drop your PDF", d: "Rendered client-side — never uploaded." },
+      { t: "Create your signature", d: "Three modes: Draw (touch + mouse), Type (italic script font), or Upload (PNG / JPEG with transparency)." },
+      { t: "Click to place on the page", d: "Click anywhere on the rendered page to drop a copy. Multiple placements per signature, navigate multi-page with Prev / Next." },
+      { t: "Sign and download", d: "pdf-lib embeds the signature PNG and draws each placement at the clicked coordinates. Download the signed PDF." },
+    ],
+    faq: [
+      { q: "Is this a legally binding e-signature?", a: "It places a visual signature image on the PDF — the same category as Adobe Acrobat's \"Fill & Sign\". For many contracts and everyday paperwork that's sufficient. For legally-binding cryptographic signatures (ISO 32000 DigSig with certificate), you'll want a CA-backed signing service; that's roadmapped as a paid feature." },
+      { q: "What's the difference between this and the paid AI · Sign?", a: "AI · Sign automatically detects signature fields (and related form fields), fills them, and places your signature in the right spots. This free version is manual: you pick where. Both produce the same signed-PDF output format." },
+      { q: "Is my signature stored?", a: "No — the signature exists in your browser memory only. It's embedded into the PDF you download; nothing is saved server-side." },
+      { q: "Which file formats for upload?", a: "PNG (including transparent background — recommended) and JPEG. Transparent PNG gives the cleanest look over existing page content." },
+      { q: "Can I sign multiple documents at once?", a: "Not yet — one PDF at a time in v1. Batch signing is planned for the paid tier." },
+      { q: "Privacy?", a: "100% client-side. Your PDF and your signature never leave your browser." },
+    ],
+    related: ["sign-pdf-free", "ai-sign", "fill-forms", "protect"],
   },
 };
 
