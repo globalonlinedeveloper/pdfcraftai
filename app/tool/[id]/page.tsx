@@ -73,6 +73,8 @@ import {
   ActionItemsPdfTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
+import { BankStatementTool } from "@/components/tools/BankStatementTool";
+import { BloodTestTool } from "@/components/tools/BloodTestTool";
 import {
   FlashcardsPdfTool,
   QuizPdfTool,
@@ -158,6 +160,8 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-ats-resume",
   "ai-resume-parse",
   "ai-action-items",
+  "ai-bank-statement",
+  "ai-blood-test",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -435,6 +439,10 @@ function ToolRunner({ id }: { id: string }) {
       return <ResumeParserTool />;
     case "ai-action-items":
       return <ActionItemsPdfTool />;
+    case "ai-bank-statement":
+      return <BankStatementTool />;
+    case "ai-blood-test":
+      return <BloodTestTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

@@ -204,6 +204,9 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "resume-parse": 2500, // Full structured JSON, many experience bullets.
     // Task #62:
     "action-items": 1500, // Single table, up to ~30 rows typical.
+    // Task #63:
+    "bank-statement": 3500, // Long transaction lists — up to ~200 rows.
+    "blood-test": 2000, // 20-60 lab values + patient metadata.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

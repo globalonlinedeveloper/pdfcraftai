@@ -95,6 +95,9 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "resume-parse",
   // Task #62:
   "action-items",
+  // Task #63 — Tier 3 wedges:
+  "bank-statement",
+  "blood-test",
 ];
 
 export async function POST(req: Request): Promise<Response> {

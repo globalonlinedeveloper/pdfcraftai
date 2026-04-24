@@ -84,6 +84,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "ai-ats-resume", name: "ATS Resume Optimizer", desc: "Tier 3 HR: audit your resume for ATS compatibility + get concrete fixes.", icon: "User", free: false, cost: "10 credits / resume", group: "AI" },
   { id: "ai-resume-parse", name: "Resume Parser", desc: "Tier 3 HR: parse a resume into structured JSON (ATS / spreadsheet ready).", icon: "User", free: false, cost: "5 credits / resume", group: "AI" },
   { id: "ai-action-items", name: "Extract Action Items", desc: "Meeting notes / specs / briefs → TODO table with owners, due dates, priorities.", icon: "Check", free: false, cost: "3 credits / doc", group: "AI" },
+  { id: "ai-bank-statement", name: "Bank Statement Parser", desc: "Tier 3 Finance: SBI/HDFC/ICICI/Axis/Kotak → categorised transactions CSV.", icon: "Receipt", free: false, cost: "30 credits / statement", group: "AI" },
+  { id: "ai-blood-test", name: "Blood Test Report Parser", desc: "Tier 3 Healthcare: lab values with normal/high/low flags. Extraction only, not medical advice.", icon: "File", free: false, cost: "15 credits / report", group: "AI" },
   { id: "ai-translate", name: "Translate PDF", desc: "Preserve layout across 20+ languages.", icon: "Translate", free: false, cost: "5 credits / doc", group: "AI" },
   { id: "ai-ocr", name: "OCR & Smart Extract", desc: "Turn scans into searchable, structured data.", icon: "Scan", free: false, cost: "~2 credits / page", group: "AI" },
   { id: "ai-rewrite", name: "Rewrite & Rephrase", desc: "Tone shift, simplify, or expand text.", icon: "Edit", free: false, cost: "~3 credits / page", group: "AI" },

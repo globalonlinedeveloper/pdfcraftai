@@ -119,7 +119,12 @@ export type SummarizeDepth =
   // Task #62:
   //   action-items §2.7 P2 — TODO list with owner/due-date
   //   extraction from meeting notes, specs, briefs (3c)
-  | "action-items";
+  | "action-items"
+  // Task #63 — Tier 3 wedges:
+  //   bank-statement §3.1 P0 — JSON transactions + CSV (30c)
+  //   blood-test     §3.4 P0 — lab values + trend notes (15c)
+  | "bank-statement"
+  | "blood-test";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -789,6 +794,58 @@ function buildSystemPrompt(opts: {
           "line note that this doesn't appear to be an " +
           "actionable document (meeting notes, spec, brief)."
         );
+      case "bank-statement":
+        // §3.1 Bank Statement Parser. JSON transaction list +
+        // category inference. Indian banks (SBI / HDFC / ICICI /
+        // Axis / Kotak) use different PDF layouts — we rely on
+        // the model's flexible parsing. Output is JSON for the
+        // UI to render + CSV export.
+        return (
+          "Parse this bank statement into structured JSON. " +
+          "Output ONLY a ```json fenced code block containing a " +
+          "single object shaped {\"account\": {\"holder\": " +
+          "string|null, \"bank\": string|null, \"number_masked\": " +
+          "string|null, \"period\": string|null}, \"opening_" +
+          "balance\": number|null, \"closing_balance\": " +
+          "number|null, \"currency\": string (default \"INR\"), " +
+          "\"transactions\": [{\"date\": string (YYYY-MM-DD when " +
+          "possible), \"description\": string (verbatim), " +
+          "\"debit\": number|null, \"credit\": number|null, " +
+          "\"balance\": number|null, \"category\": string (one " +
+          "of: Income, Transfer, Food, Travel, Shopping, Bills, " +
+          "Investment, Tax, Cash, Fees, Other)}]}. Preserve " +
+          "transaction descriptions verbatim. Category is your " +
+          "best-effort classification; if truly ambiguous use " +
+          "'Other'. Do NOT invent dates, amounts, or balances — " +
+          "null is the correct answer when the source is " +
+          "unclear. Works for SBI / HDFC / ICICI / Axis / Kotak " +
+          "/ Yes / IDFC and most NBFCs."
+        );
+      case "blood-test":
+        // §3.4 Blood Test Report Analyzer. Extracts lab values
+        // + flags out-of-range with reference ranges. NOT a
+        // diagnostic — surfaced clearly in FAQ.
+        return (
+          "Parse this blood test / lab report into structured " +
+          "JSON. Output ONLY a ```json fenced code block " +
+          "containing a single object shaped {\"patient\": " +
+          "{\"name\": string|null, \"age\": string|null, " +
+          "\"sex\": string|null, \"date\": string|null (test " +
+          "date, ISO YYYY-MM-DD when possible)}, \"lab\": " +
+          "string|null, \"results\": [{\"test\": string (the " +
+          "test name, e.g. 'Hemoglobin'), \"value\": string " +
+          "(the value as reported, including unit), \"range\": " +
+          "string|null (reference range), \"flag\": string (one " +
+          "of: 'normal', 'low', 'high', 'critical', 'unknown'), " +
+          "\"group\": string|null (e.g. 'CBC', 'Lipid Profile', " +
+          "'LFT', 'KFT', 'Thyroid', 'Glucose')}]}. Include " +
+          "EVERY reported test, not just abnormal ones. Flag " +
+          "determination uses the reference range when stated; " +
+          "if unsure, use 'unknown' rather than guessing. Do " +
+          "NOT add medical interpretation or recommendations in " +
+          "the output — this tool extracts data; interpretation " +
+          "belongs with a clinician."
+        );
     }
   })();
 
@@ -885,9 +942,12 @@ function buildUserPrompt(opts: {
       case "ats-resume":
         return "Audit this resume for ATS compatibility";
       case "resume-parse":
-        return "Parse this resume into structured JSON";
-      case "action-items":
+        return "Parse this resume into structured JSON";      case "action-items":
         return "Extract the action items";
+      case "bank-statement":
+        return "Parse this bank statement";
+      case "blood-test":
+        return "Parse this lab report";
       case "standard":
       case "detailed":
       default:
