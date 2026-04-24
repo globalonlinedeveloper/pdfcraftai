@@ -165,6 +165,13 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     tldr: 300,
     standard: 1200,
     detailed: 2000,
+    // Task #52 — three presentation-style variants. Caps sized for
+    // their intended output shape: key-points is a bullet list
+    // (compact), study-notes is revision-grade with multiple sections
+    // (largest), eli5 is conversational prose (medium).
+    "key-points": 800,
+    "study-notes": 2400,
+    eli5: 1000,
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

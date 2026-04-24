@@ -44,7 +44,10 @@ export type SeoPageSlug =
   | "reorder-pdf-pages"
   | "extract-emails-from-pdf"
   | "pdf-to-ics-calendar"
-  | "pdf-tldr";
+  | "pdf-tldr"
+  | "pdf-key-points"
+  | "pdf-to-study-notes"
+  | "explain-pdf";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -909,6 +912,62 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Signin required?", a: "Yes — all AI tools require a signed-in account (25 free credits on signup, worth ~₹125 of usage)." },
     ],
     related: ["ai-tldr", "ai-summarize", "ai-chat", "pdf-to-text"],
+  },
+
+  "pdf-key-points": {
+    tool: "ai-key-points",
+    h1: "PDF Key Points Extractor — 6–12 bullets, each cited by page",
+    sub: "Drop a PDF and get a clean bulleted list of its core insights. No prose, no TL;DR, just the bullets. 3 credits per doc.",
+    canonical: "/pdf-key-points",
+    howTo: [
+      { t: "Drop your PDF", d: "Any text PDF up to 25 MB." },
+      { t: "We extract + condense", d: "Gemini Flash 2.5 produces a bulleted list — each bullet is one claim or finding with a page citation." },
+      { t: "Copy or save", d: "Result renders as Markdown; saved to your Files for re-use." },
+    ],
+    faq: [
+      { q: "How is this different from Summarize?", a: "Summarize returns TL;DR + bullets + section prose. Key Points returns ONLY the bullets — scannable, quick, no reading through intros. 3 credits vs 3 credits but much less output to wade through." },
+      { q: "How many bullets?", a: "6–12 typically. Shorter PDFs get fewer, longer get more. No fixed cap — the model decides based on how many distinct claims exist." },
+      { q: "What about the page citations?", a: "Every bullet should end with \"[p. N]\" citing where the claim came from. If a bullet lacks a citation, the model couldn't trace it to a single page (common for multi-page themes)." },
+      { q: "Signin required?", a: "Yes — 25 free credits on signup." },
+    ],
+    related: ["ai-key-points", "ai-summarize", "ai-tldr", "ai-study-notes"],
+  },
+
+  "pdf-to-study-notes": {
+    tool: "ai-study-notes",
+    h1: "PDF to Study Notes — revision-grade AI notes with self-check questions",
+    sub: "Turn any PDF (textbook, paper, lecture) into structured study notes with key concepts, detailed sections, takeaways, and self-check questions. 8 credits per doc.",
+    canonical: "/pdf-to-study-notes",
+    howTo: [
+      { t: "Drop your PDF", d: "Textbook chapter, research paper, or lecture slides — any text PDF." },
+      { t: "We build the note pack", d: "Overview → Key Concepts → Detailed Notes (concept-by-concept with Remember: takeaways) → Self-Check Questions for recall testing." },
+      { t: "Download and revise", d: "Rendered as Markdown; saved to your Files for revision sessions." },
+    ],
+    faq: [
+      { q: "Who is this for?", a: "Students preparing for exams, teachers building revision packs, self-learners. Longer output than Summarize (8 credits vs 3) because study notes need the detail + recall-test structure." },
+      { q: "Does it hallucinate?", a: "We explicitly instruct the model not to invent facts. Every claim is grounded in the source text; analogies are allowed but must preserve the source's factual claims. For high-stakes exam prep, cross-check with the original." },
+      { q: "What about the self-check questions?", a: "4–6 short-answer questions for active-recall testing. No answer key — the point is to test what you've learned, then re-read the corresponding section to check." },
+      { q: "Indian school syllabus (NCERT)?", a: "Works across curricula — the prompt is general. Paid vertical tool NCERT Summarizer (§3.3) is roadmapped as a class-wise optimised variant." },
+    ],
+    related: ["ai-study-notes", "ai-summarize", "ai-key-points", "ai-eli5"],
+  },
+
+  "explain-pdf": {
+    tool: "ai-eli5",
+    h1: "Explain PDF in plain English — free 25 credits on signup",
+    sub: "Short sentences, everyday words, no jargon. Big Idea / Details / Why It Matters structure. 3 credits per PDF.",
+    canonical: "/explain-pdf",
+    howTo: [
+      { t: "Drop your PDF", d: "Any text-based PDF — research papers, legal docs, medical reports, technical whitepapers." },
+      { t: "Gemini simplifies", d: "Plain-language explanation with three sections: The Big Idea, The Details, Why It Matters." },
+      { t: "Read or share", d: "Good for non-expert audiences, briefing family on medical reports, first-pass skim of research papers." },
+    ],
+    faq: [
+      { q: "Does simplification lose accuracy?", a: "We explicitly instruct the model to preserve factual claims even inside analogies. Numbers, dates, and quotes aren't simplified — only the VOICE is. For exam / publication-grade answers, use Summarize instead." },
+      { q: "Why 12 and not 5?", a: "\"Like I'm 5\" is the SEO keyword, but 12 is the actual reading level we target — short sentences, no jargon, but enough vocabulary that the output isn't patronising." },
+      { q: "Does it work for legal / medical PDFs?", a: "Yes — plain-language summaries of contracts or lab reports are the top use case. But this is NOT legal or medical advice. Verify with a professional before acting." },
+    ],
+    related: ["ai-eli5", "ai-summarize", "ai-tldr", "ai-key-points"],
   },
 };
 

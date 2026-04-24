@@ -50,9 +50,20 @@ export const runtime = "nodejs";
 // malicious 500MB body can't OOM a worker.
 const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
 
-// The three valid depth strings. Kept here (not in summarize.ts) because
+// Task #52: six valid depths. Kept here (not in summarize.ts) because
 // this is the public boundary — summarize.ts is server-only code.
-const VALID_DEPTHS: readonly SummarizeDepth[] = ["tldr", "standard", "detailed"];
+// "key-points", "study-notes", "eli5" are presentation-style variants
+// each exposed as its own dedicated Tier 2 tool (ai-key-points /
+// ai-study-notes / ai-eli5). All six flow through the same /api/ai/
+// summarize route with different depthLine prompts + output-cap caps.
+const VALID_DEPTHS: readonly SummarizeDepth[] = [
+  "tldr",
+  "standard",
+  "detailed",
+  "key-points",
+  "study-notes",
+  "eli5",
+];
 
 export async function POST(req: Request): Promise<Response> {
   // -- 1. Auth ---------------------------------------------------------

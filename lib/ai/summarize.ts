@@ -46,7 +46,21 @@ import { NoRoutableProviderError, route } from "./router";
 import type { AIProviderId, StopReason, TokenUsage } from "./types";
 
 /** How much summary the caller wants. */
-export type SummarizeDepth = "tldr" | "standard" | "detailed";
+// Task #52 (2026-04-24): added three presentation-style variants —
+// "key-points", "study-notes", "eli5" — each exposed as its own
+// Tier 2 tool (ai-key-points / ai-study-notes / ai-eli5). They
+// reuse the summarize pipeline end-to-end; only the depth-line
+// prompt switch below differs. Pricing per catalog:
+//   key-points  3 credits (§2.1 P0)
+//   study-notes 8 credits (§2.4 P0 — longer output)
+//   eli5        3 credits (§2.1 P1)
+export type SummarizeDepth =
+  | "tldr"
+  | "standard"
+  | "detailed"
+  | "key-points"
+  | "study-notes"
+  | "eli5";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -286,6 +300,43 @@ function buildSystemPrompt(opts: {
           "verbatim quotes (use > blockquote syntax) cited by page. Open Questions " +
           "lists what the document does not answer that a careful reader would want to know."
         );
+      case "key-points":
+        // §2.1 Key Points Extractor. No prose — just the bulleted core.
+        // Dedicated tool because users who need a scannable insight
+        // list shouldn't have to wade through TL;DR + section summaries.
+        return (
+          "Produce ONLY a bulleted list of the document's key points, under a " +
+          "single `## Key Points` H2 header. Aim for 6–12 bullets. Each bullet " +
+          "is one concrete claim or finding with a page citation. No prose, " +
+          "no section summaries, no TL;DR, no headers other than the one H2."
+        );
+      case "study-notes":
+        // §2.4 PDF → Study Notes. Structured for study/revision:
+        // concept index, then per-concept explanation + takeaways.
+        return (
+          "Produce study notes structured for revision. Start with `## Overview` " +
+          "(2–3 sentences situating the document). Then `## Key Concepts` as a " +
+          "bulleted list (concept → one-line definition, page cited). Then for " +
+          "each major concept add an H3 section under `## Detailed Notes` with: " +
+          "the concept, a paragraph explaining it in study-guide voice, and a " +
+          "`> Remember:` blockquote with the single takeaway a student should " +
+          "memorise. End with `## Self-Check Questions` — 4–6 short-answer " +
+          "questions a student can use to test recall, no answer key."
+        );
+      case "eli5":
+        // §2.1 Explain Like I'm 5. Plain-language simplification while
+        // retaining factual fidelity (the document's claims must survive
+        // the simplification — no making up analogies that contradict
+        // the source).
+        return (
+          "Explain this document as if to a smart 12-year-old. Use short " +
+          "sentences and everyday vocabulary. No jargon, no corporate " +
+          "register. You MAY use simple analogies from everyday life, but " +
+          "only if the analogy preserves the source's factual claims — no " +
+          "invented numbers, dates, or quotes even inside an analogy. Structure " +
+          "as `## The Big Idea` (one paragraph), `## The Details` (4–8 short " +
+          "bullets in plain language), `## Why It Matters` (one paragraph)."
+        );
     }
   })();
 
@@ -324,7 +375,25 @@ function buildSystemPrompt(opts: {
 }
 
 function buildUserPrompt(opts: { depth: SummarizeDepth; text: string }): string {
-  const verb = opts.depth === "tldr" ? "Summarize" : "Summarize in full per the instructions above";
+  // Kept per-depth so the "verb" in the user turn matches what the
+  // system prompt's depthLine actually asked for. Drift here →
+  // doubled instructions / conflicted outputs.
+  const verb = (() => {
+    switch (opts.depth) {
+      case "tldr":
+        return "Summarize";
+      case "key-points":
+        return "Extract the key points";
+      case "study-notes":
+        return "Produce study notes";
+      case "eli5":
+        return "Explain this";
+      case "standard":
+      case "detailed":
+      default:
+        return "Summarize in full per the instructions above";
+    }
+  })();
   // Task #26: wrap untrusted PDF text in sentinel tags. See prompt-safety.ts.
   return (
     `${verb}. The document text follows inside the untrusted_input tag.\n\n` +

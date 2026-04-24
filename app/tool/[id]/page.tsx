@@ -50,6 +50,11 @@ import { SortPagesTool } from "@/components/tools/SortPagesTool";
 import { ExtractContactsTool } from "@/components/tools/ExtractContactsTool";
 import { ExtractDatesTool } from "@/components/tools/ExtractDatesTool";
 import { TldrPdfTool } from "@/components/tools/TldrPdfTool";
+import {
+  KeyPointsPdfTool,
+  StudyNotesPdfTool,
+  Eli5PdfTool,
+} from "@/components/tools/SummarizeVariantTool";
 
 type Params = { params: { id: string } };
 
@@ -104,6 +109,9 @@ const LIVE_TOOL_IDS = new Set<string>([
   "extract-dates",
   "ai-summarize",
   "ai-tldr",
+  "ai-key-points",
+  "ai-study-notes",
+  "ai-eli5",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -331,6 +339,12 @@ function ToolRunner({ id }: { id: string }) {
       return <SummarizePdfTool />;
     case "ai-tldr":
       return <TldrPdfTool />;
+    case "ai-key-points":
+      return <KeyPointsPdfTool />;
+    case "ai-study-notes":
+      return <StudyNotesPdfTool />;
+    case "ai-eli5":
+      return <Eli5PdfTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":
