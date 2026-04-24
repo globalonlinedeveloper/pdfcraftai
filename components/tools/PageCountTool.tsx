@@ -54,13 +54,14 @@ export function PageCountTool() {
       let characterCount = 0;
       try {
         const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-        // Use a bundled worker URL. This matches the pattern used in
-        // lib/ai/pdf-extract.ts.
+        // pdf.worker.min.mjs is copied into /public by the prebuild
+        // script (scripts/copy-pdfjs-worker.mjs). We can't let webpack
+        // bundle the worker via `new URL(..., import.meta.url)` —
+        // SWC chokes on its ES `export` syntax in non-module context.
+        // Static /public path + workerSrc string is the portable fix
+        // that keeps CSP script-src tight and the build green.
         if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
-          pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-            "pdfjs-dist/legacy/build/pdf.worker.mjs",
-            import.meta.url
-          ).toString();
+          pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs-worker.min.mjs";
         }
         const src = await pdfjs.getDocument({ data: buf.slice(0) }).promise;
         for (let p = 1; p <= src.numPages; p++) {

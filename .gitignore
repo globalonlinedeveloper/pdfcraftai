@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Claude (Cowork) session state — secrets, SSH keys, scratch images
 .claude/
+
+# Regenerated each build by scripts/copy-pdfjs-worker.mjs
+public/pdfjs-worker.min.mjs

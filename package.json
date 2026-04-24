@@ -12,7 +12,8 @@
     "smoke": "node scripts/smoke-live.mjs",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "prebuild": "node scripts/copy-pdfjs-worker.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

@@ -82,11 +82,11 @@ export function PdfToJpgTool() {
     setPages([]);
     try {
       const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+      // Worker lives at /pdfjs-worker.min.mjs — copied from
+      // node_modules by scripts/copy-pdfjs-worker.mjs at prebuild.
+      // See PageCountTool for the full rationale.
       if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/legacy/build/pdf.worker.mjs",
-          import.meta.url
-        ).toString();
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs-worker.min.mjs";
       }
       const buf = await loaded.file.arrayBuffer();
       const src = await pdfjs.getDocument({ data: buf }).promise;
