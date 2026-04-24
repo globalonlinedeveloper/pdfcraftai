@@ -56,3 +56,18 @@ export const toolsByGroup = (): Record<ToolGroup, Tool[]> => {
   for (const t of TOOLS) out[t.group].push(t);
   return out;
 };
+
+// Single source of truth for tool counts rendered in marketing copy.
+// Every place that says "16 tools" / "8 free forever" / "10 AI" used
+// to hardcode these numbers and drifted every time TOOLS grew. Derive
+// them here once; every consumer pulls from the same place so adding
+// a tool to TOOLS[] auto-updates every surface that references counts.
+//
+// Exposed as an object rather than three separate exports so call-sites
+// read as `TOOL_STATS.free` / `TOOL_STATS.ai` — grepable, impossible to
+// confuse with other counts elsewhere in the app.
+export const TOOL_STATS = {
+  total: TOOLS.length,
+  free: TOOLS.filter((t) => t.free).length,
+  ai: TOOLS.filter((t) => !t.free).length,
+} as const;

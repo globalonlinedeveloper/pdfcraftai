@@ -7,12 +7,11 @@ import { PackUpsellPanel } from "@/components/billing/PackUpsellPanel";
 import { SmartCta } from "@/components/marketing/SmartCta";
 import { LaunchNotifySignup } from "@/components/geo/LaunchNotifySignup";
 import { PRICING_FAQ } from "@/lib/pricing";
-import { TOOLS } from "@/lib/tools";
+import { TOOLS, TOOL_STATS } from "@/lib/tools";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description:
-    "Credits, not commitments. 8 free PDF tools forever. AI tools from $5/100 credits. Paid credits never expire.",
+  description: `Credits, not commitments. ${TOOL_STATS.free} free PDF tools forever. AI tools from $5/100 credits. Paid credits never expire.`,
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Pricing",
@@ -44,7 +43,7 @@ export default function PricingPage() {
             credits never expire.
           </p>
           <div className="row" style={{ justifyContent: "center", gap: 10, marginTop: 28, flexWrap: "wrap" }}>
-            <span className="chip chip-free">8 tools · always free</span>
+            <span className="chip chip-free">{TOOL_STATS.free} tools · always free</span>
             <span className="chip chip-new">Client-side WASM · no server cost</span>
             <span className="chip chip-ai">AI priced per use</span>
           </div>

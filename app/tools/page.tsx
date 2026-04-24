@@ -2,22 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolFilter } from "@/components/marketing/ToolFilter";
+import { TOOL_STATS } from "@/lib/tools";
+
+const META_DESC_SHORT = `Every PDF tool you need. ${TOOL_STATS.free} free forever, ${TOOL_STATS.ai} AI-powered.`;
+const META_DESC_LONG = `Every PDF tool you need — ${TOOL_STATS.free} free forever, ${TOOL_STATS.ai} AI-powered. Merge, split, compress, convert, chat, summarize, translate, redact.`;
 
 export const metadata: Metadata = {
   title: "All tools",
-  description:
-    "Every PDF tool you need — 8 free forever, 10 AI-powered. Merge, split, compress, convert, chat, summarize, translate, redact.",
+  description: META_DESC_LONG,
   alternates: { canonical: "/tools" },
   openGraph: {
     title: "All tools",
-    description: "Every PDF tool you need. 8 free forever, 10 AI-powered.",
+    description: META_DESC_SHORT,
     url: "/tools",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "All tools",
-    description: "Every PDF tool you need. 8 free forever, 10 AI-powered.",
+    description: META_DESC_SHORT,
   },
 };
 

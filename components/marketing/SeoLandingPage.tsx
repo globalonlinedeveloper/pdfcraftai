@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { FaqItem } from "@/components/marketing/FaqItem";
-import { toolById } from "@/lib/tools";
+import { toolById, TOOL_STATS } from "@/lib/tools";
 import type { SeoPageData } from "@/lib/seo-pages";
 
 export function SeoLandingPage({ data }: { data: SeoPageData }) {
@@ -194,7 +194,11 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
               gap: 14,
             }}
           >
-            <WhyCard icon="Menu" title="18 tools" body="Every PDF task in one place. 8 free forever, 10 AI." />
+            <WhyCard
+              icon="Menu"
+              title={`${TOOL_STATS.total} tools`}
+              body={`Every PDF task in one place. ${TOOL_STATS.free} free forever, ${TOOL_STATS.ai} AI.`}
+            />
             <WhyCard icon="Flow" title="Macros" body="Chain steps. Schedule them. Never do the same job twice." />
             <WhyCard icon="Code" title="API + SDKs" body="TypeScript, Python, Go, Ruby, PHP. Batch endpoint for scale." />
             <WhyCard icon="Shield" title="Secure by default" body="Encrypted in transit and at rest. 60-min auto-delete. Zero-retention AI." />

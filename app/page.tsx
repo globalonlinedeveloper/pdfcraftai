@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
+import { TOOL_STATS } from "@/lib/tools";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ToolsShowcase } from "@/components/landing/ToolsShowcase";
 import {
@@ -97,10 +98,10 @@ export default function HomePage() {
             }}
           >
             <span className="row" style={{ gap: 6 }}>
-              <I.Check size={14} /> 16 tools
+              <I.Check size={14} /> {TOOL_STATS.total} tools
             </span>
             <span className="row" style={{ gap: 6 }}>
-              <I.Check size={14} /> 8 free forever
+              <I.Check size={14} /> {TOOL_STATS.free} free forever
             </span>
             <span className="row" style={{ gap: 6 }}>
               <I.Check size={14} /> BYOK on Pro+

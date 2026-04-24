@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { I } from "@/components/icons/Icons";
+import { TOOL_STATS } from "@/lib/tools";
 
 /**
  * Two-pane auth shell.
@@ -162,7 +163,10 @@ export function AuthShell({
               ["Sparkle", "AI Chat, Summarize, Translate, OCR, Redact"],
               ["Flow", "Workflow Studio + Agent for multi-step tasks"],
               ["Shield", "Private mode · DPA available · Zero training on your data"],
-              ["Check", "16 tools. 8 free forever. No credit card."],
+              [
+                "Check",
+                `${TOOL_STATS.total} tools. ${TOOL_STATS.free} free forever. No credit card.`,
+              ],
             ].map(([icon, text]) => {
               const Ic = I[icon as keyof typeof I];
               return (

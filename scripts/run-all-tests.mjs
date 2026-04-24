@@ -459,6 +459,16 @@ const SUITES = [
     name: "razorpay-handoff",
     file: "test-razorpay-handoff.mjs",
   },
+  // tool-stats-consistency pins the TOOL_STATS invariant: every
+  // marketing surface that shows "N tools / M free / K AI" reads
+  // from lib/tools.ts::TOOL_STATS, never hardcodes. Before this fix,
+  // adding a tool drifted 5 places across app/ and components/ (the
+  // homepage said 16 tools but the pricing chip said 8, etc.). The
+  // derived TOOL_STATS object + this test catch the drift at CI time.
+  {
+    name: "tool-stats-consistency",
+    file: "test-tool-stats-consistency.mjs",
+  },
   // tier1-expansion pins the 6-tool Tier-1 expansion from
   // 2026-04-24 (extract-pages, delete-pages, pdf-to-jpg,
   // extract-images, page-count, pdf-metadata). Catches registry /
