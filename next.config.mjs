@@ -260,7 +260,10 @@ const nextConfig = {
       // /tools/ index is now /tools (no trailing /tools/<slug> paths
       // exist), so anything that lands here is a stale Google cache
       // entry — bounce them to the tools directory rather than 404.
-      { source: "/tools/:slug*", destination: "/tools", permanent: true },
+      // CRITICAL: must be `:slug+` (one or more), NOT `:slug*` (zero
+      // or more) — the latter matches `/tools` itself, creating an
+      // infinite self-redirect loop that 100% breaks the tools index.
+      { source: "/tools/:slug+", destination: "/tools", permanent: true },
     ];
   },
 };

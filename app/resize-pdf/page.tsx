@@ -5,7 +5,7 @@ import { SEO_PAGES } from "@/lib/seo-pages";
 const data = SEO_PAGES["resize-pdf"];
 
 export const metadata: Metadata = {
-  title: `${data.h1} · pdfcraft ai`,
+  title: data.h1,
   description: data.sub,
   alternates: { canonical: data.canonical },
   openGraph: { title: data.h1, description: data.sub, url: data.canonical, type: "website" },
