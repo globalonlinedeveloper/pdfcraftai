@@ -59,12 +59,7 @@ export const TOOLS: readonly Tool[] = [
   { id: "booklet-pdf", name: "Booklet Imposition", desc: "Saddle-stitch page shuffle for fold-and-staple booklets. Distinct from N-up.", icon: "Pages", free: true, group: "Organize" },
   { id: "free-draw-pdf", name: "Draw on PDF", desc: "Sketch, mark up, and annotate any page with a free-draw pen. 5 colors, adjustable width.", icon: "Pen", free: true, group: "Edit" },
   { id: "add-links", name: "Add Hyperlinks", desc: "Drag a region, paste a URL, get a clickable link annotation. Inverse of Strip Hyperlinks.", icon: "Pen", free: true, group: "Edit" },
-  // Sprint A — 5 Indian govt ID parsers (Tier 3 §3.x).
-  { id: "ai-aadhaar", name: "Aadhaar Parser", desc: "Tier 3 Indian Govt ID: holder + masked Aadhaar (last 4 only) + VID + privacy guidance. DPDP-compliant.", icon: "Shield", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-pan-card", name: "PAN Card Parser", desc: "Tier 3 Indian Govt ID: PAN extract + format check + Aadhaar-PAN linkage flag.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-driving-license", name: "Driving License Parser", desc: "Tier 3 Indian Govt ID: DL extract with vehicle classes + endorsements + renewal watch.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-voter-id", name: "Voter ID (EPIC) Parser", desc: "Tier 3 Indian Govt ID: EPIC + constituency + polling + NVSP cross-verification steps.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-passport", name: "Passport Parser", desc: "Tier 3 Indian Govt ID: bio data + MRZ status + renewal watch + travel tips. India + international.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
+  // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
   { id: "ai-form-26as", name: "Form 26AS Analyzer", desc: "Tier 3 Finance: TDS / tax credit reconciliation across Parts A-E with discrepancy flags.", icon: "Pages", free: false, cost: "15 credits / doc", group: "AI" },
   { id: "ai-form-15g-15h", name: "Form 15G / 15H Analyzer", desc: "Tier 3 Finance: declaration parser with eligibility check vs basic exemption limits.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },

@@ -148,12 +148,7 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "plagiarism",
   "chart-to-table",
   "paper-pattern",
-  // Sprint A — 5 Indian govt ID parsers (Tier 3, §3.x).
-  "aadhaar",
-  "pan-card",
-  "driving-license",
-  "voter-id",
-  "passport",
+  // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3, §3.1).
   "form-26as",
   "form-15g-15h",

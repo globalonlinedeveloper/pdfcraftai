@@ -131,11 +131,6 @@ import {
 import { MindmapPdfTool } from "@/components/tools/MindmapPdfTool";
 import { SemanticSearchPdfTool } from "@/components/tools/SemanticSearchPdfTool";
 import {
-  AadhaarParserTool,
-  PanCardParserTool,
-  DrivingLicenseParserTool,
-  VoterIdParserTool,
-  PassportParserTool,
   Form26asAnalyzerTool,
   Form15g15hAnalyzerTool,
   RentReceiptAnalyzerTool,
@@ -212,12 +207,7 @@ const LIVE_TOOL_IDS = new Set<string>([
   "free-draw-pdf",
   // Task #96 — add hyperlinks (inverse of strip-links)
   "add-links",
-  // Sprint A — 5 Indian govt ID parsers (Tier 3)
-  "ai-aadhaar",
-  "ai-pan-card",
-  "ai-driving-license",
-  "ai-voter-id",
-  "ai-passport",
+  // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1)
   "ai-form-26as",
   "ai-form-15g-15h",
@@ -540,17 +530,7 @@ function ToolRunner({ id }: { id: string }) {
       return <FreeDrawTool />;
     case "add-links":
       return <AddLinksTool />;
-    // Sprint A — Indian govt ID parsers (Tier 3 §3.x)
-    case "ai-aadhaar":
-      return <AadhaarParserTool />;
-    case "ai-pan-card":
-      return <PanCardParserTool />;
-    case "ai-driving-license":
-      return <DrivingLicenseParserTool />;
-    case "ai-voter-id":
-      return <VoterIdParserTool />;
-    case "ai-passport":
-      return <PassportParserTool />;
+    // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
     // Sprint B — Indian financial wedges (Tier 3 §3.1)
     case "ai-form-26as":
       return <Form26asAnalyzerTool />;
