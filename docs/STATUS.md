@@ -331,3 +331,4 @@ All actual credential values live ONLY in `.claude/secrets.env` (gitignored). If
 | Hostinger SSH private key | `.claude/id_ed25519_cowork` | Public half registered as `cowork-apr2026-v2` |
 | Hostinger env vars | hPanel only | Never copied to sandbox |
 | Google OAuth client secret | Hostinger env vars only | Never copied to sandbox |
+# Trigger redeploy 2026-04-25 09:49:04 UTC
