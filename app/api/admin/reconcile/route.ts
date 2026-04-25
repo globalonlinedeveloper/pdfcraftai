@@ -21,7 +21,8 @@
 // sweep's age window is fixed in reconcile.ts.
 
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin/guard";
+import { auth } from "@/auth";
+import { isAdminEmail } from "@/lib/admin/guard";
 import { runReconciliation } from "@/lib/payments/reconcile";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +33,24 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
-  // notFound() inside requireAdmin throws — non-admins never reach the
-  // body of this handler.
-  await requireAdmin();
+  // Inline auth, matching /api/admin/margin's pattern. requireAdmin()
+  // is for server-component pages (its notFound() renders the 404
+  // page); route handlers need explicit 401/403 JSON so the client
+  // fetch can surface a useful error message.
+  const session = await auth();
+  const email = session?.user?.email;
+  if (typeof email !== "string") {
+    return NextResponse.json(
+      { ok: false, error: "not_authenticated" },
+      { status: 401 }
+    );
+  }
+  if (!isAdminEmail(email, process.env.ADMIN_EMAILS)) {
+    return NextResponse.json(
+      { ok: false, error: "forbidden" },
+      { status: 403 }
+    );
+  }
 
   // Optional widened lookback for diagnostic runs.
   const url = new URL(req.url);
