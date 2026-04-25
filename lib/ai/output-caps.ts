@@ -208,18 +208,14 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "bank-statement": 3500, // Long transaction lists — up to ~200 rows.
     "blood-test": 2000, // 20-60 lab values + patient metadata.
     // Task #64:
-    "gst-invoice": 2000, // 5 sections incl. line items table.
     "rental": 2200, // 5 sections, prose-heavy with quoted clauses.
     "syllabus": 2200, // Topic map + 12-week table + revision strategy.
     // Task #65:
     "property": 2200, // 6 sections + chain-of-title bullets.
     "discharge": 2000, // 7 sections, plain-language rewrite.
-    "itr-form16": 2000, // 5 sections incl. tax computation table.
     // Task #67 — §3.6, §3.3, §3.1 P0 wedges.
     "cover-letter": 1200, // ≤350-word letter + 3-bullet customizations.
     "jd-match": 2200, // Fit score + alignment table + 4 bullet sections.
-    "tnpsc": 3200, // Per-question table can be 100+ rows for a full paper.
-    "jee-neet": 3600, // Per-question table + per-subject chapter-frequency tables + revision plan.
     "multi-bank": 4000, // Multi-bank JSON — can span hundreds of transactions per statement.
     // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
     "credit-card": 2400, // Spend table + top merchants + observations.
@@ -230,21 +226,15 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
     "medical-bill": 2400, // Itemised + insurance + reimbursable + next-steps.
     "prescription": 1800, // JSON medications list — usually <12 drugs.
-    "rera": 2800, // Project + approvals + risk flags + checklist.
-    "ec": 2400, // Encumbrance table + chain summary + gaps.
     "salary-slip": 1600, // Compact JSON earnings + deductions + YTD.
     // Task #78 — Tier 3 §3.3 + §3.1 + §3.10 wedges.
-    "upsc": 3200, // Per-question table for paper of 100+ questions + analytics.
     "research-paper": 2400, // 8 sections + BibTeX + related reading.
     "demat": 4000, // CAS JSON — can hold dozens of holdings + corporate actions.
     "insurance": 2800, // Coverage + exclusions + comparison + risk flags.
     "loan-bundle": 2400, // Documents found + missing + income snapshot + next steps.
     // Task #79 — Tier 3 §3.1 + §3.2 + §3.3 wedges.
     "expense-report": 2400, // Category × month matrix + observations.
-    "court-order": 2400, // Citation + parties + ratio + reasoning + implications.
     "partnership-deed": 2400, // Partners table + capital + risk flags + missing clauses.
-    "ssc-banking": 3200, // Per-Q table for paper of 100-200 questions.
-    "ncert": 2200, // Chapter summary + likely Qs + revision checklist.
     // Task #80 — Tier 3 §3.4 + §3.10 + §3.5 + §3.1 wedges.
     "scan-report": 2400, // Findings + glossary + questions to ask.
     "electricity-bill": 1800, // Slab breakdown + observations + recommendations.
@@ -259,11 +249,6 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "paper-pattern": 3200, // Multi-year frequency + trend + predictions.
     // Sprint A REVERTED in Task #99 — 5 Indian govt ID caps removed.
     // Sprint B — Indian financial wedges.
-    "form-26as": 3200, // Multi-section TDS table + reconciliation notes.
-    "form-15g-15h": 1800, // Form fields + eligibility check + risk flags.
-    "rent-receipt": 2400, // 12-month receipt table + HRA math + compliance.
-    "property-tax": 2200, // Property + tax components + dues + rebates.
-    "stamp-duty": 1800, // Document + parties + duty + verification.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

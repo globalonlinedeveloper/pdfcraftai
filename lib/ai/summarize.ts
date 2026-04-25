@@ -129,7 +129,6 @@ export type SummarizeDepth =
   //   gst-invoice §3.1 — invoice-to-GSTR fields (25c)
   //   rental      §3.2 — rental agreement risks + missing clauses (15c)
   //   syllabus    §3.3 — syllabus → week-by-week study plan (20c)
-  | "gst-invoice"
   | "rental"
   | "syllabus"
   // Task #65 — three more Tier 3 wedges:
@@ -138,7 +137,6 @@ export type SummarizeDepth =
   //   itr-form16 §3.1 P1 — Indian tax doc analyzer (20c)
   | "property"
   | "discharge"
-  | "itr-form16"
   // Task #67 — five more Tier 3 P0 wedges:
   //   cover-letter §3.6 P0 — tailored cover letter from resume +
   //   optional JD (5c). Uses `query` field for JD.
@@ -155,8 +153,6 @@ export type SummarizeDepth =
   //   per-bank summary (20c).
   | "cover-letter"
   | "jd-match"
-  | "tnpsc"
-  | "jee-neet"
   | "multi-bank"
   // Task #75 — five more Tier 3 P1 wedges:
   //   credit-card §3.1 — categorise spend, recurring charges, fees,
@@ -186,8 +182,6 @@ export type SummarizeDepth =
   //   YoY-friendly normalised structure (10c)
   | "medical-bill"
   | "prescription"
-  | "rera"
-  | "ec"
   | "salary-slip"
   // Task #78 — five more Tier 3 wedges:
   //   upsc          §3.3 — UPSC Prelims/Mains paper analyzer (20c)
@@ -200,7 +194,6 @@ export type SummarizeDepth =
   //   claim contacts) (20c)
   //   loan-bundle   §3.1 — Loan application document bundler that
   //   audits a stack of docs against bank checklist (15c)
-  | "upsc"
   | "research-paper"
   | "demat"
   | "insurance"
@@ -217,10 +210,7 @@ export type SummarizeDepth =
   //   ncert           §3.3 P1 — NCERT chapter summarizer with
   //   class-wise vocab (10c)
   | "expense-report"
-  | "court-order"
   | "partnership-deed"
-  | "ssc-banking"
-  | "ncert"
   // Task #80 — five more Tier 3 wedges:
   //   scan-report      §3.4 P2 — MRI/CT/X-ray report explainer in
   //   plain Indian English. NOT a diagnosis. (20c)
@@ -267,10 +257,6 @@ export type SummarizeDepth =
   //   rent-receipt  — rent receipts → HRA-friendly summary (10c)
   //   property-tax  — municipal property tax bill parser (10c)
   //   stamp-duty    — stamp duty receipt / e-Stamp analyzer (10c)
-  | "form-26as"
-  | "form-15g-15h"
-  | "rent-receipt"
-  | "property-tax"
   | "stamp-duty";
 
 export interface SummarizeInput {
@@ -968,27 +954,6 @@ function buildSystemPrompt(opts: {
           "unclear. Works for SBI / HDFC / ICICI / Axis / Kotak " +
           "/ Yes / IDFC and most NBFCs."
         );
-      case "gst-invoice":
-        // §3.1 GST Invoice Extractor. Extracts the fields a CA /
-        // SME needs to file GSTR — supplier/buyer GSTINs, invoice
-        // metadata, line items, tax breakdown.
-        return (
-          "Extract this GST invoice into a GSTR-2-ready Markdown " +
-          "report. Produce these H2 sections in order: " +
-          "`## Invoice Header` (table with: Invoice No, Date, " +
-          "Place of Supply, Reverse Charge Y/N). `## Supplier` " +
-          "(table: Name, GSTIN, Address, State Code). `## Buyer` " +
-          "(table: Name, GSTIN, Address, State Code). " +
-          "`## Line Items` (table with columns: HSN/SAC, " +
-          "Description, Qty, Unit, Rate, Taxable Value, " +
-          "CGST %, CGST Amt, SGST %, SGST Amt, IGST %, IGST Amt). " +
-          "`## Totals` (Taxable Value, Total CGST, Total SGST, " +
-          "Total IGST, Round-off, Invoice Total). Do NOT invent " +
-          "GSTINs or amounts — leave blank if not in the source. " +
-          "If this is not a GST invoice, render \"_Not a GST " +
-          "invoice._\" with one line stating what the document " +
-          "appears to be."
-        );
       case "rental":
         // §3.2 Rental Agreement Analyzer. Indian-context risks
         // and missing clauses. NOT legal advice; surfaced in FAQ.
@@ -1060,29 +1025,6 @@ function buildSystemPrompt(opts: {
           "End with a clear note that this is a plain-language " +
           "rewrite of an existing summary, not a new diagnosis " +
           "or recommendation."
-        );
-      case "itr-form16":
-        // §3.1 ITR / Form 16 Analyzer. Salaried Indian tax-
-        // filing document review.
-        return (
-          "Analyse this Indian tax document (Form 16, ITR-V, ITR " +
-          "Acknowledgment, or annual tax statement). Produce: " +
-          "`## Document Identified` (which form, AY/FY covered, " +
-          "PAN-masked, employer name if visible). `## Income " +
-          "Summary` (table: Salary, House Property, Capital " +
-          "Gains, Other Sources, Total — with values from the " +
-          "document; blank if section absent). `## Deductions " +
-          "Claimed` (80C, 80D, HRA, Standard Deduction, others — " +
-          "with amounts). `## Tax Computation` (table: Gross " +
-          "Total Income, Total Deductions, Taxable Income, " +
-          "Tax + Cess, TDS, Refund/Payable). `## Observations` " +
-          "(3–5 bullets — under-utilised deductions, mismatched " +
-          "TDS vs computed tax, incorrect regime selection " +
-          "indicators, etc.). `## Suggested Actions` (concrete " +
-          "items — e.g. \"verify TDS in Form 26AS\", \"file " +
-          "rectification under Section 154 if mismatch\"). End " +
-          "with a one-line note that this is an analysis, not " +
-          "tax advice — consult a CA before acting."
         );
       case "syllabus":
         // §3.3 Syllabus → Study Plan. Indian student / aspirant
@@ -1178,59 +1120,6 @@ function buildSystemPrompt(opts: {
           "the query, return just the resume audit section of " +
           "ats-resume-optimizer style output and note the missing " +
           "JD in a top-level callout."
-        );
-      case "tnpsc":
-        // §3.3 TNPSC Answer Key Analyzer. Input = TNPSC question
-        // paper OR TNPSC-released answer key PDF. Produce a
-        // question-by-question analysis.
-        return (
-          "Analyse this TNPSC (Tamil Nadu Public Service " +
-          "Commission) question paper or answer key. Output: " +
-          "`## Exam Identified` (paper name, exam date, subject, " +
-          "question count, marking scheme if visible). `## " +
-          "Question Analysis` — a Markdown table with columns: " +
-          "#, Question (short), Subject-Tag (History / Geography " +
-          "/ Polity / Economy / Science / Aptitude / Tamil Lit / " +
-          "Current Affairs), Correct Answer (from the key), " +
-          "Expected Difficulty (Easy / Medium / Hard — based on " +
-          "the TNPSC pattern you know). One row per question; " +
-          "include EVERY question present. `## Subject-Wise " +
-          "Distribution` (a table with Subject, #Questions, " +
-          "%Total, Avg-Difficulty). `## Topic Frequency` " +
-          "(bullets — recurring topics you'd prioritise for the " +
-          "next attempt). `## Strategy Notes` (3-5 bullets on " +
-          "which sections to cram vs deprioritise, pacing, and " +
-          "score-maximisation — specific to the TNPSC scheme of " +
-          "examination). Use Tamil Nadu–specific context where " +
-          "relevant (Tamil Thaayaga history, state polity, Tamil " +
-          "Nadu geography/economy)."
-        );
-      case "jee-neet":
-        // §3.3 JEE / NEET Previous Year Analyzer. Input = JEE
-        // or NEET question paper PDF.
-        return (
-          "Analyse this JEE or NEET previous-year question paper. " +
-          "Output: `## Paper Identified` (which exam — JEE Main / " +
-          "JEE Advanced / NEET-UG, year, shift/phase if visible, " +
-          "subject split). `## Question Table` — a Markdown " +
-          "table with columns: #, Question Type (MCQ / " +
-          "Numerical / Assertion-Reason / Match-following), " +
-          "Subject (Physics / Chemistry / Biology for NEET; " +
-          "Physics / Chemistry / Math for JEE), Chapter, " +
-          "Sub-topic, Difficulty (Easy / Medium / Hard), Expected " +
-          "Marks. One row per question. `## Chapter Frequency` — " +
-          "a table per subject: Chapter, #Questions, %Subject, " +
-          "Cumulative Difficulty. Sort high→low frequency. `## " +
-          "High-Yield Topics` — 6–10 chapters that showed up " +
-          "most; for each, one line on why it's high-yield (e.g. " +
-          "\"Thermodynamics — 4 Qs, all Medium+, carries 16 " +
-          "marks\"). `## Revision Plan` — a week-by-week plan " +
-          "for a 12-week runway before the exam, weighted by " +
-          "frequency × difficulty. `## Score-Maximisation Notes` " +
-          "— 3–5 bullets on attempts strategy (which subject " +
-          "first, how much time per Q, when to skip, accuracy vs " +
-          "speed trade-offs). Be specific to the JEE/NEET " +
-          "marking scheme (e.g. negative-marking penalties)."
         );
       case "credit-card":
         // §3.1 Credit Card Statement Analyzer.
@@ -1412,64 +1301,6 @@ function buildSystemPrompt(opts: {
           "'HS'=at bedtime; 'SOS'=as needed. End with no extra " +
           "commentary outside the JSON."
         );
-      case "rera":
-        // §3.5 RERA Document Analyzer.
-        return (
-          "Analyse this Indian RERA (Real Estate Regulatory " +
-          "Authority) project document — registration certificate, " +
-          "annexure, agreement for sale, or builder-buyer agreement. " +
-          "Output: `## Project Identified` (project name, RERA " +
-          "registration number, state RERA authority, promoter / " +
-          "developer name, registration date, completion deadline). " +
-          "`## Project Details` (location, total units, area type " +
-          "(carpet/built-up/super), launched towers/blocks, common " +
-          "amenities listed in the registration). `## Approvals & " +
-          "Sanctions` (commencement certificate, environment " +
-          "clearance, occupancy/completion certificates referenced). " +
-          "`## Risk Flags` (table: Issue, Severity, Quote, " +
-          "Recommendation. Common flags: missing OC/CC, expired " +
-          "approvals, registration revoked/lapsed, complaints / " +
-          "penalties on RERA portal, unrealistic completion " +
-          "timelines, area calculated on super-built-up vs RERA-" +
-          "mandated carpet area, hidden charges in agreement, " +
-          "unilateral termination rights for builder, no penalty " +
-          "for delay). `## Buyer Protections Present` (clauses " +
-          "that work for the buyer per RERA Act 2016). `## " +
-          "Verification Checklist` (concrete actions: cross-check " +
-          "registration on state RERA portal, ask for OC, verify " +
-          "encumbrance, RERA complaints search). End with note " +
-          "that this is an audit aid for buyers, NOT legal advice " +
-          "— consult a real estate lawyer + your state's RERA " +
-          "filings before purchasing."
-        );
-      case "ec":
-        // §3.2 / §3.5 Encumbrance Certificate Parser.
-        return (
-          "Parse this Indian Encumbrance Certificate (EC) issued " +
-          "by the Sub-Registrar's office. Output: `## Document " +
-          "Identified` (issuing SRO, application number, date " +
-          "issued, period covered (from-to), property description, " +
-          "applicant name). `## Encumbrances Found` (Markdown " +
-          "table: Date, Document Number, Document Type (Sale Deed " +
-          "/ Mortgage / Settlement / Gift / Lease / Release / " +
-          "Other), Parties (PII-masked), Consideration, " +
-          "Description). Sort chronologically. If 'Nil " +
-          "Encumbrance' is stated, surface that prominently. `## " +
-          "Chain Summary` (paragraph narrative: how the property " +
-          "title moved through these documents — useful to spot " +
-          "broken chains or missing predecessors). `## Risk Flags` " +
-          "(active mortgages still in force, cross-referenced " +
-          "deeds outside this EC's period that need separate ECs " +
-          "for verification, suspicious quick-flips, sale by power " +
-          "of attorney without principal verification). `## " +
-          "Coverage Gaps` (years not covered by this EC — if you " +
-          "have only 2014-2024 EC, recommend pulling the prior " +
-          "30y to satisfy bank-loan diligence). `## Recommended " +
-          "Next Steps` (additional ECs to pull, cross-reference " +
-          "with khata + property tax history). End with note " +
-          "this is a parsing aid — banks and lawyers may still " +
-          "need original EC for diligence."
-        );
       case "improve-writing":
         // §2.6 Improve Writing — clarity / concision rewrite.
         return (
@@ -1597,123 +1428,6 @@ function buildSystemPrompt(opts: {
       // removed for DPDP Act 2023 compliance and liability reasons.
       // See depth-union comment near line 254.
       // Sprint B — Indian financial wedges (§3.1).
-      case "form-26as":
-        return (
-          "Parse this Form 26AS (Tax Credit Statement from TRACES). " +
-          "Output: `## Assessee` (PAN, Name — echo full PAN, last 4 " +
-          "of Aadhaar if linked, AY). `## Part A — TDS on Salary` " +
-          "(table: Deductor, TAN, Section, Total Tax Deducted, " +
-          "Period). `## Part A1 — TDS Other Than Salary` (same " +
-          "table shape, includes 194A interest, 194I rent, 194J " +
-          "professional fees, etc.). `## Part B — TCS` (Tax " +
-          "Collected at Source). `## Part C — Advance Tax / Self-" +
-          "Assessment` (Challans paid, BSR code, dates, amounts). " +
-          "`## Part D — Refund Status` (refunds issued in this AY). " +
-          "`## Part E — High-Value Transactions (AIR / SFT)` " +
-          "(financial transactions reported by banks / mutual funds " +
-          "/ etc., flag any over thresholds). `## Cross-Check Notes` " +
-          "(does total TDS deducted equal sum across deductors? " +
-          "Does any deductor appear here but not on your Form 16?). " +
-          "End with: not tax advice. ITR file numbers should match " +
-          "Form 26AS exactly — discrepancies are the #1 source of " +
-          "ITR notices."
-        );
-      case "form-15g-15h":
-        return (
-          "Parse this Form 15G or Form 15H (declaration of zero / " +
-          "low TDS deduction). Output: `## Form Type` (15G under 18-" +
-          "60 yrs OR 15H for senior citizens 60+ — flag mismatch if " +
-          "DOB inconsistent). `## Declarant` (Name, PAN, DOB, Status " +
-          "— Individual / HUF / etc., Address). `## Income Details` " +
-          "(table: Identification number, Section, Estimated income " +
-          "this FY, Estimated total income for FY). `## Eligibility " +
-          "Check` (basic exemption limit ₹2.5L for <60, ₹3L for " +
-          "60-80, ₹5L for 80+ — flag if total estimated income " +
-          "exceeds the limit, which makes the declaration " +
-          "INVALID). `## Verification` (signature, date, place, " +
-          "verification statement presence). `## Submission Status` " +
-          "(if there's a UIN / acknowledgment number from bank or " +
-          "deductor, surface it). `## Risk Flags` (3-5 things that " +
-          "could invalidate this form — e.g., TDS already " +
-          "deducted; income exceeds limit; declarant has filed " +
-          "ITR with refund). End with: not tax advice. False " +
-          "declarations under section 277 of IT Act carry " +
-          "imprisonment + fine."
-        );
-      case "rent-receipt":
-        return (
-          "Parse this stack of rent receipts (typically 12 months for " +
-          "HRA exemption claim under section 10(13A)). Output: `## " +
-          "Tenant` (Name, address). `## Landlord` (Name, PAN if " +
-          "shown — PAN MANDATORY if annual rent > ₹1L per IT rule, " +
-          "flag if missing for that case). `## Property` (rented " +
-          "address). `## Receipt Detail Table` (table: Receipt #, " +
-          "Month, Amount, Mode of Payment, Date, Stamp Present, " +
-          "Signature Present). `## Annual Rent Total` (sum). `## " +
-          "HRA Eligibility Math` (3 limits: actual HRA received, " +
-          "rent paid - 10% basic, 50% basic for metro / 40% non-" +
-          "metro — minimum of 3 is the eligible amount; show all " +
-          "three if user provides salary basic separately, " +
-          "otherwise just the rent-paid figure). `## Compliance " +
-          "Flags` (red flags: unsigned receipts, missing landlord " +
-          "PAN with rent > ₹1L/yr, missing revenue stamp on " +
-          "receipts > ₹5K, gaps in months covered, mismatched " +
-          "amounts vs. bank-statement evidence the user might " +
-          "want to provide). End with: not tax advice. HRA claims " +
-          "must match rent agreement + bank-transfer evidence."
-        );
-      case "property-tax":
-        return (
-          "Parse this property tax bill (municipal corporation, " +
-          "panchayat, or city municipal council — covers BBMP, MCD, " +
-          "BMC, Chennai Corp, KMC, etc.). Output: `## Property` " +
-          "(Owner Name, Property ID / Khata No / PID, Address, " +
-          "Property Type — Residential / Commercial / Mixed, Built-" +
-          "Up Area, Plot Area). `## Bill Details` (Bill Number, " +
-          "Assessment Year, Half-Year H1/H2 if applicable, Issue " +
-          "Date, Due Date). `## Tax Computation` (table: " +
-          "Component, Basis, Rate, Amount — Property Tax, Library " +
-          "Cess, Health Cess, Solid Waste Cess, Beggary Cess, " +
-          "etc.). `## Outstanding Dues` (any prior unpaid amounts " +
-          "+ accrued interest / penalty). `## Total Payable`. `## " +
-          "Payment Options` (online portal, bank counter, " +
-          "authorized centers — list whatever the bill mentions). " +
-          "`## Rebate Eligibility` (early-payment rebate, " +
-          "self-assessment rebate, women / senior / disabled " +
-          "rebates if your municipality offers — flag if the bill " +
-          "mentions but doesn't apply). `## Late-Payment " +
-          "Consequences` (per-month interest, penalty %, " +
-          "disconnection of water/services if applicable). End " +
-          "with: data extraction only, not legal/financial advice. " +
-          "Cross-check Property ID against your latest sale-deed " +
-          "or khata."
-        );
-      case "stamp-duty":
-        return (
-          "Parse this stamp duty receipt / e-Stamp certificate / " +
-          "challan (Indian — covers SHCIL e-Stamp, state-portal e-" +
-          "Stamp, franking-machine receipt, traditional stamp " +
-          "paper). Output: `## Document` (Stamp Certificate / " +
-          "Receipt Number, Issue Date, Issuing Authority, State, " +
-          "Status — Valid / Used / Cancelled). `## Transaction " +
-          "Type` (Sale Deed / Lease Agreement / Gift Deed / Power " +
-          "of Attorney / Affidavit / Loan Agreement / etc.). `## " +
-          "Parties` (First Party — buyer/lessee, Second Party — " +
-          "seller/lessor). `## Property / Subject` (if a property " +
-          "transaction: address, survey number; if not, brief " +
-          "description). `## Stamp Duty Paid` (amount, percentage " +
-          "of consideration — typical IN ranges: 5-7% for sale " +
-          "deeds, varies by state/gender/urban). `## Registration " +
-          "Fee` (separate from stamp duty, usually 1%). `## " +
-          "Validity Check` (e-Stamp certificates have a unique " +
-          "ID verifiable on shcilestamp.com or state-specific " +
-          "portal — surface the verification URL). `## Common " +
-          "Issues` (3-5 risk flags: under-stamping, expired " +
-          "certificate used, mismatched parties vs deed, etc.). " +
-          "End with: data extraction only, not legal advice. " +
-          "Always verify e-Stamp authenticity on the official " +
-          "issuing portal before relying on it."
-        );
       case "scan-report":
         // §3.4 Scan Report (MRI/CT/X-ray/Ultrasound) Plain-language
         // Explainer. STRICTLY non-diagnostic — surfaces what the
@@ -1914,32 +1628,6 @@ function buildSystemPrompt(opts: {
           "out share, etc.). End with note this is a parsing aid; " +
           "category choice is heuristic and the user can override."
         );
-      case "court-order":
-        // §3.2 Indian Court Order / Judgment Summarizer.
-        return (
-          "Summarise this Indian court order / judgment. Output: " +
-          "`## Citation` (court, bench, judge(s), date, case " +
-          "number / writ petition / civil appeal / SLP, citation " +
-          "string if available). `## Parties` (Petitioner(s), " +
-          "Respondent(s), Intervenor(s) if any — PII-masked when " +
-          "the case isn't a published precedent). `## Issue(s) " +
-          "Framed` (the legal questions the court considered, " +
-          "verbatim quotes preferred). `## Held / Operative Part` " +
-          "(the operative directions of the court — what was " +
-          "ordered, granted, denied, remanded). `## Ratio " +
-          "Decidendi` (the principle of law on which the decision " +
-          "rests — paraphrased + quoted from the para that lays " +
-          "it down). `## Reasoning` (chain of reasoning the court " +
-          "follows; cite paragraph numbers where possible). `## " +
-          "Cited Authorities` (other judgments / statutes / " +
-          "constitutional articles relied on). `## Costs / Time " +
-          "Limits` (any costs awarded, compliance timelines, " +
-          "next-of-action). `## Practical Implications` (3-4 " +
-          "bullets — what this means for similarly-placed " +
-          "litigants / lawyers / authorities). End with note this " +
-          "is a research aid, not legal advice — read the full " +
-          "judgment for citation."
-        );
       case "partnership-deed":
         // §3.2 Indian Partnership Deed Analyzer.
         return (
@@ -1967,83 +1655,6 @@ function buildSystemPrompt(opts: {
           "(arbitration, non-compete on retirement, IP/goodwill " +
           "ownership, succession on death). End with note this " +
           "is an audit aid, not legal advice."
-        );
-      case "ssc-banking":
-        // §3.3 SSC CGL / Banking PO/Clerk Exam Paper Analyzer.
-        return (
-          "Analyse this Indian competitive exam paper — SSC " +
-          "(CGL/CHSL/CPO/MTS/JE/Selection Posts) or Banking " +
-          "(IBPS PO / Clerk / SO, SBI PO/Clerk, RBI Grade B, " +
-          "NABARD). Output: `## Paper Identified` (exam, " +
-          "tier/phase, year, sections, marking scheme — most " +
-          "have negative marking). `## Section-Wise Question " +
-          "Analysis` (Markdown table: #, Section (Quant " +
-          "Aptitude / Reasoning / English / GK / Current Affairs " +
-          "/ Computer / Banking Awareness / etc.), Sub-topic, " +
-          "Difficulty (Easy/Medium/Hard), Time-Per-Question " +
-          "estimate). `## Section Distribution` (questions, " +
-          "marks, time allotted per section). `## Topic " +
-          "Frequency` (recurring high-yield areas — " +
-          "Profit/Loss/SI/CI for Quant; Puzzles/Seating " +
-          "Arrangement for Reasoning; Cloze/RC for English; " +
-          "RBI / SEBI / banking awareness items). `## Strategy " +
-          "Notes` (5-7 bullets: section attempt order, time " +
-          "management, accuracy thresholds for sectional cutoff " +
-          "vs final, when to skip a difficult set, mock-test " +
-          "frequency). Use exam-specific vocabulary (Quantum " +
-          "CAT, Arun Sharma, Indian Economy by Ramesh Singh as " +
-          "study refs)."
-        );
-      case "ncert":
-        // §3.3 NCERT Textbook chapter summarizer (school).
-        return (
-          "Summarise this NCERT textbook chapter for an Indian " +
-          "school student. Output: `## Chapter Identified` (" +
-          "subject, class, chapter number + title). `## In One " +
-          "Sentence` (the central idea, in plain language). `## " +
-          "Key Concepts` (bullet list — every important term, " +
-          "definition, or formula a student needs to memorise). " +
-          "`## Important Diagrams / Figures` (list, with what " +
-          "each shows — useful since CBSE/state-board questions " +
-          "often ask 'with the help of a diagram, explain...'). " +
-          "`## Worked-Through Examples` (any problem the chapter " +
-          "solves — rewritten clearly with the steps). `## " +
-          "Likely Exam Questions` (5-8 questions in the style " +
-          "of CBSE / state-board paper writers, mixing 1-mark / " +
-          "3-mark / 5-mark, marked accordingly). `## Connections " +
-          "to Other Chapters` (1-2 sentences on prerequisites + " +
-          "what this chapter sets up). `## Common Mistakes` " +
-          "(3-4 errors students make on this chapter — " +
-          "actual misconceptions, not generic 'read carefully' " +
-          "advice). End with a 5-bullet `## Quick Revision` " +
-          "checklist."
-        );
-      case "upsc":
-        // §3.3 UPSC Prelims/Mains Analyzer.
-        return (
-          "Analyse this UPSC question paper or answer key (Prelims " +
-          "GS / CSAT / Mains GS-I/II/III/IV / Optional / Essay). " +
-          "Output: `## Paper Identified` (exam, year, paper, " +
-          "marking scheme — Prelims has 1/3 negative, Mains is " +
-          "subjective). `## Question Analysis` (Markdown table per " +
-          "question: #, Type (MCQ for Prelims, descriptive for " +
-          "Mains), Subject Tag (History / Polity / Economy / " +
-          "Geography / Environment / Science & Tech / IR / " +
-          "Internal Security / Ethics / Current Affairs / Tamil " +
-          "Lit etc.), Sub-topic, Difficulty, Word-Length-Required " +
-          "(for Mains: 150 / 250 word counts mandated by UPSC). " +
-          "For Prelims, include Correct Answer if visible). `## " +
-          "Subject-Wise Distribution` table. `## Static vs " +
-          "Current` (UPSC trends: ratio of static-syllabus topics " +
-          "vs current-affairs questions). `## Topic Frequency` " +
-          "(recurring high-yield areas — Modern Indian History, " +
-          "Constitution, Indian Economy, Environment & Ecology, " +
-          "Internal Security). `## Strategy Notes` (5-7 specific " +
-          "tactics for THIS paper level — Prelims attempts " +
-          "strategy, Mains answer-structure templates, " +
-          "Optional-specific advice). Use UPSC-aware vocabulary " +
-          "(NCERT, Laxmikanth, Spectrum, Shankar IAS, etc. as " +
-          "study-source references)."
         );
       case "research-paper":
         // §3.3 Research Paper Summarizer with citations.
@@ -2332,8 +1943,6 @@ function buildUserPrompt(opts: {
         return "Parse this bank statement";
       case "blood-test":
         return "Parse this lab report";
-      case "gst-invoice":
-        return "Extract this GST invoice";
       case "rental":
         return "Analyse this rental agreement";
       case "syllabus":
@@ -2342,16 +1951,10 @@ function buildUserPrompt(opts: {
         return "Analyse this property document";
       case "discharge":
         return "Simplify this discharge summary";
-      case "itr-form16":
-        return "Analyse this tax document";
       case "cover-letter":
         return "Draft a tailored cover letter from this resume";
       case "jd-match":
         return "Score this resume against the job description";
-      case "tnpsc":
-        return "Analyse this TNPSC paper";
-      case "jee-neet":
-        return "Analyse this JEE/NEET paper";
       case "multi-bank":
         return "Parse this multi-bank statement";
       case "credit-card":
@@ -2368,14 +1971,8 @@ function buildUserPrompt(opts: {
         return "Analyse this medical bill";
       case "prescription":
         return "Parse this prescription";
-      case "rera":
-        return "Audit this RERA document";
-      case "ec":
-        return "Parse this Encumbrance Certificate";
       case "salary-slip":
         return "Parse this salary slip";
-      case "upsc":
-        return "Analyse this UPSC paper";
       case "research-paper":
         return "Summarise this research paper";
       case "demat":
@@ -2386,14 +1983,8 @@ function buildUserPrompt(opts: {
         return "Audit this loan-application bundle";
       case "expense-report":
         return "Build an expense report from this bank statement";
-      case "court-order":
-        return "Summarise this court order";
       case "partnership-deed":
         return "Analyse this partnership deed";
-      case "ssc-banking":
-        return "Analyse this SSC/Banking exam paper";
-      case "ncert":
-        return "Summarise this NCERT chapter";
       case "scan-report":
         return "Explain this scan report in plain language";
       case "electricity-bill":
@@ -2414,16 +2005,6 @@ function buildUserPrompt(opts: {
         return "Extract data from charts in this PDF";
       case "paper-pattern":
         return "Analyse pattern across years of papers";
-      case "form-26as":
-        return "Parse this Form 26AS tax credit statement";
-      case "form-15g-15h":
-        return "Parse this Form 15G / 15H declaration";
-      case "rent-receipt":
-        return "Parse rent receipts for HRA-friendly summary";
-      case "property-tax":
-        return "Parse this property tax bill";
-      case "stamp-duty":
-        return "Parse this stamp duty receipt / e-Stamp";
       case "standard":
       case "detailed":
       default:

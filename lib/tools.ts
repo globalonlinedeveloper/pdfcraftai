@@ -40,7 +40,6 @@ export const TOOLS: readonly Tool[] = [
   { id: "highlight-pdf", name: "Highlight PDF", desc: "Drag to highlight any region. Yellow, green, pink, blue, or orange.", icon: "Edit", free: true, group: "Edit" },
   { id: "redact-free", name: "Redact PDF (free)", desc: "Black-out sensitive regions by dragging. Visual redaction for everyday sharing.", icon: "Shield", free: true, group: "Security" },
   { id: "extract-attachments", name: "Extract Attachments", desc: "List and download files embedded inside a PDF.", icon: "File", free: true, group: "Convert" },
-  { id: "invoice-generator", name: "GST Invoice Generator", desc: "Generate a clean GST-compliant invoice PDF from a form. INR/USD/EUR/GBP.", icon: "Receipt", free: true, group: "Convert" },
   { id: "edit-pdf", name: "Edit PDF (Text)", desc: "Click any text on a page to replace it. Preserves font and position.", icon: "Edit", free: true, group: "Edit" },
   { id: "sign-pdf-free", name: "Sign PDF (free)", desc: "Draw, type, or upload your signature and place it on any page.", icon: "Pen", free: true, group: "Security" },
   { id: "repair-pdf", name: "Repair PDF", desc: "Fix broken xref, rebuild page tree, and recompress streams.", icon: "Shield", free: true, group: "Optimize" },
@@ -61,11 +60,6 @@ export const TOOLS: readonly Tool[] = [
   { id: "add-links", name: "Add Hyperlinks", desc: "Drag a region, paste a URL, get a clickable link annotation. Inverse of Strip Hyperlinks.", icon: "Pen", free: true, group: "Edit" },
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
-  { id: "ai-form-26as", name: "Form 26AS Analyzer", desc: "Tier 3 Finance: TDS / tax credit reconciliation across Parts A-E with discrepancy flags.", icon: "Pages", free: false, cost: "15 credits / doc", group: "AI" },
-  { id: "ai-form-15g-15h", name: "Form 15G / 15H Analyzer", desc: "Tier 3 Finance: declaration parser with eligibility check vs basic exemption limits.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-rent-receipt", name: "Rent Receipts → HRA Summary", desc: "Tier 3 Finance: 12-month rent receipts → HRA exemption math + compliance flags.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-property-tax", name: "Property Tax Bill Analyzer", desc: "Tier 3 Finance: BBMP / MCD / BMC / KMC bill parser with rebate eligibility + late-payment warnings.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
-  { id: "ai-stamp-duty", name: "Stamp Duty / e-Stamp Analyzer", desc: "Tier 3 Finance: SHCIL / state-portal e-Stamp parser with duty + party + verification URL.", icon: "Pages", free: false, cost: "10 credits / doc", group: "AI" },
   { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
   { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
 
@@ -100,17 +94,13 @@ export const TOOLS: readonly Tool[] = [
   { id: "ai-action-items", name: "Extract Action Items", desc: "Meeting notes / specs / briefs → TODO table with owners, due dates, priorities.", icon: "Check", free: false, cost: "3 credits / doc", group: "AI" },
   { id: "ai-bank-statement", name: "Bank Statement Parser", desc: "Tier 3 Finance: SBI/HDFC/ICICI/Axis/Kotak → categorised transactions CSV.", icon: "Receipt", free: false, cost: "30 credits / statement", group: "AI" },
   { id: "ai-blood-test", name: "Blood Test Report Parser", desc: "Tier 3 Healthcare: lab values with normal/high/low flags. Extraction only, not medical advice.", icon: "File", free: false, cost: "15 credits / report", group: "AI" },
-  { id: "ai-gst-invoice", name: "GST Invoice Extractor", desc: "Tier 3 Finance: invoice → GSTR-2-ready fields with line-item tax breakdown.", icon: "Receipt", free: false, cost: "25 credits / invoice", group: "AI" },
   { id: "ai-rental", name: "Rental Agreement Analyzer", desc: "Tier 3 Legal: flags risks, missing clauses, and gives state-specific negotiation points.", icon: "Shield", free: false, cost: "15 credits / agreement", group: "AI" },
   { id: "ai-syllabus", name: "Syllabus to Study Plan", desc: "Tier 3 Education: 12-week study plan with topic map, practice checkpoints, revision strategy.", icon: "Book", free: false, cost: "20 credits / syllabus", group: "AI" },
   { id: "ai-property", name: "Property Document Checker", desc: "Tier 3 Real Estate: red flags + missing docs + chain of title in Indian sale deeds / khata / EC.", icon: "Shield", free: false, cost: "30 credits / doc", group: "AI" },
   { id: "ai-discharge", name: "Discharge Summary Simplifier", desc: "Tier 3 Healthcare: plain-language rewrite for patients + families. Not medical advice.", icon: "Chat", free: false, cost: "10 credits / summary", group: "AI" },
-  { id: "ai-itr-form16", name: "ITR / Form 16 Analyzer", desc: "Tier 3 Finance: income summary + deductions + tax computation + suggested actions.", icon: "Receipt", free: false, cost: "20 credits / doc", group: "AI" },
   // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
   { id: "ai-cover-letter", name: "Cover Letter Generator", desc: "Tier 3 HR: tailored cover letter from your resume + optional JD. 300–350 words with customisation notes.", icon: "Edit", free: false, cost: "5 credits / letter", group: "AI" },
   { id: "ai-jd-match", name: "Resume ↔ JD Matcher", desc: "Tier 3 HR: fit score + per-requirement alignment table + missing-keyword ATS audit. Paste the JD, drop the resume.", icon: "Compare", free: false, cost: "5 credits / resume", group: "AI" },
-  { id: "ai-tnpsc", name: "TNPSC Answer Key Analyzer", desc: "Tier 3 Education: per-question breakdown + subject distribution + topic frequency + TNPSC-specific strategy notes.", icon: "Book", free: false, cost: "15 credits / paper", group: "AI" },
-  { id: "ai-jee-neet", name: "JEE/NEET Previous-Year Analyzer", desc: "Tier 3 Education: per-question table + chapter frequency + high-yield topics + 12-week revision plan.", icon: "Book", free: false, cost: "20 credits / paper", group: "AI" },
   { id: "ai-multi-bank", name: "Multi-Bank Statement Merger", desc: "Tier 3 Finance: parse SBI/HDFC/ICICI/Axis/Kotak statements concatenated in one PDF. Per-bank + consolidated view.", icon: "Receipt", free: false, cost: "20 credits / doc", group: "AI" },
   // Task #69 — Tier 2 §2.3 P0: Scanned → Searchable PDF.
   { id: "ai-searchable-pdf", name: "Make PDF Searchable", desc: "Tier 2 §2.3: OCR scanned pages and overlay invisible text so Ctrl-F finds matches. Visual layout unchanged.", icon: "Scan", free: false, cost: "2 credits / page", group: "AI" },
@@ -123,21 +113,15 @@ export const TOOLS: readonly Tool[] = [
   // Task #77 — five more Tier 3 P1 wedges.
   { id: "ai-medical-bill", name: "Medical Bill / Insurance Claim Analyzer", desc: "Tier 3 Healthcare: itemised charges + cashless status + IRDAI reimbursable/excluded items + pre/post-hospitalisation notes.", icon: "Receipt", free: false, cost: "20 credits / bill", group: "AI" },
   { id: "ai-prescription", name: "Prescription Parser", desc: "Tier 3 Healthcare: parse printed + handwritten prescriptions into structured medication list with Indian conventions (BD/TDS/HS/SOS, 1-0-1).", icon: "Scan", free: false, cost: "10 credits / prescription", group: "AI" },
-  { id: "ai-rera", name: "RERA Document Analyzer", desc: "Tier 3 Real Estate: project + approvals + risk flags + buyer protections + verification checklist for Indian RERA filings.", icon: "Shield", free: false, cost: "25 credits / doc", group: "AI" },
-  { id: "ai-ec", name: "Encumbrance Certificate Parser", desc: "Tier 3 Legal: chronological encumbrance table + chain narrative + risk flags + coverage gaps. For Indian Sub-Registrar EC documents.", icon: "Shield", free: false, cost: "15 credits / EC", group: "AI" },
   { id: "ai-salary-slip", name: "Salary Slip Analyzer", desc: "Tier 3 Finance: structured JSON of earnings + deductions + YTD with original component names preserved for YoY comparison.", icon: "Receipt", free: false, cost: "10 credits / slip", group: "AI" },
   // Task #78 — five more Tier 3 wedges.
-  { id: "ai-upsc", name: "UPSC Paper Analyzer", desc: "Tier 3 Education: Prelims / Mains / Optional. Subject + sub-topic + difficulty tables. Static-vs-current ratio. UPSC-specific strategy.", icon: "Book", free: false, cost: "20 credits / paper", group: "AI" },
   { id: "ai-research-paper", name: "Research Paper Summarizer", desc: "Tier 3 Education: citation + BibTeX + methods + results (magnitudes preserved) + limitations + how-to-cite examples + related reading.", icon: "Book", free: false, cost: "15 credits / paper", group: "AI" },
   { id: "ai-demat", name: "Demat / CAS Statement Parser", desc: "Tier 3 Finance: NSDL/CDSL Consolidated Account Statements. Holdings (equity/MF/bond/ETF/SGB) + transactions (dividends, bonuses, splits, IPO allots).", icon: "Receipt", free: false, cost: "15 credits / CAS", group: "AI" },
   { id: "ai-insurance", name: "Insurance Policy Analyzer", desc: "Tier 3 Insurance: coverage + exclusions + waiting periods + claim process + renewal/portability + risk flags. Health/life/motor/home/travel/term.", icon: "Shield", free: false, cost: "20 credits / policy", group: "AI" },
   { id: "ai-loan-bundle", name: "Loan Application Bundler Audit", desc: "Tier 3 Finance: audits a stack of loan docs against lender checklist. Detects loan type, lists missing items, surfaces eligibility issues.", icon: "Receipt", free: false, cost: "15 credits / bundle", group: "AI" },
   // Task #79 — five more Tier 3 wedges.
   { id: "ai-expense-report", name: "Expense Report Builder", desc: "Tier 3 Finance: bank statement → category × month matrix + top spend + recurring charges + saving rate. Indian categories.", icon: "Receipt", free: false, cost: "15 credits / report", group: "AI" },
-  { id: "ai-court-order", name: "Court Order / Judgment Summarizer", desc: "Tier 3 Legal: Indian court orders. Citation + parties + issues framed + held + ratio decidendi + reasoning + practical implications.", icon: "Shield", free: false, cost: "20 credits / order", group: "AI" },
   { id: "ai-partnership-deed", name: "Partnership Deed Analyzer", desc: "Tier 3 Legal: partners + capital + profit/loss share + decision-making + admission/retirement + risk flags. Partnership & LLP deeds.", icon: "Shield", free: false, cost: "20 credits / deed", group: "AI" },
-  { id: "ai-ssc-banking", name: "SSC / Banking Exam Paper Analyzer", desc: "Tier 3 Education: SSC CGL / CHSL / Banking PO / Clerk / RBI / NABARD. Per-section breakdown + topic frequency + cutoff strategy.", icon: "Book", free: false, cost: "15 credits / paper", group: "AI" },
-  { id: "ai-ncert", name: "NCERT Chapter Summarizer", desc: "Tier 3 Education: NCERT textbook chapter → key concepts + diagrams + likely CBSE / state-board questions + revision checklist.", icon: "Book", free: false, cost: "10 credits / chapter", group: "AI" },
   // Task #80 — five more Tier 3 wedges.
   { id: "ai-scan-report", name: "Scan Report (MRI/CT/X-ray) Explainer", desc: "Tier 3 Healthcare: rewrites radiology reports in plain Indian English + glossary + questions to ask. STRICTLY non-diagnostic.", icon: "Scan", free: false, cost: "20 credits / scan", group: "AI" },
   { id: "ai-electricity-bill", name: "Electricity Bill Analyzer", desc: "Tier 3 Utility: TANGEDCO / BESCOM / TSSPDCL / MSEDCL / BSES / Tata Power. Slab-by-slab + saving tips specific to your DISCOM.", icon: "Receipt", free: false, cost: "5 credits / bill", group: "AI" },

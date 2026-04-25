@@ -99,18 +99,14 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "bank-statement",
   "blood-test",
   // Task #64:
-  "gst-invoice",
   "rental",
   "syllabus",
   // Task #65:
   "property",
   "discharge",
-  "itr-form16",
   // Task #67 — Tier 3 §3.6 + §3.3 + §3.1 P0 wedges:
   "cover-letter",
   "jd-match",
-  "tnpsc",
-  "jee-neet",
   "multi-bank",
   // Task #75 — five Tier 3 P1 wedges (§3.1 + §3.2):
   "credit-card",
@@ -121,21 +117,15 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   // Task #77 — five more Tier 3 P1 wedges (§3.1 + §3.2 + §3.4 + §3.5):
   "medical-bill",
   "prescription",
-  "rera",
-  "ec",
   "salary-slip",
   // Task #78 — five more Tier 3 wedges (§3.3 + §3.1 + §3.10):
-  "upsc",
   "research-paper",
   "demat",
   "insurance",
   "loan-bundle",
   // Task #79 — five more Tier 3 wedges (§3.1 + §3.2 + §3.3):
   "expense-report",
-  "court-order",
   "partnership-deed",
-  "ssc-banking",
-  "ncert",
   // Task #80 — five more Tier 3 wedges (§3.4 + §3.10 + §3.5 + §3.1):
   "scan-report",
   "electricity-bill",
@@ -150,11 +140,6 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "paper-pattern",
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3, §3.1).
-  "form-26as",
-  "form-15g-15h",
-  "rent-receipt",
-  "property-tax",
-  "stamp-duty",
 ];
 
 export async function POST(req: Request): Promise<Response> {

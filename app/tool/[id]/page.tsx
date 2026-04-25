@@ -37,7 +37,6 @@ import { AddTextBoxTool } from "@/components/tools/AddTextBoxTool";
 import { HighlightPdfTool } from "@/components/tools/HighlightPdfTool";
 import { RedactFreeTool } from "@/components/tools/RedactFreeTool";
 import { ExtractAttachmentsTool } from "@/components/tools/ExtractAttachmentsTool";
-import { InvoiceGeneratorTool } from "@/components/tools/InvoiceGeneratorTool";
 import { EditPdfTool } from "@/components/tools/EditPdfTool";
 import { SignPdfFreeTool } from "@/components/tools/SignPdfFreeTool";
 import { RepairPdfTool } from "@/components/tools/RepairPdfTool";
@@ -71,17 +70,13 @@ import {
   VideoScriptPdfTool,
   AtsResumeTool,
   ActionItemsPdfTool,
-  GstInvoiceTool,
   RentalAgreementTool,
   SyllabusStudyPlanTool,
   PropertyDocTool,
   DischargeSummaryTool,
-  ItrAnalyzerTool,
   // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
   CoverLetterTool,
   JdMatchTool,
-  TnpscAnalyzerTool,
-  JeeNeetAnalyzerTool,
   MultiBankMergerTool,
   // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
   CreditCardStatementTool,
@@ -92,21 +87,15 @@ import {
   // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
   MedicalBillTool,
   PrescriptionParserTool,
-  ReraAnalyzerTool,
-  EncumbranceCertTool,
   SalarySlipTool,
   // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
-  UpscAnalyzerTool,
   ResearchPaperTool,
   DematStatementTool,
   InsurancePolicyTool,
   LoanBundleAuditTool,
   // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
   ExpenseReportTool,
-  CourtOrderTool,
   PartnershipDeedTool,
-  SscBankingExamTool,
-  NcertChapterTool,
   // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
   ScanReportTool,
   ElectricityBillTool,
@@ -131,11 +120,6 @@ import {
 import { MindmapPdfTool } from "@/components/tools/MindmapPdfTool";
 import { SemanticSearchPdfTool } from "@/components/tools/SemanticSearchPdfTool";
 import {
-  Form26asAnalyzerTool,
-  Form15g15hAnalyzerTool,
-  RentReceiptAnalyzerTool,
-  PropertyTaxAnalyzerTool,
-  StampDutyAnalyzerTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { StampPdfTool } from "@/components/tools/StampPdfTool";
 import { NUpPdfTool } from "@/components/tools/NUpPdfTool";
@@ -184,7 +168,6 @@ const LIVE_TOOL_IDS = new Set<string>([
   "highlight-pdf",
   "redact-free",
   "extract-attachments",
-  "invoice-generator",
   "edit-pdf",
   "sign-pdf-free",
   "repair-pdf",
@@ -209,11 +192,6 @@ const LIVE_TOOL_IDS = new Set<string>([
   "add-links",
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1)
-  "ai-form-26as",
-  "ai-form-15g-15h",
-  "ai-rent-receipt",
-  "ai-property-tax",
-  "ai-stamp-duty",
   "ai-summarize",
   "ai-tldr",
   "ai-key-points",
@@ -243,17 +221,13 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-action-items",
   "ai-bank-statement",
   "ai-blood-test",
-  "ai-gst-invoice",
   "ai-rental",
   "ai-syllabus",
   "ai-property",
   "ai-discharge",
-  "ai-itr-form16",
   // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
   "ai-cover-letter",
   "ai-jd-match",
-  "ai-tnpsc",
-  "ai-jee-neet",
   "ai-multi-bank",
   // Task #69 — Tier 2 §2.3 P0.
   "ai-searchable-pdf",
@@ -266,21 +240,15 @@ const LIVE_TOOL_IDS = new Set<string>([
   // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
   "ai-medical-bill",
   "ai-prescription",
-  "ai-rera",
-  "ai-ec",
   "ai-salary-slip",
   // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
-  "ai-upsc",
   "ai-research-paper",
   "ai-demat",
   "ai-insurance",
   "ai-loan-bundle",
   // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
   "ai-expense-report",
-  "ai-court-order",
   "ai-partnership-deed",
-  "ai-ssc-banking",
-  "ai-ncert",
   // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
   "ai-scan-report",
   "ai-electricity-bill",
@@ -492,8 +460,6 @@ function ToolRunner({ id }: { id: string }) {
       return <RedactFreeTool />;
     case "extract-attachments":
       return <ExtractAttachmentsTool />;
-    case "invoice-generator":
-      return <InvoiceGeneratorTool />;
     case "edit-pdf":
       return <EditPdfTool />;
     case "sign-pdf-free":
@@ -532,16 +498,6 @@ function ToolRunner({ id }: { id: string }) {
       return <AddLinksTool />;
     // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
     // Sprint B — Indian financial wedges (Tier 3 §3.1)
-    case "ai-form-26as":
-      return <Form26asAnalyzerTool />;
-    case "ai-form-15g-15h":
-      return <Form15g15hAnalyzerTool />;
-    case "ai-rent-receipt":
-      return <RentReceiptAnalyzerTool />;
-    case "ai-property-tax":
-      return <PropertyTaxAnalyzerTool />;
-    case "ai-stamp-duty":
-      return <StampDutyAnalyzerTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-tldr":
@@ -600,8 +556,6 @@ function ToolRunner({ id }: { id: string }) {
       return <BankStatementTool />;
     case "ai-blood-test":
       return <BloodTestTool />;
-    case "ai-gst-invoice":
-      return <GstInvoiceTool />;
     case "ai-rental":
       return <RentalAgreementTool />;
     case "ai-syllabus":
@@ -610,17 +564,11 @@ function ToolRunner({ id }: { id: string }) {
       return <PropertyDocTool />;
     case "ai-discharge":
       return <DischargeSummaryTool />;
-    case "ai-itr-form16":
-      return <ItrAnalyzerTool />;
     // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
     case "ai-cover-letter":
       return <CoverLetterTool />;
     case "ai-jd-match":
       return <JdMatchTool />;
-    case "ai-tnpsc":
-      return <TnpscAnalyzerTool />;
-    case "ai-jee-neet":
-      return <JeeNeetAnalyzerTool />;
     case "ai-multi-bank":
       return <MultiBankMergerTool />;
     // Task #69 — Tier 2 §2.3 P0.
@@ -642,15 +590,9 @@ function ToolRunner({ id }: { id: string }) {
       return <MedicalBillTool />;
     case "ai-prescription":
       return <PrescriptionParserTool />;
-    case "ai-rera":
-      return <ReraAnalyzerTool />;
-    case "ai-ec":
-      return <EncumbranceCertTool />;
     case "ai-salary-slip":
       return <SalarySlipTool />;
     // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
-    case "ai-upsc":
-      return <UpscAnalyzerTool />;
     case "ai-research-paper":
       return <ResearchPaperTool />;
     case "ai-demat":
@@ -662,14 +604,8 @@ function ToolRunner({ id }: { id: string }) {
     // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
     case "ai-expense-report":
       return <ExpenseReportTool />;
-    case "ai-court-order":
-      return <CourtOrderTool />;
     case "ai-partnership-deed":
       return <PartnershipDeedTool />;
-    case "ai-ssc-banking":
-      return <SscBankingExamTool />;
-    case "ai-ncert":
-      return <NcertChapterTool />;
     // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
     case "ai-scan-report":
       return <ScanReportTool />;

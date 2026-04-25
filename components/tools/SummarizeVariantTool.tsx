@@ -42,17 +42,13 @@ type Depth =
   | "video-script"
   | "ats-resume"
   | "action-items"
-  | "gst-invoice"
   | "rental"
   | "syllabus"
   | "property"
   | "discharge"
-  | "itr-form16"
   // Task #67 Tier 3 P0 wedges.
   | "cover-letter"
   | "jd-match"
-  | "tnpsc"
-  | "jee-neet"
   | "multi-bank"
   // Task #75 Tier 3 P1 wedges.
   | "credit-card"
@@ -63,21 +59,15 @@ type Depth =
   // Task #77 Tier 3 P1 wedges.
   | "medical-bill"
   | "prescription"
-  | "rera"
-  | "ec"
   | "salary-slip"
   // Task #78 Tier 3 wedges.
-  | "upsc"
   | "research-paper"
   | "demat"
   | "insurance"
   | "loan-bundle"
   // Task #79 Tier 3 wedges.
   | "expense-report"
-  | "court-order"
   | "partnership-deed"
-  | "ssc-banking"
-  | "ncert"
   // Task #80 Tier 3 wedges.
   | "scan-report"
   | "electricity-bill"
@@ -92,10 +82,6 @@ type Depth =
   | "paper-pattern"
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
-  | "form-26as"
-  | "form-15g-15h"
-  | "rent-receipt"
-  | "property-tax"
   | "stamp-duty";
 
 type Result = {
@@ -804,21 +790,6 @@ export function ActionItemsPdfTool() {
   );
 }
 
-export function GstInvoiceTool() {
-  return (
-    <SummarizeVariantTool
-      depth="gst-invoice"
-      toolId="ai-gst-invoice"
-      callbackUrl="/tool/ai-gst-invoice"
-      prompt="Drop a GST invoice PDF to extract GSTR-2-ready fields"
-      runLabel="Extract invoice"
-      busyLabel="Extracting…"
-      successTitle="GST invoice extracted"
-      pricingBlurb="Tier 3 §3.1 Finance: Invoice header / Supplier / Buyer / Line items / Totals — formatted for GSTR-2 filing. 25 credits per invoice."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
-    />
-  );
-}
 
 export function RentalAgreementTool() {
   return (
@@ -884,21 +855,6 @@ export function DischargeSummaryTool() {
   );
 }
 
-export function ItrAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="itr-form16"
-      toolId="ai-itr-form16"
-      callbackUrl="/tool/ai-itr-form16"
-      prompt="Drop a Form 16 / ITR / annual tax statement to analyse"
-      runLabel="Analyse tax document"
-      busyLabel="Analysing…"
-      successTitle="Tax analysis ready"
-      pricingBlurb="Tier 3 §3.1 Finance: Income summary + deductions claimed + tax computation + observations + suggested actions. 20 credits. Not tax advice — consult a CA."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
-    />
-  );
-}
 
 // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
 
@@ -952,37 +908,7 @@ export function JdMatchTool() {
   );
 }
 
-export function TnpscAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="tnpsc"
-      toolId="ai-tnpsc"
-      callbackUrl="/tool/ai-tnpsc"
-      prompt="Drop a TNPSC question paper or answer key"
-      runLabel="Analyse TNPSC paper"
-      busyLabel="Analysing…"
-      successTitle="TNPSC analysis ready"
-      pricingBlurb="Tier 3 §3.3 Education: Per-question breakdown with subject tag + correct answer + difficulty. Subject-wise distribution table. Topic frequency. Strategy notes specific to the TNPSC scheme. 15 credits."
-      relatedHref={{ href: "/tool/ai-jee-neet", label: "JEE/NEET Previous-Year Analyzer" }}
-    />
-  );
-}
 
-export function JeeNeetAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="jee-neet"
-      toolId="ai-jee-neet"
-      callbackUrl="/tool/ai-jee-neet"
-      prompt="Drop a JEE Main / JEE Advanced / NEET-UG previous-year paper"
-      runLabel="Analyse JEE/NEET paper"
-      busyLabel="Analysing…"
-      successTitle="JEE/NEET analysis ready"
-      pricingBlurb="Tier 3 §3.3 Education: Per-question table + chapter-frequency tables per subject + high-yield topics + 12-week revision plan + score-maximisation strategy. 20 credits."
-      relatedHref={{ href: "/tool/ai-syllabus", label: "Syllabus → Study Plan" }}
-    />
-  );
-}
 
 export function MultiBankMergerTool() {
   return (
@@ -1116,37 +1042,8 @@ export function PrescriptionParserTool() {
   );
 }
 
-export function ReraAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="rera"
-      toolId="ai-rera"
-      callbackUrl="/tool/ai-rera"
-      prompt="Drop a RERA registration / annexure / builder agreement"
-      runLabel="Audit RERA doc"
-      busyLabel="Analysing…"
-      successTitle="RERA audit ready"
-      pricingBlurb="Tier 3 §3.5 Real Estate: project details + approvals (CC/OC/EC) + risk flags (registration revoked, area-on-super-built-up, hidden charges) + buyer protections + verification checklist. 25 credits. Not legal advice — engage a real estate lawyer + check your state RERA portal."
-      relatedHref={{ href: "/tool/ai-sale-deed", label: "Sale Deed Analyzer" }}
-    />
-  );
-}
 
-export function EncumbranceCertTool() {
-  return (
-    <SummarizeVariantTool
-      depth="ec"
-      toolId="ai-ec"
-      callbackUrl="/tool/ai-ec"
-      prompt="Drop an Encumbrance Certificate (EC) from a Sub-Registrar's office"
-      runLabel="Parse EC"
-      busyLabel="Parsing…"
-      successTitle="EC parsed"
-      pricingBlurb="Tier 3 §3.2 Legal: chronological encumbrance table + chain-of-title narrative + risk flags (active mortgages, suspicious quick-flips, broken chain) + coverage gaps + recommended next steps. 15 credits."
-      relatedHref={{ href: "/tool/ai-sale-deed", label: "Sale Deed Analyzer" }}
-    />
-  );
-}
+// EncumbranceCertTool removed in Task #99 (govt-related: Sub-Registrar EC).
 
 export function SalarySlipTool() {
   return (
@@ -1166,21 +1063,6 @@ export function SalarySlipTool() {
 
 // Task #78 — five more Tier 3 wedges.
 
-export function UpscAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="upsc"
-      toolId="ai-upsc"
-      callbackUrl="/tool/ai-upsc"
-      prompt="Drop a UPSC question paper or answer key (Prelims / Mains / Optional)"
-      runLabel="Analyse UPSC paper"
-      busyLabel="Analysing…"
-      successTitle="UPSC analysis ready"
-      pricingBlurb="Tier 3 §3.3 Education: per-question subject + sub-topic + difficulty + word-length-required (Mains) tables. Static-vs-current ratio. UPSC-specific strategy notes. NCERT/Laxmikanth/Spectrum/Shankar IAS aware. 20 credits."
-      relatedHref={{ href: "/tool/ai-tnpsc", label: "TNPSC Analyzer" }}
-    />
-  );
-}
 
 export function ResearchPaperTool() {
   return (
@@ -1264,21 +1146,6 @@ export function ExpenseReportTool() {
   );
 }
 
-export function CourtOrderTool() {
-  return (
-    <SummarizeVariantTool
-      depth="court-order"
-      toolId="ai-court-order"
-      callbackUrl="/tool/ai-court-order"
-      prompt="Drop an Indian court order / judgment"
-      runLabel="Summarise judgment"
-      busyLabel="Reading…"
-      successTitle="Judgment summary ready"
-      pricingBlurb="Tier 3 §3.2 Legal: citation + parties + issues framed + held / operative + ratio decidendi + reasoning + cited authorities + practical implications. 20 credits. Research aid, not legal advice."
-      relatedHref={{ href: "/tool/ai-nda", label: "NDA Analyzer" }}
-    />
-  );
-}
 
 export function PartnershipDeedTool() {
   return (
@@ -1296,37 +1163,7 @@ export function PartnershipDeedTool() {
   );
 }
 
-export function SscBankingExamTool() {
-  return (
-    <SummarizeVariantTool
-      depth="ssc-banking"
-      toolId="ai-ssc-banking"
-      callbackUrl="/tool/ai-ssc-banking"
-      prompt="Drop an SSC (CGL/CHSL/CPO) or Banking (IBPS / SBI / RBI / NABARD) paper"
-      runLabel="Analyse paper"
-      busyLabel="Analysing…"
-      successTitle="Paper analysis ready"
-      pricingBlurb="Tier 3 §3.3 Education: per-Q table (Quant / Reasoning / English / GK / Banking Awareness) + section distribution + topic frequency + section-attempt strategy + sectional cutoff vs final-cutoff trade-offs. 15 credits."
-      relatedHref={{ href: "/tool/ai-tnpsc", label: "TNPSC Analyzer" }}
-    />
-  );
-}
 
-export function NcertChapterTool() {
-  return (
-    <SummarizeVariantTool
-      depth="ncert"
-      toolId="ai-ncert"
-      callbackUrl="/tool/ai-ncert"
-      prompt="Drop an NCERT textbook chapter"
-      runLabel="Summarise chapter"
-      busyLabel="Summarising…"
-      successTitle="Chapter summary ready"
-      pricingBlurb="Tier 3 §3.3 Education: in-one-sentence idea + key concepts + diagrams list + worked-through examples + likely CBSE / state-board exam questions (1/3/5-mark mix) + connections + common mistakes + revision checklist. 10 credits."
-      relatedHref={{ href: "/tool/ai-syllabus", label: "Syllabus Study Plan" }}
-    />
-  );
-}
 
 // Task #80 — five more Tier 3 wedges.
 
@@ -1498,82 +1335,7 @@ export function PaperPatternTool() {
 
 // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
 
-export function Form26asAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="form-26as"
-      toolId="ai-form-26as"
-      callbackUrl="/tool/ai-form-26as"
-      prompt="Drop your Form 26AS (TDS / tax credit statement from TRACES)"
-      runLabel="Parse Form 26AS"
-      busyLabel="Parsing…"
-      successTitle="Form 26AS analysis ready"
-      pricingBlurb="Tier 3 §3.1 Finance: full reconciliation across Parts A / A1 / B / C / D / E (TDS salary, TDS other, TCS, advance tax, refunds, AIR/SFT). Cross-checks deductor totals + flags discrepancies that commonly trigger ITR notices. 15 credits. Not tax advice — match your ITR figures to 26AS exactly."
-      relatedHref={{ href: "/tool/ai-itr-form16", label: "ITR / Form 16 Analyzer" }}
-    />
-  );
-}
 
-export function Form15g15hAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="form-15g-15h"
-      toolId="ai-form-15g-15h"
-      callbackUrl="/tool/ai-form-15g-15h"
-      prompt="Drop your Form 15G or Form 15H declaration"
-      runLabel="Parse declaration"
-      busyLabel="Parsing…"
-      successTitle="Declaration analysis ready"
-      pricingBlurb="Tier 3 §3.1 Finance: detect 15G vs 15H by age, parse declarant + income details, run eligibility check against basic exemption limits, surface risk flags that could invalidate the declaration. 10 credits. Not tax advice — false declarations carry imprisonment + fine under section 277."
-      relatedHref={{ href: "/tool/ai-form-26as", label: "Form 26AS Analyzer" }}
-    />
-  );
-}
 
-export function RentReceiptAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="rent-receipt"
-      toolId="ai-rent-receipt"
-      callbackUrl="/tool/ai-rent-receipt"
-      prompt="Drop a stack of rent receipts (typically 12 months for HRA)"
-      runLabel="Parse receipts"
-      busyLabel="Parsing…"
-      successTitle="HRA-friendly summary ready"
-      pricingBlurb="Tier 3 §3.1 Finance: per-receipt table + annual rent total + HRA exemption math (3 limits per section 10(13A)) + compliance flags (landlord PAN required when rent > ₹1L/yr, revenue stamp on receipts > ₹5K, signature presence). 10 credits. Not tax advice — HRA claims must match rent agreement + bank-transfer evidence."
-      relatedHref={{ href: "/tool/ai-itr-form16", label: "ITR / Form 16 Analyzer" }}
-    />
-  );
-}
 
-export function PropertyTaxAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="property-tax"
-      toolId="ai-property-tax"
-      callbackUrl="/tool/ai-property-tax"
-      prompt="Drop your municipal property tax bill (BBMP / MCD / BMC / Chennai / KMC etc.)"
-      runLabel="Parse bill"
-      busyLabel="Parsing…"
-      successTitle="Property tax analysis ready"
-      pricingBlurb="Tier 3 §3.5 / §3.1: property identification + tax computation breakdown (cess components) + outstanding dues with interest + rebate eligibility (early-payment, women / senior / disabled) + late-payment consequences. 10 credits. Cross-check Property ID against your latest sale-deed."
-      relatedHref={{ href: "/tool/ai-property", label: "Property Document Checker" }}
-    />
-  );
-}
 
-export function StampDutyAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="stamp-duty"
-      toolId="ai-stamp-duty"
-      callbackUrl="/tool/ai-stamp-duty"
-      prompt="Drop your stamp duty receipt / e-Stamp certificate / challan"
-      runLabel="Parse stamp duty"
-      busyLabel="Parsing…"
-      successTitle="Stamp duty analysis ready"
-      pricingBlurb="Tier 3 §3.5: identifies SHCIL e-Stamp / state-portal / franking / traditional stamp paper, parses parties + transaction type + duty paid + registration fee, surfaces verification URL, flags common issues (under-stamping, expired certificate, party mismatch). 10 credits. Always verify e-Stamp authenticity on the official issuing portal."
-      relatedHref={{ href: "/tool/ai-sale-deed", label: "Sale Deed Analyzer" }}
-    />
-  );
-}

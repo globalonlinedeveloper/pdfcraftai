@@ -32,7 +32,6 @@ export type SeoPageSlug =
   | "highlight-pdf"
   | "redact-pdf-free"
   | "extract-pdf-attachments"
-  | "gst-invoice-generator"
   | "edit-pdf"
   | "sign-pdf-free"
   | "repair-pdf"
@@ -59,8 +58,6 @@ export type SeoPageSlug =
   | "tamil-pdf-translator"
   | "cover-letter-generator"
   | "resume-job-match"
-  | "tnpsc-answer-key-analyzer"
-  | "jee-neet-paper-analyzer"
   // Task #69 — Tier 2 §2.3 P0.
   | "make-pdf-searchable"
   // Task #82 — 10 SEO landings for high-traffic Tier 3 wedges.
@@ -72,8 +69,6 @@ export type SeoPageSlug =
   | "employment-contract-review"
   | "medical-bill-analyzer"
   | "prescription-parser"
-  | "upsc-paper-analyzer"
-  | "ssc-banking-exam-analyzer"
   // Task #83 — 10 more SEO landings for Tier 3 wedges.
   | "bank-statement-parser"
   | "blood-report-analyzer"
@@ -81,9 +76,7 @@ export type SeoPageSlug =
   | "ats-resume-optimizer"
   | "resume-parser"
   | "property-document-checker"
-  | "rera-document-analyzer"
   | "salary-slip-analyzer"
-  | "itr-form16-analyzer"
   | "research-paper-summarizer"
   // Task #84 — 10 SEO landings for AI core + more Tier 3.
   | "chat-with-pdf"
@@ -91,7 +84,6 @@ export type SeoPageSlug =
   | "ai-pdf-ocr"
   | "compare-pdfs"
   | "ai-redact-pdf"
-  | "gst-invoice-extractor"
   | "multi-bank-statement-merger"
   | "discharge-summary-explainer"
   | "loan-application-bundler"
@@ -104,9 +96,7 @@ export type SeoPageSlug =
   | "demat-cas-statement-parser"
   | "insurance-policy-analyzer"
   | "scan-report-explainer"
-  | "encumbrance-certificate-parser"
   | "expense-report-builder"
-  | "ncert-chapter-summarizer"
   // Task #86 — 10 SEO landings for Tier 2 AI variants.
   | "pdf-to-quiz"
   | "pdf-to-mindmap"
@@ -124,12 +114,7 @@ export type SeoPageSlug =
   | "strip-links"
   | "booklet-pdf"
   | "free-draw-pdf"
-  | "add-links"
-  | "form-26as-analyzer"
-  | "form-15g-15h-analyzer"
-  | "rent-receipt-analyzer"
-  | "property-tax-analyzer"
-  | "stamp-duty-analyzer";
+  | "add-links";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -739,25 +724,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["extract-attachments", "extract-images", "pdf-metadata", "page-count"],
   },
 
-  "gst-invoice-generator": {
-    tool: "invoice-generator",
-    h1: "Free GST invoice generator — one-page PDF in seconds",
-    sub: "Fill the form, get a clean A4 invoice PDF. CGST+SGST or IGST tax modes. INR default; USD / EUR / GBP also supported.",
-    canonical: "/gst-invoice-generator",
-    howTo: [
-      { t: "Enter business + customer info", d: "Name, address, optional GSTIN for both sides." },
-      { t: "Add line items", d: "Description, quantity, unit price. Totals recalculate live." },
-      { t: "Pick tax mode", d: "No tax, CGST+SGST (intra-state), or IGST (inter-state). Default rate 18% — change to 5 / 12 / 28 as needed." },
-      { t: "Generate and download", d: "A4 single-page PDF. No watermarks. Ready to email or print." },
-    ],
-    faq: [
-      { q: "Is this GSTR-compliant?", a: "It produces the fields mandated by the CGST rules — invoice number, date, parties, GSTIN, item breakdown, tax split. For official filing, check with your CA. This is a document generator, not a tax filing service." },
-      { q: "Can I save templates?", a: "Not yet — the form resets on reload. Save the generated PDF as your template and start from there. Multi-template save is on the paid roadmap." },
-      { q: "Does it support partial payments / advances?", a: "No, single-payment invoices only. Partial / advance handling is in-scope for the paid Pro Invoice tool." },
-      { q: "Is it really free?", a: "Yes, unlimited. No signup, no per-invoice limit." },
-    ],
-    related: ["invoice-generator", "ai-generate", "to-pdf", "page-numbers"],
-  },
 
   "edit-pdf": {
     tool: "edit-pdf",
@@ -1233,43 +1199,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-jd-match", "ai-cover-letter", "ai-ats-resume", "ai-resume-parse"],
   },
 
-  "tnpsc-answer-key-analyzer": {
-    tool: "ai-tnpsc",
-    h1: "TNPSC Answer Key Analyzer — question-wise breakdown, strategy notes",
-    sub: "Upload any TNPSC question paper or answer key. Get per-question subject tags, difficulty estimates, topic frequency, and TN-specific strategy notes. 15 credits.",
-    canonical: "/tnpsc-answer-key-analyzer",
-    howTo: [
-      { t: "Drop the paper", d: "TNPSC Group 1 / Group 2 / Group 4 / VAO / DEO — question paper or official answer key. Tamil or English medium." },
-      { t: "We analyse", d: "Per-question table: subject tag (History / Geography / Polity / Economy / Science / Aptitude / Tamil Literature / Current Affairs), correct answer, difficulty." },
-      { t: "Get your strategy", d: "Subject-wise distribution, topic frequency, and a section-by-section plan on which to cram vs skip — specific to the TNPSC scheme." },
-    ],
-    faq: [
-      { q: "Does it handle Tamil-medium papers?", a: "Yes. The model reads Tamil natively — no translation step. Output is in English for easier cross-referencing with study material, but question text is quoted in Tamil when that's the source language." },
-      { q: "What exams are supported?", a: "All TNPSC exams: Group 1, Group 2 (main + prelims), Group 4, Village Administrative Officer (VAO), District Employment Officer, Combined Engineering, and the smaller technical-subject papers." },
-      { q: "Is the difficulty estimate reliable?", a: "It's heuristic — based on the question structure and your TNPSC scheme knowledge. Use it as a rough sort for revision priority, not a literal prediction." },
-      { q: "What about previous-year question banks?", a: "Run multiple papers through and the Topic Frequency section will aggregate — you'll see which chapters recur across years." },
-    ],
-    related: ["ai-tnpsc", "ai-jee-neet", "ai-syllabus", "ai-study-notes"],
-  },
 
-  "jee-neet-paper-analyzer": {
-    tool: "ai-jee-neet",
-    h1: "JEE / NEET Previous Year Paper Analyzer — chapter frequency + revision plan",
-    sub: "Upload a JEE Main / JEE Advanced / NEET-UG paper. Per-question table, chapter frequency per subject, high-yield topics, and 12-week revision plan. 20 credits.",
-    canonical: "/jee-neet-paper-analyzer",
-    howTo: [
-      { t: "Drop the paper", d: "JEE Main, JEE Advanced, or NEET-UG — any year, any shift. Question paper or answer key both work." },
-      { t: "Per-question analysis", d: "Subject (Physics / Chemistry / Math for JEE; Physics / Chemistry / Biology for NEET), chapter, sub-topic, difficulty, expected marks — in a table you can sort." },
-      { t: "Study plan", d: "Chapter-frequency tables sorted high→low. 12-week revision plan weighted by frequency × difficulty. Score-maximisation strategy specific to each exam's marking scheme." },
-    ],
-    faq: [
-      { q: "Which exams are supported?", a: "JEE Main (all shifts since 2019), JEE Advanced (2013+), NEET-UG (post-2013 combined format). Older papers work too, though our chapter taxonomy is anchored to the current NCERT syllabus." },
-      { q: "How accurate is the chapter mapping?", a: "Very accurate for Physics and Chemistry where chapter boundaries are clean. Biology/Math occasionally sit across two chapters (e.g. Coordination Chemistry + Transition Elements) — we list both." },
-      { q: "Can I combine multiple years?", a: "Yes — merge PDFs first (use our free Merge PDF tool), then drop the combined paper. The chapter frequency will aggregate across years, which is exactly what you want for priority ranking." },
-      { q: "Is the revision plan one-size-fits-all?", a: "It's a 12-week runway at default study pace. For shorter runways, scale the Hours column proportionally. The priority order (chapter rank) stays the same." },
-    ],
-    related: ["ai-jee-neet", "ai-tnpsc", "ai-syllabus", "ai-flashcards"],
-  },
 
   "make-pdf-searchable": {
     tool: "ai-searchable-pdf",
@@ -1450,43 +1380,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-prescription", "ai-medical-bill", "ai-blood-test", "ai-discharge"],
   },
 
-  "upsc-paper-analyzer": {
-    tool: "ai-upsc",
-    h1: "UPSC Paper Analyzer — Prelims, Mains, Optional, Essay",
-    sub: "Drop a UPSC question paper or answer key. We tag every question by subject + sub-topic + difficulty, compute the static-vs-current ratio, and surface high-yield topics. 20 credits.",
-    canonical: "/upsc-paper-analyzer",
-    howTo: [
-      { t: "Drop the paper", d: "UPSC Civil Services Prelims (GS / CSAT), Mains (GS-I/II/III/IV / Essay / Optional), or any year's release." },
-      { t: "We tag every question", d: "Subject (History / Polity / Economy / Geography / Environment / Science & Tech / IR / Internal Security / Ethics / Tamil Lit if relevant), sub-topic, difficulty." },
-      { t: "Get strategy notes", d: "Static-vs-current ratio, recurring high-yield areas, and Mains-specific advice (word-length-required, answer structure templates)." },
-    ],
-    faq: [
-      { q: "Does it know UPSC's specific scheme?", a: "Yes. Prelims uses 1/3 negative marking — flagged in the analysis. Mains is subjective; word-length-required (150 / 250 words per UPSC's official mandate) is computed and surfaced. Optional papers handled separately from GS." },
-      { q: "Are the source references real?", a: "We anchor study suggestions to standard UPSC sources — NCERT, Laxmikanth (Indian Polity), Spectrum (Modern History), Shankar IAS (Environment), Indian Economy by Ramesh Singh, etc. These are widely-recommended references, not invented." },
-      { q: "Can I run multiple years through it?", a: "Yes — concatenate them into one PDF first (use our free Merge PDF tool), then run through the Multi-Year Paper Pattern tool for trend analysis. Single-paper analyser is for granular per-question breakdown of one year." },
-      { q: "Does it cover state PSC papers?", a: "TNPSC has a dedicated tool. For other state PSCs (UPPSC, MPPSC, BPSC, RPSC, etc.), this UPSC tool gives reasonable coverage but state-specific scheme nuances may be missed. State-specific tools on the roadmap." },
-    ],
-    related: ["ai-upsc", "ai-tnpsc", "ai-paper-pattern", "ai-syllabus"],
-  },
 
-  "ssc-banking-exam-analyzer": {
-    tool: "ai-ssc-banking",
-    h1: "SSC / Banking Exam Paper Analyzer — IBPS, SBI, RBI, NABARD, SSC CGL",
-    sub: "Drop an SSC or Banking exam paper. We break it down by section (Quant / Reasoning / English / GK / Banking Awareness), surface topic frequency, and give sectional-cutoff strategy. 15 credits.",
-    canonical: "/ssc-banking-exam-analyzer",
-    howTo: [
-      { t: "Drop the paper", d: "SSC CGL / CHSL / CPO / MTS / JE / Selection Posts, IBPS PO / Clerk / SO, SBI PO/Clerk, RBI Grade B, NABARD Grade A/B." },
-      { t: "We tag by section", d: "Per-question table: Section, Sub-topic, Difficulty, Time-Per-Question estimate, plus section-level distribution." },
-      { t: "Get cutoff strategy", d: "Section-attempt order, accuracy thresholds for sectional cutoff vs final cutoff, when to skip a difficult set." },
-    ],
-    faq: [
-      { q: "Does it know the difference between IBPS and SBI cutoffs?", a: "Yes. SBI typically has higher cutoffs (more competitive) and a different question style — more reasoning-heavy, less pure quant. IBPS is more uniformly distributed. Our strategy notes are exam-specific." },
-      { q: "What about Banking Awareness questions?", a: "Tagged separately and surfaced as a high-priority study list — these recur across IBPS PO, SBI PO, RBI Grade B and constitute the easiest 5-10 marks if prepped well." },
-      { q: "Is the difficulty estimate reliable?", a: "Heuristic but useful for sort. Use it as a relative ranking within the paper, not as an absolute scale across years. The Multi-Year Paper Pattern tool gives proper trend analysis if you concat 5+ years." },
-      { q: "Will the strategy notes mention specific books?", a: "Yes — Quantum CAT (quant), Arun Sharma (verbal), Indian Economy by Ramesh Singh (banking awareness), Newspapers + PIB for current affairs. Standard, widely-recommended sources, not invented." },
-    ],
-    related: ["ai-ssc-banking", "ai-tnpsc", "ai-upsc", "ai-paper-pattern"],
-  },
 
   // ---------------------------------------------------------------
   // Task #83 — 10 more SEO landings for Tier 3 wedges.
@@ -1606,24 +1500,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-property", "ai-sale-deed", "ai-rera", "ai-ec"],
   },
 
-  "rera-document-analyzer": {
-    tool: "ai-rera",
-    h1: "RERA Document Analyzer — buyer protections + risk flags",
-    sub: "Drop a RERA registration certificate, annexure, or builder-buyer agreement. We audit project details, approvals, risk flags, and verify buyer protections under RERA Act 2016. 25 credits.",
-    canonical: "/rera-document-analyzer",
-    howTo: [
-      { t: "Drop the RERA doc", d: "Registration certificate, project annexure, agreement for sale, or builder-buyer agreement." },
-      { t: "We audit", d: "Project details, approvals (CC / OC / EC), risk flags (registration revoked, area on super-built-up vs RERA-mandated carpet, hidden charges)." },
-      { t: "Verification checklist", d: "Cross-check on state RERA portal, OC verification, RERA complaints search, encumbrance check." },
-    ],
-    faq: [
-      { q: "How do I verify RERA registration on the state portal?", a: "Each state has its own RERA portal — Maharashtra (MahaRERA), Karnataka (RERA Karnataka), Tamil Nadu (TNRERA), etc. Search by registration number from the certificate. We surface the registration number prominently so you can do this lookup." },
-      { q: "What's 'area on super-built-up' and why does it matter?", a: "RERA Act 2016 mandates pricing must be based on carpet area (the actual usable space). Builders often quote and price on super-built-up area (which includes common areas and corridors), making the per-sqft price look lower. We flag any agreement that prices on super-built-up." },
-      { q: "Are RERA penalties enforceable?", a: "Yes — state RERA authorities have ordered builders to pay buyer compensation for delays, missing OCs, etc. Whether you can recover depends on your specific case + the state's enforcement track record. Surfaced in our risk flags but you'll need a lawyer for a real legal opinion." },
-      { q: "Does it work for plot purchase (not apartment)?", a: "Yes if the project is RERA-registered. Some states require RERA registration for plot developments above a threshold size." },
-    ],
-    related: ["ai-rera", "ai-builder-agreement", "ai-sale-deed", "ai-property"],
-  },
 
   "salary-slip-analyzer": {
     tool: "ai-salary-slip",
@@ -1644,24 +1520,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-salary-slip", "ai-itr-form16", "ai-bank-statement", "ai-expense-report"],
   },
 
-  "itr-form16-analyzer": {
-    tool: "ai-itr-form16",
-    h1: "ITR / Form 16 Analyzer — Indian tax return audit + suggestions",
-    sub: "Drop your Form 16, ITR-V, or annual tax statement. We extract income, deductions, tax computation, and surface under-utilised deductions or TDS mismatches. 20 credits.",
-    canonical: "/itr-form16-analyzer",
-    howTo: [
-      { t: "Drop the document", d: "Form 16 (Part A + B), ITR-V (acknowledgement), or any AY annual tax computation document." },
-      { t: "We extract + analyse", d: "Income summary, deductions claimed (80C, 80D, HRA, etc.), tax computation, observations (under-utilised deductions, regime mismatch, TDS gap)." },
-      { t: "Get suggested actions", d: "Concrete next steps — verify TDS in Form 26AS, file rectification under Section 154 if mismatch, reconsider regime choice for next FY." },
-    ],
-    faq: [
-      { q: "Is this tax advice?", a: "No. Audit + suggestion aid only. For final filing decisions, particularly anything involving capital gains, foreign income, or business income, consult a CA. We surface things to consider, not prescribe." },
-      { q: "Will it know New vs Old regime trade-offs?", a: "Yes — we surface whether your deduction utilisation suggests Old regime would have been better (or vice-versa). The optimal regime depends on your specific deduction usage, which the document reveals." },
-      { q: "What about Form 26AS / AIS reconciliation?", a: "We suggest verifying Form 26AS / AIS as a next-step action — actual cross-reconciliation requires both documents. AIS-26AS reconciliation tool is on the roadmap." },
-      { q: "Can it handle the full ITR-7 / business returns?", a: "Designed for salaried-individual ITRs (ITR-1, ITR-2). Business returns (ITR-3, ITR-5, ITR-6, ITR-7) have richer schedules — we extract what we can but recommend a CA review for those." },
-    ],
-    related: ["ai-itr-form16", "ai-salary-slip", "ai-bank-statement", "ai-mutual-fund"],
-  },
 
   "research-paper-summarizer": {
     tool: "ai-research-paper",
@@ -1783,24 +1641,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-redact", "redact-free", "protect", "ai-summarize"],
   },
 
-  "gst-invoice-extractor": {
-    tool: "ai-gst-invoice",
-    h1: "GST Invoice Extractor — PDF to GSTR-1 / 2B fields",
-    sub: "Drop a stack of GST invoices (B2B / B2C / debit notes / credit notes). We extract every field needed for GSTR-1 / GSTR-2B reconciliation. 25 credits / invoice.",
-    canonical: "/gst-invoice-extractor",
-    howTo: [
-      { t: "Drop the invoice PDF", d: "Single invoice or batch (concatenated). B2B, B2C, B2C-Large, Export, Debit Note, Credit Note — all formats." },
-      { t: "We extract GSTR fields", d: "Invoice no / date / supplier GSTIN / recipient GSTIN / place of supply / HSN / SAC / taxable value / IGST / CGST / SGST / cess / total. Validates GSTIN format." },
-      { t: "Export to GSTR-ready CSV", d: "Direct upload to your accountant's GSTR-1 prep tool. Reconcile against GSTR-2B for ITC claims." },
-    ],
-    faq: [
-      { q: "Does it validate GSTIN format?", a: "Yes — checks the 15-character format (state code + PAN + entity number + Z + check digit). Surfaces invalid GSTINs as risk flags so you can verify with the supplier before claiming ITC." },
-      { q: "What about handwritten invoices?", a: "Smaller suppliers still use handwritten invoices. AI OCR reads them but accuracy depends on legibility. For ITC claims, always cross-verify total GST amount against the GSTR-2B." },
-      { q: "Bulk processing?", a: "Single invoice per credit charge right now. For batch (50+ invoices), Pro tier offers bulk-upload with one-click processing." },
-      { q: "ITC reconciliation?", a: "We extract the invoice → comparing against your GSTR-2B (which you download from the GST portal) tells you matched / unmatched / unclaimed ITC. The Reconciler tool (on the roadmap) will do this comparison automatically." },
-    ],
-    related: ["ai-gst-invoice", "invoice-generator", "ai-bank-statement", "ai-balance-sheet"],
-  },
 
   "multi-bank-statement-merger": {
     tool: "ai-multi-bank",
@@ -2015,24 +1855,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-scan-report", "ai-blood-test", "ai-discharge", "ai-medical-bill"],
   },
 
-  "encumbrance-certificate-parser": {
-    tool: "ai-ec",
-    h1: "Encumbrance Certificate (EC) Parser — chronological liens + chain narrative",
-    sub: "Drop an EC issued by an Indian Sub-Registrar's office. We extract every encumbrance into a chronological table, narrate the chain of title, and flag coverage gaps. 15 credits.",
-    canonical: "/encumbrance-certificate-parser",
-    howTo: [
-      { t: "Drop the EC PDF", d: "From any Indian state SRO. Format varies but parser is format-aware." },
-      { t: "We extract chronologically", d: "Date / document number / type (Sale Deed / Mortgage / Settlement / Gift / Lease / Release) / parties / consideration / description." },
-      { t: "Get chain narrative + risk flags", d: "How the title moved through these documents + active mortgages + suspicious quick-flips + broken-chain warnings + coverage gaps for additional ECs to pull." },
-    ],
-    faq: [
-      { q: "How many years of EC do I need for a property purchase?", a: "Banks typically want 30 years for home loan diligence. If your EC only covers 13 years, we'll flag the gap and recommend pulling additional ECs from earlier periods. Some states issue ECs in 13-year tranches." },
-      { q: "What's a 'broken chain'?", a: "When a current sale deed references a parent document that's not produced (or not in the EC's covered period). Banks won't sanction loans on broken-chain properties. We flag it as high-severity." },
-      { q: "Will it tell me the current ownership clearly?", a: "Yes — the chain narrative ends with the current owner per the latest sale deed in the EC. If there's been any post-EC-period transaction, you'll need a fresh EC to capture it." },
-      { q: "Is this legal advice?", a: "No. Audit aid for buyers. For property purchase, your lawyer will pull EC + scrutinise it; we make the scrutiny step faster." },
-    ],
-    related: ["ai-ec", "ai-sale-deed", "ai-property", "ai-rera"],
-  },
 
   "expense-report-builder": {
     tool: "ai-expense-report",
@@ -2053,24 +1875,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-expense-report", "ai-bank-statement", "ai-multi-bank", "ai-credit-card"],
   },
 
-  "ncert-chapter-summarizer": {
-    tool: "ai-ncert",
-    h1: "NCERT Chapter Summarizer — exam-ready key concepts + likely questions",
-    sub: "Drop an NCERT textbook chapter. We extract the central idea, key concepts, important diagrams, worked-through examples, likely CBSE / state-board exam questions, and common mistakes. 10 credits.",
-    canonical: "/ncert-chapter-summarizer",
-    howTo: [
-      { t: "Drop the chapter PDF", d: "Any class (6-12), any subject — Maths, Science, Social Science, English, Hindi, regional languages." },
-      { t: "We summarise for exam prep", d: "In-one-sentence idea + key concepts (every term/definition/formula) + diagrams + worked examples." },
-      { t: "Get likely exam questions", d: "5-8 questions in CBSE / state-board paper-writer style with 1/3/5-mark distribution. Plus common student mistakes for revision." },
-    ],
-    faq: [
-      { q: "Is this aligned with the latest NCERT syllabus?", a: "Yes — we're working off the post-2023 NCERT revision. State-board chapters that draw heavily from NCERT (most do) are also handled." },
-      { q: "How accurate are the 'likely exam questions'?", a: "Style-accurate, not crystal-ball-accurate. We mimic the way CBSE / state-board paper-setters typically ask questions on this kind of content. They're useful as practice — but not a substitute for actual previous-year question papers (use Paper Pattern Analyzer for that)." },
-      { q: "Will it help with board-exam prep specifically?", a: "Yes — the 1/3/5-mark distribution mimics CBSE board exam patterns. The Quick Revision checklist at the end is designed for the night-before-exam condensed read." },
-      { q: "Does it cover competitive exam syllabi?", a: "NCERT IS the foundation for most Indian competitive exams (UPSC, JEE/NEET, SSC). For competitive-exam-specific analysis use UPSC / JEE-NEET / SSC-Banking analysers." },
-    ],
-    related: ["ai-ncert", "ai-syllabus", "ai-flashcards", "ai-paper-pattern"],
-  },
 
   // ---------------------------------------------------------------
   // Task #86 — 10 SEO landings for Tier 2 AI variants.
@@ -2409,99 +2213,10 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   // (aadhaar-parser, pan-card-parser, driving-license-parser,
   // voter-id-parser, passport-parser) removed.
 
-  "form-26as-analyzer": {
-    tool: "ai-form-26as",
-    h1: "Form 26AS Analyzer — TDS / tax credit reconciliation",
-    sub: "Drop your Form 26AS from TRACES. We parse Parts A through E, surface deductor-by-deductor TDS, advance tax challans, refunds, and high-value transactions, and flag discrepancies that commonly trigger ITR notices. 15 credits.",
-    canonical: "/form-26as-analyzer",
-    howTo: [
-      { t: "Drop the PDF", d: "Form 26AS downloaded from the TRACES portal (incometax.gov.in). Both the password-protected and unlocked versions work — unlock first if needed." },
-      { t: "Full reconciliation", d: "Parts A (TDS Salary), A1 (TDS Other), B (TCS), C (Advance / Self-Assessment Tax), D (Refunds), E (High-Value AIR / SFT) — all parsed into structured tables." },
-      { t: "Discrepancy flags", d: "Cross-check totals across deductors, find deductors that show on 26AS but not on your Form 16, surface AIR transactions that exceed reporting thresholds." },
-    ],
-    faq: [
-      { q: "Is this tax filing advice?", a: "No. We extract structured data from your 26AS for sanity-checking against your ITR draft. For the actual ITR filing math, use the Income Tax e-Filing portal or a CA. Mismatches between ITR and 26AS are the #1 cause of CPC notices — this tool catches those before you file." },
-      { q: "What about AIR / SFT transactions?", a: "Part E surfaces high-value financial transactions reported by banks, mutual funds, registrars, and others. We flag any over the standard SFT thresholds (₹10L savings deposit, ₹2L MF investment, etc.) so you can be ready for Income Tax inquiries on those." },
-      { q: "Will this work for older AYs?", a: "Yes — Form 26AS structure has been stable for years. The PDF-based version (post-2017) is what we parse. If you have a pre-2017 Form 16AS in a different format, results may be partial." },
-    ],
-    related: ["ai-itr-form16", "ai-salary-slip", "ai-rent-receipt", "ai-form-15g-15h"],
-  },
 
-  "form-15g-15h-analyzer": {
-    tool: "ai-form-15g-15h",
-    h1: "Form 15G / 15H Analyzer — TDS exemption declaration check",
-    sub: "Drop your Form 15G or Form 15H. We detect which form by age, parse declarant + income details, and run an eligibility check against the basic exemption limit so you know whether the declaration is valid. 10 credits.",
-    canonical: "/form-15g-15h-analyzer",
-    howTo: [
-      { t: "Drop the PDF", d: "The completed 15G or 15H — either bank-issued, downloaded from incometax.gov.in, or a scanned signed copy." },
-      { t: "Form type detection", d: "15G if declarant is under 60, 15H if 60+. We flag if DOB and form choice are inconsistent." },
-      { t: "Eligibility check", d: "Compares your stated estimated total income against the basic exemption limit (₹2.5L / ₹3L / ₹5L by age band). If you exceed, the declaration is invalid — submitting an invalid 15G/15H carries imprisonment + fine under section 277." },
-      { t: "Risk flags", d: "TDS already deducted, ITR with refund filed (which negates eligibility), missing PAN, missing signature." },
-    ],
-    faq: [
-      { q: "Is this tax advice?", a: "No. We extract data and flag risks. Whether to actually submit a 15G/15H is your decision (with advice from a CA if your case is non-trivial). False declarations carry section 277 penalties — imprisonment plus fine — so the eligibility check is one we surface honestly." },
-      { q: "Can I use this for joint accounts?", a: "Form 15G/15H is filed individually per holder per income source. If you have a joint FD, both holders typically need to file. Our parser handles a single declaration at a time — run it twice for joint cases." },
-      { q: "What about 15CA / 15CB?", a: "Different forms (foreign remittance). Not in this tool's scope. We'd need a separate parser for those and they're usually CA-prepared anyway." },
-    ],
-    related: ["ai-form-26as", "ai-itr-form16", "ai-bank-statement", "ai-mutual-fund"],
-  },
 
-  "rent-receipt-analyzer": {
-    tool: "ai-rent-receipt",
-    h1: "Rent Receipts → HRA Summary — 12-month receipts to exemption math",
-    sub: "Drop a stack of rent receipts and we'll produce a per-month receipt table, annual total, the section 10(13A) HRA exemption math, and compliance flags (landlord PAN, revenue stamp, signatures). 10 credits.",
-    canonical: "/rent-receipt-analyzer",
-    howTo: [
-      { t: "Drop the receipts", d: "All 12 months of rent receipts in one PDF. Scanned, photographed, or printed-from-template — all work." },
-      { t: "Receipt table", d: "Per-month: receipt number, month, amount, payment mode, date, stamp presence, signature presence." },
-      { t: "HRA math", d: "Three limits per section 10(13A): actual HRA received, rent paid - 10% basic salary, 50%/40% basic for metro/non-metro. Minimum is the eligible exemption." },
-      { t: "Compliance flags", d: "Landlord PAN required when annual rent > ₹1L (Income Tax rule). Revenue stamp required on receipts > ₹5K. Missing signatures. Gaps in months." },
-    ],
-    faq: [
-      { q: "What about rent agreements?", a: "Receipts and rent agreement are separate documents. Both are needed for an HRA claim — we parse the receipts. For agreement review, see the Rental Agreement tool." },
-      { q: "What if my landlord doesn't give a PAN?", a: "If annual rent is ≤₹1L, landlord PAN is not mandatory per IT rules. If > ₹1L, employer can refuse the HRA exemption without it. Common employer-side check during ITR. We surface this as a hard flag in the output." },
-      { q: "Bank-transfer evidence?", a: "Rent paid via bank transfer (UPI, NEFT, IMPS) is the gold standard for ITR scrutiny — it gives a paper trail beyond just receipts. We don't ingest your bank statement, but the output flags 'consider attaching bank-transfer screenshots' if cash is the dominant mode in your receipts." },
-    ],
-    related: ["ai-form-26as", "ai-itr-form16", "ai-bank-statement", "ai-rental"],
-  },
 
-  "property-tax-analyzer": {
-    tool: "ai-property-tax",
-    h1: "Property Tax Bill Analyzer — BBMP, MCD, BMC, Chennai Corp, KMC",
-    sub: "Drop your municipal property tax bill. We parse property identification, tax components (cess breakdown), outstanding dues with interest, rebate eligibility, and late-payment consequences. 10 credits.",
-    canonical: "/property-tax-analyzer",
-    howTo: [
-      { t: "Drop the PDF", d: "Bill from BBMP (Bangalore), MCD (Delhi), BMC (Mumbai), Chennai Corp, KMC (Kolkata), and most other municipal corporations / panchayats." },
-      { t: "Property + tax computation", d: "Owner, Property ID / Khata No / PID, address, type, area. Tax components: base property tax + library cess + health cess + solid waste cess + beggary cess (city-specific)." },
-      { t: "Outstanding + rebates", d: "Prior unpaid amounts with accrued interest. Rebate eligibility (early-payment, women, senior citizens, disabled — varies by city)." },
-      { t: "Late consequences", d: "Per-month interest rate, penalty %, water/services disconnection threshold if applicable." },
-    ],
-    faq: [
-      { q: "Is this legal advice for property disputes?", a: "No. We extract data from the bill. Property disputes (wrong owner name, wrong area, double taxation) need municipal corporation grievance filing or a property lawyer." },
-      { q: "What if my Property ID doesn't match my sale deed?", a: "We surface that as a 'cross-check' flag but don't auto-fix. Property ID mismatches are common after Khata transfers, address changes, or municipal re-numbering — they need to be fixed at the corporation, not in the bill itself." },
-      { q: "Will this work for panchayat-level bills?", a: "Yes for the well-formatted ones. Hand-written panchayat receipts may have partial extraction — modal 'Markdown table' output may have gaps for unstructured documents." },
-    ],
-    related: ["ai-property", "ai-rera", "ai-stamp-duty", "ai-sale-deed"],
-  },
 
-  "stamp-duty-analyzer": {
-    tool: "ai-stamp-duty",
-    h1: "Stamp Duty / e-Stamp Analyzer — SHCIL, state portals, franking",
-    sub: "Drop your stamp duty receipt or e-Stamp certificate. We identify the issuing platform (SHCIL / state portal / franking / traditional), parse parties, transaction type, duty paid, registration fee, and surface the verification URL. 10 credits.",
-    canonical: "/stamp-duty-analyzer",
-    howTo: [
-      { t: "Drop the PDF", d: "SHCIL e-Stamp certificate, state-portal e-Stamp (Maharashtra GRAS, Delhi e-Stamp, Karnataka, etc.), franking machine receipt, or scanned traditional stamp paper." },
-      { t: "Document identification", d: "Stamp Certificate / Receipt Number, Issue Date, Issuing Authority, State, Status (Valid / Used / Cancelled)." },
-      { t: "Parties + transaction", d: "First party (buyer/lessee), Second party (seller/lessor), transaction type (Sale Deed / Lease / Gift / PoA / Affidavit / Loan / etc.), property address if applicable." },
-      { t: "Duty + verification", d: "Stamp duty paid (amount + % of consideration), registration fee, and the verification URL on the issuing portal so you can confirm authenticity before relying on it." },
-    ],
-    faq: [
-      { q: "Why surface the verification URL?", a: "e-Stamp certificates have unique IDs that can be cross-checked on shcilestamp.com or the state portal. This is the only way to confirm a certificate is genuine and hasn't been used elsewhere — paper alone is forgeable." },
-      { q: "What about under-stamping?", a: "We flag if the duty paid looks low for the transaction type relative to typical state rates (e.g., Maharashtra sale deed = 6%, Karnataka = 5.6%, urban Delhi = 6%, etc.) — but state rates change, gender/age rebates apply, and we can't tell consideration without seeing the deed itself. Treat as a directional flag." },
-      { q: "Common e-Stamp scams?", a: "Three: forged certificates (verify on portal), expired certificates re-used (e-Stamps generally must be used within 6 months of issue for property transactions), and certificates issued for one transaction being used for another. Our output includes a 'Common Issues' checklist." },
-    ],
-    related: ["ai-sale-deed", "ai-rental", "ai-property-tax", "ai-property"],
-  },
 };
 
 export const SEO_SLUGS = Object.keys(SEO_PAGES) as SeoPageSlug[];
