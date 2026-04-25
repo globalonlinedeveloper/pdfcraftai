@@ -130,6 +130,9 @@ import {
 } from "@/components/tools/StructuredVariantTool";
 import { MindmapPdfTool } from "@/components/tools/MindmapPdfTool";
 import { SemanticSearchPdfTool } from "@/components/tools/SemanticSearchPdfTool";
+import { StampPdfTool } from "@/components/tools/StampPdfTool";
+import { NUpPdfTool } from "@/components/tools/NUpPdfTool";
+import { GrayscalePdfTool } from "@/components/tools/GrayscalePdfTool";
 
 type Params = { params: { id: string } };
 
@@ -182,6 +185,10 @@ const LIVE_TOOL_IDS = new Set<string>([
   "sort-pages",
   "extract-contacts",
   "extract-dates",
+  // Task #93 — client-side gap fillers
+  "stamp-pdf",
+  "n-up-pdf",
+  "grayscale-pdf",
   "ai-summarize",
   "ai-tldr",
   "ai-key-points",
@@ -484,6 +491,12 @@ function ToolRunner({ id }: { id: string }) {
       return <ExtractContactsTool />;
     case "extract-dates":
       return <ExtractDatesTool />;
+    case "stamp-pdf":
+      return <StampPdfTool />;
+    case "n-up-pdf":
+      return <NUpPdfTool />;
+    case "grayscale-pdf":
+      return <GrayscalePdfTool />;
     case "ai-summarize":
       return <SummarizePdfTool />;
     case "ai-tldr":

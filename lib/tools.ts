@@ -52,6 +52,9 @@ export const TOOLS: readonly Tool[] = [
   { id: "sort-pages", name: "Sort Pages", desc: "Drag thumbnails to reorder a PDF's pages visually.", icon: "Pages", free: true, group: "Organize" },
   { id: "extract-contacts", name: "Extract Emails, Phones, URLs", desc: "Regex-based extraction of contact info from text PDFs. CSV and vCard export.", icon: "Search", free: true, group: "Convert" },
   { id: "extract-dates", name: "Extract Dates → Calendar", desc: "Find every date in a PDF and download as an .ics calendar file.", icon: "Clock", free: true, group: "Convert" },
+  { id: "stamp-pdf", name: "Add Stamp", desc: "DRAFT, CONFIDENTIAL, APPROVED, PAID — preset business stamps with rotation and color.", icon: "Pen", free: true, group: "Edit" },
+  { id: "n-up-pdf", name: "N-up Layout", desc: "Combine multiple pages on one sheet — 2-up, 4-up, booklet imposition.", icon: "Pages", free: true, group: "Organize" },
+  { id: "grayscale-pdf", name: "Convert to Grayscale", desc: "Render every page as black-and-white. Useful for B&W print prep.", icon: "Image", free: true, group: "Optimize" },
   { id: "page-numbers", name: "Page Numbers & Watermark", desc: "Add headers, footers, and watermarks.", icon: "Pages", free: true, group: "Edit" },
   { id: "protect", name: "Unlock / Protect PDF", desc: "Add or remove passwords and permissions.", icon: "Lock", free: true, group: "Security" },
 

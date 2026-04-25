@@ -117,7 +117,10 @@ export type SeoPageSlug =
   | "improve-pdf-writing"
   | "paraphrase-pdf"
   | "pdf-plagiarism-check"
-  | "chart-to-data-table";
+  | "chart-to-data-table"
+  | "stamp-pdf"
+  | "n-up-pdf"
+  | "grayscale-pdf";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -2252,6 +2255,66 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Export?", a: "Markdown tables (copy-paste ready). For Excel-friendly export, CSV is on the roadmap. Right now copy from the markdown table into a spreadsheet works fine." },
     ],
     related: ["ai-chart-to-table", "ai-table", "ai-balance-sheet", "ai-research-paper"],
+  },
+
+  "stamp-pdf": {
+    tool: "stamp-pdf",
+    h1: "Add stamp to PDF — DRAFT, CONFIDENTIAL, APPROVED, PAID, RECEIVED",
+    sub: "Apply preset business stamps to any PDF page in your browser. Free, no signup, no upload — runs entirely on your device.",
+    canonical: "/stamp-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Up to 50 MB. Encrypted PDFs need to be unlocked first." },
+      { t: "Pick a stamp", d: "DRAFT, CONFIDENTIAL, APPROVED, REJECTED, PAID, RECEIVED, REVIEWED, COPY, ORIGINAL, VOID, FINAL, URGENT — or type your own (up to 30 chars)." },
+      { t: "Choose position + rotation + opacity", d: "9-position grid (top/middle/bottom × left/center/right), -45° to +45° tilt, 20-100% opacity. Blank page range = stamp every page." },
+      { t: "Apply and download", d: "Output PDF has the stamp baked into the page content stream — recipients can't easily edit it out without a fresh redact pass." },
+    ],
+    faq: [
+      { q: "Is the stamp reversible?", a: "It's drawn into the page content stream, not as an annotation. A determined recipient with PDF editor software can still remove it (the original ink layer is intact underneath). For irreversible stamping, also run Redact + Flatten after stamping." },
+      { q: "Why no transparent fill on the rectangle?", a: "Classic rubber-stamp look has a colored border with the document visible behind. If you need a fully solid block-out (e.g., for VOID over financial data), use Redact instead." },
+      { q: "Can I stamp only specific pages?", a: "Yes — the page range field accepts ranges like \"1, 3-5, 7\". Blank means every page." },
+      { q: "Does this work on scanned PDFs?", a: "Yes. The stamp is drawn on top of whatever's on the page — image-only or vector-text both work." },
+    ],
+    related: ["image-watermark", "redact-free", "highlight-pdf", "flatten-pdf"],
+  },
+
+  "n-up-pdf": {
+    tool: "n-up-pdf",
+    h1: "N-up PDF — combine multiple pages on one sheet (2-up, 4-up, booklet)",
+    sub: "Tile 2, 4, 6, 8, or 9 source pages onto a single output sheet. Pure browser conversion — no upload, no signup. Save paper on long documents.",
+    canonical: "/n-up-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Any size; 50 MB cap." },
+      { t: "Pick a layout", d: "2-up (2×1), 4-up (2×2), 6-up (3×2), 8-up (4×2), or 9-up (3×3)." },
+      { t: "Pick output paper + spacing", d: "US Letter / A4 / Legal / A3 in landscape. Margin 0-72pt, gap between slots 0-48pt. Optional thin borders around each placed page." },
+      { t: "Combine and download", d: "Output is a fresh PDF with each sheet containing your tiled source pages, aspect-preserved and centered in each slot." },
+    ],
+    faq: [
+      { q: "Why landscape output?", a: "2-up and 4-up portrait sources fit naturally on landscape sheets — pages stay right-side-up. For pure-portrait output (e.g., a 1-up cropped print), use Crop PDF." },
+      { q: "Can I do booklet imposition (folded saddle-stitch)?", a: "This tool does straight-grid tiling, not signature imposition (where page order is shuffled for booklet folding). For saddle-stitch booklets the page-order math is different — that's on the roadmap." },
+      { q: "Will text in the tiled pages still be selectable?", a: "Yes. Each source page is embedded as a real PDF page (not rasterized), so text remains selectable and accessible at the smaller scale." },
+      { q: "What if my source has different page sizes?", a: "Each is independently scaled to fit its slot, aspect-preserved. Mixed-size sources work cleanly." },
+    ],
+    related: ["merge", "split", "extract-pages", "resize-pdf"],
+  },
+
+  "grayscale-pdf": {
+    tool: "grayscale-pdf",
+    h1: "Convert PDF to grayscale — black & white print prep",
+    sub: "Render every page as luminance-correct grayscale entirely in your browser. Perfect for B&W laser print prep, color-restricted submissions, or visual-noise reduction.",
+    canonical: "/grayscale-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Any size up to 50 MB. Multi-page documents work — each page is processed sequentially with progress shown." },
+      { t: "Pick render quality", d: "Draft (96 DPI) for screen review, Standard (144 DPI) for general use, High (192 DPI) for clean print, Print (240 DPI) for archive-quality." },
+      { t: "Convert", d: "Each page is rasterized and converted using the Rec. 601 luminance formula (0.299R + 0.587G + 0.114B) — perceptually correct grayscale, not naive averaging." },
+      { t: "Download", d: "Output PDF has every page as a grayscale image. File size scales with quality preset." },
+    ],
+    faq: [
+      { q: "Will text still be selectable?", a: "No — the output is image-only because every page is rasterized to grayscale. This is the trade-off for true visual grayscale. If you need both selectable text AND grayscale, that's a content-stream color remap (paid AI tier roadmap item, not free)." },
+      { q: "Why luminance instead of just averaging RGB?", a: "Naive (R+G+B)/3 makes pure red and pure green render as the same gray, which looks wrong. Rec. 601 weights match human perception — green looks brighter than red, which matches reality." },
+      { q: "How big will the output file be?", a: "Roughly 0.5-2 MB per page at Standard quality; 1-4 MB per page at Print quality. Color PDFs often shrink slightly because the 3 color channels collapse into 1, even though we're encoding as PNG." },
+      { q: "Is this the same as Compress PDF?", a: "No. Compress reduces file size while preserving color and text. Grayscale removes color entirely (and text-selectability) but isn't necessarily smaller. Use them together if you want a small B&W file: Grayscale → Compress." },
+    ],
+    related: ["compress", "pdf-to-jpg", "remove-metadata", "flatten-pdf"],
   },
 };
 
