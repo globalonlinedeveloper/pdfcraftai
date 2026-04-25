@@ -84,7 +84,18 @@ export type SeoPageSlug =
   | "rera-document-analyzer"
   | "salary-slip-analyzer"
   | "itr-form16-analyzer"
-  | "research-paper-summarizer";
+  | "research-paper-summarizer"
+  // Task #84 — 10 SEO landings for AI core + more Tier 3.
+  | "chat-with-pdf"
+  | "summarize-pdf"
+  | "ai-pdf-ocr"
+  | "compare-pdfs"
+  | "ai-redact-pdf"
+  | "gst-invoice-extractor"
+  | "multi-bank-statement-merger"
+  | "discharge-summary-explainer"
+  | "loan-application-bundler"
+  | "pdf-to-flashcards";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -1635,6 +1646,202 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Will it work for non-English papers?", a: "Best for English. For Indian-language academic papers (uncommon but exist), use AI Translate first, then summarise the translated version." },
     ],
     related: ["ai-research-paper", "ai-citations", "ai-summarize", "ai-tldr"],
+  },
+
+  // ---------------------------------------------------------------
+  // Task #84 — 10 SEO landings for AI core (Chat / Summarize /
+  // OCR / Compare / Redact) + more Tier 3 (GST / Multi-Bank /
+  // Discharge / Loan / Flashcards).
+  // ---------------------------------------------------------------
+
+  "chat-with-pdf": {
+    tool: "ai-chat",
+    h1: "Chat with PDF — ask questions, get cited answers",
+    sub: "Upload a PDF, ask anything in natural language, get answers with source page references. Works on contracts, research papers, manuals, financial statements. 5 credits / 20 questions.",
+    canonical: "/chat-with-pdf",
+    howTo: [
+      { t: "Upload your PDF", d: "Up to 100 MB, any topic — legal, financial, academic, technical." },
+      { t: "Ask in natural language", d: "\"What's the termination clause?\", \"What was the revenue in 2023?\", \"Summarise section 4 in plain English.\"" },
+      { t: "Get cited answers", d: "Every claim links back to a page in the source PDF — verify before relying on it." },
+    ],
+    faq: [
+      { q: "How is this different from copy-pasting into ChatGPT?", a: "Two big things. (1) We chunk + retrieve passages from your PDF and ground answers in those passages with page citations — so hallucination is bounded. (2) The PDF stays attached across the conversation; you don't have to re-paste sections each turn." },
+      { q: "Will it work for scanned PDFs?", a: "Yes — we OCR scanned pages first, then chat. Scanned-PDF chat is slightly slower (one-time OCR cost on first use) but answers cite the same page numbers as the printed scan." },
+      { q: "How long is the chat memory?", a: "20 questions per session for 5 credits. After that, we charge 5 credits per additional 20 questions to keep the conversation going. The PDF stays loaded across the whole session." },
+      { q: "Can I chat with multiple PDFs at once?", a: "Single PDF for now. Multi-PDF chat (e.g. 'compare the termination clauses across these 3 vendor contracts') is on the roadmap." },
+    ],
+    related: ["ai-chat", "ai-summarize", "ai-tldr", "ai-semantic-search"],
+  },
+
+  "summarize-pdf": {
+    tool: "ai-summarize",
+    h1: "Summarize PDF — short, medium, detailed, bullet-point modes",
+    sub: "Drop any PDF and pick a depth: tldr, standard, detailed, or bullet points. Page citations included. Works on research papers, contracts, reports, manuals. 5 credits.",
+    canonical: "/summarize-pdf",
+    howTo: [
+      { t: "Drop a PDF", d: "Any size up to 100 MB. We extract text, OCR if scanned, then summarise." },
+      { t: "Pick a depth", d: "TL;DR (1 paragraph) / Standard (5-7 paragraphs) / Detailed (15+ paragraphs) / Bullet Points." },
+      { t: "Read with page refs", d: "Every claim cites the page it came from. Cross-check anything that surprises you." },
+    ],
+    faq: [
+      { q: "How long does it take?", a: "10-30 seconds for most documents. Longer documents (200+ pages) may take ~60 seconds — the AI processes them in chunks." },
+      { q: "Will the summary preserve numbers exactly?", a: "Yes — explicitly. We instruct the model to quote effect sizes, percentages, p-values verbatim. Misreporting numbers in summaries is the #1 risk; we prioritise accuracy here." },
+      { q: "Does it editorialise?", a: "No. Neutral prose, no superlatives. We suppress 'critical', 'remarkable', 'important' unless the source uses those exact words. Plain summary, not marketing." },
+      { q: "Can I summarise multiple PDFs together?", a: "Single PDF per call. For comparing 2 PDFs, use AI Compare. For multi-PDF Q&A, use Multi-PDF Chat (on the roadmap)." },
+    ],
+    related: ["ai-summarize", "ai-tldr", "ai-key-points", "ai-study-notes"],
+  },
+
+  "ai-pdf-ocr": {
+    tool: "ai-ocr",
+    h1: "AI PDF OCR — handwriting, multilingual, low-quality scans",
+    sub: "Drop a scanned PDF. We OCR every page — including handwriting and Indian-language scripts (Devanagari, Tamil, Telugu, Bengali) — and return clean searchable text. ~2 credits / page.",
+    canonical: "/ai-pdf-ocr",
+    howTo: [
+      { t: "Drop a scanned PDF", d: "Up to 50 pages. Older / low-resolution scans, handwritten notes, multilingual documents — all supported." },
+      { t: "We OCR + clean", d: "AI Vision model (not legacy Tesseract) — handles handwriting better, recovers from lower DPI, multilingual." },
+      { t: "Get text + searchable PDF option", d: "Markdown text by default. Want the original PDF made searchable? Use Make PDF Searchable instead." },
+    ],
+    faq: [
+      { q: "How does this differ from Tesseract?", a: "Tesseract is rule-based — fast on clean printed text, struggles on handwriting and Indian scripts. We use a vision-language model that handles imperfect scans, mixed scripts, and handwriting much better. Higher accuracy, slightly higher cost." },
+      { q: "Which Indian languages are supported?", a: "Devanagari (Hindi, Marathi, Sanskrit), Tamil, Telugu, Kannada, Malayalam, Bengali, Gujarati, Punjabi (Gurmukhi), Odia, Assamese, Urdu (Nastaliq). Best results on machine-printed text; handwritten Indic is harder." },
+      { q: "Can I get a searchable PDF instead of just text?", a: "Yes — use the Make PDF Searchable tool, which OCRs each page AND overlays the recognised text invisibly on the original visual, so Ctrl-F finds matches in the original layout." },
+      { q: "What's the page limit?", a: "50 pages per call. For longer documents, split first (use our free Split PDF tool), OCR each chunk, then combine." },
+    ],
+    related: ["ai-ocr", "ai-searchable-pdf", "pdf-to-text", "ai-translate"],
+  },
+
+  "compare-pdfs": {
+    tool: "ai-compare",
+    h1: "Compare PDFs — side-by-side diff with AI severity analysis",
+    sub: "Upload two versions of a document. We surface what changed, classify changes by severity (added clause / deleted clause / numeric change / wording shift), and flag legally / financially material edits. 15 credits.",
+    canonical: "/compare-pdfs",
+    howTo: [
+      { t: "Upload two PDFs", d: "Original + modified. Same document, different revisions — contracts, agreements, reports, policies." },
+      { t: "We diff with context", d: "Not just textual diff: AI classifies each change by severity (cosmetic / wording / material / legal-impact)." },
+      { t: "Read the diff narrative", d: "Section-by-section narrative with the most material changes surfaced first, plus a flat list of all changes for completeness." },
+    ],
+    faq: [
+      { q: "Will it work for redlined Word→PDF exports?", a: "Yes. Track-changes PDFs export clean → we diff against the older clean version and surface the same changes a Word redline would, but with severity classification on top." },
+      { q: "What counts as a 'material' change?", a: "Numeric changes (price, dates, payment terms, deposit amounts), party changes, jurisdiction shifts, indemnity caps, termination notice periods. Cosmetic / formatting changes are surfaced separately at the end." },
+      { q: "Can it detect missing clauses?", a: "Yes — if v2 deletes a clause from v1, we flag it as a deletion with the original wording shown for context." },
+      { q: "Privacy?", a: "By default both PDFs delete in 60 minutes. For sensitive contracts, Pro tier offers shorter retention windows + audit log." },
+    ],
+    related: ["ai-compare", "ai-summarize", "ai-rewrite", "ai-redact"],
+  },
+
+  "ai-redact-pdf": {
+    tool: "ai-redact",
+    h1: "AI Redact PDF — auto-detect PII and black it out",
+    sub: "Drop a PDF. We auto-detect names, emails, phone numbers, PAN, Aadhaar, account numbers, addresses, and let you confirm before redacting. Output is permanently sanitised. 2 credits / page.",
+    canonical: "/ai-redact-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Contracts, court orders, medical records, bank statements — anything you need to share but with PII removed." },
+      { t: "We detect PII", d: "Names, emails, phones, PAN (X-style mask), Aadhaar (last 4 digits), account numbers, addresses. Confirm before applying." },
+      { t: "Download redacted PDF", d: "PII is permanently rasterised over — recipient cannot copy/paste or extract the underlying text." },
+    ],
+    faq: [
+      { q: "Is the redaction reversible?", a: "No. We rasterise the redacted regions, so the underlying text is destroyed in the output PDF. (Don't confuse this with white-rectangle 'redaction' that some PDF tools do — those leave the text in the content stream and a determined recipient can recover it. We don't.)" },
+      { q: "Will it catch Indian-specific PII?", a: "Yes — PAN format (5 letters + 4 digits + 1 letter), Aadhaar (12 digits, formatted XXXX-XXXX-XXXX), GSTIN (15 chars), bank account numbers (8-18 digits). All detected and offered for redaction." },
+      { q: "What about photos / signatures?", a: "Embedded images aren't auto-redacted. Use our manual Free Redact tool to draw rectangles over images. Auto-detection of faces / signatures is on the roadmap." },
+      { q: "Can I keep some PII visible?", a: "Yes — confirmation step lets you uncheck specific PII types or specific instances before applying. E.g., keep the company name visible while redacting individual employee names." },
+    ],
+    related: ["ai-redact", "redact-free", "protect", "ai-summarize"],
+  },
+
+  "gst-invoice-extractor": {
+    tool: "ai-gst-invoice",
+    h1: "GST Invoice Extractor — PDF to GSTR-1 / 2B fields",
+    sub: "Drop a stack of GST invoices (B2B / B2C / debit notes / credit notes). We extract every field needed for GSTR-1 / GSTR-2B reconciliation. 25 credits / invoice.",
+    canonical: "/gst-invoice-extractor",
+    howTo: [
+      { t: "Drop the invoice PDF", d: "Single invoice or batch (concatenated). B2B, B2C, B2C-Large, Export, Debit Note, Credit Note — all formats." },
+      { t: "We extract GSTR fields", d: "Invoice no / date / supplier GSTIN / recipient GSTIN / place of supply / HSN / SAC / taxable value / IGST / CGST / SGST / cess / total. Validates GSTIN format." },
+      { t: "Export to GSTR-ready CSV", d: "Direct upload to your accountant's GSTR-1 prep tool. Reconcile against GSTR-2B for ITC claims." },
+    ],
+    faq: [
+      { q: "Does it validate GSTIN format?", a: "Yes — checks the 15-character format (state code + PAN + entity number + Z + check digit). Surfaces invalid GSTINs as risk flags so you can verify with the supplier before claiming ITC." },
+      { q: "What about handwritten invoices?", a: "Smaller suppliers still use handwritten invoices. AI OCR reads them but accuracy depends on legibility. For ITC claims, always cross-verify total GST amount against the GSTR-2B." },
+      { q: "Bulk processing?", a: "Single invoice per credit charge right now. For batch (50+ invoices), Pro tier offers bulk-upload with one-click processing." },
+      { q: "ITC reconciliation?", a: "We extract the invoice → comparing against your GSTR-2B (which you download from the GST portal) tells you matched / unmatched / unclaimed ITC. The Reconciler tool (on the roadmap) will do this comparison automatically." },
+    ],
+    related: ["ai-gst-invoice", "invoice-generator", "ai-bank-statement", "ai-balance-sheet"],
+  },
+
+  "multi-bank-statement-merger": {
+    tool: "ai-multi-bank",
+    h1: "Multi-Bank Statement Merger — SBI + HDFC + ICICI in one consolidated view",
+    sub: "Drop a PDF that concatenates statements from multiple Indian banks. We parse each bank's transactions separately, then merge into a consolidated category-level summary. 20 credits.",
+    canonical: "/multi-bank-statement-merger",
+    howTo: [
+      { t: "Concatenate your bank statements", d: "Use our free Merge PDF tool to combine statements from SBI / HDFC / ICICI / Axis / Kotak / etc. into one PDF." },
+      { t: "Drop the merged PDF", d: "We auto-detect which bank each statement is from based on layout + transaction-narration patterns." },
+      { t: "Get per-bank + consolidated view", d: "Each bank's transactions parsed separately. Then a consolidated cross-bank category breakdown — total spend by Food / Travel / EMI / etc." },
+    ],
+    faq: [
+      { q: "How does it tell which transaction came from which bank?", a: "Layout fingerprinting + narration patterns. SBI uses 'TRANSFER FROM' formatting; HDFC uses 'EFT-CR-'; ICICI uses 'BIL/'. Plus header sections that explicitly identify the bank. We'll get the bank attribution right ~95% of the time on standard statements." },
+      { q: "Why merge multiple banks instead of running each separately?", a: "Cross-bank category view. If you have ₹50K in Food spend across 3 cards on 3 banks, you can't see that without merging. Saves an analyst hour per consolidation." },
+      { q: "Are inter-bank transfers double-counted?", a: "We attempt to detect them — same date / amount / narration mentioning 'TRANSFER' or 'NEFT to <self>'. Surfaced separately so you don't double-count yourself." },
+      { q: "Privacy?", a: "60-minute retention default. For accountant / CA workflows, Pro tier offers longer retention + access logs." },
+    ],
+    related: ["ai-multi-bank", "ai-bank-statement", "ai-credit-card", "ai-expense-report"],
+  },
+
+  "discharge-summary-explainer": {
+    tool: "ai-discharge",
+    h1: "Discharge Summary Explainer — plain Indian English for patients + family",
+    sub: "Drop a hospital discharge summary. We rewrite the diagnoses, medications, follow-up plan, and warning signs in plain language. 10 credits.",
+    canonical: "/discharge-summary-explainer",
+    howTo: [
+      { t: "Drop the discharge PDF", d: "From any Indian hospital — multi-speciality, smaller nursing home, government hospital." },
+      { t: "We rewrite in plain English", d: "Diagnosis (medical Latin → everyday words), treatment given, medications (with dosing in 1-0-1 / BD / TDS familiar terms), follow-up plan, warning signs." },
+      { t: "Share with family", d: "Output is patient + family friendly so caregivers (often elderly parents or non-doctor relatives) actually understand the post-discharge instructions." },
+    ],
+    faq: [
+      { q: "Is this medical advice?", a: "No. It's a language translation aid. We rewrite what the doctor wrote — we don't add interpretation, we don't change dosages, we don't suggest skipping medications. Always discuss the discharge with the prescribing doctor if anything is unclear." },
+      { q: "Does it explain medications?", a: "Yes — in plain language. 'Tab Pan-D 40 mg 1-0-0' becomes 'Pantoprazole 40 mg, one tablet in the morning before food, for stomach acid'. Indian prescribing shorthand pre-encoded." },
+      { q: "What about warning signs to watch for?", a: "Surfaced prominently — when to rush back to the hospital, when to call the doctor, when something is normal vs an emergency. Critical for post-surgery / post-cardiac / post-stroke discharges." },
+      { q: "Will it explain insurance / payment items?", a: "Discharge summaries are clinical, not financial. For the bill itself use Medical Bill Analyzer — it parses the itemised charges and surfaces IRDAI-reimbursable items." },
+    ],
+    related: ["ai-discharge", "ai-medical-bill", "ai-prescription", "ai-blood-test"],
+  },
+
+  "loan-application-bundler": {
+    tool: "ai-loan-bundle",
+    h1: "Loan Application Document Bundler Audit — checklist + missing items",
+    sub: "Drop your stack of loan-application docs (concatenated). We detect the loan type, audit against the lender's typical checklist, surface missing items and eligibility-affecting flags. 15 credits.",
+    canonical: "/loan-application-bundler",
+    howTo: [
+      { t: "Combine your loan docs", d: "Use our free Merge PDF tool to combine PAN + Aadhaar + salary slips + bank statements + ITR + property docs into one PDF." },
+      { t: "Drop the bundle", d: "We detect the loan type (home / personal / business / car / education) from the document mix." },
+      { t: "Get the audit", d: "Documents present / partial / missing per the typical lender checklist + income snapshot + eligibility-affecting issues + concrete next steps." },
+    ],
+    faq: [
+      { q: "Will banks accept my loan if everything's green?", a: "No. This is a checklist completeness aid, not pre-approval. Final eligibility is the lender's call based on your CIBIL score, FOIR, employment stability, and credit appetite. We surface what's missing so you don't waste a sanction-day with incomplete docs." },
+      { q: "How does it know the lender's checklist?", a: "We've encoded the typical Indian retail lending checklist — same set used by HDFC / SBI / ICICI / Axis / Bajaj / etc. for home / personal / business loans. Specific lender exceptions (e.g., NBFCs that don't ask for Form 26AS) need verification with the lender directly." },
+      { q: "Will it spot bounced EMIs / salary credit gaps in the bank statement?", a: "Yes — those are the eligibility-affecting flags. Bounced EMIs in the last 12 months are a major red flag for any new sanction." },
+      { q: "Privacy?", a: "Sensitive financials are uploaded — 60-minute deletion default. For DSAs / brokers handling multiple clients, Pro tier offers per-client folders + audit logs." },
+    ],
+    related: ["ai-loan-bundle", "ai-bank-statement", "ai-itr-form16", "ai-salary-slip"],
+  },
+
+  "pdf-to-flashcards": {
+    tool: "ai-flashcards",
+    h1: "PDF to Flashcards — 10-30 Anki-compatible cards from any document",
+    sub: "Drop a textbook chapter, lecture notes, or study material. We generate 10-30 question / answer flashcards with difficulty levels. Anki-compatible export. 10 credits.",
+    canonical: "/pdf-to-flashcards",
+    howTo: [
+      { t: "Drop the PDF", d: "NCERT chapter, lecture handout, exam syllabus, research paper — any factual document with content worth retaining." },
+      { t: "We generate Q/A pairs", d: "10-30 cards depending on document length. Each card has a question, an answer, and a difficulty level (easy / medium / hard)." },
+      { t: "Import to Anki / Quizlet", d: "JSON export is compatible with Anki's CSV-import and Quizlet's bulk-import. Or just read them in-browser." },
+    ],
+    faq: [
+      { q: "Are the questions exam-style?", a: "Yes for school / college / competitive content — we mix factual recall, definitions, and application questions in proportions that match exam patterns. Specific exam targeting (TNPSC / UPSC / JEE) is better via the dedicated exam-paper analyzers." },
+      { q: "What difficulty mix?", a: "~40% easy (recall facts), ~40% medium (apply concepts), ~20% hard (analyse / compare). Adjust the balance manually if you're using cards for early-stage vs final revision." },
+      { q: "Will it work for non-English content?", a: "English best. For Indian-language content, AI Translate first, then generate flashcards. Native Indic-language flashcard generation is on the roadmap." },
+      { q: "Anki-compatible export format?", a: "JSON output mirrors Anki's question/answer/tag/difficulty schema. Save the JSON, run a 5-line Python script (or use Anki's CSV-import after a converter), and your deck is ready." },
+    ],
+    related: ["ai-flashcards", "ai-quiz", "ai-mindmap", "ai-study-notes"],
   },
 };
 
