@@ -40,7 +40,10 @@ type Depth =
   | "newsletter"
   | "video-script"
   | "ats-resume"
-  | "action-items";
+  | "action-items"
+  | "gst-invoice"
+  | "rental"
+  | "syllabus";
 
 type Result = {
   fileId?: string;
@@ -613,6 +616,54 @@ export function ActionItemsPdfTool() {
       successTitle="Action items extracted"
       pricingBlurb="Markdown table of actionable TODOs — Task / Owner / Due / Priority / Page. Owners and deadlines blank when not in source. 3 credits per PDF."
       relatedHref={{ href: "/tool/extract-dates", label: "Extract Dates → Calendar (for deadlines)" }}
+    />
+  );
+}
+
+export function GstInvoiceTool() {
+  return (
+    <SummarizeVariantTool
+      depth="gst-invoice"
+      toolId="ai-gst-invoice"
+      callbackUrl="/tool/ai-gst-invoice"
+      prompt="Drop a GST invoice PDF to extract GSTR-2-ready fields"
+      runLabel="Extract invoice"
+      busyLabel="Extracting…"
+      successTitle="GST invoice extracted"
+      pricingBlurb="Tier 3 §3.1 Finance: Invoice header / Supplier / Buyer / Line items / Totals — formatted for GSTR-2 filing. 25 credits per invoice."
+      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
+    />
+  );
+}
+
+export function RentalAgreementTool() {
+  return (
+    <SummarizeVariantTool
+      depth="rental"
+      toolId="ai-rental"
+      callbackUrl="/tool/ai-rental"
+      prompt="Drop a rental agreement PDF to flag risks and missing clauses"
+      runLabel="Analyse agreement"
+      busyLabel="Analysing…"
+      successTitle="Rental analysis ready"
+      pricingBlurb="Tier 3 §3.2 Legal: Critical issues + missing standard clauses + negotiation points + state-specific notes (Karnataka / Maharashtra / Delhi / Tamil Nadu). 15 credits. Not legal advice."
+      relatedHref={{ href: "/tool/ai-summarize", label: "AI Summarize (general docs)" }}
+    />
+  );
+}
+
+export function SyllabusStudyPlanTool() {
+  return (
+    <SummarizeVariantTool
+      depth="syllabus"
+      toolId="ai-syllabus"
+      callbackUrl="/tool/ai-syllabus"
+      prompt="Drop a syllabus PDF to generate a week-by-week study plan"
+      runLabel="Build study plan"
+      busyLabel="Planning…"
+      successTitle="Study plan ready"
+      pricingBlurb="Tier 3 §3.3 Education: Topic map + 12-week schedule with practice checkpoints + final-revision strategy. Tuned for TNPSC / UPSC / JEE / NEET / NCERT / university syllabi. 20 credits."
+      relatedHref={{ href: "/tool/ai-study-notes", label: "PDF to Study Notes (per-doc deep notes)" }}
     />
   );
 }

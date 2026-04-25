@@ -71,6 +71,9 @@ import {
   VideoScriptPdfTool,
   AtsResumeTool,
   ActionItemsPdfTool,
+  GstInvoiceTool,
+  RentalAgreementTool,
+  SyllabusStudyPlanTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
 import { BankStatementTool } from "@/components/tools/BankStatementTool";
@@ -162,6 +165,9 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-action-items",
   "ai-bank-statement",
   "ai-blood-test",
+  "ai-gst-invoice",
+  "ai-rental",
+  "ai-syllabus",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -443,6 +449,12 @@ function ToolRunner({ id }: { id: string }) {
       return <BankStatementTool />;
     case "ai-blood-test":
       return <BloodTestTool />;
+    case "ai-gst-invoice":
+      return <GstInvoiceTool />;
+    case "ai-rental":
+      return <RentalAgreementTool />;
+    case "ai-syllabus":
+      return <SyllabusStudyPlanTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

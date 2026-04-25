@@ -124,7 +124,14 @@ export type SummarizeDepth =
   //   bank-statement §3.1 P0 — JSON transactions + CSV (30c)
   //   blood-test     §3.4 P0 — lab values + trend notes (15c)
   | "bank-statement"
-  | "blood-test";
+  | "blood-test"
+  // Task #64 — three more Tier 3 P0 wedges:
+  //   gst-invoice §3.1 — invoice-to-GSTR fields (25c)
+  //   rental      §3.2 — rental agreement risks + missing clauses (15c)
+  //   syllabus    §3.3 — syllabus → week-by-week study plan (20c)
+  | "gst-invoice"
+  | "rental"
+  | "syllabus";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -821,6 +828,71 @@ function buildSystemPrompt(opts: {
           "unclear. Works for SBI / HDFC / ICICI / Axis / Kotak " +
           "/ Yes / IDFC and most NBFCs."
         );
+      case "gst-invoice":
+        // §3.1 GST Invoice Extractor. Extracts the fields a CA /
+        // SME needs to file GSTR — supplier/buyer GSTINs, invoice
+        // metadata, line items, tax breakdown.
+        return (
+          "Extract this GST invoice into a GSTR-2-ready Markdown " +
+          "report. Produce these H2 sections in order: " +
+          "`## Invoice Header` (table with: Invoice No, Date, " +
+          "Place of Supply, Reverse Charge Y/N). `## Supplier` " +
+          "(table: Name, GSTIN, Address, State Code). `## Buyer` " +
+          "(table: Name, GSTIN, Address, State Code). " +
+          "`## Line Items` (table with columns: HSN/SAC, " +
+          "Description, Qty, Unit, Rate, Taxable Value, " +
+          "CGST %, CGST Amt, SGST %, SGST Amt, IGST %, IGST Amt). " +
+          "`## Totals` (Taxable Value, Total CGST, Total SGST, " +
+          "Total IGST, Round-off, Invoice Total). Do NOT invent " +
+          "GSTINs or amounts — leave blank if not in the source. " +
+          "If this is not a GST invoice, render \"_Not a GST " +
+          "invoice._\" with one line stating what the document " +
+          "appears to be."
+        );
+      case "rental":
+        // §3.2 Rental Agreement Analyzer. Indian-context risks
+        // and missing clauses. NOT legal advice; surfaced in FAQ.
+        return (
+          "Analyse this rental agreement for risks and missing " +
+          "clauses. Produce these H2 sections: `## Summary` " +
+          "(one paragraph: parties, term, rent, deposit, " +
+          "city/state). `## Critical Issues` (bullets with quoted " +
+          "text + risk explanation — unfair lock-in, biased " +
+          "deposit-forfeit, vague maintenance obligations, " +
+          "missing notice period, etc.). `## Missing Standard " +
+          "Clauses` (typical Indian rental clauses absent here — " +
+          "Maintenance & Repairs, Utilities, Force Majeure, " +
+          "Renewal Terms, Termination, Dispute Resolution, " +
+          "Stamp Duty / Registration, Lock-in, Notice Period). " +
+          "`## Negotiation Points` (3–5 specific suggestions a " +
+          "tenant or landlord should ask for). `## Standard " +
+          "Practice Notes` (Indian rental norms relevant to this " +
+          "agreement — Karnataka / Maharashtra / Delhi / Tamil " +
+          "Nadu specifics if state is identifiable). End with a " +
+          "one-line disclaimer that this is not legal advice."
+        );
+      case "syllabus":
+        // §3.3 Syllabus → Study Plan. Indian student / aspirant
+        // workflow. Generates week-by-week schedule with practice
+        // checkpoints.
+        return (
+          "Convert this syllabus into a structured study plan. " +
+          "Produce: `## Overview` (3–4 sentence framing — " +
+          "subject area, scope, and how the topics relate). " +
+          "`## Topic Map` (flat bulleted list of every topic / " +
+          "subtopic in source order, page-cited where possible). " +
+          "`## Recommended Study Plan` (a Markdown table with " +
+          "columns: Week, Topics, Hours, Practice Checkpoint). " +
+          "Default to 12 weeks at 8 hours/week unless the " +
+          "syllabus implies otherwise; adjust if obviously a " +
+          "shorter course (e.g. a 6-week boot camp). Practice " +
+          "Checkpoint = a concrete activity (mock test, problem " +
+          "set, summary essay). `## Final Revision Strategy` " +
+          "(2–3 paragraphs on how to use the last week before " +
+          "the exam). Optimised for Indian competitive-exam / " +
+          "school / college-course syllabi (TNPSC, UPSC, JEE, " +
+          "NEET, NCERT, university)."
+        );
       case "blood-test":
         // §3.4 Blood Test Report Analyzer. Extracts lab values
         // + flags out-of-range with reference ranges. NOT a
@@ -948,6 +1020,12 @@ function buildUserPrompt(opts: {
         return "Parse this bank statement";
       case "blood-test":
         return "Parse this lab report";
+      case "gst-invoice":
+        return "Extract this GST invoice";
+      case "rental":
+        return "Analyse this rental agreement";
+      case "syllabus":
+        return "Build a study plan from this syllabus";
       case "standard":
       case "detailed":
       default:
