@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { FaqItem } from "@/components/marketing/FaqItem";
+import { ReviewSection } from "@/components/marketing/ReviewSection";
 import { toolById, TOOL_STATS } from "@/lib/tools";
 import type { SeoPageData } from "@/lib/seo-pages";
 
@@ -431,6 +432,9 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
           </article>
         </section>
       )}
+
+      {/* ===== Reviews (SEO Ship #7) ===== */}
+      <ReviewSection topic={tool.id} />
 
       {/* ===== FAQ ===== */}
       <section style={{ padding: "80px 0", background: "var(--bg-1)" }}>

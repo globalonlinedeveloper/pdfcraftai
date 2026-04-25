@@ -130,6 +130,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="" />
         {/*
+          SEO Ship #6 (2026-04-25): preconnect to AI provider endpoints
+          so the TLS handshake is warm by the time a paid AI tool fires
+          its first request. Cuts ~150-300ms off TTFB on AI ops, which
+          shows up directly in Largest Contentful Paint for tool pages
+          where the model output is the LCP element.
+          We use dns-prefetch (cheap) for both, and preconnect only on
+          the OpenAI host since Anthropic doesn't currently take user
+          requests directly from the browser (we route via our API).
+        */}
+        <link rel="dns-prefetch" href="https://api.openai.com" />
+        <link rel="dns-prefetch" href="https://api.anthropic.com" />
+        <link rel="preconnect" href="https://api.openai.com" crossOrigin="" />
+        {/*
+          Preload the icon SVG used in nav. It's the only above-the-fold
+          image on most pages; preload removes it from the critical path.
+        */}
+        <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml" />
+        {/*
           Site-wide JSON-LD (Task #72). Two types in one block:
           - Organization: identifies the brand entity to Google so it
             can build a Knowledge Panel and connect signals across
