@@ -95,7 +95,18 @@ export type SeoPageSlug =
   | "multi-bank-statement-merger"
   | "discharge-summary-explainer"
   | "loan-application-bundler"
-  | "pdf-to-flashcards";
+  | "pdf-to-flashcards"
+  // Task #85 — 10 more SEO landings completing Tier 3 wedge coverage.
+  | "court-judgment-summarizer"
+  | "partnership-deed-analyzer"
+  | "builder-agreement-analyzer"
+  | "balance-sheet-extractor"
+  | "demat-cas-statement-parser"
+  | "insurance-policy-analyzer"
+  | "scan-report-explainer"
+  | "encumbrance-certificate-parser"
+  | "expense-report-builder"
+  | "ncert-chapter-summarizer";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -1842,6 +1853,200 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Anki-compatible export format?", a: "JSON output mirrors Anki's question/answer/tag/difficulty schema. Save the JSON, run a 5-line Python script (or use Anki's CSV-import after a converter), and your deck is ready." },
     ],
     related: ["ai-flashcards", "ai-quiz", "ai-mindmap", "ai-study-notes"],
+  },
+
+  // ---------------------------------------------------------------
+  // Task #85 — 10 more SEO landings completing Tier 3 wedge coverage.
+  // ---------------------------------------------------------------
+
+  "court-judgment-summarizer": {
+    tool: "ai-court-order",
+    h1: "Court Judgment Summarizer — citation, ratio decidendi, implications",
+    sub: "Drop an Indian court order or judgment. We extract citation, parties, issues framed, held/operative directions, ratio decidendi, reasoning, cited authorities, and practical implications. 20 credits.",
+    canonical: "/court-judgment-summarizer",
+    howTo: [
+      { t: "Drop the judgment", d: "Supreme Court, High Court, NCLT, NCDRC, ITAT, CESTAT, district court — any reportable Indian decision." },
+      { t: "We structure the analysis", d: "Citation + parties + issues + held + ratio decidendi + reasoning chain with paragraph numbers + cited authorities." },
+      { t: "Get the practical takeaway", d: "What this means for similarly-placed litigants, lawyers, or authorities — 3-4 bullets." },
+    ],
+    faq: [
+      { q: "Will it identify the ratio decidendi correctly?", a: "Mostly yes. We surface the principle of law on which the decision rests, paraphrased AND quoted from the para that lays it down. For complex multi-issue judgments, the model occasionally collapses overlapping ratios — for citation work, always cross-check the original judgment." },
+      { q: "Does it identify obiter dicta?", a: "Surfaced separately when present. The court's incidental observations are noted but flagged as not part of the binding ratio." },
+      { q: "Will it handle judgments in vernacular Indian languages?", a: "English best. Most reportable judgments are in English. For state-court vernacular judgments (Tamil Nadu HC sometimes publishes Tamil), AI Translate first, then summarise." },
+      { q: "Is this legal advice?", a: "No. It's a research aid for lawyers, paralegals, and law students. For citation work, always read the full judgment." },
+    ],
+    related: ["ai-court-order", "ai-nda", "ai-employment", "ai-rental"],
+  },
+
+  "partnership-deed-analyzer": {
+    tool: "ai-partnership-deed",
+    h1: "Partnership Deed Analyzer — Indian partnership + LLP audit",
+    sub: "Drop a partnership / LLP deed. We extract partners, capital contributions, profit-share, decision-making rules + flag risks (no exit clause, indefinite lock-in, missing IP/goodwill, no arbitration). 20 credits.",
+    canonical: "/partnership-deed-analyzer",
+    howTo: [
+      { t: "Drop the deed", d: "Indian Partnership Act 1932 partnership OR LLP Act 2008 LLP. Both supported." },
+      { t: "We extract structure", d: "Partners table (name + role + capital + profit share + drawings) + business object + decision-making + admission/retirement/death rules." },
+      { t: "Get risk flags + missing clauses", d: "Vague decision-making, no goodwill valuation, missing IP / succession / arbitration clauses surfaced as severity-rated flags." },
+    ],
+    faq: [
+      { q: "What's the most common red flag in Indian partnership deeds?", a: "Profit share that doesn't match capital share, without justification. If A puts in 60% of capital but takes only 40% of profit (and no clear reason), that's an audit flag — usually due to one partner contributing services not capital. Should be documented explicitly." },
+      { q: "What are the 'missing standard clauses' to watch for?", a: "Arbitration / dispute resolution, IP / goodwill ownership on dissolution, succession on partner death (without it the firm dissolves under the Indian Partnership Act 1932), books-of-account audit cadence, non-compete on retirement." },
+      { q: "Does it know LLP-specific concerns?", a: "Yes. LLPs have different liability + profit-share + RoC compliance requirements vs traditional partnerships. We flag LLP-specific issues separately when the deed is an LLP agreement." },
+      { q: "Is this legal advice?", a: "No — audit aid. For high-stakes partnerships (large capital, multi-partner, succession concerns), engage a lawyer." },
+    ],
+    related: ["ai-partnership-deed", "ai-employment", "ai-nda", "ai-balance-sheet"],
+  },
+
+  "builder-agreement-analyzer": {
+    tool: "ai-builder-agreement",
+    h1: "Builder Agreement Red-Flag Detector — under-construction property audit",
+    sub: "Drop your builder-buyer agreement (under-construction apartment / villa / plot). We surface pricing red flags, asymmetric delay penalties, RERA Act 2016 protection gaps, and negotiation points. 30 credits.",
+    canonical: "/builder-agreement-analyzer",
+    howTo: [
+      { t: "Drop the agreement PDF", d: "Pre-signing or already signed. Apartment, villa, or plot. Any state — RERA-registered or not (we'll flag if not)." },
+      { t: "We audit pricing + dates + risk", d: "Carpet vs super-built-up exposure, possession date + grace clause, escalation, parking + amenities + maintenance deposit + GST." },
+      { t: "Get red flags + RERA gaps", d: "Asymmetric delay penalty, mandatory club, vague force-majeure, no exit clause + which RERA Act 2016 protections are honoured vs missing." },
+    ],
+    faq: [
+      { q: "Why is 'pricing on super-built-up' a red flag?", a: "RERA Act 2016 mandates pricing must be based on carpet area (the actual usable space). Builders quote on super-built-up (which includes corridors, lobbies, shaft) making the per-sqft price look lower than the real cost per usable sqft. We flag any agreement that prices on super-built-up — you'll pay 25-30% more per usable sqft than the headline rate suggests." },
+      { q: "What's an 'asymmetric delay penalty'?", a: "Common in builder contracts: tiny penalty if the builder delays possession (e.g., ₹5/sqft/month) but huge penalty if you delay payment (e.g., 18% interest p.a.). RERA Act 2016 mandates symmetric delay penalties; we flag asymmetric ones as red flags worth pushing back on." },
+      { q: "Is this legal advice?", a: "No. It's an audit aid for buyers. For high-stakes purchases (₹50L+ properties), engage a property lawyer before signing." },
+      { q: "Does it work for plot purchases?", a: "Yes — same parser. Plot agreements have less complexity than apartment agreements but the RERA + chain-of-title checks still apply." },
+    ],
+    related: ["ai-builder-agreement", "ai-rera", "ai-sale-deed", "ai-property"],
+  },
+
+  "balance-sheet-extractor": {
+    tool: "ai-balance-sheet",
+    h1: "Balance Sheet & P&L Extractor — Ind AS / IFRS / Indian GAAP",
+    sub: "Drop an audited annual report or financial statement. We extract balance sheet + P&L + cash flow into structured JSON with computed key ratios (current, D/E, ROE, ROA, interest coverage). 25 credits.",
+    canonical: "/balance-sheet-extractor",
+    howTo: [
+      { t: "Drop the financial statement", d: "Audited annual report (standalone or consolidated), management report, or quarterly result. Ind AS, IFRS, or Indian GAAP." },
+      { t: "We extract line-by-line", d: "Balance sheet (assets, equity & liabilities) + P&L (revenue, expenses, PAT) + cash flow + EPS. Original line names preserved." },
+      { t: "Get computed ratios", d: "Current ratio, D/E, ROE, ROA, interest coverage — calculated from extracted data, null if any input is missing rather than guessed." },
+    ],
+    faq: [
+      { q: "Why preserve original line-item names?", a: "Different companies' schedules differ — 'Other Operating Income' in one company is 'Other Income' in another. If we normalised away these company-specific lines, you'd lose the granularity needed for cross-year or peer comparison. We keep the names verbatim for analyst use." },
+      { q: "Does it handle consolidated vs standalone?", a: "Yes — period_type field flags which. Most listed Indian companies report both; pick the one you need (consolidated for group view, standalone for parent-only)." },
+      { q: "Will it compute industry-specific ratios?", a: "Generic financial ratios only. For industry-specific metrics (NIM for banks, premium-to-equity for insurance, ARPU for telecom), you'll need to compute manually from the extracted line items — but the data is there in structured JSON." },
+      { q: "Privacy?", a: "Public companies' filings are already public. For private company financials, 60-minute deletion default applies." },
+    ],
+    related: ["ai-balance-sheet", "ai-bank-statement", "ai-itr-form16", "ai-mutual-fund"],
+  },
+
+  "demat-cas-statement-parser": {
+    tool: "ai-demat",
+    h1: "Demat / CAS Statement Parser — NSDL + CDSL holdings to JSON",
+    sub: "Drop your NSDL or CDSL Consolidated Account Statement (CAS) or demat holdings statement. We parse holdings + transactions + corporate actions into structured JSON. 15 credits.",
+    canonical: "/demat-cas-statement-parser",
+    howTo: [
+      { t: "Get a CAS from your DP", d: "Free monthly statement from NSDL or CDSL covering all your demat holdings across brokers (Zerodha, Groww, ICICIDirect, HDFC Sec, etc.)." },
+      { t: "Drop the PDF", d: "We auto-detect NSDL vs CDSL format and parse holdings + transactions + corporate actions." },
+      { t: "Get structured JSON", d: "Equity / MF / bond / ETF / SGB / REIT / InvIT classification + asset-class summary + corporate actions (dividend, bonus, split, IPO allots, demerger, rights)." },
+    ],
+    faq: [
+      { q: "What's the difference between NSDL and CDSL?", a: "Two depositories operating in parallel — most retail investors are on one, some on both via different brokers. Statement layouts differ but our parser handles both." },
+      { q: "Will it catch corporate actions?", a: "Yes — bonuses, splits, demergers, rights issues, IPO allotments, mutual fund switches, dividend payouts. Surfaced separately from regular buy/sell transactions." },
+      { q: "Does it compute capital gains?", a: "We extract the data but don't compute gains directly — for tax filing, use the ITR / Form 16 Analyzer along with this. Mutual fund LTCG vs STCG calculation specifically benefits from the Mutual Fund Statement Parser tool which preserves cost-basis information more granularly." },
+      { q: "Is the structured JSON downloadable?", a: "Yes — for downstream use (portfolio dashboards, accountant import). Format follows standard demat-statement schema for easy integration." },
+    ],
+    related: ["ai-demat", "ai-mutual-fund", "ai-bank-statement", "ai-itr-form16"],
+  },
+
+  "insurance-policy-analyzer": {
+    tool: "ai-insurance",
+    h1: "Insurance Policy Analyzer — health, life, motor, home, travel, term",
+    sub: "Drop your Indian insurance policy. We surface coverage, premiums, exclusions, waiting periods, claim process, renewal/portability, and risk flags (room-rent capping, sub-limits, missing day-care list). 20 credits.",
+    canonical: "/insurance-policy-analyzer",
+    howTo: [
+      { t: "Drop the policy PDF", d: "Health (individual / family floater / group), life, term, motor, home, travel — all parsed." },
+      { t: "We audit coverage + exclusions", d: "Section-by-section benefits + sum-insured + sub-limits + permanent exclusions + waiting periods (PED, specific-disease, initial)." },
+      { t: "Get risk flags + claim process", d: "Severity-rated flags (low room-rent capping, high co-pay, missing day-care list, restoration absent) + cashless network + claim document checklist." },
+    ],
+    faq: [
+      { q: "What's 'room-rent capping' and why does it matter?", a: "Many Indian health policies cap the room-rent eligible for reimbursement (e.g., 1% of sum insured per day). If you take a higher-category room, the proportionate-deduction clause kicks in — every other charge (doctor's fees, investigations, OT charges) is reduced in proportion. Worst-case you can lose 30-50% of your claim. We flag low room-rent capping as high-severity." },
+      { q: "Does it understand IRDAI standard exclusions?", a: "Yes — registration fees, food/attendant charges, diapers, telephone, MRD admin charges are pre-encoded as standard exclusions. Policy-specific exclusions (specific-disease waits, hazardous-activity exclusions) are extracted from the policy itself." },
+      { q: "Will it tell me whether to renew or port?", a: "We surface the data — sum insured used to date, NCB earned, cumulative bonus, renewability guarantee. The renewal vs port decision is yours, but you'll have the inputs." },
+      { q: "Is this insurance advice?", a: "No — parsing aid. For decisions on switching insurers, engage an IRDAI-licensed insurance advisor." },
+    ],
+    related: ["ai-insurance", "ai-medical-bill", "ai-discharge", "ai-blood-test"],
+  },
+
+  "scan-report-explainer": {
+    tool: "ai-scan-report",
+    h1: "MRI / CT / X-Ray Report Explainer — plain Indian English, NOT a diagnosis",
+    sub: "Drop your radiology report. We rewrite the radiologist's findings in plain English, build a glossary of medical terms, list questions to ask your doctor, and flag what the scan does NOT tell you. 20 credits.",
+    canonical: "/scan-report-explainer",
+    howTo: [
+      { t: "Drop the report PDF", d: "MRI / CT / X-ray / Ultrasound / Mammogram / DEXA from any Indian hospital or diagnostic centre." },
+      { t: "We translate the language", d: "Findings rewritten in plain Indian English. Medical Latin glossary built. Patient-friendly questions to ask your doctor." },
+      { t: "Read with the caveat", d: "STRICTLY a language translation aid — NOT a diagnosis. Always discuss with the prescribing doctor." },
+    ],
+    faq: [
+      { q: "Will it tell me whether something is serious?", a: "Only if the radiologist's report explicitly says so. If the report uses words like 'critical', 'emergency', 'urgent', 'see doctor immediately', we surface that in a top callout. We DON'T add severity assessment that isn't already in the report." },
+      { q: "What does 'no acute intracranial abnormality' mean?", a: "Glossary will tell you — typically 'no recent injury or bleeding visible in the brain'. Different scans have their own technical phrases; we translate them into everyday words." },
+      { q: "Why list 'what this does NOT tell you'?", a: "MRI brain doesn't evaluate the spine. Ultrasound abdomen doesn't replace endoscopy. X-ray chest doesn't catch every cancer. Patients often over-extend a normal scan into 'I'm completely healthy' — we surface the scan's limits explicitly." },
+      { q: "Is this medical advice?", a: "ABSOLUTELY NOT. It's a translation aid. We do not interpret findings, do not suggest treatments, do not say what to worry about. Your doctor does that. Use this to come prepared for the post-scan consultation, not to skip it." },
+    ],
+    related: ["ai-scan-report", "ai-blood-test", "ai-discharge", "ai-medical-bill"],
+  },
+
+  "encumbrance-certificate-parser": {
+    tool: "ai-ec",
+    h1: "Encumbrance Certificate (EC) Parser — chronological liens + chain narrative",
+    sub: "Drop an EC issued by an Indian Sub-Registrar's office. We extract every encumbrance into a chronological table, narrate the chain of title, and flag coverage gaps. 15 credits.",
+    canonical: "/encumbrance-certificate-parser",
+    howTo: [
+      { t: "Drop the EC PDF", d: "From any Indian state SRO. Format varies but parser is format-aware." },
+      { t: "We extract chronologically", d: "Date / document number / type (Sale Deed / Mortgage / Settlement / Gift / Lease / Release) / parties / consideration / description." },
+      { t: "Get chain narrative + risk flags", d: "How the title moved through these documents + active mortgages + suspicious quick-flips + broken-chain warnings + coverage gaps for additional ECs to pull." },
+    ],
+    faq: [
+      { q: "How many years of EC do I need for a property purchase?", a: "Banks typically want 30 years for home loan diligence. If your EC only covers 13 years, we'll flag the gap and recommend pulling additional ECs from earlier periods. Some states issue ECs in 13-year tranches." },
+      { q: "What's a 'broken chain'?", a: "When a current sale deed references a parent document that's not produced (or not in the EC's covered period). Banks won't sanction loans on broken-chain properties. We flag it as high-severity." },
+      { q: "Will it tell me the current ownership clearly?", a: "Yes — the chain narrative ends with the current owner per the latest sale deed in the EC. If there's been any post-EC-period transaction, you'll need a fresh EC to capture it." },
+      { q: "Is this legal advice?", a: "No. Audit aid for buyers. For property purchase, your lawyer will pull EC + scrutinise it; we make the scrutiny step faster." },
+    ],
+    related: ["ai-ec", "ai-sale-deed", "ai-property", "ai-rera"],
+  },
+
+  "expense-report-builder": {
+    tool: "ai-expense-report",
+    h1: "Expense Report Builder — bank statement to category × month matrix",
+    sub: "Drop your Indian bank statement. We categorise every transaction (Rent, Groceries, Fuel, EMI, SIPs, Bills, etc.), build a category × month matrix, and show your saving rate. 15 credits.",
+    canonical: "/expense-report-builder",
+    howTo: [
+      { t: "Drop the bank statement", d: "Any Indian bank — SBI, HDFC, ICICI, Axis, Kotak. 3-12 months span works best for monthly trend." },
+      { t: "We categorise + matrix", d: "Indian-aware categories (Rent, EMI, SIPs, UPI Transfers, Bills, Bank Charges) cross-tabulated by month." },
+      { t: "Get insights", d: "Top spend areas, recurring charges (subscriptions / EMI), saving rate (income - expense), actionable bullets." },
+    ],
+    faq: [
+      { q: "How accurate is the categorisation?", a: "Heuristic-good. Common Indian merchants and patterns are recognised — Big Bazaar = groceries, BookMyShow = entertainment, Razorpay-Cred = card-bill payment. Edge cases get tagged as 'Other'. Output is JSON; you can re-categorise in Excel if needed." },
+      { q: "Will it spot recurring subscriptions I forgot?", a: "Yes — same merchant + monthly cadence + similar amount = surfaced as a recurring charge. Helpful for cancelling forgotten OTT, gym, or SaaS subscriptions." },
+      { q: "Saving rate calculation?", a: "(Total credits except refunds) - (Total debits). Doesn't account for credit card spend that hasn't been billed yet, so directionally accurate but not a precise net-worth delta." },
+      { q: "Multi-account?", a: "Single statement per call. For multi-bank consolidated view, use the Multi-Bank Statement Merger." },
+    ],
+    related: ["ai-expense-report", "ai-bank-statement", "ai-multi-bank", "ai-credit-card"],
+  },
+
+  "ncert-chapter-summarizer": {
+    tool: "ai-ncert",
+    h1: "NCERT Chapter Summarizer — exam-ready key concepts + likely questions",
+    sub: "Drop an NCERT textbook chapter. We extract the central idea, key concepts, important diagrams, worked-through examples, likely CBSE / state-board exam questions, and common mistakes. 10 credits.",
+    canonical: "/ncert-chapter-summarizer",
+    howTo: [
+      { t: "Drop the chapter PDF", d: "Any class (6-12), any subject — Maths, Science, Social Science, English, Hindi, regional languages." },
+      { t: "We summarise for exam prep", d: "In-one-sentence idea + key concepts (every term/definition/formula) + diagrams + worked examples." },
+      { t: "Get likely exam questions", d: "5-8 questions in CBSE / state-board paper-writer style with 1/3/5-mark distribution. Plus common student mistakes for revision." },
+    ],
+    faq: [
+      { q: "Is this aligned with the latest NCERT syllabus?", a: "Yes — we're working off the post-2023 NCERT revision. State-board chapters that draw heavily from NCERT (most do) are also handled." },
+      { q: "How accurate are the 'likely exam questions'?", a: "Style-accurate, not crystal-ball-accurate. We mimic the way CBSE / state-board paper-setters typically ask questions on this kind of content. They're useful as practice — but not a substitute for actual previous-year question papers (use Paper Pattern Analyzer for that)." },
+      { q: "Will it help with board-exam prep specifically?", a: "Yes — the 1/3/5-mark distribution mimics CBSE board exam patterns. The Quick Revision checklist at the end is designed for the night-before-exam condensed read." },
+      { q: "Does it cover competitive exam syllabi?", a: "NCERT IS the foundation for most Indian competitive exams (UPSC, JEE/NEET, SSC). For competitive-exam-specific analysis use UPSC / JEE-NEET / SSC-Banking analysers." },
+    ],
+    related: ["ai-ncert", "ai-syllabus", "ai-flashcards", "ai-paper-pattern"],
   },
 };
 
