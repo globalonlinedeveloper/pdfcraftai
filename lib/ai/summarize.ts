@@ -157,7 +157,23 @@ export type SummarizeDepth =
   | "jd-match"
   | "tnpsc"
   | "jee-neet"
-  | "multi-bank";
+  | "multi-bank"
+  // Task #75 — five more Tier 3 P1 wedges:
+  //   credit-card §3.1 — categorise spend, recurring charges, fees,
+  //   reward burn (15c)
+  //   mutual-fund §3.1 — parse CAMS / KFin consolidated MF
+  //   statements with returns + holdings table (15c)
+  //   nda         §3.2 — flag risky NDA clauses, missing carveouts,
+  //   negotiation points (15c)
+  //   sale-deed   §3.2 — Indian sale deed risk audit + missing
+  //   clauses + chain-of-title (25c)
+  //   employment  §3.2 — employment contract review with
+  //   non-compete, IP, notice period flags (20c)
+  | "credit-card"
+  | "mutual-fund"
+  | "nda"
+  | "sale-deed"
+  | "employment";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -1118,6 +1134,127 @@ function buildSystemPrompt(opts: {
           "speed trade-offs). Be specific to the JEE/NEET " +
           "marking scheme (e.g. negative-marking penalties)."
         );
+      case "credit-card":
+        // §3.1 Credit Card Statement Analyzer.
+        return (
+          "Analyse this credit card statement (Indian or international " +
+          "issuer). Output: `## Statement Identified` (bank, card type, " +
+          "billing period, last-4, total due, minimum due, due date). " +
+          "`## Spend by Category` (a Markdown table with columns: " +
+          "Category, Amount, % of Total, # Transactions. Use " +
+          "categories: Food/Groceries, Fuel, Travel, Shopping, " +
+          "Entertainment, Bills/Utilities, EMI, Cash/ATM, Fees/Charges, " +
+          "Refund/Credit, Other). `## Top Merchants` (top 10 by spend " +
+          "with merchant + total). `## Fees & Interest` (table: Type, " +
+          "Amount, Description — finance charges, late fees, " +
+          "over-limit, foreign-tx fees). `## Recurring Charges` " +
+          "(detected subscriptions: name, frequency, amount). `## " +
+          "Reward Points` (earned this cycle, redeemed, balance — if " +
+          "visible). `## Observations` (3-5 bullets — high-fee " +
+          "alerts, unusual spikes, recurring charges to review). End " +
+          "with note that this is parsed data, not financial advice."
+        );
+      case "mutual-fund":
+        // §3.1 Mutual Fund / CAMS / KFin Statement Parser.
+        return (
+          "Parse this mutual fund consolidated statement (CAMS, " +
+          "KFin, or AMC-specific format). Output: `## Statement " +
+          "Identified` (PAN-masked, period covered, AMCs included, " +
+          "folio count). `## Holdings Snapshot` (Markdown table: " +
+          "Scheme, Folio, AMC, Category (Equity/Debt/Hybrid/ELSS/" +
+          "Liquid/Other), Units, NAV, Current Value, Invested, " +
+          "Returns %, XIRR if available). Sort by Current Value " +
+          "desc. `## Asset Allocation` (table: Category, Value, " +
+          "% of Portfolio). `## Transaction Summary` (table: Type " +
+          "(Purchase/Switch-In/SIP/Redeem/Dividend), Count, Amount). " +
+          "`## SIPs Active` (scheme, monthly amount, next date if " +
+          "visible). `## Top Performers` (3 best XIRR) and `## " +
+          "Underperformers` (3 worst — if held >12 months and " +
+          "negative or below 8%). `## Tax Lots` (only mention if " +
+          "relevant for capital gains; LTCG vs STCG split). End with " +
+          "note that this is parsed data, not investment advice — " +
+          "consult an SEBI-registered advisor."
+        );
+      case "nda":
+        // §3.2 NDA Analyzer.
+        return (
+          "Analyse this Non-Disclosure Agreement (NDA / confidentiality " +
+          "agreement). Output: `## Agreement Identified` (parties, " +
+          "effective date, term length, jurisdiction). `## Type` " +
+          "(unilateral / mutual / multilateral). `## Risk Flags` " +
+          "(table: Issue, Severity (high/medium/low), Quote from " +
+          "agreement, Recommendation). Common high-severity flags " +
+          "to surface: missing residual-knowledge carveout, broad " +
+          "definition of confidential information, indefinite term " +
+          "or auto-renewal, embedded non-compete or non-solicit, " +
+          "one-sided indemnification, jurisdiction in remote/foreign " +
+          "courts, missing return-of-materials clause, IP assignment " +
+          "(should NOT be in an NDA). `## Negotiation Points` (3-5 " +
+          "concrete redlines you'd push back on, with suggested " +
+          "language). `## Standard / Acceptable` (clauses that " +
+          "are typical and OK to sign as-is). `## Missing Standard " +
+          "Clauses` (e.g. residual knowledge, exceptions for " +
+          "publicly-known info, forced-disclosure protections). End " +
+          "with note that this is a flag-and-discuss aid, not legal " +
+          "advice — review with counsel before signing high-stakes " +
+          "NDAs."
+        );
+      case "sale-deed":
+        // §3.2 Sale Deed Analyzer (Indian property buyers).
+        return (
+          "Analyse this Indian sale deed / property conveyance " +
+          "document. Output: `## Document Identified` (deed type, " +
+          "execution date, sub-registrar office, document number, " +
+          "stamp duty paid, consideration amount). `## Parties` " +
+          "(seller(s) and buyer(s) with relationship — e.g. " +
+          "individual / firm / power of attorney). `## Property " +
+          "Schedule` (description from deed: extent, boundaries, " +
+          "khata/survey number, full address). `## Chain of Title` " +
+          "(brief paragraph summarising prior ownership chain " +
+          "referenced in the deed; flag any gaps). `## Encumbrances " +
+          "& Liens Mentioned` (any existing charges, mortgages, " +
+          "leases, easements). `## Risk Flags` (table: Issue, " +
+          "Severity, Quote, Recommendation. Common flags: incomplete " +
+          "chain of title, missing parent document references, " +
+          "inadequate stamp duty, undivided share without partition, " +
+          "ongoing litigation references, agricultural-conversion " +
+          "issues, RERA non-disclosure for under-construction). `## " +
+          "Missing Standard Clauses` (e.g. indemnity by seller for " +
+          "title defects, encumbrance certificate cross-reference, " +
+          "tax-paid receipts attached). `## Recommended Verifications` " +
+          "(EC for past 30 years, latest property tax receipt, " +
+          "khata certificate, building approval, RERA registration " +
+          "if applicable). End with explicit note that this is a " +
+          "checklist aid for buyers, NOT legal advice — engage a " +
+          "local property lawyer before purchasing."
+        );
+      case "employment":
+        // §3.2 Employment Contract Review.
+        return (
+          "Analyse this employment / appointment contract. Output: " +
+          "`## Role Identified` (employer, employee, designation, " +
+          "start date, location). `## Compensation Summary` (table: " +
+          "Component, Amount, Frequency — base, allowances, bonuses, " +
+          "ESOPs, benefits). `## Term & Termination` (probation " +
+          "length, notice period — both sides, severance entitlement, " +
+          "termination-for-cause grounds). `## Risk Flags` (table: " +
+          "Issue, Severity, Quote, Recommendation. Common flags: " +
+          "long non-compete (>6 months), broad non-solicit, IP " +
+          "assignment that captures pre-employment work, garden " +
+          "leave at full notice, training-bond / clawback clauses, " +
+          "exclusive-jurisdiction in distant city, unilateral " +
+          "transfer rights, no severance on retrenchment, vague " +
+          "performance-improvement-plan exit, post-termination " +
+          "moonlighting bans). `## Standard / Acceptable` (clauses " +
+          "typical for the role/level). `## Missing Standard " +
+          "Protections` (e.g. earned-leave encashment, gratuity " +
+          "reference, prior-employer release). `## Negotiation " +
+          "Points` (3-5 redlines a candidate could reasonably push " +
+          "back on with suggested replacement language). End with " +
+          "note that this is an audit aid, not legal advice — for " +
+          "senior or India-specific issues consult an employment " +
+          "lawyer."
+        );
       case "multi-bank":
         // §3.1 Multi-Bank Merger. Input = concatenated bank
         // statements (user uploads a merged PDF containing
@@ -1278,6 +1415,16 @@ function buildUserPrompt(opts: {
         return "Analyse this JEE/NEET paper";
       case "multi-bank":
         return "Parse this multi-bank statement";
+      case "credit-card":
+        return "Analyse this credit card statement";
+      case "mutual-fund":
+        return "Parse this mutual fund statement";
+      case "nda":
+        return "Analyse this NDA";
+      case "sale-deed":
+        return "Audit this sale deed";
+      case "employment":
+        return "Review this employment contract";
       case "standard":
       case "detailed":
       default:

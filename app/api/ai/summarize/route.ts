@@ -112,6 +112,12 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "tnpsc",
   "jee-neet",
   "multi-bank",
+  // Task #75 — five Tier 3 P1 wedges (§3.1 + §3.2):
+  "credit-card",
+  "mutual-fund",
+  "nda",
+  "sale-deed",
+  "employment",
 ];
 
 export async function POST(req: Request): Promise<Response> {

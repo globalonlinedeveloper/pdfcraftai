@@ -221,6 +221,12 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "tnpsc": 3200, // Per-question table can be 100+ rows for a full paper.
     "jee-neet": 3600, // Per-question table + per-subject chapter-frequency tables + revision plan.
     "multi-bank": 4000, // Multi-bank JSON — can span hundreds of transactions per statement.
+    // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
+    "credit-card": 2400, // Spend table + top merchants + observations.
+    "mutual-fund": 2800, // Holdings + asset allocation + performers tables.
+    "nda": 2400, // Risk flags + negotiation + standard sections.
+    "sale-deed": 2800, // Property schedule + chain of title + risk flags + verifications.
+    "employment": 2400, // Comp + termination + risk flags + missing protections.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

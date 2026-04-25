@@ -52,7 +52,13 @@ type Depth =
   | "jd-match"
   | "tnpsc"
   | "jee-neet"
-  | "multi-bank";
+  | "multi-bank"
+  // Task #75 Tier 3 P1 wedges.
+  | "credit-card"
+  | "mutual-fund"
+  | "nda"
+  | "sale-deed"
+  | "employment";
 
 type Result = {
   fileId?: string;
@@ -886,6 +892,88 @@ export function MultiBankMergerTool() {
       successTitle="Consolidated statement ready"
       pricingBlurb="Tier 3 §3.1 Finance: Parses statements from multiple Indian banks concatenated in one PDF. Outputs per-bank summaries + a consolidated transaction view with category breakdown. 20 credits."
       relatedHref={{ href: "/tool/ai-bank-statement", label: "Single Bank Statement Parser" }}
+    />
+  );
+}
+
+// Task #75 — five more Tier 3 P1 wedges.
+
+export function CreditCardStatementTool() {
+  return (
+    <SummarizeVariantTool
+      depth="credit-card"
+      toolId="ai-credit-card"
+      callbackUrl="/tool/ai-credit-card"
+      prompt="Drop a credit card statement to analyse"
+      runLabel="Analyse statement"
+      busyLabel="Analysing…"
+      successTitle="Credit card analysis ready"
+      pricingBlurb="Tier 3 §3.1 Finance: Spend by category + top merchants + recurring charges + fees + reward burn. Works on Indian and international issuers. 15 credits. Not financial advice."
+      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
+    />
+  );
+}
+
+export function MutualFundStatementTool() {
+  return (
+    <SummarizeVariantTool
+      depth="mutual-fund"
+      toolId="ai-mutual-fund"
+      callbackUrl="/tool/ai-mutual-fund"
+      prompt="Drop a CAMS / KFin / AMC mutual fund statement"
+      runLabel="Parse statement"
+      busyLabel="Parsing…"
+      successTitle="Mutual fund analysis ready"
+      pricingBlurb="Tier 3 §3.1 Finance: Holdings snapshot + asset allocation + transactions + active SIPs + top/bottom performers + tax-lot summary. Works on CAMS, KFin, and AMC formats. 15 credits. Not investment advice."
+      relatedHref={{ href: "/tool/ai-itr-form16", label: "ITR / Form 16 Analyzer" }}
+    />
+  );
+}
+
+export function NdaAnalyzerTool() {
+  return (
+    <SummarizeVariantTool
+      depth="nda"
+      toolId="ai-nda"
+      callbackUrl="/tool/ai-nda"
+      prompt="Drop an NDA / confidentiality agreement to audit"
+      runLabel="Audit NDA"
+      busyLabel="Analysing…"
+      successTitle="NDA audit ready"
+      pricingBlurb="Tier 3 §3.2 Legal: Parties + type + risk flags (severity-rated) + negotiation points + missing standard clauses. Common red flags surfaced — embedded non-competes, indefinite terms, IP assignment in NDAs. 15 credits. Not legal advice."
+      relatedHref={{ href: "/tool/ai-employment", label: "Employment Contract Review" }}
+    />
+  );
+}
+
+export function SaleDeedAnalyzerTool() {
+  return (
+    <SummarizeVariantTool
+      depth="sale-deed"
+      toolId="ai-sale-deed"
+      callbackUrl="/tool/ai-sale-deed"
+      prompt="Drop an Indian sale deed / property document"
+      runLabel="Audit sale deed"
+      busyLabel="Analysing…"
+      successTitle="Sale deed audit ready"
+      pricingBlurb="Tier 3 §3.2 Legal: Property schedule + chain of title + encumbrances + risk flags + missing standard clauses + recommended verifications (EC, khata, RERA). Built for Indian home buyers. 25 credits. Not legal advice — engage a property lawyer."
+      relatedHref={{ href: "/tool/ai-property", label: "Property Document Checker" }}
+    />
+  );
+}
+
+export function EmploymentContractTool() {
+  return (
+    <SummarizeVariantTool
+      depth="employment"
+      toolId="ai-employment"
+      callbackUrl="/tool/ai-employment"
+      prompt="Drop an employment / appointment contract to review"
+      runLabel="Review contract"
+      busyLabel="Analysing…"
+      successTitle="Contract review ready"
+      pricingBlurb="Tier 3 §3.2 Legal: Compensation + term + termination + risk flags (non-compete, IP assignment, training bond) + missing protections + negotiation points. 20 credits. Not legal advice."
+      relatedHref={{ href: "/tool/ai-nda", label: "NDA Analyzer" }}
     />
   );
 }

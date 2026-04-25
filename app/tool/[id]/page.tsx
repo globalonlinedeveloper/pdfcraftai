@@ -83,6 +83,12 @@ import {
   TnpscAnalyzerTool,
   JeeNeetAnalyzerTool,
   MultiBankMergerTool,
+  // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
+  CreditCardStatementTool,
+  MutualFundStatementTool,
+  NdaAnalyzerTool,
+  SaleDeedAnalyzerTool,
+  EmploymentContractTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
 import { BankStatementTool } from "@/components/tools/BankStatementTool";
@@ -189,6 +195,12 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-multi-bank",
   // Task #69 — Tier 2 §2.3 P0.
   "ai-searchable-pdf",
+  // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
+  "ai-credit-card",
+  "ai-mutual-fund",
+  "ai-nda",
+  "ai-sale-deed",
+  "ai-employment",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -496,6 +508,17 @@ function ToolRunner({ id }: { id: string }) {
     // Task #69 — Tier 2 §2.3 P0.
     case "ai-searchable-pdf":
       return <SearchablePdfTool />;
+    // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
+    case "ai-credit-card":
+      return <CreditCardStatementTool />;
+    case "ai-mutual-fund":
+      return <MutualFundStatementTool />;
+    case "ai-nda":
+      return <NdaAnalyzerTool />;
+    case "ai-sale-deed":
+      return <SaleDeedAnalyzerTool />;
+    case "ai-employment":
+      return <EmploymentContractTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

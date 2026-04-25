@@ -100,6 +100,12 @@ export const TOOLS: readonly Tool[] = [
   { id: "ai-multi-bank", name: "Multi-Bank Statement Merger", desc: "Tier 3 Finance: parse SBI/HDFC/ICICI/Axis/Kotak statements concatenated in one PDF. Per-bank + consolidated view.", icon: "Receipt", free: false, cost: "20 credits / doc", group: "AI" },
   // Task #69 — Tier 2 §2.3 P0: Scanned → Searchable PDF.
   { id: "ai-searchable-pdf", name: "Make PDF Searchable", desc: "Tier 2 §2.3: OCR scanned pages and overlay invisible text so Ctrl-F finds matches. Visual layout unchanged.", icon: "Scan", free: false, cost: "2 credits / page", group: "AI" },
+  // Task #75 — five Tier 3 P1 wedges.
+  { id: "ai-credit-card", name: "Credit Card Statement Analyzer", desc: "Tier 3 Finance: spend by category + top merchants + recurring charges + fees. Indian and international issuers.", icon: "Receipt", free: false, cost: "15 credits / statement", group: "AI" },
+  { id: "ai-mutual-fund", name: "Mutual Fund Statement Parser", desc: "Tier 3 Finance: parse CAMS / KFin / AMC statements. Holdings + allocation + active SIPs + performers.", icon: "Receipt", free: false, cost: "15 credits / statement", group: "AI" },
+  { id: "ai-nda", name: "NDA Analyzer", desc: "Tier 3 Legal: risk flags + negotiation points + missing standard clauses. Catches embedded non-competes, IP assignment.", icon: "Shield", free: false, cost: "15 credits / NDA", group: "AI" },
+  { id: "ai-sale-deed", name: "Sale Deed Analyzer", desc: "Tier 3 Legal: property schedule + chain of title + encumbrances + recommended verifications. For Indian home buyers.", icon: "Shield", free: false, cost: "25 credits / deed", group: "AI" },
+  { id: "ai-employment", name: "Employment Contract Review", desc: "Tier 3 Legal: comp + termination + risk flags (non-compete, IP, training bond) + negotiation points.", icon: "Shield", free: false, cost: "20 credits / contract", group: "AI" },
   { id: "ai-translate", name: "Translate PDF", desc: "Preserve layout across 20+ languages.", icon: "Translate", free: false, cost: "5 credits / doc", group: "AI" },
   { id: "ai-ocr", name: "OCR & Smart Extract", desc: "Turn scans into searchable, structured data.", icon: "Scan", free: false, cost: "~2 credits / page", group: "AI" },
   { id: "ai-rewrite", name: "Rewrite & Rephrase", desc: "Tone shift, simplify, or expand text.", icon: "Edit", free: false, cost: "~3 credits / page", group: "AI" },
