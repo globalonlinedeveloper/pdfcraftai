@@ -62,7 +62,6 @@ import {
   ExpandPdfTool,
   ToneAnalyzePdfTool,
   CitationsPdfTool,
-  FinancialsPdfTool,
   SentimentPdfTool,
   BiasPdfTool,
   ProofreadPdfTool,
@@ -70,47 +69,30 @@ import {
   VideoScriptPdfTool,
   AtsResumeTool,
   ActionItemsPdfTool,
-  RentalAgreementTool,
   SyllabusStudyPlanTool,
-  PropertyDocTool,
   DischargeSummaryTool,
   // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
   CoverLetterTool,
   JdMatchTool,
-  MultiBankMergerTool,
   // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
-  CreditCardStatementTool,
-  MutualFundStatementTool,
   NdaAnalyzerTool,
-  SaleDeedAnalyzerTool,
   EmploymentContractTool,
   // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
-  MedicalBillTool,
-  PrescriptionParserTool,
   SalarySlipTool,
   // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
   ResearchPaperTool,
-  DematStatementTool,
   InsurancePolicyTool,
   LoanBundleAuditTool,
   // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
-  ExpenseReportTool,
   PartnershipDeedTool,
   // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
-  ScanReportTool,
-  ElectricityBillTool,
-  TelecomBillTool,
-  BuilderAgreementTool,
-  BalanceSheetTool,
   // Task #81 — Tier 2 §2.5/§2.6/§2.8 + Tier 3 §3.3 wedges.
   ImproveWritingTool,
   ParaphraseTool,
   PlagiarismHeuristicTool,
   ChartToTableTool,
-  PaperPatternTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
-import { BankStatementTool } from "@/components/tools/BankStatementTool";
 import { BloodTestTool } from "@/components/tools/BloodTestTool";
 import { SearchablePdfTool } from "@/components/tools/SearchablePdfTool";
 import {
@@ -206,7 +188,6 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-expand",
   "ai-tone-analyze",
   "ai-citations",
-  "ai-financials",
   "ai-sentiment",
   "ai-bias",
   "ai-proofread",
@@ -219,48 +200,31 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-ats-resume",
   "ai-resume-parse",
   "ai-action-items",
-  "ai-bank-statement",
   "ai-blood-test",
-  "ai-rental",
   "ai-syllabus",
-  "ai-property",
   "ai-discharge",
   // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
   "ai-cover-letter",
   "ai-jd-match",
-  "ai-multi-bank",
   // Task #69 — Tier 2 §2.3 P0.
   "ai-searchable-pdf",
   // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
-  "ai-credit-card",
-  "ai-mutual-fund",
   "ai-nda",
-  "ai-sale-deed",
   "ai-employment",
   // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
-  "ai-medical-bill",
-  "ai-prescription",
   "ai-salary-slip",
   // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
   "ai-research-paper",
-  "ai-demat",
   "ai-insurance",
   "ai-loan-bundle",
   // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
-  "ai-expense-report",
   "ai-partnership-deed",
   // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
-  "ai-scan-report",
-  "ai-electricity-bill",
-  "ai-telecom-bill",
-  "ai-builder-agreement",
-  "ai-balance-sheet",
   // Task #81 — Tier 2 + Tier 3 wedges.
   "ai-improve-writing",
   "ai-paraphrase",
   "ai-plagiarism",
   "ai-chart-to-table",
-  "ai-paper-pattern",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -526,8 +490,6 @@ function ToolRunner({ id }: { id: string }) {
       return <ToneAnalyzePdfTool />;
     case "ai-citations":
       return <CitationsPdfTool />;
-    case "ai-financials":
-      return <FinancialsPdfTool />;
     case "ai-sentiment":
       return <SentimentPdfTool />;
     case "ai-bias":
@@ -552,16 +514,10 @@ function ToolRunner({ id }: { id: string }) {
       return <ResumeParserTool />;
     case "ai-action-items":
       return <ActionItemsPdfTool />;
-    case "ai-bank-statement":
-      return <BankStatementTool />;
     case "ai-blood-test":
       return <BloodTestTool />;
-    case "ai-rental":
-      return <RentalAgreementTool />;
     case "ai-syllabus":
       return <SyllabusStudyPlanTool />;
-    case "ai-property":
-      return <PropertyDocTool />;
     case "ai-discharge":
       return <DischargeSummaryTool />;
     // Task #67 — Tier 3 §3.6, §3.3, §3.1 P0 wedges.
@@ -569,54 +525,28 @@ function ToolRunner({ id }: { id: string }) {
       return <CoverLetterTool />;
     case "ai-jd-match":
       return <JdMatchTool />;
-    case "ai-multi-bank":
-      return <MultiBankMergerTool />;
     // Task #69 — Tier 2 §2.3 P0.
     case "ai-searchable-pdf":
       return <SearchablePdfTool />;
     // Task #75 — Tier 3 §3.1 + §3.2 P1 wedges.
-    case "ai-credit-card":
-      return <CreditCardStatementTool />;
-    case "ai-mutual-fund":
-      return <MutualFundStatementTool />;
     case "ai-nda":
       return <NdaAnalyzerTool />;
-    case "ai-sale-deed":
-      return <SaleDeedAnalyzerTool />;
     case "ai-employment":
       return <EmploymentContractTool />;
     // Task #77 — Tier 3 §3.4, §3.5, §3.2, §3.1 P1 wedges.
-    case "ai-medical-bill":
-      return <MedicalBillTool />;
-    case "ai-prescription":
-      return <PrescriptionParserTool />;
     case "ai-salary-slip":
       return <SalarySlipTool />;
     // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
     case "ai-research-paper":
       return <ResearchPaperTool />;
-    case "ai-demat":
-      return <DematStatementTool />;
     case "ai-insurance":
       return <InsurancePolicyTool />;
     case "ai-loan-bundle":
       return <LoanBundleAuditTool />;
     // Task #79 — Tier 3 §3.1, §3.2, §3.3 wedges.
-    case "ai-expense-report":
-      return <ExpenseReportTool />;
     case "ai-partnership-deed":
       return <PartnershipDeedTool />;
     // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
-    case "ai-scan-report":
-      return <ScanReportTool />;
-    case "ai-electricity-bill":
-      return <ElectricityBillTool />;
-    case "ai-telecom-bill":
-      return <TelecomBillTool />;
-    case "ai-builder-agreement":
-      return <BuilderAgreementTool />;
-    case "ai-balance-sheet":
-      return <BalanceSheetTool />;
     // Task #81 — Tier 2 + Tier 3 wedges.
     case "ai-improve-writing":
       return <ImproveWritingTool />;
@@ -626,8 +556,6 @@ function ToolRunner({ id }: { id: string }) {
       return <PlagiarismHeuristicTool />;
     case "ai-chart-to-table":
       return <ChartToTableTool />;
-    case "ai-paper-pattern":
-      return <PaperPatternTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

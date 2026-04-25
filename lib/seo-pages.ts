@@ -61,21 +61,12 @@ export type SeoPageSlug =
   // Task #69 — Tier 2 §2.3 P0.
   | "make-pdf-searchable"
   // Task #82 — 10 SEO landings for high-traffic Tier 3 wedges.
-  | "electricity-bill-analyzer"
-  | "telecom-bill-analyzer"
-  | "mutual-fund-statement-parser"
-  | "credit-card-statement-analyzer"
   | "nda-analyzer"
   | "employment-contract-review"
-  | "medical-bill-analyzer"
-  | "prescription-parser"
   // Task #83 — 10 more SEO landings for Tier 3 wedges.
-  | "bank-statement-parser"
   | "blood-report-analyzer"
-  | "rental-agreement-analyzer"
   | "ats-resume-optimizer"
   | "resume-parser"
-  | "property-document-checker"
   | "salary-slip-analyzer"
   | "research-paper-summarizer"
   // Task #84 — 10 SEO landings for AI core + more Tier 3.
@@ -84,26 +75,19 @@ export type SeoPageSlug =
   | "ai-pdf-ocr"
   | "compare-pdfs"
   | "ai-redact-pdf"
-  | "multi-bank-statement-merger"
   | "discharge-summary-explainer"
   | "loan-application-bundler"
   | "pdf-to-flashcards"
   // Task #85 — 10 more SEO landings completing Tier 3 wedge coverage.
   | "court-judgment-summarizer"
   | "partnership-deed-analyzer"
-  | "builder-agreement-analyzer"
-  | "balance-sheet-extractor"
-  | "demat-cas-statement-parser"
   | "insurance-policy-analyzer"
-  | "scan-report-explainer"
-  | "expense-report-builder"
   // Task #86 — 10 SEO landings for Tier 2 AI variants.
   | "pdf-to-quiz"
   | "pdf-to-mindmap"
   | "syllabus-to-study-plan"
   | "extract-tables-from-pdf"
   | "rewrite-pdf-tone"
-  | "multi-year-paper-pattern"
   | "improve-pdf-writing"
   | "paraphrase-pdf"
   | "pdf-plagiarism-check"
@@ -1228,82 +1212,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   // making them eligible for Google rich results.
   // ---------------------------------------------------------------
 
-  "electricity-bill-analyzer": {
-    tool: "ai-electricity-bill",
-    h1: "Electricity Bill Analyzer — slab-by-slab breakdown for Indian DISCOMs",
-    sub: "Drop your TANGEDCO / BESCOM / TSSPDCL / MSEDCL / BSES / Tata Power bill. We split it slab-by-slab, flag slab-jump warnings, and surface state-specific saving recommendations. 5 credits.",
-    canonical: "/electricity-bill-analyzer",
-    howTo: [
-      { t: "Drop your bill PDF", d: "Any Indian state DISCOM. We auto-detect the operator from the layout and tariff structure." },
-      { t: "We analyse the slabs", d: "Telescopic-tariff aware — slab N spillovers raise the rate on ALL units in lower slabs." },
-      { t: "Get saving recommendations", d: "Specific to your DISCOM area: shift X units to avoid slab jump, switch to TOD tariff if eligible, etc." },
-    ],
-    faq: [
-      { q: "Which states / DISCOMs are supported?", a: "All major ones: Tamil Nadu (TANGEDCO), Karnataka (BESCOM), Telangana (TSSPDCL), Andhra (APSPDCL), Maharashtra (MSEDCL), Delhi (BSES Rajdhani / Yamuna / Tata Power-DDL), Gujarat (Torrent / DGVCL / UGVCL / MGVCL / PGVCL), West Bengal (CESC / WBSEDCL), and so on. Layout differs across states but the parser auto-adapts." },
-      { q: "What's a 'slab jump' warning?", a: "Most Indian DISCOMs use telescopic tariffs — if you cross 200 units, the rate jumps for ALL units (not just the ones above 200). We flag bills near a slab boundary so you can shift consumption pre-month-end." },
-      { q: "Does it explain the fuel surcharge / FPPCA?", a: "Yes. The Fuel & Power Purchase Cost Adjustment is a state-regulator-approved pass-through that shows up as a separate line. We surface what it is and how it varied vs your previous bill." },
-      { q: "Is the saving advice actually useful?", a: "Yes — concrete, like 'you used 218 units; if you'd kept it at 200 you'd have saved ₹X.YY because every unit billed at the higher slab rate'. Not generic 'use less electricity' advice." },
-    ],
-    related: ["ai-electricity-bill", "ai-telecom-bill", "ai-bank-statement", "ai-expense-report"],
-  },
-
-  "telecom-bill-analyzer": {
-    tool: "ai-telecom-bill",
-    h1: "Telecom Bill Analyzer — Airtel / Jio / Vi postpaid + fibre",
-    sub: "Drop your Indian postpaid mobile or fibre bill. We compare plan vs usage, flag overages, detect duplicate-OTT subscriptions, and recommend a better-fit plan. 5 credits.",
-    canonical: "/telecom-bill-analyzer",
-    howTo: [
-      { t: "Drop your bill PDF", d: "Airtel postpaid / fibre, Jio postpaid / fibre, Vi postpaid, BSNL postpaid. Auto-detected." },
-      { t: "We compare plan vs usage", d: "Voice mins / data GB / SMS / international roaming with overage flagged separately." },
-      { t: "Get plan-fit advice", d: "If you're consistently under-utilising the plan or repeatedly hitting overage, we suggest specific cheaper or better-fit plans on the same operator." },
-    ],
-    faq: [
-      { q: "Does it catch duplicate OTT subscriptions?", a: "Yes — if your plan bundles Disney+ Hotstar or Netflix Basic AND you're paying separately on the OTT app, we flag it. This is one of the most common money-leaks for Indian postpaid users." },
-      { q: "What about international roaming activations?", a: "Surfaced as a risk flag. Many users get stung by mid-cycle add-ons that auto-activate during travel. We list the charge + days active + the post-cycle baseline difference." },
-      { q: "Will it work for prepaid recharges?", a: "Not yet — prepaid receipts don't have the same plan-vs-usage data. Postpaid + fibre only for now. Roadmap: prepaid recharge-history analysis." },
-      { q: "Are plan recommendations operator-locked?", a: "Yes — we only recommend plans on your current operator. Switching operators (port-out) is a different decision involving network coverage, contract penalties, and CAF processing." },
-    ],
-    related: ["ai-telecom-bill", "ai-electricity-bill", "ai-credit-card", "ai-bank-statement"],
-  },
-
-  "mutual-fund-statement-parser": {
-    tool: "ai-mutual-fund",
-    h1: "CAMS / KFin Mutual Fund Statement Parser — holdings, SIPs, returns",
-    sub: "Drop a consolidated mutual fund statement (CAMS, KFin, AMC-specific). We extract holdings, asset allocation, active SIPs, and top/bottom performers. 15 credits.",
-    canonical: "/mutual-fund-statement-parser",
-    howTo: [
-      { t: "Email yourself a CAS", d: "Request a Consolidated Account Statement from CAMS or KFin (free) — it covers all your folios in one PDF." },
-      { t: "Drop the PDF here", d: "We parse holdings + transactions + SIPs into structured JSON, then render readable tables + an asset-allocation breakdown." },
-      { t: "Compare performers", d: "Top 3 by XIRR, bottom 3 (held >12 months and underperforming), tax-lot summary for capital gains." },
-    ],
-    faq: [
-      { q: "Which formats are supported?", a: "CAMS Mailback (the standard CAS most investors get), KFin (Karvy) statements, and direct AMC statements (HDFC AMC, ICICI Pru, SBI MF, Axis MF, Nippon, etc.). Layouts vary but the parser is format-aware." },
-      { q: "Does it compute XIRR correctly?", a: "Yes when transaction dates are present in the source. If only year-end NAV snapshots are given (some AMC formats), we report holding-period return instead and flag the limitation." },
-      { q: "Is the Top / Bottom Performers list trustworthy?", a: "Reasonable directional ranking. Holdings <12 months are excluded from the underperformers list — short-term volatility isn't a fair benchmark for an SIP held 6 months." },
-      { q: "Can I see ELSS lock-in info?", a: "Yes — when the source statement marks tax-saving folios. Lock-in start / end dates, units locked, and units free are surfaced." },
-    ],
-    related: ["ai-mutual-fund", "ai-demat", "ai-itr-form16", "ai-bank-statement"],
-  },
-
-  "credit-card-statement-analyzer": {
-    tool: "ai-credit-card",
-    h1: "Credit Card Statement Analyzer — spend, fees, recurring charges",
-    sub: "Drop a credit card statement (Indian or international issuer). We categorise spend, list top merchants, detect recurring subscriptions, and break down fees + interest. 15 credits.",
-    canonical: "/credit-card-statement-analyzer",
-    howTo: [
-      { t: "Drop your statement", d: "HDFC, ICICI, SBI Card, Axis, Kotak, Amex, Citi (legacy), international issuers — all supported." },
-      { t: "We categorise spend", d: "Food / Travel / Shopping / Bills / EMI / Cash etc. Indian merchants recognised by name." },
-      { t: "Get the recurring-charges list", d: "Subscriptions you might've forgotten — Netflix, gym, software-as-a-service. Cancel the ones you don't use." },
-    ],
-    faq: [
-      { q: "Does it catch foreign-transaction fees?", a: "Yes. Forex markup (typically 1.5-3.5% on Indian cards) is surfaced as a separate line in the Fees & Interest section so you can decide if a forex card would save money on your travel pattern." },
-      { q: "What about reward points?", a: "Surfaced when visible — earned this cycle, redeemed, balance. Helpful for users tracking whether they're hitting milestone bonuses or letting points expire." },
-      { q: "Is my data stored?", a: "By default, uploads are deleted within 60 minutes of processing. Pro tier offers 30-day history if you want to track spending trends across multiple statements." },
-      { q: "Will it work for corporate cards?", a: "Yes — same parser. Corporate cards have a slightly different fee structure (typically lower forex markup, different category mix), so the observations adapt." },
-    ],
-    related: ["ai-credit-card", "ai-bank-statement", "ai-expense-report", "ai-mutual-fund"],
-  },
-
   "nda-analyzer": {
     tool: "ai-nda",
     h1: "NDA Analyzer — flag risky clauses, missing carveouts, negotiation points",
@@ -1342,68 +1250,11 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-employment", "ai-cover-letter", "ai-jd-match", "ai-nda"],
   },
 
-  "medical-bill-analyzer": {
-    tool: "ai-medical-bill",
-    h1: "Medical Bill Analyzer — itemised charges + IRDAI insurance claim prep",
-    sub: "Drop a hospital bill or medical claim document. We itemise charges by IRDAI category, surface cashless approval status, separate reimbursable vs excluded items, and prep your insurance claim. 20 credits.",
-    canonical: "/medical-bill-analyzer",
-    howTo: [
-      { t: "Drop the bill PDF", d: "Hospital bill, IP discharge bill, OP consultation receipt, pharmacy bill, diagnostic centre bill — all parsed." },
-      { t: "We itemise + flag", d: "Charges grouped by Room/ICU, Doctor's Fees, Investigations, Medicines, Procedures, Implants. Cashless / pre-auth status surfaced." },
-      { t: "Reimbursable vs excluded", d: "IRDAI standard exclusions (registration, food, attendant fees, telephone) separated from likely-claimable items." },
-    ],
-    faq: [
-      { q: "Will my insurance actually pay what's marked 'reimbursable'?", a: "Not guaranteed — IRDAI rules + your specific policy wording control. We mark items typically covered, but each insurer has policy-specific exclusions. The output is a checklist aid, not a reimbursement guarantee." },
-      { q: "Does it know IRDAI exclusions?", a: "Yes — registration fees, food/attendant charges, diapers/sanitary items, telephone, MRD admin charges, etc. are flagged as typically non-reimbursable so you don't include them in the claim form." },
-      { q: "What about pre / post-hospitalisation?", a: "If your bill is for a hospitalisation, we list items potentially claimable in the 30-day pre-hospitalisation and 60-day post-hospitalisation windows (standard IRDAI structure). Saves you from missing legitimate claim line items." },
-      { q: "Will it work for handwritten itemised bills?", a: "Mostly. Smaller hospitals still use handwritten bills. AI OCR reads them but accuracy depends on legibility. For large claims, double-check the typed totals against the original." },
-    ],
-    related: ["ai-medical-bill", "ai-prescription", "ai-insurance", "ai-blood-test"],
-  },
-
-  "prescription-parser": {
-    tool: "ai-prescription",
-    h1: "Prescription Parser — handwritten + printed Indian prescriptions",
-    sub: "Drop a prescription (printed or handwritten). We parse drug name, strength, dosage, frequency, duration, route into structured JSON. Indian conventions (BD/TDS/HS/SOS, 1-0-1) understood. 10 credits.",
-    canonical: "/prescription-parser",
-    howTo: [
-      { t: "Drop the prescription", d: "Photo or scan of a printed slip, or a handwritten Rx. Good lighting + a flat surface improve accuracy." },
-      { t: "We parse drug-by-drug", d: "Each medication: name, strength, dosage, frequency, duration, route, with a confidence flag." },
-      { t: "Verify low-confidence lines", d: "We never guess drug names — illegible lines come back as null with confidence='low' so you can verify with the prescriber." },
-    ],
-    faq: [
-      { q: "How accurate is handwritten parsing?", a: "Very good for clearly-written prescriptions. For genuinely scribbled handwriting (the doctor stereotype is real) we err on the side of caution — better to flag a line as 'low confidence, verify with prescriber' than to guess a wrong drug name. Wrong drug = patient safety risk." },
-      { q: "Does it understand Indian prescribing shorthand?", a: "Yes — BD (twice daily), TDS (thrice daily), QID (four times), HS (at bedtime), SOS (as needed), STAT (immediately), 1-0-1 (morning-noon-night), AC (before meals), PC (after meals). Pre-encoded." },
-      { q: "Will it suggest alternative drugs or dosages?", a: "No. Strictly parsing — no clinical recommendation. We extract what the prescriber wrote, period." },
-      { q: "Can I export the parsed list to a pharmacy app?", a: "JSON output is structured for downstream integration. Not currently exported to specific apps but the format is standard enough that any pharmacy / pillbox app can consume it." },
-    ],
-    related: ["ai-prescription", "ai-medical-bill", "ai-blood-test", "ai-discharge"],
-  },
-
 
 
   // ---------------------------------------------------------------
   // Task #83 — 10 more SEO landings for Tier 3 wedges.
   // ---------------------------------------------------------------
-
-  "bank-statement-parser": {
-    tool: "ai-bank-statement",
-    h1: "Bank Statement Parser — Indian banks, categorised + Excel export",
-    sub: "Drop a SBI / HDFC / ICICI / Axis / Kotak (or any Indian bank) statement. We parse every transaction into a clean table with category tags. 30 credits per statement.",
-    canonical: "/bank-statement-parser",
-    howTo: [
-      { t: "Drop the statement PDF", d: "Password-protected? Use our free Unlock PDF tool first. Most major Indian banks supported." },
-      { t: "We parse + categorise", d: "Date / description / amount / balance + category tag (salary / UPI / EMI / bills / shopping / etc.)." },
-      { t: "Download as CSV / Excel", d: "Or run AI Expense Report on it for a category × month matrix." },
-    ],
-    faq: [
-      { q: "Which banks are supported?", a: "All major Indian banks — SBI (saral / regular), HDFC, ICICI (savings + IBANK4U), Axis (priority + regular), Kotak, IDFC First, Yes, IndusInd, RBL, AU Small Finance, Federal, plus the public sector banks. International banks operating in India (Citi-legacy, HSBC, StanC) also work." },
-      { q: "Will it work for password-protected statements?", a: "Use our free Unlock PDF tool first (you provide the password) — the unlocked output goes through this parser." },
-      { q: "Are categories editable?", a: "The output is JSON + a rendered table. Download as CSV and re-categorise in Excel / Google Sheets if our heuristic categories aren't right for your use." },
-      { q: "Multi-month statements OK?", a: "Yes — common Indian bank statements span 3, 6, or 12 months. We handle them in one pass. For multi-bank statements (concatenated), use the Multi-Bank Merger tool." },
-    ],
-    related: ["ai-bank-statement", "ai-multi-bank", "ai-expense-report", "ai-credit-card"],
-  },
 
   "blood-report-analyzer": {
     tool: "ai-blood-test",
@@ -1422,25 +1273,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Can I export the data?", a: "Yes — JSON output is downloadable. Tracking trends across reports? Coming soon as a Pro tier feature with a dashboard." },
     ],
     related: ["ai-blood-test", "ai-medical-bill", "ai-prescription", "ai-discharge"],
-  },
-
-  "rental-agreement-analyzer": {
-    tool: "ai-rental",
-    h1: "Rental Agreement Analyzer — flag risky clauses, missing protections",
-    sub: "Drop a rental / lease agreement. We surface risk flags (lock-in, deposit return, unilateral rent hike, escape clauses), missing standard protections, and state-specific concerns. 15 credits.",
-    canonical: "/rental-agreement-analyzer",
-    howTo: [
-      { t: "Drop the agreement", d: "Pre-signing or already signed — both useful. Residential or commercial." },
-      { t: "We audit clause-by-clause", d: "Risk flags by severity, state-specific concerns (Karnataka stamp duty, Maharashtra Rent Control Act, etc.)." },
-      { t: "Get redlines + missing clauses", d: "What you should push back on (security deposit > 2 months rent in many states is now capped) + what's missing (mandatory maintenance, utilities split)." },
-    ],
-    faq: [
-      { q: "Does it know state-specific rental laws?", a: "Reasonably. Karnataka Rent Act 1999, Maharashtra Rent Control Act 1999, Delhi Rent Control Act 1958, Tamil Nadu Regulation of Rights and Responsibilities of Landlords and Tenants Act 2017. State-specific calculation of registration / stamp duty surfaced." },
-      { q: "Is the security deposit cap legally enforceable?", a: "The Model Tenancy Act 2021 caps residential at 2 months and commercial at 6 months, but enforcement is state-by-state. We flag deposits above these caps as red flags worth negotiating, not as illegal — verify with a local lawyer for binding interpretation." },
-      { q: "Does it flag broker biases?", a: "Standard clauses that favour the landlord disproportionately are surfaced. Common ones: tenant pays for ALL repairs (unfair), no notice for visits (unfair), security deposit forfeit on breakage (unfair without itemised damage)." },
-      { q: "Will it work for commercial rentals?", a: "Yes — same parser, but we recommend specific commercial review for large lease commitments because escalation clauses, exclusivity / non-compete on the premises, and CAM (Common Area Maintenance) charges are commercial-specific." },
-    ],
-    related: ["ai-rental", "ai-property", "ai-sale-deed", "ai-employment"],
   },
 
   "ats-resume-optimizer": {
@@ -1479,25 +1311,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Privacy of candidate data?", a: "By default, uploads delete in 60 minutes. For recruiter use cases, we recommend the Pro tier with longer history + an audit log of who accessed what." },
     ],
     related: ["ai-resume-parse", "ai-ats-resume", "ai-jd-match", "ai-cover-letter"],
-  },
-
-  "property-document-checker": {
-    tool: "ai-property",
-    h1: "Property Document Checker — sale deed / khata / EC red flag audit",
-    sub: "Drop an Indian property document (sale deed, khata, parent document, EC). We surface chain-of-title issues, encumbrances, and missing standard documents you should still pull. 30 credits.",
-    canonical: "/property-document-checker",
-    howTo: [
-      { t: "Drop the document", d: "Sale Deed, Khata Certificate, Parent Document, EC, or any combination concatenated." },
-      { t: "We audit", d: "Document type identification, chain of title narrative, risk flags by severity, missing standard documents." },
-      { t: "Get a verification checklist", d: "What else to pull from the SRO, banks, and authorities before purchasing." },
-    ],
-    faq: [
-      { q: "What's the most common red flag?", a: "Broken chain of title — current sale deed references a parent document that's not produced. Banks won't sanction loans on a property with broken chain. We flag it as high-severity." },
-      { q: "Does it know state-specific document names?", a: "Reasonably. Karnataka khata, Tamil Nadu patta + chitta, Maharashtra 7/12 extract, Andhra revenue records, Delhi DDA documents — common ones recognised." },
-      { q: "Will it tell me whether to buy?", a: "No. It surfaces issues you should investigate — final 'buy or not' is your + your lawyer's call. We're an audit aid, not a recommendation engine." },
-      { q: "Is OC / CC checked?", a: "If the document references Occupancy / Completion Certificates, we surface their dates. Whether OC is still valid (some states have time-bound validity) needs verification with the local municipality." },
-    ],
-    related: ["ai-property", "ai-sale-deed", "ai-rera", "ai-ec"],
   },
 
 
@@ -1642,25 +1455,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   },
 
 
-  "multi-bank-statement-merger": {
-    tool: "ai-multi-bank",
-    h1: "Multi-Bank Statement Merger — SBI + HDFC + ICICI in one consolidated view",
-    sub: "Drop a PDF that concatenates statements from multiple Indian banks. We parse each bank's transactions separately, then merge into a consolidated category-level summary. 20 credits.",
-    canonical: "/multi-bank-statement-merger",
-    howTo: [
-      { t: "Concatenate your bank statements", d: "Use our free Merge PDF tool to combine statements from SBI / HDFC / ICICI / Axis / Kotak / etc. into one PDF." },
-      { t: "Drop the merged PDF", d: "We auto-detect which bank each statement is from based on layout + transaction-narration patterns." },
-      { t: "Get per-bank + consolidated view", d: "Each bank's transactions parsed separately. Then a consolidated cross-bank category breakdown — total spend by Food / Travel / EMI / etc." },
-    ],
-    faq: [
-      { q: "How does it tell which transaction came from which bank?", a: "Layout fingerprinting + narration patterns. SBI uses 'TRANSFER FROM' formatting; HDFC uses 'EFT-CR-'; ICICI uses 'BIL/'. Plus header sections that explicitly identify the bank. We'll get the bank attribution right ~95% of the time on standard statements." },
-      { q: "Why merge multiple banks instead of running each separately?", a: "Cross-bank category view. If you have ₹50K in Food spend across 3 cards on 3 banks, you can't see that without merging. Saves an analyst hour per consolidation." },
-      { q: "Are inter-bank transfers double-counted?", a: "We attempt to detect them — same date / amount / narration mentioning 'TRANSFER' or 'NEFT to <self>'. Surfaced separately so you don't double-count yourself." },
-      { q: "Privacy?", a: "60-minute retention default. For accountant / CA workflows, Pro tier offers longer retention + access logs." },
-    ],
-    related: ["ai-multi-bank", "ai-bank-statement", "ai-credit-card", "ai-expense-report"],
-  },
-
   "discharge-summary-explainer": {
     tool: "ai-discharge",
     h1: "Discharge Summary Explainer — plain Indian English for patients + family",
@@ -1760,63 +1554,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-partnership-deed", "ai-employment", "ai-nda", "ai-balance-sheet"],
   },
 
-  "builder-agreement-analyzer": {
-    tool: "ai-builder-agreement",
-    h1: "Builder Agreement Red-Flag Detector — under-construction property audit",
-    sub: "Drop your builder-buyer agreement (under-construction apartment / villa / plot). We surface pricing red flags, asymmetric delay penalties, RERA Act 2016 protection gaps, and negotiation points. 30 credits.",
-    canonical: "/builder-agreement-analyzer",
-    howTo: [
-      { t: "Drop the agreement PDF", d: "Pre-signing or already signed. Apartment, villa, or plot. Any state — RERA-registered or not (we'll flag if not)." },
-      { t: "We audit pricing + dates + risk", d: "Carpet vs super-built-up exposure, possession date + grace clause, escalation, parking + amenities + maintenance deposit + GST." },
-      { t: "Get red flags + RERA gaps", d: "Asymmetric delay penalty, mandatory club, vague force-majeure, no exit clause + which RERA Act 2016 protections are honoured vs missing." },
-    ],
-    faq: [
-      { q: "Why is 'pricing on super-built-up' a red flag?", a: "RERA Act 2016 mandates pricing must be based on carpet area (the actual usable space). Builders quote on super-built-up (which includes corridors, lobbies, shaft) making the per-sqft price look lower than the real cost per usable sqft. We flag any agreement that prices on super-built-up — you'll pay 25-30% more per usable sqft than the headline rate suggests." },
-      { q: "What's an 'asymmetric delay penalty'?", a: "Common in builder contracts: tiny penalty if the builder delays possession (e.g., ₹5/sqft/month) but huge penalty if you delay payment (e.g., 18% interest p.a.). RERA Act 2016 mandates symmetric delay penalties; we flag asymmetric ones as red flags worth pushing back on." },
-      { q: "Is this legal advice?", a: "No. It's an audit aid for buyers. For high-stakes purchases (₹50L+ properties), engage a property lawyer before signing." },
-      { q: "Does it work for plot purchases?", a: "Yes — same parser. Plot agreements have less complexity than apartment agreements but the RERA + chain-of-title checks still apply." },
-    ],
-    related: ["ai-builder-agreement", "ai-rera", "ai-sale-deed", "ai-property"],
-  },
-
-  "balance-sheet-extractor": {
-    tool: "ai-balance-sheet",
-    h1: "Balance Sheet & P&L Extractor — Ind AS / IFRS / Indian GAAP",
-    sub: "Drop an audited annual report or financial statement. We extract balance sheet + P&L + cash flow into structured JSON with computed key ratios (current, D/E, ROE, ROA, interest coverage). 25 credits.",
-    canonical: "/balance-sheet-extractor",
-    howTo: [
-      { t: "Drop the financial statement", d: "Audited annual report (standalone or consolidated), management report, or quarterly result. Ind AS, IFRS, or Indian GAAP." },
-      { t: "We extract line-by-line", d: "Balance sheet (assets, equity & liabilities) + P&L (revenue, expenses, PAT) + cash flow + EPS. Original line names preserved." },
-      { t: "Get computed ratios", d: "Current ratio, D/E, ROE, ROA, interest coverage — calculated from extracted data, null if any input is missing rather than guessed." },
-    ],
-    faq: [
-      { q: "Why preserve original line-item names?", a: "Different companies' schedules differ — 'Other Operating Income' in one company is 'Other Income' in another. If we normalised away these company-specific lines, you'd lose the granularity needed for cross-year or peer comparison. We keep the names verbatim for analyst use." },
-      { q: "Does it handle consolidated vs standalone?", a: "Yes — period_type field flags which. Most listed Indian companies report both; pick the one you need (consolidated for group view, standalone for parent-only)." },
-      { q: "Will it compute industry-specific ratios?", a: "Generic financial ratios only. For industry-specific metrics (NIM for banks, premium-to-equity for insurance, ARPU for telecom), you'll need to compute manually from the extracted line items — but the data is there in structured JSON." },
-      { q: "Privacy?", a: "Public companies' filings are already public. For private company financials, 60-minute deletion default applies." },
-    ],
-    related: ["ai-balance-sheet", "ai-bank-statement", "ai-itr-form16", "ai-mutual-fund"],
-  },
-
-  "demat-cas-statement-parser": {
-    tool: "ai-demat",
-    h1: "Demat / CAS Statement Parser — NSDL + CDSL holdings to JSON",
-    sub: "Drop your NSDL or CDSL Consolidated Account Statement (CAS) or demat holdings statement. We parse holdings + transactions + corporate actions into structured JSON. 15 credits.",
-    canonical: "/demat-cas-statement-parser",
-    howTo: [
-      { t: "Get a CAS from your DP", d: "Free monthly statement from NSDL or CDSL covering all your demat holdings across brokers (Zerodha, Groww, ICICIDirect, HDFC Sec, etc.)." },
-      { t: "Drop the PDF", d: "We auto-detect NSDL vs CDSL format and parse holdings + transactions + corporate actions." },
-      { t: "Get structured JSON", d: "Equity / MF / bond / ETF / SGB / REIT / InvIT classification + asset-class summary + corporate actions (dividend, bonus, split, IPO allots, demerger, rights)." },
-    ],
-    faq: [
-      { q: "What's the difference between NSDL and CDSL?", a: "Two depositories operating in parallel — most retail investors are on one, some on both via different brokers. Statement layouts differ but our parser handles both." },
-      { q: "Will it catch corporate actions?", a: "Yes — bonuses, splits, demergers, rights issues, IPO allotments, mutual fund switches, dividend payouts. Surfaced separately from regular buy/sell transactions." },
-      { q: "Does it compute capital gains?", a: "We extract the data but don't compute gains directly — for tax filing, use the ITR / Form 16 Analyzer along with this. Mutual fund LTCG vs STCG calculation specifically benefits from the Mutual Fund Statement Parser tool which preserves cost-basis information more granularly." },
-      { q: "Is the structured JSON downloadable?", a: "Yes — for downstream use (portfolio dashboards, accountant import). Format follows standard demat-statement schema for easy integration." },
-    ],
-    related: ["ai-demat", "ai-mutual-fund", "ai-bank-statement", "ai-itr-form16"],
-  },
-
   "insurance-policy-analyzer": {
     tool: "ai-insurance",
     h1: "Insurance Policy Analyzer — health, life, motor, home, travel, term",
@@ -1836,44 +1573,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     related: ["ai-insurance", "ai-medical-bill", "ai-discharge", "ai-blood-test"],
   },
 
-  "scan-report-explainer": {
-    tool: "ai-scan-report",
-    h1: "MRI / CT / X-Ray Report Explainer — plain Indian English, NOT a diagnosis",
-    sub: "Drop your radiology report. We rewrite the radiologist's findings in plain English, build a glossary of medical terms, list questions to ask your doctor, and flag what the scan does NOT tell you. 20 credits.",
-    canonical: "/scan-report-explainer",
-    howTo: [
-      { t: "Drop the report PDF", d: "MRI / CT / X-ray / Ultrasound / Mammogram / DEXA from any Indian hospital or diagnostic centre." },
-      { t: "We translate the language", d: "Findings rewritten in plain Indian English. Medical Latin glossary built. Patient-friendly questions to ask your doctor." },
-      { t: "Read with the caveat", d: "STRICTLY a language translation aid — NOT a diagnosis. Always discuss with the prescribing doctor." },
-    ],
-    faq: [
-      { q: "Will it tell me whether something is serious?", a: "Only if the radiologist's report explicitly says so. If the report uses words like 'critical', 'emergency', 'urgent', 'see doctor immediately', we surface that in a top callout. We DON'T add severity assessment that isn't already in the report." },
-      { q: "What does 'no acute intracranial abnormality' mean?", a: "Glossary will tell you — typically 'no recent injury or bleeding visible in the brain'. Different scans have their own technical phrases; we translate them into everyday words." },
-      { q: "Why list 'what this does NOT tell you'?", a: "MRI brain doesn't evaluate the spine. Ultrasound abdomen doesn't replace endoscopy. X-ray chest doesn't catch every cancer. Patients often over-extend a normal scan into 'I'm completely healthy' — we surface the scan's limits explicitly." },
-      { q: "Is this medical advice?", a: "ABSOLUTELY NOT. It's a translation aid. We do not interpret findings, do not suggest treatments, do not say what to worry about. Your doctor does that. Use this to come prepared for the post-scan consultation, not to skip it." },
-    ],
-    related: ["ai-scan-report", "ai-blood-test", "ai-discharge", "ai-medical-bill"],
-  },
-
-
-  "expense-report-builder": {
-    tool: "ai-expense-report",
-    h1: "Expense Report Builder — bank statement to category × month matrix",
-    sub: "Drop your Indian bank statement. We categorise every transaction (Rent, Groceries, Fuel, EMI, SIPs, Bills, etc.), build a category × month matrix, and show your saving rate. 15 credits.",
-    canonical: "/expense-report-builder",
-    howTo: [
-      { t: "Drop the bank statement", d: "Any Indian bank — SBI, HDFC, ICICI, Axis, Kotak. 3-12 months span works best for monthly trend." },
-      { t: "We categorise + matrix", d: "Indian-aware categories (Rent, EMI, SIPs, UPI Transfers, Bills, Bank Charges) cross-tabulated by month." },
-      { t: "Get insights", d: "Top spend areas, recurring charges (subscriptions / EMI), saving rate (income - expense), actionable bullets." },
-    ],
-    faq: [
-      { q: "How accurate is the categorisation?", a: "Heuristic-good. Common Indian merchants and patterns are recognised — Big Bazaar = groceries, BookMyShow = entertainment, Razorpay-Cred = card-bill payment. Edge cases get tagged as 'Other'. Output is JSON; you can re-categorise in Excel if needed." },
-      { q: "Will it spot recurring subscriptions I forgot?", a: "Yes — same merchant + monthly cadence + similar amount = surfaced as a recurring charge. Helpful for cancelling forgotten OTT, gym, or SaaS subscriptions." },
-      { q: "Saving rate calculation?", a: "(Total credits except refunds) - (Total debits). Doesn't account for credit card spend that hasn't been billed yet, so directionally accurate but not a precise net-worth delta." },
-      { q: "Multi-account?", a: "Single statement per call. For multi-bank consolidated view, use the Multi-Bank Statement Merger." },
-    ],
-    related: ["ai-expense-report", "ai-bank-statement", "ai-multi-bank", "ai-credit-card"],
-  },
 
 
   // ---------------------------------------------------------------
@@ -1973,25 +1672,6 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "What about non-English content?", a: "Best on English. For Indian-language content, AI Translate first, then re-tone." },
     ],
     related: ["ai-rewrite", "ai-improve-writing", "ai-paraphrase", "ai-proofread"],
-  },
-
-  "multi-year-paper-pattern": {
-    tool: "ai-paper-pattern",
-    h1: "Multi-Year Question Paper Pattern Analysis — predict next paper",
-    sub: "Concatenate 5+ years of past exam papers. We surface topic frequency over years, question-type trends, difficulty drift, and predict topics likely to recur. 15 credits.",
-    canonical: "/multi-year-paper-pattern",
-    howTo: [
-      { t: "Concatenate past papers", d: "Use our free Merge PDF tool to combine 5-10 years of the same exam (TNPSC / UPSC / JEE / NEET / SSC / Banking / GATE / board) into one PDF." },
-      { t: "Drop the merged PDF", d: "We detect each year's paper boundary and tag every question across all years." },
-      { t: "Get pattern + predictions", d: "Subject mix over time + topic frequency + question-type trend + difficulty drift + recycle rate + predicted topics for next paper, ranked." },
-    ],
-    faq: [
-      { q: "How accurate are the predictions?", a: "Pattern-based, not crystal-ball. We rank topics by their cumulative frequency × difficulty across years. The top 6-10 topics WILL appear in some form on the next paper, but exact wording and difficulty-level depend on the paper-setter's taste that year." },
-      { q: "What's a 'recycle rate'?", a: "Questions that appear verbatim or near-verbatim across years. Some exams (especially SSC / state PSCs) have higher recycle rates than others (UPSC almost never repeats). Recycled questions are free marks if you've prepped correctly." },
-      { q: "How many years should I include?", a: "5-10 years is the sweet spot. Less than 5 and trends are noisy; more than 10 and old syllabus changes pollute the signal." },
-      { q: "Does it work for state-board exams?", a: "Yes — CBSE 10th / 12th, state-board paper sets are well-supported. We've also tested on coaching-institute mock paper sets (where recycle rates are very high)." },
-    ],
-    related: ["ai-paper-pattern", "ai-tnpsc", "ai-jee-neet", "ai-upsc"],
   },
 
   "improve-pdf-writing": {

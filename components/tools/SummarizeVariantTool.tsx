@@ -34,7 +34,6 @@ type Depth =
   | "expand"
   | "tone-analyze"
   | "citations"
-  | "financials"
   | "sentiment"
   | "bias"
   | "proofread"
@@ -42,44 +41,28 @@ type Depth =
   | "video-script"
   | "ats-resume"
   | "action-items"
-  | "rental"
   | "syllabus"
-  | "property"
   | "discharge"
   // Task #67 Tier 3 P0 wedges.
   | "cover-letter"
   | "jd-match"
-  | "multi-bank"
   // Task #75 Tier 3 P1 wedges.
-  | "credit-card"
-  | "mutual-fund"
   | "nda"
-  | "sale-deed"
   | "employment"
   // Task #77 Tier 3 P1 wedges.
-  | "medical-bill"
-  | "prescription"
   | "salary-slip"
   // Task #78 Tier 3 wedges.
   | "research-paper"
-  | "demat"
   | "insurance"
   | "loan-bundle"
   // Task #79 Tier 3 wedges.
-  | "expense-report"
   | "partnership-deed"
   // Task #80 Tier 3 wedges.
-  | "scan-report"
-  | "electricity-bill"
-  | "telecom-bill"
-  | "builder-agreement"
-  | "balance-sheet"
   // Task #81 Tier 2 + Tier 3 wedges.
   | "improve-writing"
   | "paraphrase"
   | "plagiarism"
   | "chart-to-table"
-  | "paper-pattern"
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
   | "stamp-duty";
@@ -662,21 +645,6 @@ export function CitationsPdfTool() {
   );
 }
 
-export function FinancialsPdfTool() {
-  return (
-    <SummarizeVariantTool
-      depth="financials"
-      toolId="ai-financials"
-      callbackUrl="/tool/ai-financials"
-      prompt="Drop a financial PDF to extract its key numbers"
-      runLabel="Extract financials"
-      busyLabel="Extracting…"
-      successTitle="Financials extracted"
-      pricingBlurb="Metric / Value / Unit / Period / Page table. Handles INR crore + USD million + ratios + percentages. 5 credits per PDF."
-      relatedHref={{ href: "/tool/ai-table", label: "AI · Table Extract (any table → Excel)" }}
-    />
-  );
-}
 
 export function SentimentPdfTool() {
   return (
@@ -791,21 +759,6 @@ export function ActionItemsPdfTool() {
 }
 
 
-export function RentalAgreementTool() {
-  return (
-    <SummarizeVariantTool
-      depth="rental"
-      toolId="ai-rental"
-      callbackUrl="/tool/ai-rental"
-      prompt="Drop a rental agreement PDF to flag risks and missing clauses"
-      runLabel="Analyse agreement"
-      busyLabel="Analysing…"
-      successTitle="Rental analysis ready"
-      pricingBlurb="Tier 3 §3.2 Legal: Critical issues + missing standard clauses + negotiation points + state-specific notes (Karnataka / Maharashtra / Delhi / Tamil Nadu). 15 credits. Not legal advice."
-      relatedHref={{ href: "/tool/ai-summarize", label: "AI Summarize (general docs)" }}
-    />
-  );
-}
 
 export function SyllabusStudyPlanTool() {
   return (
@@ -823,21 +776,6 @@ export function SyllabusStudyPlanTool() {
   );
 }
 
-export function PropertyDocTool() {
-  return (
-    <SummarizeVariantTool
-      depth="property"
-      toolId="ai-property"
-      callbackUrl="/tool/ai-property"
-      prompt="Drop a property document (sale deed / khata / EC) to check for red flags"
-      runLabel="Check property doc"
-      busyLabel="Analysing…"
-      successTitle="Property doc analysis ready"
-      pricingBlurb="Tier 3 §3.5 Real Estate: Document type / property details / chain of title / encumbrances / red flags / missing standard documents. 30 credits. Not legal advice."
-      relatedHref={{ href: "/tool/ai-rental", label: "Rental Agreement Analyzer" }}
-    />
-  );
-}
 
 export function DischargeSummaryTool() {
   return (
@@ -910,55 +848,10 @@ export function JdMatchTool() {
 
 
 
-export function MultiBankMergerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="multi-bank"
-      toolId="ai-multi-bank"
-      callbackUrl="/tool/ai-multi-bank"
-      prompt="Drop a multi-bank statement PDF (SBI / HDFC / ICICI / Axis / Kotak…)"
-      runLabel="Merge statements"
-      busyLabel="Parsing…"
-      successTitle="Consolidated statement ready"
-      pricingBlurb="Tier 3 §3.1 Finance: Parses statements from multiple Indian banks concatenated in one PDF. Outputs per-bank summaries + a consolidated transaction view with category breakdown. 20 credits."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Single Bank Statement Parser" }}
-    />
-  );
-}
 
 // Task #75 — five more Tier 3 P1 wedges.
 
-export function CreditCardStatementTool() {
-  return (
-    <SummarizeVariantTool
-      depth="credit-card"
-      toolId="ai-credit-card"
-      callbackUrl="/tool/ai-credit-card"
-      prompt="Drop a credit card statement to analyse"
-      runLabel="Analyse statement"
-      busyLabel="Analysing…"
-      successTitle="Credit card analysis ready"
-      pricingBlurb="Tier 3 §3.1 Finance: Spend by category + top merchants + recurring charges + fees + reward burn. Works on Indian and international issuers. 15 credits. Not financial advice."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
-    />
-  );
-}
 
-export function MutualFundStatementTool() {
-  return (
-    <SummarizeVariantTool
-      depth="mutual-fund"
-      toolId="ai-mutual-fund"
-      callbackUrl="/tool/ai-mutual-fund"
-      prompt="Drop a CAMS / KFin / AMC mutual fund statement"
-      runLabel="Parse statement"
-      busyLabel="Parsing…"
-      successTitle="Mutual fund analysis ready"
-      pricingBlurb="Tier 3 §3.1 Finance: Holdings snapshot + asset allocation + transactions + active SIPs + top/bottom performers + tax-lot summary. Works on CAMS, KFin, and AMC formats. 15 credits. Not investment advice."
-      relatedHref={{ href: "/tool/ai-itr-form16", label: "ITR / Form 16 Analyzer" }}
-    />
-  );
-}
 
 export function NdaAnalyzerTool() {
   return (
@@ -976,21 +869,6 @@ export function NdaAnalyzerTool() {
   );
 }
 
-export function SaleDeedAnalyzerTool() {
-  return (
-    <SummarizeVariantTool
-      depth="sale-deed"
-      toolId="ai-sale-deed"
-      callbackUrl="/tool/ai-sale-deed"
-      prompt="Drop an Indian sale deed / property document"
-      runLabel="Audit sale deed"
-      busyLabel="Analysing…"
-      successTitle="Sale deed audit ready"
-      pricingBlurb="Tier 3 §3.2 Legal: Property schedule + chain of title + encumbrances + risk flags + missing standard clauses + recommended verifications (EC, khata, RERA). Built for Indian home buyers. 25 credits. Not legal advice — engage a property lawyer."
-      relatedHref={{ href: "/tool/ai-property", label: "Property Document Checker" }}
-    />
-  );
-}
 
 export function EmploymentContractTool() {
   return (
@@ -1010,37 +888,7 @@ export function EmploymentContractTool() {
 
 // Task #77 — five more Tier 3 P1 wedges.
 
-export function MedicalBillTool() {
-  return (
-    <SummarizeVariantTool
-      depth="medical-bill"
-      toolId="ai-medical-bill"
-      callbackUrl="/tool/ai-medical-bill"
-      prompt="Drop a hospital bill / medical bill / insurance claim doc"
-      runLabel="Analyse bill"
-      busyLabel="Analysing…"
-      successTitle="Medical bill analysis ready"
-      pricingBlurb="Tier 3 §3.4 Healthcare: itemised charges + insurance / cashless status + IRDAI-reimbursable vs excluded + pre/post-hospitalisation notes. 20 credits. Not a guarantee of reimbursement — IRDAI rules + your policy wording control."
-      relatedHref={{ href: "/tool/ai-blood-test", label: "Blood Test Report Parser" }}
-    />
-  );
-}
 
-export function PrescriptionParserTool() {
-  return (
-    <SummarizeVariantTool
-      depth="prescription"
-      toolId="ai-prescription"
-      callbackUrl="/tool/ai-prescription"
-      prompt="Drop a prescription (printed or handwritten)"
-      runLabel="Parse prescription"
-      busyLabel="Reading…"
-      successTitle="Prescription parsed"
-      pricingBlurb="Tier 3 §3.4 Healthcare: handwritten + printed prescriptions parsed into structured JSON — drug name, strength, dosage, frequency, duration, route, with confidence flags. Indian conventions (BD/TDS/HS/SOS, 1-0-1) understood. 10 credits. Not medical advice — verify with the prescriber if any line shows low confidence."
-      relatedHref={{ href: "/tool/ai-medical-bill", label: "Medical Bill Analyzer" }}
-    />
-  );
-}
 
 
 // EncumbranceCertTool removed in Task #99 (govt-related: Sub-Registrar EC).
@@ -1080,21 +928,6 @@ export function ResearchPaperTool() {
   );
 }
 
-export function DematStatementTool() {
-  return (
-    <SummarizeVariantTool
-      depth="demat"
-      toolId="ai-demat"
-      callbackUrl="/tool/ai-demat"
-      prompt="Drop an NSDL/CDSL Consolidated Account Statement (CAS)"
-      runLabel="Parse CAS"
-      busyLabel="Parsing…"
-      successTitle="Demat / CAS parsed"
-      pricingBlurb="Tier 3 §3.1 Finance: structured JSON of holdings (equity / MF / bond / ETF / SGB) + transactions (incl. dividends, bonuses, splits, IPO allots) + asset-class summary. NSDL + CDSL formats supported. 15 credits."
-      relatedHref={{ href: "/tool/ai-mutual-fund", label: "Mutual Fund Statement Parser" }}
-    />
-  );
-}
 
 export function InsurancePolicyTool() {
   return (
@@ -1130,21 +963,6 @@ export function LoanBundleAuditTool() {
 
 // Task #79 — five more Tier 3 wedges.
 
-export function ExpenseReportTool() {
-  return (
-    <SummarizeVariantTool
-      depth="expense-report"
-      toolId="ai-expense-report"
-      callbackUrl="/tool/ai-expense-report"
-      prompt="Drop a bank statement to build a categorised expense report"
-      runLabel="Build report"
-      busyLabel="Categorising…"
-      successTitle="Expense report ready"
-      pricingBlurb="Tier 3 §3.1 Finance: bank-statement → category × month matrix (rent / groceries / fuel / EMI / SIPs / etc.) + top spend areas + recurring charges + saving rate. Indian categories. 15 credits."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
-    />
-  );
-}
 
 
 export function PartnershipDeedTool() {
@@ -1167,85 +985,10 @@ export function PartnershipDeedTool() {
 
 // Task #80 — five more Tier 3 wedges.
 
-export function ScanReportTool() {
-  return (
-    <SummarizeVariantTool
-      depth="scan-report"
-      toolId="ai-scan-report"
-      callbackUrl="/tool/ai-scan-report"
-      prompt="Drop a radiology / scan report (MRI / CT / X-ray / Ultrasound)"
-      runLabel="Explain in plain English"
-      busyLabel="Translating…"
-      successTitle="Plain-language scan report ready"
-      pricingBlurb="Tier 3 §3.4 Healthcare: rewrites the radiologist's report in plain Indian English + glossary of medical terms + questions to ask your doctor + scan limits. 20 credits. STRICTLY a language translation aid — NOT a diagnosis."
-      relatedHref={{ href: "/tool/ai-blood-test", label: "Blood Test Report Parser" }}
-    />
-  );
-}
 
-export function ElectricityBillTool() {
-  return (
-    <SummarizeVariantTool
-      depth="electricity-bill"
-      toolId="ai-electricity-bill"
-      callbackUrl="/tool/ai-electricity-bill"
-      prompt="Drop your Indian electricity bill (TANGEDCO / BESCOM / TSSPDCL / MSEDCL / BSES / Tata Power…)"
-      runLabel="Analyse bill"
-      busyLabel="Analysing…"
-      successTitle="Electricity bill analysis ready"
-      pricingBlurb="Tier 3 §3.10 Utility: slab-by-slab tariff breakdown + telescopic-tariff slab-warning + fixed/variable charges + saving recommendations specific to your DISCOM. 5 credits."
-      relatedHref={{ href: "/tool/ai-telecom-bill", label: "Telecom Bill Analyzer" }}
-    />
-  );
-}
 
-export function TelecomBillTool() {
-  return (
-    <SummarizeVariantTool
-      depth="telecom-bill"
-      toolId="ai-telecom-bill"
-      callbackUrl="/tool/ai-telecom-bill"
-      prompt="Drop your Airtel / Jio / Vi postpaid or fibre / broadband bill"
-      runLabel="Analyse bill"
-      busyLabel="Analysing…"
-      successTitle="Telecom bill analysis ready"
-      pricingBlurb="Tier 3 §3.10 Utility: plan vs usage table + overage + add-ons + bundled OTT (Disney+/Prime/Netflix) + risk flags (auto-renewals, premium SMS, IDD activated) + plan-fit recommendations. 5 credits."
-      relatedHref={{ href: "/tool/ai-electricity-bill", label: "Electricity Bill Analyzer" }}
-    />
-  );
-}
 
-export function BuilderAgreementTool() {
-  return (
-    <SummarizeVariantTool
-      depth="builder-agreement"
-      toolId="ai-builder-agreement"
-      callbackUrl="/tool/ai-builder-agreement"
-      prompt="Drop an under-construction property builder-buyer agreement"
-      runLabel="Audit agreement"
-      busyLabel="Auditing…"
-      successTitle="Builder agreement audit ready"
-      pricingBlurb="Tier 3 §3.5 Real Estate: pricing breakdown (carpet vs super-built-up exposure) + key dates + red flags (asymmetric delay penalty, mandatory club, vague force-majeure) + RERA Act 2016 protection check + negotiation points. 30 credits. Not legal advice — engage a property lawyer."
-      relatedHref={{ href: "/tool/ai-rera", label: "RERA Document Analyzer" }}
-    />
-  );
-}
 
-export function BalanceSheetTool() {
-  return (
-    <SummarizeVariantTool
-      depth="balance-sheet"
-      toolId="ai-balance-sheet"
-      callbackUrl="/tool/ai-balance-sheet"
-      prompt="Drop an audited annual report or financial statements"
-      runLabel="Extract financials"
-      busyLabel="Extracting…"
-      successTitle="Financials extracted"
-      pricingBlurb="Tier 3 §3.1 Finance: structured JSON of balance sheet + P&L + cash flow with line items preserved verbatim + computed ratios (current ratio, D/E, ROE, ROA, interest coverage) where derivable. Ind AS / IFRS / Indian GAAP aware. 25 credits."
-      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
-    />
-  );
-}
 
 // Task #81 — five more wedges.
 
@@ -1313,21 +1056,6 @@ export function ChartToTableTool() {
   );
 }
 
-export function PaperPatternTool() {
-  return (
-    <SummarizeVariantTool
-      depth="paper-pattern"
-      toolId="ai-paper-pattern"
-      callbackUrl="/tool/ai-paper-pattern"
-      prompt="Drop 5+ years of past papers (concatenated) for pattern analysis"
-      runLabel="Find patterns"
-      busyLabel="Analysing…"
-      successTitle="Pattern analysis ready"
-      pricingBlurb="Tier 3 §3.3 Education: multi-year subject mix + topic frequency + question type trend + difficulty drift + recycle rate + predictions for next paper. 15 credits. Works for TNPSC/UPSC/JEE/NEET/SSC/Banking/GATE/board exams."
-      relatedHref={{ href: "/tool/ai-tnpsc", label: "TNPSC Single-Paper Analyzer" }}
-    />
-  );
-}
 
 // Sprint A REVERTED in Task #99 — 5 Indian govt ID wrapper
 // components removed (AadhaarParserTool, PanCardParserTool,

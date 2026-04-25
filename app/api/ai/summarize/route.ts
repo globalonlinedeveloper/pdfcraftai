@@ -75,7 +75,6 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   "expand",
   "tone-analyze",
   "citations",
-  "financials",
   // Task #56:
   "sentiment",
   "bias",
@@ -96,48 +95,31 @@ const VALID_DEPTHS: readonly SummarizeDepth[] = [
   // Task #62:
   "action-items",
   // Task #63 — Tier 3 wedges:
-  "bank-statement",
   "blood-test",
   // Task #64:
-  "rental",
   "syllabus",
   // Task #65:
-  "property",
   "discharge",
   // Task #67 — Tier 3 §3.6 + §3.3 + §3.1 P0 wedges:
   "cover-letter",
   "jd-match",
-  "multi-bank",
   // Task #75 — five Tier 3 P1 wedges (§3.1 + §3.2):
-  "credit-card",
-  "mutual-fund",
   "nda",
-  "sale-deed",
   "employment",
   // Task #77 — five more Tier 3 P1 wedges (§3.1 + §3.2 + §3.4 + §3.5):
-  "medical-bill",
-  "prescription",
   "salary-slip",
   // Task #78 — five more Tier 3 wedges (§3.3 + §3.1 + §3.10):
   "research-paper",
-  "demat",
   "insurance",
   "loan-bundle",
   // Task #79 — five more Tier 3 wedges (§3.1 + §3.2 + §3.3):
-  "expense-report",
   "partnership-deed",
   // Task #80 — five more Tier 3 wedges (§3.4 + §3.10 + §3.5 + §3.1):
-  "scan-report",
-  "electricity-bill",
-  "telecom-bill",
-  "builder-agreement",
-  "balance-sheet",
   // Task #81 — five more wedges (Tier 2 §2.5/§2.6/§2.8 + Tier 3 §3.3):
   "improve-writing",
   "paraphrase",
   "plagiarism",
   "chart-to-table",
-  "paper-pattern",
   // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
   // Sprint B — 5 Indian financial wedges (Tier 3, §3.1).
 ];

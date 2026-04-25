@@ -83,7 +83,6 @@ export type SummarizeDepth =
   | "expand"
   | "tone-analyze"
   | "citations"
-  | "financials"
   // Task #56:
   //   sentiment   §2.5 P2 — document-level + section sentiment (3c)
   //   bias        §2.5 P3 — inclusive-language audit (5c)
@@ -123,19 +122,16 @@ export type SummarizeDepth =
   // Task #63 — Tier 3 wedges:
   //   bank-statement §3.1 P0 — JSON transactions + CSV (30c)
   //   blood-test     §3.4 P0 — lab values + trend notes (15c)
-  | "bank-statement"
   | "blood-test"
   // Task #64 — three more Tier 3 P0 wedges:
   //   gst-invoice §3.1 — invoice-to-GSTR fields (25c)
   //   rental      §3.2 — rental agreement risks + missing clauses (15c)
   //   syllabus    §3.3 — syllabus → week-by-week study plan (20c)
-  | "rental"
   | "syllabus"
   // Task #65 — three more Tier 3 wedges:
   //   property §3.5 P1 — title/khata/EC/parent (30c)
   //   discharge §3.4 P1 — patient-friendly discharge summary (10c)
   //   itr-form16 §3.1 P1 — Indian tax doc analyzer (20c)
-  | "property"
   | "discharge"
   // Task #67 — five more Tier 3 P0 wedges:
   //   cover-letter §3.6 P0 — tailored cover letter from resume +
@@ -153,7 +149,6 @@ export type SummarizeDepth =
   //   per-bank summary (20c).
   | "cover-letter"
   | "jd-match"
-  | "multi-bank"
   // Task #75 — five more Tier 3 P1 wedges:
   //   credit-card §3.1 — categorise spend, recurring charges, fees,
   //   reward burn (15c)
@@ -165,10 +160,7 @@ export type SummarizeDepth =
   //   clauses + chain-of-title (25c)
   //   employment  §3.2 — employment contract review with
   //   non-compete, IP, notice period flags (20c)
-  | "credit-card"
-  | "mutual-fund"
   | "nda"
-  | "sale-deed"
   | "employment"
   // Task #77 — five more Tier 3 P1 wedges:
   //   medical-bill §3.4 — Indian medical bill / insurance claim
@@ -180,8 +172,6 @@ export type SummarizeDepth =
   //   chain of liens / mortgages over time (15c)
   //   salary-slip  §3.1 — Indian salary slip analyzer with
   //   YoY-friendly normalised structure (10c)
-  | "medical-bill"
-  | "prescription"
   | "salary-slip"
   // Task #78 — five more Tier 3 wedges:
   //   upsc          §3.3 — UPSC Prelims/Mains paper analyzer (20c)
@@ -195,7 +185,6 @@ export type SummarizeDepth =
   //   loan-bundle   §3.1 — Loan application document bundler that
   //   audits a stack of docs against bank checklist (15c)
   | "research-paper"
-  | "demat"
   | "insurance"
   | "loan-bundle"
   // Task #79 — five more Tier 3 wedges:
@@ -209,7 +198,6 @@ export type SummarizeDepth =
   //   paper analyzer (15c)
   //   ncert           §3.3 P1 — NCERT chapter summarizer with
   //   class-wise vocab (10c)
-  | "expense-report"
   | "partnership-deed"
   // Task #80 — five more Tier 3 wedges:
   //   scan-report      §3.4 P2 — MRI/CT/X-ray report explainer in
@@ -222,11 +210,6 @@ export type SummarizeDepth =
   //   red-flag detector for buyers (30c)
   //   balance-sheet    §3.1 P2 — extract structured financials from
   //   a balance sheet / P&L (25c)
-  | "scan-report"
-  | "electricity-bill"
-  | "telecom-bill"
-  | "builder-agreement"
-  | "balance-sheet"
   // Task #81 — five more wedges (Tier 2 §2.5/§2.6/§2.8 + Tier 3 §3.3):
   //   improve-writing  §2.6 P1 — clarity / concision rewrite (5c)
   //   paraphrase       §2.6 P1 — paraphrase preserving meaning (5c)
@@ -240,7 +223,6 @@ export type SummarizeDepth =
   | "paraphrase"
   | "plagiarism"
   | "chart-to-table"
-  | "paper-pattern"
   // Sprint A (REVERTED — DPDP / liability concerns):
   //   The 5 Indian govt ID parsers (aadhaar, pan-card, driving-
   //   license, voter-id, passport) shipped in commit 6782560 were
@@ -687,25 +669,6 @@ function buildSystemPrompt(opts: {
           "document._` and explain in one line why (e.g. 'This " +
           "appears to be a product brochure')."
         );
-      case "financials":
-        // §2.7 Extract Key Financial Numbers. Tables of monetary
-        // figures, percentages, ratios with currency, unit, and
-        // context. Targets Indian finance docs (lakhs/crores) AND
-        // international (millions/billions).
-        return (
-          "Extract the key financial numbers from this document. " +
-          "Output a single Markdown table with columns `Metric | " +
-          "Value | Unit | Period | Page`. Metric = what the number " +
-          "measures (e.g. 'Revenue', 'EBITDA margin', 'Debt-to-equity'). " +
-          "Value = the number as stated. Unit = currency code + scale " +
-          "('INR crore', 'USD million', '%', 'x'). Period = the time " +
-          "window if given (e.g. 'FY2025', 'Q2 2026', 'as of " +
-          "2026-03-31'). Page = where it appears. Capture every " +
-          "monetary figure, ratio, and percentage that has business " +
-          "meaning — not page numbers or form-field IDs. If the " +
-          "document contains no financial data, render " +
-          "`_No financial figures found._` instead of the table."
-        );
       case "sentiment":
         // §2.5 Sentiment Analysis. Overall + per-section sentiment
         // with evidence. Neutral default for factual docs; flags
@@ -927,80 +890,6 @@ function buildSystemPrompt(opts: {
           "line note that this doesn't appear to be an " +
           "actionable document (meeting notes, spec, brief)."
         );
-      case "bank-statement":
-        // §3.1 Bank Statement Parser. JSON transaction list +
-        // category inference. Indian banks (SBI / HDFC / ICICI /
-        // Axis / Kotak) use different PDF layouts — we rely on
-        // the model's flexible parsing. Output is JSON for the
-        // UI to render + CSV export.
-        return (
-          "Parse this bank statement into structured JSON. " +
-          "Output ONLY a ```json fenced code block containing a " +
-          "single object shaped {\"account\": {\"holder\": " +
-          "string|null, \"bank\": string|null, \"number_masked\": " +
-          "string|null, \"period\": string|null}, \"opening_" +
-          "balance\": number|null, \"closing_balance\": " +
-          "number|null, \"currency\": string (default \"INR\"), " +
-          "\"transactions\": [{\"date\": string (YYYY-MM-DD when " +
-          "possible), \"description\": string (verbatim), " +
-          "\"debit\": number|null, \"credit\": number|null, " +
-          "\"balance\": number|null, \"category\": string (one " +
-          "of: Income, Transfer, Food, Travel, Shopping, Bills, " +
-          "Investment, Tax, Cash, Fees, Other)}]}. Preserve " +
-          "transaction descriptions verbatim. Category is your " +
-          "best-effort classification; if truly ambiguous use " +
-          "'Other'. Do NOT invent dates, amounts, or balances — " +
-          "null is the correct answer when the source is " +
-          "unclear. Works for SBI / HDFC / ICICI / Axis / Kotak " +
-          "/ Yes / IDFC and most NBFCs."
-        );
-      case "rental":
-        // §3.2 Rental Agreement Analyzer. Indian-context risks
-        // and missing clauses. NOT legal advice; surfaced in FAQ.
-        return (
-          "Analyse this rental agreement for risks and missing " +
-          "clauses. Produce these H2 sections: `## Summary` " +
-          "(one paragraph: parties, term, rent, deposit, " +
-          "city/state). `## Critical Issues` (bullets with quoted " +
-          "text + risk explanation — unfair lock-in, biased " +
-          "deposit-forfeit, vague maintenance obligations, " +
-          "missing notice period, etc.). `## Missing Standard " +
-          "Clauses` (typical Indian rental clauses absent here — " +
-          "Maintenance & Repairs, Utilities, Force Majeure, " +
-          "Renewal Terms, Termination, Dispute Resolution, " +
-          "Stamp Duty / Registration, Lock-in, Notice Period). " +
-          "`## Negotiation Points` (3–5 specific suggestions a " +
-          "tenant or landlord should ask for). `## Standard " +
-          "Practice Notes` (Indian rental norms relevant to this " +
-          "agreement — Karnataka / Maharashtra / Delhi / Tamil " +
-          "Nadu specifics if state is identifiable). End with a " +
-          "one-line disclaimer that this is not legal advice."
-        );
-      case "property":
-        // §3.5 Property Document Checker. Title deed / khata /
-        // Encumbrance Certificate / parent document analysis for
-        // Indian residential / commercial property purchases.
-        return (
-          "Analyse this Indian property document for completeness " +
-          "and red flags. Produce: `## Document Type` (one line — " +
-          "Sale Deed / Khata / Encumbrance Certificate / Parent " +
-          "Document / Allotment Letter / Lease Deed / etc.; if " +
-          "unclear, say so). `## Property Details` (table: Address, " +
-          "Survey/Plot No, Built-up area, Type, Title Holder, " +
-          "Acquisition Date). `## Chain of Title` (bullets " +
-          "tracing ownership history if visible — flag any gaps " +
-          "or unrelated transfers). `## Encumbrances & Charges` " +
-          "(list any mortgages, liens, court orders mentioned). " +
-          "`## Red Flags` (bullets — missing seller signatures, " +
-          "stamp-duty inconsistencies, encumbrance not cleared, " +
-          "incomplete survey numbers, illegible registration " +
-          "stamps, etc.). `## Missing Documents` (list standard " +
-          "docs a buyer would also ask for that aren't in this " +
-          "PDF — Khata Extract, Tax-paid Receipts, Approved " +
-          "Plan, Occupancy Certificate, NOC, Power of Attorney, " +
-          "etc.). End with a one-line disclaimer that property " +
-          "verification requires a qualified lawyer / advocate."
-        );
       case "discharge":
         // §3.4 Discharge Summary Simplifier. Patient + family-
         // friendly version of a hospital discharge summary.
@@ -1121,47 +1010,6 @@ function buildSystemPrompt(opts: {
           "ats-resume-optimizer style output and note the missing " +
           "JD in a top-level callout."
         );
-      case "credit-card":
-        // §3.1 Credit Card Statement Analyzer.
-        return (
-          "Analyse this credit card statement (Indian or international " +
-          "issuer). Output: `## Statement Identified` (bank, card type, " +
-          "billing period, last-4, total due, minimum due, due date). " +
-          "`## Spend by Category` (a Markdown table with columns: " +
-          "Category, Amount, % of Total, # Transactions. Use " +
-          "categories: Food/Groceries, Fuel, Travel, Shopping, " +
-          "Entertainment, Bills/Utilities, EMI, Cash/ATM, Fees/Charges, " +
-          "Refund/Credit, Other). `## Top Merchants` (top 10 by spend " +
-          "with merchant + total). `## Fees & Interest` (table: Type, " +
-          "Amount, Description — finance charges, late fees, " +
-          "over-limit, foreign-tx fees). `## Recurring Charges` " +
-          "(detected subscriptions: name, frequency, amount). `## " +
-          "Reward Points` (earned this cycle, redeemed, balance — if " +
-          "visible). `## Observations` (3-5 bullets — high-fee " +
-          "alerts, unusual spikes, recurring charges to review). End " +
-          "with note that this is parsed data, not financial advice."
-        );
-      case "mutual-fund":
-        // §3.1 Mutual Fund / CAMS / KFin Statement Parser.
-        return (
-          "Parse this mutual fund consolidated statement (CAMS, " +
-          "KFin, or AMC-specific format). Output: `## Statement " +
-          "Identified` (PAN-masked, period covered, AMCs included, " +
-          "folio count). `## Holdings Snapshot` (Markdown table: " +
-          "Scheme, Folio, AMC, Category (Equity/Debt/Hybrid/ELSS/" +
-          "Liquid/Other), Units, NAV, Current Value, Invested, " +
-          "Returns %, XIRR if available). Sort by Current Value " +
-          "desc. `## Asset Allocation` (table: Category, Value, " +
-          "% of Portfolio). `## Transaction Summary` (table: Type " +
-          "(Purchase/Switch-In/SIP/Redeem/Dividend), Count, Amount). " +
-          "`## SIPs Active` (scheme, monthly amount, next date if " +
-          "visible). `## Top Performers` (3 best XIRR) and `## " +
-          "Underperformers` (3 worst — if held >12 months and " +
-          "negative or below 8%). `## Tax Lots` (only mention if " +
-          "relevant for capital gains; LTCG vs STCG split). End with " +
-          "note that this is parsed data, not investment advice — " +
-          "consult an SEBI-registered advisor."
-        );
       case "nda":
         // §3.2 NDA Analyzer.
         return (
@@ -1185,35 +1033,6 @@ function buildSystemPrompt(opts: {
           "with note that this is a flag-and-discuss aid, not legal " +
           "advice — review with counsel before signing high-stakes " +
           "NDAs."
-        );
-      case "sale-deed":
-        // §3.2 Sale Deed Analyzer (Indian property buyers).
-        return (
-          "Analyse this Indian sale deed / property conveyance " +
-          "document. Output: `## Document Identified` (deed type, " +
-          "execution date, sub-registrar office, document number, " +
-          "stamp duty paid, consideration amount). `## Parties` " +
-          "(seller(s) and buyer(s) with relationship — e.g. " +
-          "individual / firm / power of attorney). `## Property " +
-          "Schedule` (description from deed: extent, boundaries, " +
-          "khata/survey number, full address). `## Chain of Title` " +
-          "(brief paragraph summarising prior ownership chain " +
-          "referenced in the deed; flag any gaps). `## Encumbrances " +
-          "& Liens Mentioned` (any existing charges, mortgages, " +
-          "leases, easements). `## Risk Flags` (table: Issue, " +
-          "Severity, Quote, Recommendation. Common flags: incomplete " +
-          "chain of title, missing parent document references, " +
-          "inadequate stamp duty, undivided share without partition, " +
-          "ongoing litigation references, agricultural-conversion " +
-          "issues, RERA non-disclosure for under-construction). `## " +
-          "Missing Standard Clauses` (e.g. indemnity by seller for " +
-          "title defects, encumbrance certificate cross-reference, " +
-          "tax-paid receipts attached). `## Recommended Verifications` " +
-          "(EC for past 30 years, latest property tax receipt, " +
-          "khata certificate, building approval, RERA registration " +
-          "if applicable). End with explicit note that this is a " +
-          "checklist aid for buyers, NOT legal advice — engage a " +
-          "local property lawyer before purchasing."
         );
       case "employment":
         // §3.2 Employment Contract Review.
@@ -1241,65 +1060,6 @@ function buildSystemPrompt(opts: {
           "note that this is an audit aid, not legal advice — for " +
           "senior or India-specific issues consult an employment " +
           "lawyer."
-        );
-      case "medical-bill":
-        // §3.4 Medical Bill / Insurance Claim Prep.
-        return (
-          "Analyse this Indian medical bill / hospital bill / " +
-          "insurance claim document. Output: `## Bill Identified` " +
-          "(hospital name, patient (PII-masked), admission date, " +
-          "discharge date, IP/OP, total billed, total payable). " +
-          "`## Itemised Charges` (Markdown table: Category " +
-          "(Room/ICU, Doctor's Fees, Investigations, Medicines, " +
-          "Procedures, Consumables, Implants, Other), Amount, " +
-          "%Total, # Items). `## Insurance / Cashless` (insurer if " +
-          "visible, sum-insured used, cashless approval status, " +
-          "co-pay / deductible amount, dis-allowed items). `## " +
-          "Likely Reimbursable` (line items typically covered by " +
-          "Indian health insurance — IRDAI standard exclusions " +
-          "noted separately). `## Likely Non-Reimbursable` " +
-          "(IRDAI-excluded items: registration fees, food charges, " +
-          "diapers, attendant fees, telephone, etc.). `## Pre-/" +
-          "Post-Hospitalisation Notes` (if claim pertains to a " +
-          "hospitalisation, list the items potentially claimable " +
-          "in the 30-day pre and 60-day post windows). `## " +
-          "Suggested Next Steps` (concrete actions: documents to " +
-          "compile for claim, common reasons claims get denied, " +
-          "discharge summary cross-check). End with note this is " +
-          "a parsing + checklist aid, NOT a guarantee of " +
-          "reimbursement — IRDAI rules + your specific policy " +
-          "wording control."
-        );
-      case "prescription":
-        // §3.4 Prescription Parser (handwritten + printed).
-        return (
-          "Parse this Indian prescription (printed or handwritten) " +
-          "into structured JSON. Output ONLY a ```json fenced code " +
-          "block with shape: {\"prescriber\": {\"name\": " +
-          "string|null, \"qualification\": string|null, " +
-          "\"registration_no\": string|null, \"clinic\": " +
-          "string|null}, \"patient\": {\"name\": string|null, " +
-          "\"age\": string|null, \"sex\": string|null, \"date\": " +
-          "string|null (ISO YYYY-MM-DD)}, \"diagnosis\": " +
-          "string|null, \"medications\": [{\"name\": string (the " +
-          "drug name as written, brand or generic), \"strength\": " +
-          "string|null (e.g. '500 mg'), \"dosage\": string|null " +
-          "(e.g. '1 tablet'), \"frequency\": string|null (e.g. " +
-          "'twice daily', '1-0-1', 'BD'), \"duration\": " +
-          "string|null (e.g. '5 days', '14 days'), \"timing\": " +
-          "string|null (e.g. 'after food', 'before sleep'), " +
-          "\"route\": string|null (oral / IV / topical / inhaled), " +
-          "\"confidence\": string (one of: 'high', 'medium', " +
-          "'low' — based on legibility)}], \"investigations\": " +
-          "[string] (lab tests prescribed), \"follow_up\": " +
-          "string|null (next visit instructions)}. " +
-          "Handwriting interpretation rules: when illegible mark " +
-          "the field as null and set confidence='low'. NEVER " +
-          "guess a drug name — wrong drug is a safety risk. Use " +
-          "Indian prescribing conventions: '1-0-1' means morning-" +
-          "noon-night; 'BD'=twice daily; 'TDS'=thrice daily; " +
-          "'HS'=at bedtime; 'SOS'=as needed. End with no extra " +
-          "commentary outside the JSON."
         );
       case "improve-writing":
         // §2.6 Improve Writing — clarity / concision rewrite.
@@ -1393,241 +1153,11 @@ function buildSystemPrompt(opts: {
           "gridlines), surface that explicitly rather than " +
           "inventing numbers."
         );
-      case "paper-pattern":
-        // §3.3 Multi-year question-paper pattern analyzer.
-        return (
-          "Analyse this stack of question papers (typically 5-10 " +
-          "years of the same exam concatenated). The user wants " +
-          "to know what questions / topics / patterns recur and " +
-          "which trend up or down. Output: `## Papers Detected` " +
-          "(table: Year, Total Questions, Total Marks, " +
-          "Sections). `## Subject / Section Mix Over Time` " +
-          "(Markdown table — rows = subjects/sections, columns = " +
-          "years, cells = #questions or %share. Reveals shifts " +
-          "in syllabus weighting). `## Topic Frequency Across " +
-          "Years` (table: Topic, Year-1, Year-2 ... ; aggregated " +
-          "list sorted desc by total. The actual top of this " +
-          "list is your high-yield study list). `## Question " +
-          "Type Trend` (factual MCQ vs application-based vs " +
-          "assertion-reason vs match-following ratio over " +
-          "years). `## Difficulty Drift` (Easy / Medium / Hard " +
-          "% per year). `## Question Recycle Rate` (questions " +
-          "that appear verbatim or near-verbatim across years — " +
-          "list them). `## Predictions` (5-7 specific topics " +
-          "with high probability of appearing next, ranked, " +
-          "with reasoning anchored in the data above — not " +
-          "generic 'study hard'). `## Strategy Implications` " +
-          "(3-5 bullets on study allocation, ignored sub-topics " +
-          "the data suggests are safe to deprioritise, etc.). " +
-          "Use exam-specific vocabulary if you can identify the " +
-          "exam (TNPSC / UPSC / JEE / NEET / SSC / Banking / " +
-          "GATE / etc.)."
-        );
       // Sprint A REVERTED in Task #99 — 5 Indian govt ID parsers
       // (aadhaar / pan-card / driving-license / voter-id / passport)
       // removed for DPDP Act 2023 compliance and liability reasons.
       // See depth-union comment near line 254.
       // Sprint B — Indian financial wedges (§3.1).
-      case "scan-report":
-        // §3.4 Scan Report (MRI/CT/X-ray/Ultrasound) Plain-language
-        // Explainer. STRICTLY non-diagnostic — surfaces what the
-        // radiologist wrote in patient-friendly language only.
-        return (
-          "Rewrite this radiology / scan report (MRI / CT / X-ray " +
-          "/ Ultrasound / Mammogram / DEXA) in plain Indian " +
-          "English for a patient and their family. Output: `## " +
-          "Scan Identified` (modality, body part(s) imaged, date, " +
-          "referring doctor, reporting radiologist if visible). " +
-          "`## Why the Scan Was Done` (clinical indication / " +
-          "history section, in plain language). `## What the " +
-          "Radiologist Found` (organ-by-organ in patient-friendly " +
-          "phrasing — translate medical Latin to everyday words. " +
-          "Examples: 'no acute intracranial abnormality' → 'no " +
-          "recent injury or bleeding visible in the brain'). `## " +
-          "Impression` (rewrite the radiologist's impression " +
-          "verbatim AND in plain language side-by-side). `## " +
-          "Glossary` (table: Term-from-report, Plain-English " +
-          "meaning. Cover the technical words the patient is " +
-          "likely to Google). `## Questions to Ask Your Doctor` " +
-          "(5-7 specific questions tied to THIS report — not " +
-          "generic). `## What This Does NOT Tell You` (be honest " +
-          "about scan limits — e.g. an MRI brain doesn't evaluate " +
-          "the spine; an ultrasound abdomen doesn't replace " +
-          "endoscopy). End with a clear caveat block: this is a " +
-          "language translation aid, NOT a diagnosis or treatment " +
-          "plan. Always discuss the report with the prescribing " +
-          "doctor. Do NOT invent findings. Do NOT downplay or " +
-          "amplify what's in the report. If the report contains " +
-          "an urgent finding (e.g. 'critical', 'emergency', 'see " +
-          "doctor immediately'), surface that in a bold callout " +
-          "at the top."
-        );
-      case "electricity-bill":
-        // §3.10 Indian Electricity Bill Analyzer (TANGEDCO,
-        // BESCOM, TSSPDCL, MSEDCL, BSES, Tata Power, etc.).
-        return (
-          "Analyse this Indian electricity bill. Output: `## Bill " +
-          "Identified` (DISCOM — TANGEDCO / BESCOM / TSSPDCL / " +
-          "MSEDCL / BSES Rajdhani-Yamuna / Tata Power-DDL / " +
-          "Adani-Mumbai / etc., consumer number masked, billing " +
-          "period, due date, total amount). `## Consumption " +
-          "Snapshot` (units consumed kWh, daily-average, " +
-          "compared with previous bill if visible, sanctioned " +
-          "load, contract demand). `## Tariff Breakdown` (slab- " +
-          "by-slab Markdown table: Slab, Units in Slab, Rate, " +
-          "Charge — useful since most Indian DISCOMs use " +
-          "telescopic slabs where overshooting one tier raises " +
-          "rates on ALL units). `## Other Charges` (Fixed " +
-          "Charges, Fuel Surcharge, Electricity Duty, Meter " +
-          "Rent, Late Payment Surcharge, GST). `## Subsidy / " +
-          "Rebate Applied` (any state subsidy, BPL, solar net-" +
-          "metering credit). `## Observations` (3-5 " +
-          "actionable bullets — about-to-cross-slab warnings, " +
-          "fixed-charge anomalies, meter-reading basis " +
-          "(actual / estimated / on-record), unusually high " +
-          "fuel surcharge in a regulatory adjustment cycle). " +
-          "`## Saving Recommendations` (concrete: 'shift " +
-          "23 units pre-month-end to avoid slab jump', 'if " +
-          "average exceeds 500 units consider switching to TOD " +
-          "tariff if available in your DISCOM area', 'check if " +
-          "you qualify for the state rooftop-solar subsidy'). " +
-          "End with note this is a parsing aid; tariff details " +
-          "vary by state and DISCOM, refer to the bill or DISCOM " +
-          "website for authoritative interpretation."
-        );
-      case "telecom-bill":
-        // §3.10 Indian Telecom Bill Analyzer (Airtel / Jio / Vi
-        // postpaid + broadband).
-        return (
-          "Analyse this Indian telecom bill (Airtel / Jio / Vi " +
-          "postpaid mobile or fibre / broadband). Output: `## " +
-          "Bill Identified` (operator, account number masked, " +
-          "service type (postpaid mobile / fibre / DTH / " +
-          "enterprise), billing cycle, due date, total). `## " +
-          "Plan Details` (current plan name, base price, " +
-          "validity, included talktime / data / SMS / OTT " +
-          "subscriptions). `## Usage vs Plan` (table: Resource, " +
-          "Included, Used, Overage, Overage Charge — separate " +
-          "rows for Voice (mins), Data (GB), SMS, ISD/IDD if " +
-          "any). `## Add-ons & Bolt-ons` (any additional packs " +
-          "purchased mid-cycle: data add-on, ISD pack, " +
-          "international roaming, value-added services). `## " +
-          "OTT / Subscription Bundle` (Disney+ Hotstar, Amazon " +
-          "Prime, Netflix Basic, JioSaavn etc. bundled in the " +
-          "plan — flag duplicates if the user is paying " +
-          "separately for the same service). `## Charges " +
-          "Breakdown` (base + add-ons + overage + GST). `## " +
-          "Risk Flags` (mid-cycle pack auto-renewal, " +
-          "international roaming activated, premium SMS " +
-          "charges, OTT trial that converted to paid, last-bill " +
-          "spike). `## Plan Fit Recommendations` (3-5 bullets: " +
-          "is the user under-utilising the plan and over-paying, " +
-          "or repeatedly hitting overage and should upgrade; " +
-          "specific cheaper / better-fit plans on the same " +
-          "operator if pattern is clear). End with note this " +
-          "is a parsing aid, plan details change frequently."
-        );
-      case "builder-agreement":
-        // §3.5 Builder Agreement Red-Flag Detector for under-
-        // construction property buyers.
-        return (
-          "Audit this Indian builder-buyer agreement (under-" +
-          "construction property — apartment / villa / plot). " +
-          "Output: `## Project Identified` (project name, RERA " +
-          "registration number, builder, tower / phase, unit " +
-          "number, super-built-up + carpet area, agreed total " +
-          "consideration, BSP, parking + amenity charges, GST). " +
-          "`## Key Dates & Milestones` (booking date, possession " +
-          "date promised, payment plan / construction-linked " +
-          "milestones, grace period clause). `## Pricing & " +
-          "Charges Breakdown` (Markdown table: Component, " +
-          "Amount, Per-sqft Rate, Charged on (Carpet vs Super-" +
-          "built-up), Notes. Surface PLC, EDC, IDC, Club " +
-          "Membership, Maintenance Deposit, Stamp + Registration " +
-          "if included). `## Red Flags` (severity-rated table: " +
-          "Issue, Severity, Quote, Recommendation. Common ones " +
-          "to surface — area calculated on super-built-up vs " +
-          "RERA-mandated carpet area, unilateral right to alter " +
-          "specifications, vague 'force majeure' that includes " +
-          "ordinary delays, possession-date escape clauses, " +
-          "no mention of OC / completion certificate, asymmetric " +
-          "delay-penalty (huge for buyer, tiny for builder), " +
-          "free interest-free period for builder if buyer pays " +
-          "late, mandatory arbitration in distant city, no " +
-          "exit / refund clause, transfer fees on resale, " +
-          "compulsory club membership at handover, undefined " +
-          "common-area share). `## Buyer Protections Per RERA " +
-          "Act 2016` (which mandatory protections are honoured " +
-          "vs missing in this agreement). `## Specifications & " +
-          "Material Schedule` (table from the spec annexure " +
-          "if included). `## Recommended Verifications & " +
-          "Negotiation Points` (concrete actions before signing: " +
-          "verify RERA on state portal, ask for sanctioned " +
-          "plan, OC, EC for the plot, phase-wise approvals; " +
-          "redlines to push back on with replacement language). " +
-          "End with note this is an audit aid for buyers, NOT " +
-          "legal advice — engage a property lawyer before " +
-          "signing a builder agreement."
-        );
-      case "balance-sheet":
-        // §3.1 Balance Sheet / P&L Extractor for analysts.
-        return (
-          "Extract the financial statements from this audited or " +
-          "management report into structured JSON. Output ONLY a " +
-          "```json fenced code block with shape: {\"entity\": " +
-          "{\"name\": string|null, \"CIN\": string|null, \"FY\": " +
-          "string|null, \"period_type\": string (one of: 'annual', " +
-          "'half-year', 'quarter', 'standalone', 'consolidated'), " +
-          "\"reporting_framework\": string|null (Ind AS / IFRS / " +
-          "Indian GAAP)}, \"balance_sheet\": {\"as_at\": string|null, " +
-          "\"assets\": {\"non_current\": [{\"head\": string, " +
-          "\"current_period\": number, \"prior_period\": " +
-          "number|null}], \"current\": [...], \"total\": number}, " +
-          "\"equity_and_liabilities\": {\"equity\": [...], " +
-          "\"non_current_liabilities\": [...], \"current_liabilities\": " +
-          "[...], \"total\": number}}, \"profit_and_loss\": " +
-          "{\"period\": string|null, \"revenue\": [...], " +
-          "\"expenses\": [...], \"profit_before_tax\": number, " +
-          "\"tax\": number, \"profit_after_tax\": number, \"eps\": " +
-          "{\"basic\": number|null, \"diluted\": number|null}}, " +
-          "\"cash_flow\": {\"operating\": number|null, " +
-          "\"investing\": number|null, \"financing\": number|null, " +
-          "\"net_change\": number|null} (only if cash flow " +
-          "statement included), \"key_ratios\": {\"current_ratio\": " +
-          "number|null, \"debt_to_equity\": number|null, " +
-          "\"roe\": number|null (calculated if PAT / avg-equity " +
-          "is derivable), \"roa\": number|null, \"interest_coverage\": " +
-          "number|null} (compute the ratios from the extracted " +
-          "data — null if any input is missing rather than " +
-          "guessing)}. Round to 2 decimals. Preserve original " +
-          "line-item names verbatim — don't normalise away " +
-          "company-specific schedules. Do NOT add commentary " +
-          "outside the JSON."
-        );
-      case "expense-report":
-        // §3.1 Expense Report Builder from a bank statement.
-        return (
-          "Build a structured expense report from this bank " +
-          "statement. Use Indian categories. Output: `## Statement " +
-          "Identified` (bank, account masked, period). `## " +
-          "Category × Month Matrix` (Markdown table — rows = " +
-          "categories, columns = months in the period, cells = " +
-          "spend). Categories: Salary (negative = inflow), Rent, " +
-          "Groceries / Food, Fuel, Utilities, Mobile / Internet, " +
-          "EMI / Loans, Insurance, Investments / SIPs, Travel, " +
-          "Shopping, Entertainment / Subscriptions, Healthcare, " +
-          "Education, Cash / ATM, UPI Transfers, Refunds / " +
-          "Reversals, Bank Charges, Other. `## Top Spend Areas` " +
-          "(top 5 categories by total with %). `## Recurring " +
-          "Charges Detected` (subscriptions / EMI with frequency " +
-          "+ amount + counter party). `## Income Snapshot` " +
-          "(monthly avg net income — credits minus refunds). `## " +
-          "Saving Rate` (income - expense, % of income). `## " +
-          "Observations` (3-5 actionable bullets — high-fee " +
-          "alerts, unusual spikes, subscriptions to review, dining-" +
-          "out share, etc.). End with note this is a parsing aid; " +
-          "category choice is heuristic and the user can override."
-        );
       case "partnership-deed":
         // §3.2 Indian Partnership Deed Analyzer.
         return (
@@ -1680,36 +1210,6 @@ function buildSystemPrompt(opts: {
           "sentence, in the most plain language possible (the " +
           "kind of sentence you'd use to explain it to a smart " +
           "non-specialist)."
-        );
-      case "demat":
-        // §3.1 NSDL/CDSL CAS / Demat statement parser.
-        return (
-          "Parse this NSDL or CDSL Consolidated Account Statement " +
-          "(CAS) or demat holdings statement into structured JSON. " +
-          "Output ONLY a ```json fenced code block with shape: " +
-          "{\"cas\": {\"depository\": string (NSDL or CDSL), " +
-          "\"period\": {\"from\": string|null (ISO), \"to\": " +
-          "string|null}, \"PAN\": string|null (masked), \"BO_id\": " +
-          "string|null (masked)}, \"holdings\": [{\"isin\": " +
-          "string, \"name\": string (security name), " +
-          "\"category\": string (one of: 'equity', 'mutual-fund', " +
-          "'bond', 'gsec', 'etf', 'reit', 'invit', 'sgb', " +
-          "'commercial-paper', 'other'), \"quantity\": number, " +
-          "\"avg_cost\": number|null, \"current_value\": " +
-          "number|null, \"unrealised_pnl\": number|null}], " +
-          "\"transactions\": [{\"date\": string (ISO), \"type\": " +
-          "string (one of: 'buy', 'sell', 'dividend', 'bonus', " +
-          "'split', 'demerger', 'rights', 'ipo-allot', 'transfer-" +
-          "in', 'transfer-out', 'redemption', 'corp-action-other'), " +
-          "\"isin\": string, \"name\": string, \"quantity\": " +
-          "number|null, \"amount\": number|null}], \"summary\": " +
-          "{\"total_value\": number, \"by_category\": [{" +
-          "\"category\": string, \"value\": number, \"percent\": " +
-          "number}], \"corporate_actions_count\": number, " +
-          "\"transactions_count\": number}}. Don't add commentary " +
-          "outside the JSON. Round amounts to 2 decimals. If a " +
-          "field isn't determinable from the statement, null it " +
-          "rather than guessing."
         );
       case "insurance":
         // §3.10 Insurance Policy Parser (health/life/motor/etc.).
@@ -1805,42 +1305,6 @@ function buildSystemPrompt(opts: {
           "components. Round amounts to 2 decimals. Do NOT add " +
           "commentary outside the JSON."
         );
-      case "multi-bank":
-        // §3.1 Multi-Bank Merger. Input = concatenated bank
-        // statements (user uploads a merged PDF containing
-        // statements from multiple banks). Output consolidated
-        // JSON + per-bank summary.
-        return (
-          "Parse this multi-bank statement PDF into structured " +
-          "JSON. The document contains statements from MULTIPLE " +
-          "banks concatenated together. Output ONLY a ```json " +
-          "fenced code block containing a single object shaped " +
-          "{\"period\": {\"from\": string|null (ISO date), " +
-          "\"to\": string|null}, \"banks\": [{\"bank\": string " +
-          "(SBI / HDFC / ICICI / Axis / Kotak / etc.), " +
-          "\"account_mask\": string|null (last 4 digits), " +
-          "\"opening_balance\": number|null, \"closing_balance\": " +
-          "number|null, \"total_credits\": number, \"total_debits\": " +
-          "number, \"transactions\": [{\"date\": string (ISO " +
-          "YYYY-MM-DD), \"description\": string, \"type\": " +
-          "string (one of: 'credit', 'debit'), \"amount\": " +
-          "number, \"balance\": number|null, \"category\": string " +
-          "(one of: 'salary', 'transfer', 'upi', 'atm', 'emi', " +
-          "'bills', 'shopping', 'food', 'fuel', 'investment', " +
-          "'refund', 'interest', 'fee', 'other')}]}], " +
-          "\"consolidated\": {\"total_credits\": number, " +
-          "\"total_debits\": number, \"net_flow\": number, " +
-          "\"transaction_count\": number, \"bank_count\": number, " +
-          "\"by_category\": [{\"category\": string, \"credits\": " +
-          "number, \"debits\": number, \"count\": number}]}}. " +
-          "Detect the bank from transaction narration patterns, " +
-          "account-statement formatting, or bank logos/text. " +
-          "Merge all transactions into a single sorted-by-date " +
-          "view inside each bank, and also aggregate in " +
-          "`consolidated`. Include EVERY transaction. Do NOT " +
-          "invent amounts or dates; if a row is illegible, skip " +
-          "it rather than guessing. Round amounts to 2 decimals."
-        );
     }
   })();
 
@@ -1914,8 +1378,6 @@ function buildUserPrompt(opts: {
         return "Analyse the tone and style";
       case "citations":
         return "Extract the citations";
-      case "financials":
-        return "Extract the financial numbers";
       case "sentiment":
         return "Analyse the sentiment";
       case "bias":
@@ -1939,62 +1401,30 @@ function buildUserPrompt(opts: {
       case "resume-parse":
         return "Parse this resume into structured JSON";      case "action-items":
         return "Extract the action items";
-      case "bank-statement":
-        return "Parse this bank statement";
       case "blood-test":
         return "Parse this lab report";
-      case "rental":
-        return "Analyse this rental agreement";
       case "syllabus":
         return "Build a study plan from this syllabus";
-      case "property":
-        return "Analyse this property document";
       case "discharge":
         return "Simplify this discharge summary";
       case "cover-letter":
         return "Draft a tailored cover letter from this resume";
       case "jd-match":
         return "Score this resume against the job description";
-      case "multi-bank":
-        return "Parse this multi-bank statement";
-      case "credit-card":
-        return "Analyse this credit card statement";
-      case "mutual-fund":
-        return "Parse this mutual fund statement";
       case "nda":
         return "Analyse this NDA";
-      case "sale-deed":
-        return "Audit this sale deed";
       case "employment":
         return "Review this employment contract";
-      case "medical-bill":
-        return "Analyse this medical bill";
-      case "prescription":
-        return "Parse this prescription";
       case "salary-slip":
         return "Parse this salary slip";
       case "research-paper":
         return "Summarise this research paper";
-      case "demat":
-        return "Parse this demat / CAS statement";
       case "insurance":
         return "Analyse this insurance policy";
       case "loan-bundle":
         return "Audit this loan-application bundle";
-      case "expense-report":
-        return "Build an expense report from this bank statement";
       case "partnership-deed":
         return "Analyse this partnership deed";
-      case "scan-report":
-        return "Explain this scan report in plain language";
-      case "electricity-bill":
-        return "Analyse this electricity bill";
-      case "telecom-bill":
-        return "Analyse this telecom bill";
-      case "builder-agreement":
-        return "Audit this builder agreement";
-      case "balance-sheet":
-        return "Extract financials from this report";
       case "improve-writing":
         return "Improve the writing in this document";
       case "paraphrase":
@@ -2003,8 +1433,6 @@ function buildUserPrompt(opts: {
         return "Audit originality of this document";
       case "chart-to-table":
         return "Extract data from charts in this PDF";
-      case "paper-pattern":
-        return "Analyse pattern across years of papers";
       case "standard":
       case "detailed":
       default:
