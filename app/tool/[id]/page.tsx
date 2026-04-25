@@ -107,6 +107,12 @@ import {
   PartnershipDeedTool,
   SscBankingExamTool,
   NcertChapterTool,
+  // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
+  ScanReportTool,
+  ElectricityBillTool,
+  TelecomBillTool,
+  BuilderAgreementTool,
+  BalanceSheetTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
 import { BankStatementTool } from "@/components/tools/BankStatementTool";
@@ -237,6 +243,12 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-partnership-deed",
   "ai-ssc-banking",
   "ai-ncert",
+  // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
+  "ai-scan-report",
+  "ai-electricity-bill",
+  "ai-telecom-bill",
+  "ai-builder-agreement",
+  "ai-balance-sheet",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -588,6 +600,17 @@ function ToolRunner({ id }: { id: string }) {
       return <SscBankingExamTool />;
     case "ai-ncert":
       return <NcertChapterTool />;
+    // Task #80 — Tier 3 §3.4, §3.10, §3.5, §3.1 wedges.
+    case "ai-scan-report":
+      return <ScanReportTool />;
+    case "ai-electricity-bill":
+      return <ElectricityBillTool />;
+    case "ai-telecom-bill":
+      return <TelecomBillTool />;
+    case "ai-builder-agreement":
+      return <BuilderAgreementTool />;
+    case "ai-balance-sheet":
+      return <BalanceSheetTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":

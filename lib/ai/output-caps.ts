@@ -245,6 +245,12 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "partnership-deed": 2400, // Partners table + capital + risk flags + missing clauses.
     "ssc-banking": 3200, // Per-Q table for paper of 100-200 questions.
     "ncert": 2200, // Chapter summary + likely Qs + revision checklist.
+    // Task #80 — Tier 3 §3.4 + §3.10 + §3.5 + §3.1 wedges.
+    "scan-report": 2400, // Findings + glossary + questions to ask.
+    "electricity-bill": 1800, // Slab breakdown + observations + recommendations.
+    "telecom-bill": 1800, // Plan vs usage + add-ons + recommendations.
+    "builder-agreement": 3200, // Pricing + dates + red flags + RERA protections + verifications.
+    "balance-sheet": 4000, // Full BS + P&L + cash flow + computed ratios.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

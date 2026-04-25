@@ -76,7 +76,13 @@ type Depth =
   | "court-order"
   | "partnership-deed"
   | "ssc-banking"
-  | "ncert";
+  | "ncert"
+  // Task #80 Tier 3 wedges.
+  | "scan-report"
+  | "electricity-bill"
+  | "telecom-bill"
+  | "builder-agreement"
+  | "balance-sheet";
 
 type Result = {
   fileId?: string;
@@ -1238,6 +1244,88 @@ export function NcertChapterTool() {
       successTitle="Chapter summary ready"
       pricingBlurb="Tier 3 §3.3 Education: in-one-sentence idea + key concepts + diagrams list + worked-through examples + likely CBSE / state-board exam questions (1/3/5-mark mix) + connections + common mistakes + revision checklist. 10 credits."
       relatedHref={{ href: "/tool/ai-syllabus", label: "Syllabus Study Plan" }}
+    />
+  );
+}
+
+// Task #80 — five more Tier 3 wedges.
+
+export function ScanReportTool() {
+  return (
+    <SummarizeVariantTool
+      depth="scan-report"
+      toolId="ai-scan-report"
+      callbackUrl="/tool/ai-scan-report"
+      prompt="Drop a radiology / scan report (MRI / CT / X-ray / Ultrasound)"
+      runLabel="Explain in plain English"
+      busyLabel="Translating…"
+      successTitle="Plain-language scan report ready"
+      pricingBlurb="Tier 3 §3.4 Healthcare: rewrites the radiologist's report in plain Indian English + glossary of medical terms + questions to ask your doctor + scan limits. 20 credits. STRICTLY a language translation aid — NOT a diagnosis."
+      relatedHref={{ href: "/tool/ai-blood-test", label: "Blood Test Report Parser" }}
+    />
+  );
+}
+
+export function ElectricityBillTool() {
+  return (
+    <SummarizeVariantTool
+      depth="electricity-bill"
+      toolId="ai-electricity-bill"
+      callbackUrl="/tool/ai-electricity-bill"
+      prompt="Drop your Indian electricity bill (TANGEDCO / BESCOM / TSSPDCL / MSEDCL / BSES / Tata Power…)"
+      runLabel="Analyse bill"
+      busyLabel="Analysing…"
+      successTitle="Electricity bill analysis ready"
+      pricingBlurb="Tier 3 §3.10 Utility: slab-by-slab tariff breakdown + telescopic-tariff slab-warning + fixed/variable charges + saving recommendations specific to your DISCOM. 5 credits."
+      relatedHref={{ href: "/tool/ai-telecom-bill", label: "Telecom Bill Analyzer" }}
+    />
+  );
+}
+
+export function TelecomBillTool() {
+  return (
+    <SummarizeVariantTool
+      depth="telecom-bill"
+      toolId="ai-telecom-bill"
+      callbackUrl="/tool/ai-telecom-bill"
+      prompt="Drop your Airtel / Jio / Vi postpaid or fibre / broadband bill"
+      runLabel="Analyse bill"
+      busyLabel="Analysing…"
+      successTitle="Telecom bill analysis ready"
+      pricingBlurb="Tier 3 §3.10 Utility: plan vs usage table + overage + add-ons + bundled OTT (Disney+/Prime/Netflix) + risk flags (auto-renewals, premium SMS, IDD activated) + plan-fit recommendations. 5 credits."
+      relatedHref={{ href: "/tool/ai-electricity-bill", label: "Electricity Bill Analyzer" }}
+    />
+  );
+}
+
+export function BuilderAgreementTool() {
+  return (
+    <SummarizeVariantTool
+      depth="builder-agreement"
+      toolId="ai-builder-agreement"
+      callbackUrl="/tool/ai-builder-agreement"
+      prompt="Drop an under-construction property builder-buyer agreement"
+      runLabel="Audit agreement"
+      busyLabel="Auditing…"
+      successTitle="Builder agreement audit ready"
+      pricingBlurb="Tier 3 §3.5 Real Estate: pricing breakdown (carpet vs super-built-up exposure) + key dates + red flags (asymmetric delay penalty, mandatory club, vague force-majeure) + RERA Act 2016 protection check + negotiation points. 30 credits. Not legal advice — engage a property lawyer."
+      relatedHref={{ href: "/tool/ai-rera", label: "RERA Document Analyzer" }}
+    />
+  );
+}
+
+export function BalanceSheetTool() {
+  return (
+    <SummarizeVariantTool
+      depth="balance-sheet"
+      toolId="ai-balance-sheet"
+      callbackUrl="/tool/ai-balance-sheet"
+      prompt="Drop an audited annual report or financial statements"
+      runLabel="Extract financials"
+      busyLabel="Extracting…"
+      successTitle="Financials extracted"
+      pricingBlurb="Tier 3 §3.1 Finance: structured JSON of balance sheet + P&L + cash flow with line items preserved verbatim + computed ratios (current ratio, D/E, ROE, ROA, interest coverage) where derivable. Ind AS / IFRS / Indian GAAP aware. 25 credits."
+      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
     />
   );
 }

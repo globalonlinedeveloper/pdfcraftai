@@ -220,7 +220,23 @@ export type SummarizeDepth =
   | "court-order"
   | "partnership-deed"
   | "ssc-banking"
-  | "ncert";
+  | "ncert"
+  // Task #80 — five more Tier 3 wedges:
+  //   scan-report      §3.4 P2 — MRI/CT/X-ray report explainer in
+  //   plain Indian English. NOT a diagnosis. (20c)
+  //   electricity-bill §3.10 P2 — TANGEDCO / BESCOM / TSSPDCL etc.
+  //   slab-by-slab + recommendations (5c)
+  //   telecom-bill     §3.10 P2 — Airtel / Jio / Vi postpaid /
+  //   broadband bill analysis with overage flags (5c)
+  //   builder-agreement §3.5 P2 — under-construction agreement
+  //   red-flag detector for buyers (30c)
+  //   balance-sheet    §3.1 P2 — extract structured financials from
+  //   a balance sheet / P&L (25c)
+  | "scan-report"
+  | "electricity-bill"
+  | "telecom-bill"
+  | "builder-agreement"
+  | "balance-sheet";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -1419,6 +1435,182 @@ function buildSystemPrompt(opts: {
           "this is a parsing aid — banks and lawyers may still " +
           "need original EC for diligence."
         );
+      case "scan-report":
+        // §3.4 Scan Report (MRI/CT/X-ray/Ultrasound) Plain-language
+        // Explainer. STRICTLY non-diagnostic — surfaces what the
+        // radiologist wrote in patient-friendly language only.
+        return (
+          "Rewrite this radiology / scan report (MRI / CT / X-ray " +
+          "/ Ultrasound / Mammogram / DEXA) in plain Indian " +
+          "English for a patient and their family. Output: `## " +
+          "Scan Identified` (modality, body part(s) imaged, date, " +
+          "referring doctor, reporting radiologist if visible). " +
+          "`## Why the Scan Was Done` (clinical indication / " +
+          "history section, in plain language). `## What the " +
+          "Radiologist Found` (organ-by-organ in patient-friendly " +
+          "phrasing — translate medical Latin to everyday words. " +
+          "Examples: 'no acute intracranial abnormality' → 'no " +
+          "recent injury or bleeding visible in the brain'). `## " +
+          "Impression` (rewrite the radiologist's impression " +
+          "verbatim AND in plain language side-by-side). `## " +
+          "Glossary` (table: Term-from-report, Plain-English " +
+          "meaning. Cover the technical words the patient is " +
+          "likely to Google). `## Questions to Ask Your Doctor` " +
+          "(5-7 specific questions tied to THIS report — not " +
+          "generic). `## What This Does NOT Tell You` (be honest " +
+          "about scan limits — e.g. an MRI brain doesn't evaluate " +
+          "the spine; an ultrasound abdomen doesn't replace " +
+          "endoscopy). End with a clear caveat block: this is a " +
+          "language translation aid, NOT a diagnosis or treatment " +
+          "plan. Always discuss the report with the prescribing " +
+          "doctor. Do NOT invent findings. Do NOT downplay or " +
+          "amplify what's in the report. If the report contains " +
+          "an urgent finding (e.g. 'critical', 'emergency', 'see " +
+          "doctor immediately'), surface that in a bold callout " +
+          "at the top."
+        );
+      case "electricity-bill":
+        // §3.10 Indian Electricity Bill Analyzer (TANGEDCO,
+        // BESCOM, TSSPDCL, MSEDCL, BSES, Tata Power, etc.).
+        return (
+          "Analyse this Indian electricity bill. Output: `## Bill " +
+          "Identified` (DISCOM — TANGEDCO / BESCOM / TSSPDCL / " +
+          "MSEDCL / BSES Rajdhani-Yamuna / Tata Power-DDL / " +
+          "Adani-Mumbai / etc., consumer number masked, billing " +
+          "period, due date, total amount). `## Consumption " +
+          "Snapshot` (units consumed kWh, daily-average, " +
+          "compared with previous bill if visible, sanctioned " +
+          "load, contract demand). `## Tariff Breakdown` (slab- " +
+          "by-slab Markdown table: Slab, Units in Slab, Rate, " +
+          "Charge — useful since most Indian DISCOMs use " +
+          "telescopic slabs where overshooting one tier raises " +
+          "rates on ALL units). `## Other Charges` (Fixed " +
+          "Charges, Fuel Surcharge, Electricity Duty, Meter " +
+          "Rent, Late Payment Surcharge, GST). `## Subsidy / " +
+          "Rebate Applied` (any state subsidy, BPL, solar net-" +
+          "metering credit). `## Observations` (3-5 " +
+          "actionable bullets — about-to-cross-slab warnings, " +
+          "fixed-charge anomalies, meter-reading basis " +
+          "(actual / estimated / on-record), unusually high " +
+          "fuel surcharge in a regulatory adjustment cycle). " +
+          "`## Saving Recommendations` (concrete: 'shift " +
+          "23 units pre-month-end to avoid slab jump', 'if " +
+          "average exceeds 500 units consider switching to TOD " +
+          "tariff if available in your DISCOM area', 'check if " +
+          "you qualify for the state rooftop-solar subsidy'). " +
+          "End with note this is a parsing aid; tariff details " +
+          "vary by state and DISCOM, refer to the bill or DISCOM " +
+          "website for authoritative interpretation."
+        );
+      case "telecom-bill":
+        // §3.10 Indian Telecom Bill Analyzer (Airtel / Jio / Vi
+        // postpaid + broadband).
+        return (
+          "Analyse this Indian telecom bill (Airtel / Jio / Vi " +
+          "postpaid mobile or fibre / broadband). Output: `## " +
+          "Bill Identified` (operator, account number masked, " +
+          "service type (postpaid mobile / fibre / DTH / " +
+          "enterprise), billing cycle, due date, total). `## " +
+          "Plan Details` (current plan name, base price, " +
+          "validity, included talktime / data / SMS / OTT " +
+          "subscriptions). `## Usage vs Plan` (table: Resource, " +
+          "Included, Used, Overage, Overage Charge — separate " +
+          "rows for Voice (mins), Data (GB), SMS, ISD/IDD if " +
+          "any). `## Add-ons & Bolt-ons` (any additional packs " +
+          "purchased mid-cycle: data add-on, ISD pack, " +
+          "international roaming, value-added services). `## " +
+          "OTT / Subscription Bundle` (Disney+ Hotstar, Amazon " +
+          "Prime, Netflix Basic, JioSaavn etc. bundled in the " +
+          "plan — flag duplicates if the user is paying " +
+          "separately for the same service). `## Charges " +
+          "Breakdown` (base + add-ons + overage + GST). `## " +
+          "Risk Flags` (mid-cycle pack auto-renewal, " +
+          "international roaming activated, premium SMS " +
+          "charges, OTT trial that converted to paid, last-bill " +
+          "spike). `## Plan Fit Recommendations` (3-5 bullets: " +
+          "is the user under-utilising the plan and over-paying, " +
+          "or repeatedly hitting overage and should upgrade; " +
+          "specific cheaper / better-fit plans on the same " +
+          "operator if pattern is clear). End with note this " +
+          "is a parsing aid, plan details change frequently."
+        );
+      case "builder-agreement":
+        // §3.5 Builder Agreement Red-Flag Detector for under-
+        // construction property buyers.
+        return (
+          "Audit this Indian builder-buyer agreement (under-" +
+          "construction property — apartment / villa / plot). " +
+          "Output: `## Project Identified` (project name, RERA " +
+          "registration number, builder, tower / phase, unit " +
+          "number, super-built-up + carpet area, agreed total " +
+          "consideration, BSP, parking + amenity charges, GST). " +
+          "`## Key Dates & Milestones` (booking date, possession " +
+          "date promised, payment plan / construction-linked " +
+          "milestones, grace period clause). `## Pricing & " +
+          "Charges Breakdown` (Markdown table: Component, " +
+          "Amount, Per-sqft Rate, Charged on (Carpet vs Super-" +
+          "built-up), Notes. Surface PLC, EDC, IDC, Club " +
+          "Membership, Maintenance Deposit, Stamp + Registration " +
+          "if included). `## Red Flags` (severity-rated table: " +
+          "Issue, Severity, Quote, Recommendation. Common ones " +
+          "to surface — area calculated on super-built-up vs " +
+          "RERA-mandated carpet area, unilateral right to alter " +
+          "specifications, vague 'force majeure' that includes " +
+          "ordinary delays, possession-date escape clauses, " +
+          "no mention of OC / completion certificate, asymmetric " +
+          "delay-penalty (huge for buyer, tiny for builder), " +
+          "free interest-free period for builder if buyer pays " +
+          "late, mandatory arbitration in distant city, no " +
+          "exit / refund clause, transfer fees on resale, " +
+          "compulsory club membership at handover, undefined " +
+          "common-area share). `## Buyer Protections Per RERA " +
+          "Act 2016` (which mandatory protections are honoured " +
+          "vs missing in this agreement). `## Specifications & " +
+          "Material Schedule` (table from the spec annexure " +
+          "if included). `## Recommended Verifications & " +
+          "Negotiation Points` (concrete actions before signing: " +
+          "verify RERA on state portal, ask for sanctioned " +
+          "plan, OC, EC for the plot, phase-wise approvals; " +
+          "redlines to push back on with replacement language). " +
+          "End with note this is an audit aid for buyers, NOT " +
+          "legal advice — engage a property lawyer before " +
+          "signing a builder agreement."
+        );
+      case "balance-sheet":
+        // §3.1 Balance Sheet / P&L Extractor for analysts.
+        return (
+          "Extract the financial statements from this audited or " +
+          "management report into structured JSON. Output ONLY a " +
+          "```json fenced code block with shape: {\"entity\": " +
+          "{\"name\": string|null, \"CIN\": string|null, \"FY\": " +
+          "string|null, \"period_type\": string (one of: 'annual', " +
+          "'half-year', 'quarter', 'standalone', 'consolidated'), " +
+          "\"reporting_framework\": string|null (Ind AS / IFRS / " +
+          "Indian GAAP)}, \"balance_sheet\": {\"as_at\": string|null, " +
+          "\"assets\": {\"non_current\": [{\"head\": string, " +
+          "\"current_period\": number, \"prior_period\": " +
+          "number|null}], \"current\": [...], \"total\": number}, " +
+          "\"equity_and_liabilities\": {\"equity\": [...], " +
+          "\"non_current_liabilities\": [...], \"current_liabilities\": " +
+          "[...], \"total\": number}}, \"profit_and_loss\": " +
+          "{\"period\": string|null, \"revenue\": [...], " +
+          "\"expenses\": [...], \"profit_before_tax\": number, " +
+          "\"tax\": number, \"profit_after_tax\": number, \"eps\": " +
+          "{\"basic\": number|null, \"diluted\": number|null}}, " +
+          "\"cash_flow\": {\"operating\": number|null, " +
+          "\"investing\": number|null, \"financing\": number|null, " +
+          "\"net_change\": number|null} (only if cash flow " +
+          "statement included), \"key_ratios\": {\"current_ratio\": " +
+          "number|null, \"debt_to_equity\": number|null, " +
+          "\"roe\": number|null (calculated if PAT / avg-equity " +
+          "is derivable), \"roa\": number|null, \"interest_coverage\": " +
+          "number|null} (compute the ratios from the extracted " +
+          "data — null if any input is missing rather than " +
+          "guessing)}. Round to 2 decimals. Preserve original " +
+          "line-item names verbatim — don't normalise away " +
+          "company-specific schedules. Do NOT add commentary " +
+          "outside the JSON."
+        );
       case "expense-report":
         // §3.1 Expense Report Builder from a bank statement.
         return (
@@ -1923,6 +2115,16 @@ function buildUserPrompt(opts: {
         return "Analyse this SSC/Banking exam paper";
       case "ncert":
         return "Summarise this NCERT chapter";
+      case "scan-report":
+        return "Explain this scan report in plain language";
+      case "electricity-bill":
+        return "Analyse this electricity bill";
+      case "telecom-bill":
+        return "Analyse this telecom bill";
+      case "builder-agreement":
+        return "Audit this builder agreement";
+      case "balance-sheet":
+        return "Extract financials from this report";
       case "standard":
       case "detailed":
       default:
