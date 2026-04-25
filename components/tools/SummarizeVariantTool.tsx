@@ -10,7 +10,7 @@
 // one of the six VALID_DEPTHS. The route already handles persistence,
 // credits, idempotency, truncation, moderation — we don't touch it.
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { classifyAiError } from "@/lib/ai/degradation";
@@ -19,6 +19,7 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { track } from "@/lib/analytics";
 
 type Depth =
   | "key-points"
@@ -135,13 +136,31 @@ export function SummarizeVariantTool(props: {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
 
+  // Task #87 — tool_view event on mount. Fires once per page load
+  // for the GA4 conversion funnel.
+  useEffect(() => {
+    track({
+      event: "tool_view",
+      tool_id: props.toolId,
+      tool_group: "AI",
+      from: "tool_runner",
+    });
+  }, [props.toolId]);
+
   const onFiles = useCallback((files: File[]) => {
     const f = files[0];
     if (!f) return;
     setError(null);
     setResult(null);
     setFile(f);
-  }, []);
+    // Task #87 — tool_upload event when user attaches a file.
+    // Funnel step 2 of 3 (view → upload → run).
+    track({
+      event: "tool_upload",
+      tool_id: props.toolId,
+      file_size_kb: Math.round(f.size / 1024),
+    });
+  }, [props.toolId]);
 
   const reset = () => {
     setFile(null);
@@ -161,6 +180,14 @@ export function SummarizeVariantTool(props: {
     }
     const fresh = await getSession();
     if (!fresh?.user) {
+      // Task #87 — anonymous user hit the run button. This is the
+      // single highest-intent moment for signup conversion: they've
+      // uploaded a file AND clicked run, then bounced to login.
+      track({
+        event: "signup_redirect",
+        tool_id: props.toolId,
+        from_path: props.callbackUrl,
+      });
       router.push(`/login?callbackUrl=${encodeURIComponent(props.callbackUrl)}`);
       return;
     }
@@ -173,6 +200,9 @@ export function SummarizeVariantTool(props: {
         ? crypto.randomUUID()
         : `ik-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+    // Task #87 — capture wall-clock for processing_ms.
+    const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+
     try {
       const form = new FormData();
       form.append("pdf", file);
@@ -184,24 +214,48 @@ export function SummarizeVariantTool(props: {
       }
       const res = await fetch("/api/ai/summarize", { method: "POST", body: form });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      const tEnd = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const processing_ms = Math.round(tEnd - t0);
 
       if (res.ok) {
+        const credit = Number(body.creditCost ?? 0);
+        const pageCount =
+          typeof body.pageCount === "number" ? body.pageCount : undefined;
         setResult({
           fileId: typeof body.fileId === "string" ? body.fileId : undefined,
           filename: typeof body.filename === "string" ? body.filename : undefined,
           markdown: String(body.markdown ?? ""),
-          creditCost: Number(body.creditCost ?? 0),
+          creditCost: credit,
           newBalance: typeof body.newBalance === "number" ? body.newBalance : undefined,
-          pageCount: typeof body.pageCount === "number" ? body.pageCount : undefined,
+          pageCount,
           wasTruncated: Boolean(body.wasTruncated),
+        });
+        // Task #87 — tool_run_success event. Funnel step 3 of 3.
+        track({
+          event: "tool_run_success",
+          tool_id: props.toolId,
+          depth: props.depth,
+          credit_cost: credit,
+          page_count: pageCount,
+          processing_ms,
         });
         return;
       }
       if (res.status === 207) {
+        const credit = Number(body.creditCost ?? 0);
         setResult({
           markdown: String(body.markdown ?? ""),
-          creditCost: Number(body.creditCost ?? 0),
+          creditCost: credit,
           wasTruncated: Boolean(body.wasTruncated),
+        });
+        // 207 = compute succeeded, persist failed. Still a successful
+        // run from the user's perspective.
+        track({
+          event: "tool_run_success",
+          tool_id: props.toolId,
+          depth: props.depth,
+          credit_cost: credit,
+          processing_ms,
         });
         return;
       }
@@ -211,9 +265,22 @@ export function SummarizeVariantTool(props: {
           ? classified.userMessage
           : "Something went wrong. Try again in a moment."
       );
+      // Task #87 — tool_run_error event for funnel drop-off analysis.
+      track({
+        event: "tool_run_error",
+        tool_id: props.toolId,
+        depth: props.depth,
+        error_code: `http_${res.status}`,
+      });
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Request failed.");
+      track({
+        event: "tool_run_error",
+        tool_id: props.toolId,
+        depth: props.depth,
+        error_code: "network_error",
+      });
     } finally {
       setBusy(false);
     }
