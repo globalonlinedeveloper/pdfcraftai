@@ -15,7 +15,9 @@
 
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+// Hostinger LSAPI runs on Node, not edge. Keep this on the default
+// Node runtime — works the same, just needs Node's `Buffer` for
+// the PNG encode. Edge would 503 here.
 export const alt =
   "pdfcraft ai — Every PDF tool you need. Free, AI-powered, no signup.";
 export const size = { width: 1200, height: 630 };
