@@ -227,6 +227,40 @@ const nextConfig = {
         destination: "/register",
         permanent: false,
       },
+      // Task #71 — legacy /tools/<slug> URLs from the prototype that
+      // Google still has cached. Surfaced via GSC: 14 pages were
+      // returning 5xx because the routes no longer exist. We map each
+      // legacy slug to its current SEO landing (or `/tools` for the
+      // ones that don't have a 1:1 successor) with permanent: true so
+      // Google replaces the cached entry with the new canonical.
+      //
+      // Why permanent (308 in Next 14): we never want these legacy
+      // paths back. The 308 also preserves PageRank from any backlinks
+      // that point at the old URLs.
+      { source: "/tools/merge-pdf", destination: "/merge-pdf", permanent: true },
+      { source: "/tools/split-pdf", destination: "/split-pdf", permanent: true },
+      { source: "/tools/compress-pdf", destination: "/compress-pdf", permanent: true },
+      { source: "/tools/protect-pdf", destination: "/tool/protect", permanent: true },
+      { source: "/tools/unlock-pdf", destination: "/tool/protect", permanent: true },
+      { source: "/tools/organize-pdf", destination: "/tool/sort-pages", permanent: true },
+      { source: "/tools/remove-pages", destination: "/delete-pdf-pages", permanent: true },
+      { source: "/tools/extract-pages", destination: "/extract-pdf-pages", permanent: true },
+      { source: "/tools/rotate-pdf", destination: "/tool/rotate", permanent: true },
+      { source: "/tools/pdf-to-jpg", destination: "/pdf-to-jpg", permanent: true },
+      { source: "/tools/pdf-to-png", destination: "/pdf-to-png", permanent: true },
+      { source: "/tools/pdf-to-word", destination: "/pdf-to-word", permanent: true },
+      { source: "/tools/pdf-to-excel", destination: "/pdf-to-excel", permanent: true },
+      { source: "/tools/pdf-to-powerpoint", destination: "/pdf-to-powerpoint", permanent: true },
+      { source: "/tools/png-to-pdf", destination: "/png-to-pdf", permanent: true },
+      { source: "/tools/jpg-to-pdf", destination: "/jpg-to-pdf", permanent: true },
+      { source: "/tools/word-to-pdf", destination: "/word-to-pdf", permanent: true },
+      { source: "/tools/excel-to-pdf", destination: "/excel-to-pdf", permanent: true },
+      { source: "/tools/powerpoint-to-pdf", destination: "/powerpoint-to-pdf", permanent: true },
+      // Catch-all for any other /tools/<slug> not covered above. The
+      // /tools/ index is now /tools (no trailing /tools/<slug> paths
+      // exist), so anything that lands here is a stale Google cache
+      // entry — bounce them to the tools directory rather than 404.
+      { source: "/tools/:slug*", destination: "/tools", permanent: true },
     ];
   },
 };
