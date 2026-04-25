@@ -120,7 +120,9 @@ export type SeoPageSlug =
   | "chart-to-data-table"
   | "stamp-pdf"
   | "n-up-pdf"
-  | "grayscale-pdf";
+  | "grayscale-pdf"
+  | "strip-links"
+  | "booklet-pdf";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -2315,6 +2317,45 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Is this the same as Compress PDF?", a: "No. Compress reduces file size while preserving color and text. Grayscale removes color entirely (and text-selectability) but isn't necessarily smaller. Use them together if you want a small B&W file: Grayscale → Compress." },
     ],
     related: ["compress", "pdf-to-jpg", "remove-metadata", "flatten-pdf"],
+  },
+
+  "strip-links": {
+    tool: "strip-links",
+    h1: "Remove hyperlinks from PDF — strip every URL and goto link",
+    sub: "Surgically remove every clickable link from a PDF without touching highlights, comments, or other annotations. Free, browser-only — no upload needed.",
+    canonical: "/strip-links",
+    howTo: [
+      { t: "Drop the PDF", d: "Up to 50 MB. We count URL links and internal navigation links separately so you know what's about to change." },
+      { t: "Strip", d: "Walks each page's annotation array and removes anything with subtype /Link. Other annotations (highlights, sticky notes, form widgets) stay put." },
+      { t: "Download", d: "Output PDF reads identically — only the click targets are gone. Visible link text and styling are preserved." },
+    ],
+    faq: [
+      { q: "Will the link text still be visible?", a: "Yes. Only the click target is removed (the /Link annotation). The original underlying text — including the blue / underline styling that the original document author chose — is part of the page content stream and stays exactly as it was. To strip the styling too, run Edit PDF after this." },
+      { q: "What's the difference vs. Flatten PDF?", a: "Flatten removes ALL annotations including form widgets, highlights, and comments. Strip Hyperlinks is the surgical version — only /Link annotations are touched." },
+      { q: "Why would I need this?", a: "Common cases: sharing a doc where the linked URLs themselves are sensitive (private GitHub repos, internal Confluence, partner-only resources); printing without blue link clutter; preventing recipients from accidentally navigating away during a presentation; meeting submission requirements that disallow active hyperlinks." },
+      { q: "What about table-of-contents jumps?", a: "Internal navigation links (TOC jumps within the same PDF) are also removed. If you need to keep them, use Flatten + Bookmarks instead." },
+    ],
+    related: ["flatten-pdf", "remove-metadata", "redact-free", "edit-pdf"],
+  },
+
+  "booklet-pdf": {
+    tool: "booklet-pdf",
+    h1: "PDF booklet maker — saddle-stitch imposition for fold-and-staple printing",
+    sub: "Shuffle pages so they read in correct order after folding and stapling at the spine. Pure browser conversion — print duplex, fold, staple. Done.",
+    canonical: "/booklet-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Source is automatically padded to a multiple of 4 with blank pages at the end so the cover wrap math works out." },
+      { t: "Pick output paper", d: "US Letter / A4 / Legal / A3 — all in landscape (the only orientation where two portrait halves of a sheet make a booklet)." },
+      { t: "Optional fold-line guide", d: "Faint center line drawn on each output page so you can fold cleanly. Toggle off for production print." },
+      { t: "Print, fold, staple", d: "Print double-sided with flip-on-long-edge. Stack the printouts in order, fold the entire stack in half, staple along the fold (saddle stitch)." },
+    ],
+    faq: [
+      { q: "What's the difference between this and N-up?", a: "N-up tiles pages in reading order — page 1 in slot 1, page 2 in slot 2, etc. Booklet imposition shuffles pages so that AFTER folding the printed sheets, they read in correct order. The math is different and they solve different problems. N-up is for compact reading; booklet is for fold-and-staple printing." },
+      { q: "Why does my PDF need a multiple of 4 pages?", a: "A folded sheet has 4 pages (two faces × two halves). Source PDFs that aren't a multiple of 4 get padded with blanks at the end. A 5-page source becomes 8 pages — the last 3 are blank but the page-order math still works." },
+      { q: "What if I want to print single-sided?", a: "Print 'odd pages only' first, re-feed the stack, then print 'even pages only'. Most modern printers handle this in their print dialog. Output PDF order is already correct for both sides." },
+      { q: "Does this work for very long PDFs?", a: "Saddle-stitch tops out around 80 pages (20 sheets) before the fold gets bulky and pages start to creep at the spine. For longer documents, perfect-bound (multiple signatures glued at the spine) is the right approach — that's not what this tool does." },
+    ],
+    related: ["n-up-pdf", "merge", "split", "extract-pages"],
   },
 };
 
