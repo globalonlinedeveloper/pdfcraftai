@@ -339,6 +339,42 @@ These are higher-leverage moves than catalog-completion-for-its-own-sake.
 
 ---
 
-_Last regenerated: 2026-04-25._
-_Source of truth: `lib/tools.ts` (124 entries) + this file (target spec)._
+_Last regenerated: 2026-04-25 (final)._
+_Source of truth: `lib/tools.ts` (113 entries) + this file (target spec)._
 _To audit: `node scripts/audit-catalog.mjs` (todo: not yet written — manual audit lives in this doc)._
+
+---
+
+## Addendum 2026-04-25 — govt-tool removal (Task #99)
+
+After the catalog reached 134 tools, a strategic-pruning pass removed **21 govt-related tools** as a single decision:
+
+**Removed in two phases:**
+
+Phase 1 (commit `5cacf08`) — 5 Indian govt ID parsers:
+`ai-aadhaar`, `ai-pan-card`, `ai-driving-license`, `ai-voter-id`, `ai-passport`
+
+Phase 2 (commit `e1e8ecd`) — 16 broader govt-related tools:
+- §3a Govt-conducted exams (5): `ai-tnpsc`, `ai-jee-neet`, `ai-upsc`, `ai-ssc-banking`, `ai-ncert`
+- §3b Income Tax Department (3): `ai-form-26as`, `ai-form-15g-15h`, `ai-itr-form16`
+- §3c Statutory/judicial/municipal (5): `ai-rera`, `ai-ec`, `ai-court-order`, `ai-property-tax`, `ai-stamp-duty`
+- §3d GST/HRA (3): `invoice-generator`, `ai-gst-invoice`, `ai-rent-receipt`
+
+**Rationale:**
+- DPDP Act 2023 compliance burden — even processing user's own govt-issued docs at scale carries regulatory risk
+- Liability — disputes over govt-document interpretation (tax notices, exam scoring, RERA fines) are real
+- Trust signal — competitors that focus on private documents have cleaner positioning
+- Strategic — concentrate on documents that are entirely **user-owned** (bank statements, contracts, medical records, salary slips) where the AI processing risk is bounded
+
+**Final state (locked-in by user decision 2026-04-25):**
+
+| Tier | Count | Status |
+|------|-------|--------|
+| Tier 1 (free WASM) | **43** | Locked — strict PDF mechanics |
+| Tier 2 (universal AI) | **35** | Locked — universal AI ops on PDF input |
+| Tier 3 (private-doc verticals) | **35** | Locked — no govt body in the document chain |
+| **Total** | **113** | Locked at strict PDF-test pass (option A from audit) |
+
+All 113 remaining tools pass the strict PDF test: every tool has a PDF in the input or output flow. No further removal scoped.
+
+**Sitemap audit post-removal:** 257/257 URLs return 200 (verified via `node scripts/audit-sitemap.mjs`). No broken-link drift.
