@@ -188,7 +188,23 @@ export type SummarizeDepth =
   | "prescription"
   | "rera"
   | "ec"
-  | "salary-slip";
+  | "salary-slip"
+  // Task #78 — five more Tier 3 wedges:
+  //   upsc          §3.3 — UPSC Prelims/Mains paper analyzer (20c)
+  //   research-paper §3.3 — academic paper summarizer with cited
+  //   methods/results/limitations + BibTeX (15c)
+  //   demat         §3.1 — NSDL/CDSL CAS / demat statement analyzer
+  //   with portfolio + corporate actions (15c)
+  //   insurance     §3.10 — Indian insurance policy comparator OR
+  //   single-policy parser (extracts coverage / premium / exclusions /
+  //   claim contacts) (20c)
+  //   loan-bundle   §3.1 — Loan application document bundler that
+  //   audits a stack of docs against bank checklist (15c)
+  | "upsc"
+  | "research-paper"
+  | "demat"
+  | "insurance"
+  | "loan-bundle";
 
 export interface SummarizeInput {
   /** Extracted PDF text, pages joined with `\f`. */
@@ -1387,6 +1403,153 @@ function buildSystemPrompt(opts: {
           "this is a parsing aid — banks and lawyers may still " +
           "need original EC for diligence."
         );
+      case "upsc":
+        // §3.3 UPSC Prelims/Mains Analyzer.
+        return (
+          "Analyse this UPSC question paper or answer key (Prelims " +
+          "GS / CSAT / Mains GS-I/II/III/IV / Optional / Essay). " +
+          "Output: `## Paper Identified` (exam, year, paper, " +
+          "marking scheme — Prelims has 1/3 negative, Mains is " +
+          "subjective). `## Question Analysis` (Markdown table per " +
+          "question: #, Type (MCQ for Prelims, descriptive for " +
+          "Mains), Subject Tag (History / Polity / Economy / " +
+          "Geography / Environment / Science & Tech / IR / " +
+          "Internal Security / Ethics / Current Affairs / Tamil " +
+          "Lit etc.), Sub-topic, Difficulty, Word-Length-Required " +
+          "(for Mains: 150 / 250 word counts mandated by UPSC). " +
+          "For Prelims, include Correct Answer if visible). `## " +
+          "Subject-Wise Distribution` table. `## Static vs " +
+          "Current` (UPSC trends: ratio of static-syllabus topics " +
+          "vs current-affairs questions). `## Topic Frequency` " +
+          "(recurring high-yield areas — Modern Indian History, " +
+          "Constitution, Indian Economy, Environment & Ecology, " +
+          "Internal Security). `## Strategy Notes` (5-7 specific " +
+          "tactics for THIS paper level — Prelims attempts " +
+          "strategy, Mains answer-structure templates, " +
+          "Optional-specific advice). Use UPSC-aware vocabulary " +
+          "(NCERT, Laxmikanth, Spectrum, Shankar IAS, etc. as " +
+          "study-source references)."
+        );
+      case "research-paper":
+        // §3.3 Research Paper Summarizer with citations.
+        return (
+          "Summarise this academic research paper. Output: `## " +
+          "Citation` (full citation in APA 7 + a `## BibTeX` block " +
+          "below it). `## Field & Sub-field` (broad area + specific " +
+          "subdiscipline). `## Research Question` (one or two " +
+          "sentences — what the paper actually asks). `## " +
+          "Hypotheses / Claims` (bulleted, each with the section " +
+          "of the paper it appears in if you can identify it). `## " +
+          "Methods` (study design, sample size, instruments, " +
+          "statistical methods — quote the key choices). `## Key " +
+          "Results` (numbered list — each result with the " +
+          "magnitude/effect/p-value where stated; quote precisely " +
+          "rather than paraphrasing numbers). `## Limitations` " +
+          "(both author-acknowledged AND ones the methods imply " +
+          "but the authors didn't surface). `## How to Cite This " +
+          "Paper` (3 short example sentences a reviewer / writer " +
+          "could adapt). `## Related Reading` (3-5 references " +
+          "from the paper's own bibliography that look most " +
+          "central). End with the paper's contribution in one " +
+          "sentence, in the most plain language possible (the " +
+          "kind of sentence you'd use to explain it to a smart " +
+          "non-specialist)."
+        );
+      case "demat":
+        // §3.1 NSDL/CDSL CAS / Demat statement parser.
+        return (
+          "Parse this NSDL or CDSL Consolidated Account Statement " +
+          "(CAS) or demat holdings statement into structured JSON. " +
+          "Output ONLY a ```json fenced code block with shape: " +
+          "{\"cas\": {\"depository\": string (NSDL or CDSL), " +
+          "\"period\": {\"from\": string|null (ISO), \"to\": " +
+          "string|null}, \"PAN\": string|null (masked), \"BO_id\": " +
+          "string|null (masked)}, \"holdings\": [{\"isin\": " +
+          "string, \"name\": string (security name), " +
+          "\"category\": string (one of: 'equity', 'mutual-fund', " +
+          "'bond', 'gsec', 'etf', 'reit', 'invit', 'sgb', " +
+          "'commercial-paper', 'other'), \"quantity\": number, " +
+          "\"avg_cost\": number|null, \"current_value\": " +
+          "number|null, \"unrealised_pnl\": number|null}], " +
+          "\"transactions\": [{\"date\": string (ISO), \"type\": " +
+          "string (one of: 'buy', 'sell', 'dividend', 'bonus', " +
+          "'split', 'demerger', 'rights', 'ipo-allot', 'transfer-" +
+          "in', 'transfer-out', 'redemption', 'corp-action-other'), " +
+          "\"isin\": string, \"name\": string, \"quantity\": " +
+          "number|null, \"amount\": number|null}], \"summary\": " +
+          "{\"total_value\": number, \"by_category\": [{" +
+          "\"category\": string, \"value\": number, \"percent\": " +
+          "number}], \"corporate_actions_count\": number, " +
+          "\"transactions_count\": number}}. Don't add commentary " +
+          "outside the JSON. Round amounts to 2 decimals. If a " +
+          "field isn't determinable from the statement, null it " +
+          "rather than guessing."
+        );
+      case "insurance":
+        // §3.10 Insurance Policy Parser (health/life/motor/etc.).
+        return (
+          "Analyse this Indian insurance policy document (health, " +
+          "life, motor, home, travel, term). Output: `## Policy " +
+          "Identified` (insurer, plan name, policy number (PII-" +
+          "masked last 4), product type, policy period, premium " +
+          "frequency, latest premium). `## Coverage` (table: " +
+          "Section / Benefit, Sum Insured / Limit, Deductible, " +
+          "Notes. Surface room-rent capping, sub-limits, ICU " +
+          "limits for health). `## Insureds` (list of covered " +
+          "lives or assets with relationship/age — health/family " +
+          "floater). `## Premium & Discounts` (base premium, " +
+          "GST, NCB / cumulative bonus, riders / add-ons " +
+          "purchased, total). `## Exclusions` (table of permanent " +
+          "exclusions + waiting periods + pre-existing-disease " +
+          "wait + specific-disease wait — IRDAI standard plus " +
+          "policy-specific). `## Claim Process` (cashless network " +
+          "TPA name, intimation contact, document checklist for " +
+          "claim). `## Renewal & Portability` (renewability " +
+          "guarantee, lifetime renewal flag, portability rights " +
+          "summary, grace period). `## Risk Flags` (severity-" +
+          "rated table: low room-rent capping that forces " +
+          "proportionate deduction, high co-pay, missing day-" +
+          "care procedure list, restoration benefit absent, " +
+          "sub-limits worse than market average). `## Comparison " +
+          "Notes` (1-2 paragraphs benchmarking against typical " +
+          "market features for that product type — without " +
+          "naming specific competing brands). End with note this " +
+          "is a parsing aid, not insurance advice."
+        );
+      case "loan-bundle":
+        // §3.1 Loan Application Document Bundler / Audit.
+        return (
+          "Audit this stack of loan-application documents against " +
+          "Indian bank checklists (home loan / personal loan / " +
+          "business loan / car loan). The PDF likely concatenates " +
+          "several documents — identify what's present and what " +
+          "is missing for a typical lender's KYC + financial + " +
+          "collateral diligence. Output: `## Loan Type Detected` " +
+          "(home / personal / business / car / education / " +
+          "unknown — best guess from contents, with confidence). " +
+          "`## Documents Found` (Markdown table: Document, " +
+          "Status (Present / Partial / Missing), Pages, Notes. " +
+          "Common lines: PAN, Aadhaar, address proof, last-3 " +
+          "salary slips, last-6 bank statements, ITR/Form 16 last " +
+          "2 years, Form 26AS, employment letter, KYC selfie/" +
+          "video, property documents (chain of title, EC, sale " +
+          "deed, sanctioned plan, OC), property tax receipt, " +
+          "company KYC for self-employed, GST returns, " +
+          "partnership deed / MoA, balance sheet for last 2 FYs). " +
+          "`## Income Snapshot` (gross monthly income detected, " +
+          "net income, FOIR estimate if data permits, debt " +
+          "obligations spotted). `## Eligibility-Affecting Items` " +
+          "(things the lender will care about: employment " +
+          "stability gap, salary credit pattern in bank " +
+          "statements, EMI bounces, large unexplained credits). " +
+          "`## Missing / Unclear Documents` (specific list of " +
+          "what's missing so the applicant can re-submit). `## " +
+          "Recommended Next Steps` (5-7 concrete actions to " +
+          "complete the bundle and fix any issues that would " +
+          "delay sanction). End with note this is a checklist " +
+          "aid, NOT pre-approval — final eligibility is the " +
+          "lender's call."
+        );
       case "salary-slip":
         // §3.1 Salary Slip Analyzer.
         return (
@@ -1596,6 +1759,16 @@ function buildUserPrompt(opts: {
         return "Parse this Encumbrance Certificate";
       case "salary-slip":
         return "Parse this salary slip";
+      case "upsc":
+        return "Analyse this UPSC paper";
+      case "research-paper":
+        return "Summarise this research paper";
+      case "demat":
+        return "Parse this demat / CAS statement";
+      case "insurance":
+        return "Analyse this insurance policy";
+      case "loan-bundle":
+        return "Audit this loan-application bundle";
       case "standard":
       case "detailed":
       default:

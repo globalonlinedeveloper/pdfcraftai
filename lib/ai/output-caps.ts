@@ -233,6 +233,12 @@ export const OP_OUTPUT_CAP_TABLE: CapTable = {
     "rera": 2800, // Project + approvals + risk flags + checklist.
     "ec": 2400, // Encumbrance table + chain summary + gaps.
     "salary-slip": 1600, // Compact JSON earnings + deductions + YTD.
+    // Task #78 — Tier 3 §3.3 + §3.1 + §3.10 wedges.
+    "upsc": 3200, // Per-question table for paper of 100+ questions + analytics.
+    "research-paper": 2400, // 8 sections + BibTeX + related reading.
+    "demat": 4000, // CAS JSON — can hold dozens of holdings + corporate actions.
+    "insurance": 2800, // Coverage + exclusions + comparison + risk flags.
+    "loan-bundle": 2400, // Documents found + missing + income snapshot + next steps.
   },
 
   // Compare produces a side-by-side diff narrative. 4000 is

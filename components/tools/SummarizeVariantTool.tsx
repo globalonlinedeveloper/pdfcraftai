@@ -64,7 +64,13 @@ type Depth =
   | "prescription"
   | "rera"
   | "ec"
-  | "salary-slip";
+  | "salary-slip"
+  // Task #78 Tier 3 wedges.
+  | "upsc"
+  | "research-paper"
+  | "demat"
+  | "insurance"
+  | "loan-bundle";
 
 type Result = {
   fileId?: string;
@@ -1062,6 +1068,88 @@ export function SalarySlipTool() {
       successTitle="Salary slip parsed"
       pricingBlurb="Tier 3 §3.1 Finance: structured JSON with employer / employee / period / earnings / deductions / totals / YTD. Preserves idiosyncratic component names (Special Allowance, LTA, etc.) for accurate YoY comparison. 10 credits."
       relatedHref={{ href: "/tool/ai-itr-form16", label: "ITR / Form 16 Analyzer" }}
+    />
+  );
+}
+
+// Task #78 — five more Tier 3 wedges.
+
+export function UpscAnalyzerTool() {
+  return (
+    <SummarizeVariantTool
+      depth="upsc"
+      toolId="ai-upsc"
+      callbackUrl="/tool/ai-upsc"
+      prompt="Drop a UPSC question paper or answer key (Prelims / Mains / Optional)"
+      runLabel="Analyse UPSC paper"
+      busyLabel="Analysing…"
+      successTitle="UPSC analysis ready"
+      pricingBlurb="Tier 3 §3.3 Education: per-question subject + sub-topic + difficulty + word-length-required (Mains) tables. Static-vs-current ratio. UPSC-specific strategy notes. NCERT/Laxmikanth/Spectrum/Shankar IAS aware. 20 credits."
+      relatedHref={{ href: "/tool/ai-tnpsc", label: "TNPSC Analyzer" }}
+    />
+  );
+}
+
+export function ResearchPaperTool() {
+  return (
+    <SummarizeVariantTool
+      depth="research-paper"
+      toolId="ai-research-paper"
+      callbackUrl="/tool/ai-research-paper"
+      prompt="Drop an academic research paper"
+      runLabel="Summarise paper"
+      busyLabel="Summarising…"
+      successTitle="Research paper summary ready"
+      pricingBlurb="Tier 3 §3.3 Education: APA citation + BibTeX + research question + methods + key results (with magnitudes preserved) + limitations (acknowledged + implied) + cite-this examples + related reading. 15 credits."
+      relatedHref={{ href: "/tool/ai-citations", label: "Extract Citations" }}
+    />
+  );
+}
+
+export function DematStatementTool() {
+  return (
+    <SummarizeVariantTool
+      depth="demat"
+      toolId="ai-demat"
+      callbackUrl="/tool/ai-demat"
+      prompt="Drop an NSDL/CDSL Consolidated Account Statement (CAS)"
+      runLabel="Parse CAS"
+      busyLabel="Parsing…"
+      successTitle="Demat / CAS parsed"
+      pricingBlurb="Tier 3 §3.1 Finance: structured JSON of holdings (equity / MF / bond / ETF / SGB) + transactions (incl. dividends, bonuses, splits, IPO allots) + asset-class summary. NSDL + CDSL formats supported. 15 credits."
+      relatedHref={{ href: "/tool/ai-mutual-fund", label: "Mutual Fund Statement Parser" }}
+    />
+  );
+}
+
+export function InsurancePolicyTool() {
+  return (
+    <SummarizeVariantTool
+      depth="insurance"
+      toolId="ai-insurance"
+      callbackUrl="/tool/ai-insurance"
+      prompt="Drop an Indian insurance policy (health / life / motor / home / travel / term)"
+      runLabel="Analyse policy"
+      busyLabel="Analysing…"
+      successTitle="Insurance policy analysis ready"
+      pricingBlurb="Tier 3 §3.10 Insurance: coverage + premiums + exclusions + waiting periods + claim process + renewal/portability + risk flags (room-rent capping, sub-limits, missing day-care list, restoration absent). 20 credits. Not insurance advice."
+      relatedHref={{ href: "/tool/ai-medical-bill", label: "Medical Bill Analyzer" }}
+    />
+  );
+}
+
+export function LoanBundleAuditTool() {
+  return (
+    <SummarizeVariantTool
+      depth="loan-bundle"
+      toolId="ai-loan-bundle"
+      callbackUrl="/tool/ai-loan-bundle"
+      prompt="Drop a stack of loan-application docs (concatenated PDF)"
+      runLabel="Audit bundle"
+      busyLabel="Auditing…"
+      successTitle="Loan bundle audit ready"
+      pricingBlurb="Tier 3 §3.1 Finance: detects loan type + audits docs against typical lender checklist (PAN, Aadhaar, salary slips, bank statements, ITR/Form 16, property docs, etc.) + flags missing items + income snapshot + eligibility-affecting issues. 15 credits. Not pre-approval."
+      relatedHref={{ href: "/tool/ai-bank-statement", label: "Bank Statement Parser" }}
     />
   );
 }

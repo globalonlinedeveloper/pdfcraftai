@@ -95,6 +95,12 @@ import {
   ReraAnalyzerTool,
   EncumbranceCertTool,
   SalarySlipTool,
+  // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
+  UpscAnalyzerTool,
+  ResearchPaperTool,
+  DematStatementTool,
+  InsurancePolicyTool,
+  LoanBundleAuditTool,
 } from "@/components/tools/SummarizeVariantTool";
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
 import { BankStatementTool } from "@/components/tools/BankStatementTool";
@@ -213,6 +219,12 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-rera",
   "ai-ec",
   "ai-salary-slip",
+  // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
+  "ai-upsc",
+  "ai-research-paper",
+  "ai-demat",
+  "ai-insurance",
+  "ai-loan-bundle",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -542,6 +554,17 @@ function ToolRunner({ id }: { id: string }) {
       return <EncumbranceCertTool />;
     case "ai-salary-slip":
       return <SalarySlipTool />;
+    // Task #78 — Tier 3 §3.3, §3.1, §3.10 wedges.
+    case "ai-upsc":
+      return <UpscAnalyzerTool />;
+    case "ai-research-paper":
+      return <ResearchPaperTool />;
+    case "ai-demat":
+      return <DematStatementTool />;
+    case "ai-insurance":
+      return <InsurancePolicyTool />;
+    case "ai-loan-bundle":
+      return <LoanBundleAuditTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":
