@@ -60,7 +60,9 @@ export type SeoPageSlug =
   | "cover-letter-generator"
   | "resume-job-match"
   | "tnpsc-answer-key-analyzer"
-  | "jee-neet-paper-analyzer";
+  | "jee-neet-paper-analyzer"
+  // Task #69 — Tier 2 §2.3 P0.
+  | "make-pdf-searchable";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -1200,6 +1202,26 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Is the revision plan one-size-fits-all?", a: "It's a 12-week runway at default study pace. For shorter runways, scale the Hours column proportionally. The priority order (chapter rank) stays the same." },
     ],
     related: ["ai-jee-neet", "ai-tnpsc", "ai-syllabus", "ai-flashcards"],
+  },
+
+  "make-pdf-searchable": {
+    tool: "ai-searchable-pdf",
+    h1: "Make PDF searchable — OCR scanned pages, keep visual layout",
+    sub: "Add an invisible text layer to a scanned PDF so Ctrl-F finds matches and copy/paste returns real text. Original page appearance unchanged. 2 credits per page.",
+    canonical: "/make-pdf-searchable",
+    howTo: [
+      { t: "Drop your scanned PDF", d: "Up to 50 pages per file. Larger? Use the free Split PDF tool first, then run each chunk." },
+      { t: "We OCR each page", d: "Vision OCR transcribes the text — works on machine-printed scans and most clear handwriting." },
+      { t: "Download the searchable PDF", d: "Same visual content, plus an invisible text layer. Ctrl-F now works in Acrobat, Chrome, Preview, and search engines." },
+    ],
+    faq: [
+      { q: "Will the visual page look any different?", a: "No — the original scanned image is untouched. We only add an invisible text overlay (opacity 0). The PDF reader's text-search index sees the text; visually nothing changes." },
+      { q: "Will copy/paste give me word-perfect text?", a: "Search works perfectly. Copy/paste returns the recognised text as a single block per page rather than word-by-word coordinates. For pixel-accurate copy/paste with bounding boxes we need Tesseract HOCR — on the roadmap." },
+      { q: "What languages are supported?", a: "English works best. Indian-language scripts (Devanagari, Tamil, Telugu, etc.) are recognised by the OCR step but the invisible-text overlay uses a Latin-only font, so search for non-Latin queries is best-effort." },
+      { q: "What happens to blank pages?", a: "Skipped silently. The page stays in the output but no overlay is added. Your credit cost is based on TOTAL pages OCR'd, including blanks (the OCR pass still touches every page)." },
+      { q: "Is this faster than Acrobat OCR?", a: "Comparable. Acrobat does word-bbox positioning which gives perfect copy/paste alignment but takes ~5-10 seconds per page. Our pass is ~2-3s per page and gives perfect search." },
+    ],
+    related: ["ai-searchable-pdf", "ai-ocr", "ai-translate", "split-pdf"],
   },
 };
 

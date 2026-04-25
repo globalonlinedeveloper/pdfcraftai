@@ -87,6 +87,7 @@ import {
 import { ResumeParserTool } from "@/components/tools/ResumeParserTool";
 import { BankStatementTool } from "@/components/tools/BankStatementTool";
 import { BloodTestTool } from "@/components/tools/BloodTestTool";
+import { SearchablePdfTool } from "@/components/tools/SearchablePdfTool";
 import {
   FlashcardsPdfTool,
   QuizPdfTool,
@@ -186,6 +187,8 @@ const LIVE_TOOL_IDS = new Set<string>([
   "ai-tnpsc",
   "ai-jee-neet",
   "ai-multi-bank",
+  // Task #69 — Tier 2 §2.3 P0.
+  "ai-searchable-pdf",
   "ai-translate",
   "ai-compare",
   "ai-ocr",
@@ -490,6 +493,9 @@ function ToolRunner({ id }: { id: string }) {
       return <JeeNeetAnalyzerTool />;
     case "ai-multi-bank":
       return <MultiBankMergerTool />;
+    // Task #69 — Tier 2 §2.3 P0.
+    case "ai-searchable-pdf":
+      return <SearchablePdfTool />;
     case "ai-translate":
       return <TranslatePdfTool />;
     case "ai-compare":
