@@ -53,6 +53,10 @@ export function ReconcileRunner() {
       const res = await fetch(`/api/admin/reconcile?${params.toString()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Empty body required: Hostinger's LSAPI proxy returns 400 on
+        // POSTs that declare Content-Type but ship no body. Sending an
+        // empty `{}` keeps the request well-formed end-to-end.
+        body: "{}",
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
