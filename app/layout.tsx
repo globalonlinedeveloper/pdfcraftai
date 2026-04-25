@@ -41,11 +41,19 @@ export const metadata: Metadata = {
     },
     description:
       "Every PDF tool you need. Plus the ones you didn't know existed.",
-    // OG image deferred — Task #74's dynamic ImageResponse approach
-    // failed at build-time static export on Hostinger (next/og's
-    // gradient-text rendering triggers Google Fonts fetch, which
-    // returns 400 in the build sandbox). Will revisit with a static
-    // public/og.png that requires no runtime font dep.
+    // Static public/og.png shipped in the repo. Pre-rendered 1200x630
+    // at build time so there's no runtime / build-time font fetch
+    // (which is what blew up Task #74's dynamic ImageResponse
+    // approach on Hostinger). Every page inherits this card unless
+    // it sets openGraph.images itself.
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "pdfcraft ai — Every PDF tool you need. Plus the ones you didn't know existed.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -54,6 +62,12 @@ export const metadata: Metadata = {
       template: "%s · pdfcraft ai",
     },
     description: "Every PDF tool you need. Plus the ones you didn't know existed.",
+    images: [
+      {
+        url: "/og.png",
+        alt: "pdfcraft ai — Every PDF tool you need.",
+      },
+    ],
   },
   icons: {
     icon: "/favicon.ico",
