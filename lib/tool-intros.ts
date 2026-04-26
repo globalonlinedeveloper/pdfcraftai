@@ -293,7 +293,7 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-study-notes": {
     text: "What you'll get: revision-grade study notes with an overview, key concepts, detailed sections with takeaways, and self-check questions.",
-    related: { id: "ai-key-points", label: "Key Points (quick bullet list)" },
+    related: { id: "ai-key-points", label: "AI · Key Points (quick bullet list)" },
   },
   "ai-eli5": {
     text: "What you'll get: a plain-language explanation — big idea, simple bullets, and why it matters. Written for a 12-year-old.",
@@ -301,7 +301,7 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-faq": {
     text: "What you'll get: 6–10 Q&A pairs inferred from your document, each answer grounded in the source with page citations. Gaps flagged under 'Not covered'.",
-    related: { id: "ai-chat", label: "Chat with PDF (ask your own questions)" },
+    related: { id: "ai-chat", label: "AI · Chat with PDF (ask your own questions)" },
   },
   "ai-blog": {
     text: "What you'll get: a publish-ready blog post — title, lede, 3–5 H2 sections, conclusion. Factual fidelity preserved.",
@@ -317,11 +317,11 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-social-thread": {
     text: "What you'll get: a numbered 5–10 post thread — hook, one idea per post, takeaway close. ~240 chars each, LinkedIn or X ready.",
-    related: { id: "ai-blog", label: "PDF to Blog Post (long-form)" },
+    related: { id: "ai-blog", label: "AI · PDF to Blog Post (long-form)" },
   },
   "ai-condense": {
     text: "What you'll get: a tighter rewrite preserving every fact, ~40–60% of original length. Not a summary — the document itself, shorter.",
-    related: { id: "ai-tldr", label: "TL;DR (one-paragraph summary instead)" },
+    related: { id: "ai-tldr", label: "AI · TL;DR (one-paragraph summary instead)" },
   },
   "ai-expand": {
     text: "What you'll get: each bullet expanded into a full paragraph with context and examples from the source. No invented facts. ~140–180% of original length.",
@@ -329,15 +329,15 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-tone-analyze": {
     text: "What you'll get: a voice + audience + 6–10 style attributes report with observations on tells and shifts. Analyses only — doesn't rewrite.",
-    related: { id: "ai-readability", label: "Readability Score (grade-level focus)" },
+    related: { id: "ai-readability", label: "AI · Readability Score (grade-level focus)" },
   },
   "ai-citations": {
     text: "What you'll get: a BibTeX block + human-readable reference list with auto-generated citation keys.",
-    related: { id: "ai-entities", label: "Extract Entities (people/orgs/places/dates)" },
+    related: { id: "ai-entities", label: "AI · Extract Entities (people/orgs/places/dates)" },
   },
   "ai-sentiment": {
     text: "What you'll get: an overall sentiment verdict + per-section table with evidence + notable shifts between sections.",
-    related: { id: "ai-tone-analyze", label: "Tone & Style Analyzer (voice + register)" },
+    related: { id: "ai-tone-analyze", label: "AI · Tone & Style Analyzer (voice + register)" },
   },
   "ai-bias": {
     text: "What you'll get: a bias audit covering gendered language, outdated terminology, stereotyping, and accessibility-framing — plus concrete edit suggestions.",
@@ -349,15 +349,15 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-newsletter": {
     text: "What you'll get: a complete newsletter — subject line, preheader, 3–5 sections, and sign-off. Direct voice, no sales-speak.",
-    related: { id: "ai-blog", label: "PDF to Blog Post (longer form)" },
+    related: { id: "ai-blog", label: "AI · PDF to Blog Post (longer form)" },
   },
   "ai-video-script": {
     text: "What you'll get: a video script — opening hook + 3–5 × 90-second segments + closing CTA, with bracketed stage cues.",
-    related: { id: "ai-social-thread", label: "PDF to Social Thread (shorter-form distillation)" },
+    related: { id: "ai-social-thread", label: "AI · PDF to Social Thread (shorter-form distillation)" },
   },
   "ai-ats-resume": {
     text: "What you'll get: an ATS score with critical fixes, keyword gaps, format issues, and a suggested summary line.",
-    related: { id: "ai-resume-parse", label: "Resume Parser (export to CSV)" },
+    related: { id: "ai-resume-parse", label: "AI · Resume Parser (export to CSV)" },
   },
   "ai-action-items": {
     text: "What you'll get: a markdown table of actionable TODOs — Task / Owner / Due / Priority / Page. Owners and deadlines blank when not in the source.",
@@ -365,11 +365,11 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-syllabus": {
     text: "What you'll get: a topic map + 12-week schedule with practice checkpoints + a final-revision strategy. Tuned for TNPSC / UPSC / JEE / NEET / NCERT / university syllabi.",
-    related: { id: "ai-study-notes", label: "PDF to Study Notes (per-doc deep notes)" },
+    related: { id: "ai-study-notes", label: "AI · PDF to Study Notes (per-doc deep notes)" },
   },
   "ai-discharge": {
     text: "What you'll get: a patient + family-friendly version of your discharge summary with diagnoses, medications, follow-ups, and warning signs in everyday language. Not medical advice.",
-    related: { id: "ai-blood-test", label: "Blood Test Report Parser" },
+    related: { id: "ai-blood-test", label: "AI · Blood Test Report Parser" },
   },
   "ai-cover-letter": {
     text: "What you'll get: a 300–350 word tailored cover letter with 3 customisation notes so you can swap in alternatives. Paste the JD for a tailored letter; leave blank for a generic-but-strong version.",
@@ -379,54 +379,54 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "ai-nda": {
     text: "What you'll get: a parties + type + risk-flag (severity-rated) report with negotiation points and missing standard clauses. Common red flags surfaced — embedded non-competes, indefinite terms, IP assignment. Not legal advice.",
-    related: { id: "ai-employment", label: "Employment Contract Review" },
+    related: { id: "ai-employment", label: "AI · Employment Contract Review" },
   },
   "ai-employment": {
     text: "What you'll get: a compensation + term + termination + risk-flag (non-compete, IP assignment, training bond) report with missing protections and negotiation points. Not legal advice.",
-    related: { id: "ai-nda", label: "NDA Analyzer" },
+    related: { id: "ai-nda", label: "AI · NDA Analyzer" },
   },
   "ai-salary-slip": {
     text: "What you'll get: structured JSON with employer / employee / period / earnings / deductions / totals / YTD. Preserves idiosyncratic component names (Special Allowance, LTA, etc.) for accurate YoY comparison.",
   },
   "ai-research-paper": {
     text: "What you'll get: APA citation + BibTeX + research question + methods + key results (with magnitudes preserved) + limitations (acknowledged + implied) + cite-this examples + related reading.",
-    related: { id: "ai-citations", label: "Extract Citations" },
+    related: { id: "ai-citations", label: "AI · Extract Citations" },
   },
   "ai-insurance": {
     text: "What you'll get: a coverage + premiums + exclusions + waiting periods + claim process + renewal/portability report with risk flags (room-rent capping, sub-limits, missing day-care list, restoration absent). Not insurance advice.",
-    related: { id: "ai-blood-test", label: "Blood Test Analyzer" },
+    related: { id: "ai-blood-test", label: "AI · Blood Test Analyzer" },
   },
   "ai-loan-bundle": {
     text: "What you'll get: an audit of your loan-application bundle against a typical lender checklist (ID proofs, salary slips, bank statements, ITRs, property docs) + missing-item flags + income snapshot + eligibility-affecting issues. Not pre-approval.",
-    related: { id: "ai-table", label: "AI Table Extract" },
+    related: { id: "ai-table", label: "AI · Table Extract" },
   },
   "ai-partnership-deed": {
     text: "What you'll get: a partners table + capital + profit/loss share + decision-making + admission/retirement rules + risk flags + missing standard clauses (arbitration, IP/goodwill, succession). Not legal advice.",
-    related: { id: "ai-employment", label: "Employment Contract Review" },
+    related: { id: "ai-employment", label: "AI · Employment Contract Review" },
   },
   "ai-improve-writing": {
     text: "What you'll get: a rewrite for clarity and concision (~20–30% shorter) without changing facts, register, or claims. Edit summary surfaces the kinds of changes made (passive→active, redundant qualifiers cut, etc.).",
-    related: { id: "ai-paraphrase", label: "Paraphrase" },
+    related: { id: "ai-paraphrase", label: "AI · Paraphrase" },
   },
   "ai-paraphrase": {
     text: "What you'll get: a re-wording that preserves every claim, number, and conclusion. Same length as input. Technical terms preserved when no plainer synonym would be accurate. Not a substitute for citation.",
-    related: { id: "ai-improve-writing", label: "Improve Writing" },
+    related: { id: "ai-improve-writing", label: "AI · Improve Writing" },
   },
   "ai-detector": {
     text: "What you'll get: a heuristic AI-content audit — surfaces well-documented LLM stylistic fingerprints (formulaic openers, hedging overuse, em-dash patterns, register-too-polished, three-item rhetoric, transitional clichés). Honest caveat: heuristic only, not a courtroom-grade classifier — false positives and negatives possible.",
-    related: { id: "ai-improve-writing", label: "Improve Writing" },
+    related: { id: "ai-improve-writing", label: "AI · Improve Writing" },
   },
   "ai-chart-to-table": {
     text: "What you'll get: chart data points extracted from any visual chart type (bar / line / pie / scatter / stacked), with axis labels and units preserved. For values it can't read precisely, returns a range with a confidence note.",
-    related: { id: "ai-table", label: "AI Table Extract" },
+    related: { id: "ai-table", label: "AI · Table Extract" },
   },
   "ai-flashcards": {
     text: "What you'll get: 10–30 Q&A flashcards grounded in your PDF, with page refs. Anki-compatible CSV export (front,back).",
-    related: { id: "ai-quiz", label: "PDF to Quiz (MCQ format)" },
+    related: { id: "ai-quiz", label: "AI · PDF to Quiz (MCQ format)" },
   },
   "ai-quiz": {
     text: "What you'll get: 6–12 multiple-choice questions with 4 plausible options each, correct answer, and a one-line explanation with page ref. JSON export.",
-    related: { id: "ai-flashcards", label: "PDF to Flashcards (Q&A format)" },
+    related: { id: "ai-flashcards", label: "AI · PDF to Flashcards (Q&A format)" },
   },
 
   // --------- 5 free tools previously missing from TOOL_INTROS ---------
