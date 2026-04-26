@@ -18,15 +18,21 @@
 
 "use server";
 
+// Note (Bundle H7 fix): "use server" files may only export async
+// functions. The `AGENT_MACRO_TOOL_ID` constant that used to live
+// here was moved to lib/agent/macro-constants.ts so it can still be
+// imported from non-server contexts (e.g. the /macros listing UI).
+//
+// The shape we store in user_macros.params_json is the AgentPlan
+// from lib/agent/types.ts. Reading code casts at the use site.
+
 import { randomUUID } from "crypto";
 import { and, desc, eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
+import { AGENT_MACRO_TOOL_ID } from "./macro-constants";
 import type { AgentPlan } from "./types";
-
-/** Sentinel tool_id for plan-shaped macros. */
-export const AGENT_MACRO_TOOL_ID = "agent";
 
 const MAX_NAME_LEN = 80;
 const MIN_NAME_LEN = 1;
