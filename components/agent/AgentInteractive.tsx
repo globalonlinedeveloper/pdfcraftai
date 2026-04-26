@@ -1274,9 +1274,15 @@ export default function AgentInteractive() {
 
             <div className="divider" style={{ margin: "24px 0 16px" }} />
 
+            {/*
+              H7.4: BALANCE chip lives in the page header (line ~670)
+              and stays visible the whole time. The done card already
+              shows "3 credits used" two rows up, so a second BALANCE
+              line here is pure duplication. Keep just the file-TTL
+              note — it's the one piece of footer info that isn't
+              available elsewhere in the layout.
+            */}
             <div className="row" style={{ justifyContent: "center", gap: 14 }}>
-              <span className="mono subtle" style={{ fontSize: 11 }}>BALANCE: {credits}</span>
-              <span className="mono subtle" style={{ fontSize: 11 }}>·</span>
               <span className="mono subtle" style={{ fontSize: 11 }}>FILES AUTO-DELETE IN 60 MIN</span>
             </div>
           </div>
