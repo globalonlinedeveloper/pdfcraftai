@@ -262,14 +262,24 @@ export const AGENT_TOOLS: Record<ToolName, AgentToolDef> = {
   "ai-translate": {
     name: "ai-translate",
     description:
-      "Translate a PDF to a target language while preserving layout. 5 credits per doc.",
-    params: fileIdSchema.extend({
-      target_lang: z
-        .string()
-        .min(2)
-        .max(5)
-        .describe("ISO 639-1 code, e.g. 'es', 'fr', 'ja'"),
-    }),
+      "Translate a PDF or pasted text to a target language. Provide EITHER file_id OR text. 5 credits per doc.",
+    // H7.3: accept text input the same way ai-summarize does, so the
+    // agent can chain pasted-text → translate without file-storage
+    // infra. fileIdSchema's required file_id was blocking text-input
+    // dispatch.
+    params: z
+      .object({
+        file_id: z.string().optional(),
+        text: z.string().optional(),
+        target_lang: z
+          .string()
+          .min(2)
+          .max(5)
+          .describe("ISO 639-1 code, e.g. 'es', 'fr', 'ja'"),
+      })
+      .refine((d) => Boolean(d.file_id || d.text), {
+        message: "Must provide either file_id or text.",
+      }),
     handler: "ai-route",
     aiOp: "translate",
     risk: "review",
@@ -340,20 +350,35 @@ export const AGENT_TOOLS: Record<ToolName, AgentToolDef> = {
   "ai-rewrite": {
     name: "ai-rewrite",
     description:
-      "Rewrite a PDF's text in a target tone (formal/casual/clearer/shorter/academic). Preserves layout. ~3 credits per page.",
-    params: fileIdSchema.extend({
-      tone: z.enum([
-        "formal",
-        "casual",
-        "clearer",
-        "shorter",
-        "academic",
-      ]),
-    }),
+      "Rewrite a PDF or pasted text in a target tone (formal/casual/clearer/shorter/academic). Provide EITHER file_id OR text. 3 credits per doc (text) or per page (file).",
+    // H7.3: accept text input. Map the agent's friendly tone names
+    // ("clearer", "shorter") onto the lib/ai/rewrite RewriteMode enum
+    // ("simplify", "concise") inside dispatch-ai.ts.
+    params: z
+      .object({
+        file_id: z.string().optional(),
+        text: z.string().optional(),
+        tone: z.enum([
+          "formal",
+          "casual",
+          "clearer",
+          "shorter",
+          "academic",
+        ]),
+      })
+      .refine((d) => Boolean(d.file_id || d.text), {
+        message: "Must provide either file_id or text.",
+      }),
     handler: "ai-route",
     aiOp: "rewrite",
     risk: "review",
-    estCredits: (_p, ctx) => 3 * (ctx.inputPageCount ?? 5),
+    // Text-input runs are flat 3cr (no pages); file-input scales by
+    // page count (still 3/page). The estimator picks the cheaper path
+    // when text is present.
+    estCredits: (params, ctx) => {
+      const hasText = typeof (params as { text?: string }).text === "string";
+      return hasText ? 3 : 3 * (ctx.inputPageCount ?? 5);
+    },
   },
   "ai-compare": {
     name: "ai-compare",

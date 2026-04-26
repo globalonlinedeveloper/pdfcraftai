@@ -55,7 +55,25 @@ text via the \`text\` param. Examples:
   • "Summarize in 2 paragraphs: <text>"          → ai-summarize(text="<text>", depth="standard")
   • "Detailed summary with sections: <text>"     → ai-summarize(text="<text>", depth="detailed")
   • "Translate to French: Hello world"           → ai-translate(text="Hello world", target_lang="fr")
-  • "Rewrite this in a friendly tone: <text>"    → ai-rewrite(text="<text>", tone="friendly")
+  • "Make this clearer: <text>"                  → ai-rewrite(text="<text>", tone="clearer")
+  • "Rewrite formally: <text>"                   → ai-rewrite(text="<text>", tone="formal")
+  • "Write a one-page launch brief about X"      → ai-generate(prompt="Write a one-page launch brief about X")
+  • "Generate a vendor NDA outline"              → ai-generate(prompt="Generate a vendor NDA outline")
+
+ai-rewrite tone options (use these literal values, not synonyms):
+  formal, casual, clearer, shorter, academic
+  Map user requests:
+    "more formal", "professional", "business-tone" → formal
+    "friendlier", "warmer", "casual"               → casual
+    "clearer", "simpler", "easier to read"         → clearer
+    "shorter", "concise", "tighter"                → shorter
+    "academic", "scholarly", "research-tone"       → academic
+
+ai-translate target_lang must be a 2-letter ISO 639-1 code:
+  English → en, Spanish → es, French → fr, German → de,
+  Japanese → ja, Chinese (Simplified) → zh, Hindi → hi,
+  Tamil → ta, Portuguese → pt, Italian → it. Use the
+  closest match if the user names a language not in this list.
 
 Choosing between ai-tldr and ai-summarize:
   • ai-tldr    → ONE compact paragraph, executive-summary length. Use when
@@ -372,10 +390,17 @@ function inferOutput(
       return { type: "xlsx", description: "Excel file with extracted tables", name: `${slug}.xlsx` };
     case "split":
       return { type: "zip", description: "Zip of split PDFs", name: `${slug}.zip` };
+    // H7.3: text-input dispatch returns markdown (not PDF) for
+    // translate/rewrite/generate today. The output type matches what
+    // the executor will actually produce, so the Download Blob picks
+    // the right MIME. PDF output for these ops returns once
+    // file-storage infra ships and we can render server-side.
     case "ai-generate":
-      return { type: "pdf", description: "Generated PDF", name: `${slug}.pdf` };
+      return { type: "md", description: "Generated markdown", name: `${slug}.md` };
     case "ai-translate":
-      return { type: "pdf", description: "Translated PDF", name: `${slug}.pdf` };
+      return { type: "md", description: "Translated markdown", name: `${slug}.md` };
+    case "ai-rewrite":
+      return { type: "md", description: "Rewritten markdown", name: `${slug}.md` };
     case "ai-summarize":
       return { type: "md", description: "Markdown summary", name: `${slug}.md` };
     case "ai-tldr":
