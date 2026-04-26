@@ -492,6 +492,8 @@ export default function AgentInteractive() {
       void (async () => {
         try {
           const { runId } = await startRunRemote({ plan: backendPlan });
+          // Stash so the Download button can fetch outputs from this run.
+          (window as unknown as { __agentRunId?: string }).__agentRunId = runId;
           setLog((l) => [...l, `→ run started (id ${runId.slice(0, 8)})`]);
           const final = await pollUntilTerminal(runId, {
             intervalMs: 1000,
@@ -1129,7 +1131,75 @@ export default function AgentInteractive() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => alert("Demo only — run each step on its individual /tool/* page for real downloads.")}
+                onClick={async () => {
+                  // H7+ download: real runs have a runId stashed by runPlan;
+                  // fetch the latest succeeded step's outputRef and download
+                  // it as a Blob with the right MIME. Demo runs (no runId)
+                  // fall back to the demo-only alert.
+                  const runId = (window as unknown as { __agentRunId?: string }).__agentRunId;
+                  if (!runId) {
+                    alert(
+                      "Demo only — run each step on its individual /tool/* page for real downloads.",
+                    );
+                    return;
+                  }
+                  try {
+                    const res = await fetch(`/api/agent/runs/${encodeURIComponent(runId)}`);
+                    if (!res.ok) throw new Error(`run fetch ${res.status}`);
+                    const { run } = (await res.json()) as {
+                      run: {
+                        steps: Array<{
+                          status: string;
+                          outputRef: string | null;
+                          outputType: string | null;
+                          tool: string;
+                        }>;
+                      };
+                    };
+                    // Pick the last succeeded step with a non-stub output as
+                    // the deliverable. Stub steps (output_type starts with
+                    // "json/stub-") are no-op placeholders pre-H6+.
+                    const deliverables = run.steps.filter(
+                      (s) =>
+                        s.status === "succeeded" &&
+                        s.outputRef &&
+                        s.outputType &&
+                        !s.outputType.startsWith("json/stub-") &&
+                        !s.outputType.startsWith("json/notification") &&
+                        !s.outputType.startsWith("json/file-list"),
+                    );
+                    const last = deliverables[deliverables.length - 1];
+                    if (!last) {
+                      alert(
+                        "No downloadable output yet — this plan only contained system steps (file listing / notifications) or stub steps. Run an AI step (summarize, translate, etc.) to get a deliverable.",
+                      );
+                      return;
+                    }
+                    // Map outputType → file extension + MIME for the
+                    // browser's download UX.
+                    const extByType: Record<string, [string, string]> = {
+                      "text/markdown": ["md", "text/markdown"],
+                      "text/plain": ["txt", "text/plain"],
+                      "text/csv": ["csv", "text/csv"],
+                      "application/json": ["json", "application/json"],
+                    };
+                    const [ext, mime] = extByType[last.outputType ?? ""] ?? [
+                      "txt",
+                      "text/plain",
+                    ];
+                    const blob = new Blob([last.outputRef ?? ""], { type: mime });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `agent-${runId.slice(0, 8)}-step-${last.tool}.${ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch (err) {
+                    alert(`Download failed: ${(err as Error).message}`);
+                  }
+                }}
               >
                 <I.Download size={14} /> Download
               </button>
