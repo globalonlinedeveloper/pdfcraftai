@@ -28,9 +28,9 @@
 //   pattern in H4 (the existing batch-jobs table can host agent work).
 
 import { getAgentTool } from "./tool-registry";
-import { setRunStatus, setStepStatus } from "./run-store";
+import { getRunForUser, setRunStatus, setStepStatus } from "./run-store";
 import { SYSTEM_TOOL_HANDLERS } from "./system-tools";
-import type { AgentPlan, AgentStep } from "./types";
+import type { AgentPlan, AgentStep, StepStatus } from "./types";
 
 const MICROS_PER_CREDIT = 40_000;
 
@@ -58,11 +58,37 @@ export async function executePlan(
 ): Promise<ExecutorOutput> {
   await setRunStatus({ runId: input.runId, status: "running" });
 
+  // Bundle H5: load existing step statuses so re-invocation (after a
+  // sys.ask.user approval) skips steps already in terminal state. Without
+  // this, calling executePlan twice would re-run completed steps.
+  const existing = await getRunForUser({
+    runId: input.runId,
+    userId: input.userId,
+  });
+  const existingStatusByIdx = new Map<number, StepStatus>();
+  if (existing) {
+    for (const s of existing.steps) {
+      existingStatusByIdx.set(s.idx, s.status);
+    }
+  }
+  const TERMINAL: ReadonlySet<StepStatus> = new Set([
+    "succeeded",
+    "failed",
+    "skipped",
+  ]);
+
   let totalCostMicros = 0;
   let stepsExecuted = 0;
   let finalStatus: ExecutorOutput["status"] = "completed";
 
   for (const step of input.plan.steps) {
+    // Skip steps that already reached a terminal state (typical when this
+    // is a resume after sys.ask.user approval — the awaiting step has
+    // been flipped to "succeeded" by the approve handler before re-invoke).
+    if (TERMINAL.has(existingStatusByIdx.get(step.idx) ?? "pending")) {
+      continue;
+    }
+
     const def = getAgentTool(step.tool);
     if (!def) {
       // Should never happen — planner already validated against the
@@ -184,36 +210,47 @@ async function dispatchStep(
     }
 
     case "ai-route":
-      // H3 will:
-      //   1. Resolve aiOp → /api/ai/<aiOp> URL
-      //   2. Build a multipart body from the prior step's output_ref
-      //   3. fetch() with the user's session cookie forwarded
-      //   4. Capture { fileId, creditCost, balance } from the response
-      // For H2 we mark as skipped so the run still terminates cleanly.
+      // H6 will wire this — gated on file-storage infra landing first
+      // (the existing /api/ai/<op> routes take multipart uploads, not
+      // file IDs from the files table; storage_key in db/schema/app.ts
+      // is currently a "Phase 2 stub"). The full path:
+      //   1. Read file_id → files row → storage_key → bytes from disk
+      //   2. Call lib/ai/<op>.ts directly (skip HTTP layer)
+      //   3. spendCredits(op, cost) — same accounting as the routes
+      //   4. Persist output back as a new files row
+      //   5. Return { outputRef: newFileId, costCredits }
+      // For now: record the step as a structured stub so the timeline
+      // shows what WOULD have run — useful for plan validation +
+      // user-visible "this is the plan we'd execute" preview.
       return {
         status: "succeeded",
         outputRef: JSON.stringify({
           stub: true,
-          message:
-            "ai-route dispatch deferred to H3 — step recorded as a no-op for now.",
           tool: step.tool,
+          aiOp: _aiOp,
           params: step.params,
+          message:
+            "AI step recorded as no-op pending file-storage infrastructure (H6).",
+          runDirectlyAt: `/tool/${step.tool}`,
         }),
-        outputType: "json/stub",
+        outputType: "json/stub-ai",
         costCredits: 0,
       };
 
     case "wasm-node":
-      // H3 will run pdf-lib server-side. For H2: same stub treatment.
+      // H6 will run pdf-lib server-side via shared lib/wasm-server/<tool>.ts
+      // helpers. Same gating: needs persistent file storage. Today: stub.
       return {
         status: "succeeded",
         outputRef: JSON.stringify({
           stub: true,
-          message:
-            "wasm-node dispatch deferred to H3 — step recorded as a no-op for now.",
           tool: step.tool,
+          params: step.params,
+          message:
+            "Free-tool step recorded as no-op pending file-storage infrastructure (H6).",
+          runDirectlyAt: `/tool/${step.tool}`,
         }),
-        outputType: "json/stub",
+        outputType: "json/stub-wasm",
         costCredits: 0,
       };
 
