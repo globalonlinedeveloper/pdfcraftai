@@ -8,8 +8,6 @@ const COLS: Col[] = [
     links: [
       ["Tools", "/tools"],
       ["Use cases", "/use-cases"],
-      ["Agent", "/agent"],
-      ["Macros", "/macros"],
       ["Bulk", "/bulk"],
       ["Pricing", "/pricing"],
       ["API", "/api"],

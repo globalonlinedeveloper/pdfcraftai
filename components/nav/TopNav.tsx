@@ -11,9 +11,13 @@ import { ThemeToggle } from "@/components/nav/ThemeToggle";
 type NavLink = { href: string; label: string; accent?: boolean; eyebrow?: React.ReactNode };
 
 const NAV: NavLink[] = [
-  { href: "/agent", label: "Agent", accent: true, eyebrow: <I.Sparkle size={12} /> },
+  // H8: removed Agent + Macros (and the /studio editor those routed to).
+  // The agent surface didn't earn its keep — most workflow features it
+  // promised (file uploads, scheduling, sharing) weren't shipped, and
+  // the per-tool pages handle the actual user flow. Per-tool macros
+  // (saved configs on each /tool/* runner) still work via the separate
+  // lib/macro-actions.ts code path.
   { href: "/tools", label: "Tools" },
-  { href: "/macros", label: "Macros" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
   { href: "/help", label: "Help" },
@@ -37,7 +41,6 @@ export function TopNav() {
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-    if (href === "/macros") return pathname === "/macros" || pathname.startsWith("/studio");
     return pathname === href || pathname.startsWith(href + "/");
   };
 

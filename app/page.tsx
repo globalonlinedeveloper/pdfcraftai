@@ -5,8 +5,6 @@ import { TOOL_STATS } from "@/lib/tools";
 import { HeroDemo } from "@/components/landing/HeroDemo";
 import { ToolsShowcase } from "@/components/landing/ToolsShowcase";
 import {
-  AgentPromo,
-  MacrosPromo,
   HowItWorks,
   Audience,
   Security,
@@ -114,12 +112,6 @@ export default function HomePage() {
 
       {/* ===== Tools showcase ===== */}
       <ToolsShowcase />
-
-      {/* ===== Agent promo ===== */}
-      <AgentPromo />
-
-      {/* ===== Macros / Workflow Studio promo ===== */}
-      <MacrosPromo />
 
       {/* ===== How credits work ===== */}
       <HowItWorks />

@@ -9,9 +9,6 @@ import { Footer } from "./Footer";
  * Authenticated app routes (/app/*) and auth pages (login/register/signup/
  * forgot-password) render their own chrome inside their own layout, so we
  * hide the marketing chrome there.
- *
- * Studio (/studio) is a full-bleed canvas — it keeps the TopNav for
- * navigation but hides the Footer so the canvas can fill the viewport.
  */
 const HIDDEN_EXACT = new Set([
   "/login",
@@ -23,9 +20,10 @@ const HIDDEN_PREFIXES = ["/app"];
 
 /**
  * Routes that keep the TopNav but suppress the Footer.
- * Canvas / tool surfaces that want maximum vertical real estate.
+ * Empty after H8 — /studio (the macros canvas) was deleted, and was the
+ * only route that needed full-bleed treatment.
  */
-const NO_FOOTER_EXACT = new Set<string>(["/studio"]);
+const NO_FOOTER_EXACT = new Set<string>();
 const NO_FOOTER_PREFIXES: string[] = [];
 
 export function MarketingChrome({ children }: { children: React.ReactNode }) {

@@ -47,7 +47,7 @@ export default function BulkPage() {
         }
         subtitle="Every tool on pdfcraft ai works in bulk — merge, split, OCR, translate, redact. Drop a zip or point at a folder; we handle the fan-out."
         primaryCta={{ href: "/register", label: "Upload a batch" }}
-        secondaryCta={{ href: "/macros", label: "Wrap it in a macro" }}
+        secondaryCta={{ href: "/pricing", label: "See pricing" }}
       />
 
       <section style={{ padding: "80px 28px", borderTop: "1px solid var(--border)" }}>

@@ -128,13 +128,16 @@ export const AD_SLOTS: Record<
   },
 
   // Bottom of every /use-cases/<workflow> page.
+  // H8: was promoting /macros (deleted). Repointed at /tools so users
+  // see the catalog instead — the next-best step from a use-case
+  // landing.
   "use-case-end": {
     default: {
-      eyebrow: "Save this workflow",
-      headline: "Run multi-step PDF workflows on autopilot",
-      body: "Macros chain steps so you don't redo the same job. Drop a folder, get a folder out.",
-      cta: "Learn about Macros",
-      href: "/macros",
+      eyebrow: "Browse every tool",
+      headline: "100+ free PDF tools, ready to chain manually",
+      body: "Merge, split, compress, OCR, translate, redact, sign — every job has its own dedicated page with a save-as-macro chip on every runner.",
+      cta: "Browse all tools",
+      href: "/tools",
     },
   },
 
@@ -152,13 +155,16 @@ export const AD_SLOTS: Record<
 
   // Bundle E (2026-04-26): /tools catalog page (high-traffic SEO
   // landing for users browsing the full tool grid).
+  // H8: was promoting /macros (deleted). Pointed at /pricing so users
+  // who land on the catalog see how AI tools are priced — most
+  // commercially relevant next step from a free-tool browser.
   "tools-catalog": {
     default: {
-      eyebrow: "Save your favourite chains",
-      headline: "Turn 3-step workflows into 1-click Macros",
-      body: "Combine any tools — merge → compress → translate — and re-run them on a folder of PDFs.",
-      cta: "Learn about Macros",
-      href: "/macros",
+      eyebrow: "Free + AI in one place",
+      headline: "Free PDF tools forever. AI tools when you need them.",
+      body: "Merge, split, compress, OCR — all free, no signup. AI tools (summarize, translate, rewrite) charge a flat per-doc credit.",
+      cta: "See pricing",
+      href: "/pricing",
     },
   },
 
