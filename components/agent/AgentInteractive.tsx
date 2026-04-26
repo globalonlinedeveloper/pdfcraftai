@@ -324,10 +324,20 @@ export default function AgentInteractive() {
     // Was Bundle H3: opt-in flag for everyone. That left signed-in users
     // staring at a deterministic mock unless they manually edited the URL,
     // which defeats the purpose of having a real backend.
+    //
+    // H7.1 race fix: useSession returns "loading" briefly on first paint
+    // while it fetches /api/auth/session. A signed-in user who types fast
+    // and hits Plan it during that window used to get the demo path. We
+    // now treat "loading" as "probably authenticated" — the API will 401
+    // if truly anon, and the catch block already falls back to demo with
+    // a logged error. Worst case is one wasted API call for an anon user
+    // who happened to click during the loading window; right tradeoff.
     const sessionAuthed = sessionStatus === "authenticated";
+    const sessionLoading = sessionStatus === "loading";
     const forceDemo = searchParams.get("backend") === "demo";
     const forceReal = searchParams.get("backend") === "real";
-    const useRealBackend = forceReal || (sessionAuthed && !forceDemo);
+    const useRealBackend =
+      forceReal || ((sessionAuthed || sessionLoading) && !forceDemo);
 
     if (useRealBackend) {
       // Real LLM-driven planner. The backend AgentPlan shape differs from
