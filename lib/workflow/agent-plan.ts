@@ -123,56 +123,110 @@ export interface AgentExample {
   tag: string;
 }
 
-// H7.5: examples rewritten to match what Agent mode CAN ACTUALLY DO
-// today (text-input → markdown deliverable). The pre-H7.5 examples
-// promised PDF attachments, file-storage discovery ("docs in my
-// downloads"), email delivery, password-protected sharing — none of
-// which the executor can do until file-storage + integrations infra
-// land. Old examples were aspirational and led to silent failures
-// (the planner picked stub-only ops, run completed with no
-// downloadable output).
+// H7.5 / H7.6: examples rewritten to match what Agent mode CAN
+// ACTUALLY DO today (text-input → markdown deliverable), then
+// expanded in H7.6 to cover EVERY working tool variant — full
+// coverage of summarize/tldr depths, translate languages, all five
+// rewrite modes, and generate. Aspirational use-cases (file-storage,
+// email delivery, sharing, multi-doc workflows) live in
+// AGENT_COMING_SOON_EXAMPLES — rendered as non-clickable preview
+// chips so users see the roadmap without hitting dead-end runs.
 //
-// Each example below uses pasted text as the source and produces a
-// markdown deliverable (.md) the user can download. The "Coming soon"
-// ones live in AGENT_COMING_SOON_EXAMPLES — rendered as preview
-// chips, NOT clickable, so users see the roadmap without hitting
-// dead-end runs.
+// Tags double as the underlying tool name so users can scan the grid
+// and see "I can do summarize, translate, rewrite, generate" without
+// reading every blurb. Order is: Summarize → Translate → Rewrite →
+// Generate (cheap → expensive, simple → complex).
 export const AGENT_EXAMPLES: AgentExample[] = [
+  // ─── Summarize family (3) ──────────────────────────────────────
   {
     icon: "Summary",
     title: "TL;DR a meeting note",
     prompt: 'TL;DR this meeting note in one paragraph: "Today we agreed to ship the v2 auth migration by end of Q3, with Priya owning the rollout plan and a hard cutover on Sept 15. Open risks: SSO regressions in the staging environment and unclear ownership of the legacy session table. Next sync: Tuesday 9am."',
-    tag: "Productivity",
+    tag: "Summarize",
   },
   {
     icon: "Summary",
     title: "Multi-section summary",
     prompt: 'Summarize this in two paragraphs with key takeaways: "Q3 revenue grew 23% to $4.2B, driven by enterprise expansion in EMEA and APAC. Operating margin expanded 180 bps to 31.4%. Free cash flow conversion was 92%. Net retention is 119%, gross retention 96%. The board approved a $500M share buyback. Top three product launches contributed 14% of new ARR."',
-    tag: "Executive",
+    tag: "Summarize",
   },
+  {
+    icon: "Summary",
+    title: "Detailed report summary",
+    prompt: 'Give me a detailed multi-section summary with TL;DR, key points, and risks: "The customer-data migration spanned 14 weeks across three regions. We hit our SLA on every milestone except the final cutover, which slipped 6 days due to a Postgres replication lag we did not anticipate. Total records migrated: 2.4M. Records requiring manual reconciliation: 312. Customer-reported incidents post-cutover: 18, all resolved within 24h. Operating margin impact for the quarter: -1.2%. Lessons: pre-flight load testing should include 95th-percentile replication scenarios, not just average."',
+    tag: "Summarize",
+  },
+
+  // ─── Translate family (3 — covers EU + Asian scripts + Indic) ─
   {
     icon: "Translate",
     title: "Translate to Spanish",
     prompt: 'Translate this to Spanish: "Welcome to our quarterly all-hands. Today we will cover product wins, customer feedback, and our roadmap for the next 90 days. Please hold questions until the end."',
-    tag: "Localization",
+    tag: "Translate",
   },
+  {
+    icon: "Translate",
+    title: "Translate to French",
+    prompt: 'Translate this to French: "Our refund policy: full refunds are available within 14 days of purchase, no questions asked. After 14 days, refunds are pro-rated based on remaining service time. Annual plans are eligible for refund within 30 days."',
+    tag: "Translate",
+  },
+  {
+    icon: "Translate",
+    title: "Translate to Japanese",
+    prompt: 'Translate this to Japanese: "Thank you for joining the beta program. You will receive early access to new features, a private Slack channel, and a dedicated success manager. We expect candid feedback in return."',
+    tag: "Translate",
+  },
+
+  // ─── Rewrite family (5 — every mode the tool supports) ────────
   {
     icon: "Edit",
     title: "Make text clearer",
     prompt: 'Rewrite this in a clearer tone: "Per our previous correspondence dated the 14th instant, kindly be advised that the aforementioned deliverables have been duly executed in accordance with the stipulations enumerated in the master services agreement."',
-    tag: "Writing",
+    tag: "Rewrite",
   },
   {
     icon: "Edit",
     title: "Shorten an email",
     prompt: 'Rewrite this shorter: "Dear team, I wanted to take a moment to thank everyone for their hard work this past quarter. We have made significant progress across all of our key initiatives, and I am incredibly proud of what we have accomplished together. As we look ahead to the next quarter, I want to share some thoughts on where we should focus our efforts."',
-    tag: "Writing",
+    tag: "Rewrite",
+  },
+  {
+    icon: "Edit",
+    title: "Make it formal",
+    prompt: 'Rewrite this in a more formal tone: "Hey, just wanted to give you a quick heads up that the launch is bumped to next Wednesday because the QA team found a couple of weird edge cases in the payment flow. Sorry for the headache!"',
+    tag: "Rewrite",
+  },
+  {
+    icon: "Edit",
+    title: "Make it casual",
+    prompt: 'Rewrite this in a more casual tone: "Pursuant to our agreement, please be advised that the deliverables outlined in Schedule A have been completed and are now available for your review at your earliest convenience."',
+    tag: "Rewrite",
+  },
+  {
+    icon: "Edit",
+    title: "Academic tone",
+    prompt: 'Rewrite this in an academic tone: "We tried a bunch of different ways to make our model faster and the one that worked best was caching the embeddings. It made everything way quicker. Worth doing if you are running into similar issues."',
+    tag: "Rewrite",
+  },
+
+  // ─── Generate family (3 — varied doc types) ───────────────────
+  {
+    icon: "Generate",
+    title: "Draft a launch one-pager",
+    prompt: "Write a one-page launch brief for a new AI feature called Smart Redact: positioning, target user, three competitive differentiators, and a 30-day rollout plan. Keep it under 400 words.",
+    tag: "Generate",
   },
   {
     icon: "Generate",
-    title: "Draft a one-pager",
-    prompt: "Write a one-page launch brief for a new AI feature called Smart Redact: positioning, target user, three competitive differentiators, and a 30-day rollout plan. Keep it under 400 words.",
-    tag: "Marketing",
+    title: "Draft a job description",
+    prompt: "Write a senior backend engineer job description for a Series B fintech startup. Include: about us, role overview, what you'll do, what we're looking for, nice-to-haves, and benefits. Stack is Go + Postgres + GCP. Keep it under 500 words.",
+    tag: "Generate",
+  },
+  {
+    icon: "Generate",
+    title: "Draft a release announcement",
+    prompt: "Write a customer-facing release announcement for v2.0 of our product. Headline + 3 paragraphs covering what's new, what's improved, and how to upgrade. Tone: confident, plainspoken, not too marketing-heavy. Under 350 words.",
+    tag: "Generate",
   },
 ];
 
