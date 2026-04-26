@@ -213,10 +213,20 @@ export const AGENT_TOOLS: Record<ToolName, AgentToolDef> = {
   "ai-summarize": {
     name: "ai-summarize",
     description:
-      "Generate executive summary + per-section bullets from a PDF, cited by page. Best for reports/papers/memos. 3 credits per doc.",
-    params: fileIdSchema.extend({
-      depth: z.enum(["tldr", "standard", "detailed"]).default("standard"),
-    }),
+      "Generate executive summary + per-section bullets cited by page. Best for reports/papers/memos. Provide EITHER file_id (an uploaded PDF) OR text (raw text from a prior step like ai-ocr). 3 credits per doc.",
+    // H6: accept either file_id OR text. Bundle G5's ai-route dispatch
+    // works on text directly today; file_id support lands once
+    // file-storage infra ships (the existing /api/ai/* routes still
+    // work for PDF uploads via the tool runner pages).
+    params: z
+      .object({
+        file_id: z.string().optional(),
+        text: z.string().optional().describe("Raw text input — alternative to file_id."),
+        depth: z.enum(["tldr", "standard", "detailed"]).default("standard"),
+      })
+      .refine((d) => Boolean(d.file_id || d.text), {
+        message: "Must provide either file_id or text.",
+      }),
     handler: "ai-route",
     aiOp: "summarize",
     risk: "review",
@@ -225,12 +235,19 @@ export const AGENT_TOOLS: Record<ToolName, AgentToolDef> = {
   "ai-tldr": {
     name: "ai-tldr",
     description:
-      "One-paragraph executive summary of a PDF. Cheapest summary tool. 2 credits per doc.",
-    params: fileIdSchema,
+      "One-paragraph executive summary. Cheapest summary tool. Provide EITHER file_id OR text. 3 credits per doc.",
+    params: z
+      .object({
+        file_id: z.string().optional(),
+        text: z.string().optional(),
+      })
+      .refine((d) => Boolean(d.file_id || d.text), {
+        message: "Must provide either file_id or text.",
+      }),
     handler: "ai-route",
     aiOp: "summarize",
     risk: "review",
-    estCredits: () => 2,
+    estCredits: () => 3,
   },
   "ai-ocr": {
     name: "ai-ocr",

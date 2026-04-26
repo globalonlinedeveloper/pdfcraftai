@@ -30,6 +30,7 @@
 import { getAgentTool } from "./tool-registry";
 import { getRunForUser, setRunStatus, setStepStatus } from "./run-store";
 import { SYSTEM_TOOL_HANDLERS } from "./system-tools";
+import { dispatchAiStep } from "./dispatch-ai";
 import type { AgentPlan, AgentStep, StepStatus } from "./types";
 
 const MICROS_PER_CREDIT = 40_000;
@@ -81,6 +82,19 @@ export async function executePlan(
   let stepsExecuted = 0;
   let finalStatus: ExecutorOutput["status"] = "completed";
 
+  // H6: thread the most recent succeeded step's output to subsequent
+  // ai-route steps so they can use it as input. Pre-load from the
+  // existing run snapshot for steps already done; populated incrementally
+  // as new steps succeed in the loop below.
+  const stepOutputs = new Map<number, { ref: string; type: string | null }>();
+  if (existing) {
+    for (const s of existing.steps) {
+      if (s.status === "succeeded" && s.outputRef) {
+        stepOutputs.set(s.idx, { ref: s.outputRef, type: s.outputType });
+      }
+    }
+  }
+
   for (const step of input.plan.steps) {
     // Skip steps that already reached a terminal state (typical when this
     // is a resume after sys.ask.user approval — the awaiting step has
@@ -110,7 +124,21 @@ export async function executePlan(
     });
 
     try {
-      const result = await dispatchStep(step, def.handler, def.aiOp, input);
+      // Pass the most recent succeeded step's output to dispatch so AI
+      // steps can chain (e.g. ai-ocr → ai-summarize). Naïve "last
+      // succeeded step" wins for now; the planner's `dependsOn` array
+      // is the right wiring once step output gets multi-source.
+      const lastSucceededIdx = Math.max(...stepOutputs.keys(), 0);
+      const priorOutput =
+        lastSucceededIdx > 0 ? stepOutputs.get(lastSucceededIdx) : undefined;
+
+      const result = await dispatchStep(
+        step,
+        def.handler,
+        def.aiOp,
+        input,
+        priorOutput,
+      );
       stepsExecuted++;
 
       if (result.status === "awaiting_approval") {
@@ -140,6 +168,13 @@ export async function executePlan(
         outputType: result.outputType,
         costMicros: stepCostMicros,
       });
+      // Make this step's output available to downstream steps.
+      if (result.outputRef) {
+        stepOutputs.set(step.idx, {
+          ref: result.outputRef,
+          type: result.outputType ?? null,
+        });
+      }
     } catch (err) {
       const message = (err as Error).message ?? "unknown error";
       await setStepStatus({
@@ -188,8 +223,9 @@ interface DispatchResult {
 async function dispatchStep(
   step: AgentStep,
   handler: "ai-route" | "wasm-node" | "system",
-  _aiOp: string | undefined,
+  aiOp: string | undefined,
   ctx: ExecutorInput,
+  priorOutput?: { ref: string; type: string | null },
 ): Promise<DispatchResult> {
   switch (handler) {
     case "system": {
@@ -209,33 +245,39 @@ async function dispatchStep(
       };
     }
 
-    case "ai-route":
-      // H6 will wire this — gated on file-storage infra landing first
-      // (the existing /api/ai/<op> routes take multipart uploads, not
-      // file IDs from the files table; storage_key in db/schema/app.ts
-      // is currently a "Phase 2 stub"). The full path:
-      //   1. Read file_id → files row → storage_key → bytes from disk
-      //   2. Call lib/ai/<op>.ts directly (skip HTTP layer)
-      //   3. spendCredits(op, cost) — same accounting as the routes
-      //   4. Persist output back as a new files row
-      //   5. Return { outputRef: newFileId, costCredits }
-      // For now: record the step as a structured stub so the timeline
-      // shows what WOULD have run — useful for plan validation +
-      // user-visible "this is the plan we'd execute" preview.
+    case "ai-route": {
+      // H6 — real dispatch via lib/agent/dispatch-ai.ts. Today only
+      // text-input ops (ai-summarize / ai-tldr with `text` param) run
+      // for real. file_id input + non-summarize ops return a structured
+      // stub from the dispatcher so the timeline still completes.
+      if (!aiOp) {
+        throw new Error(`Tool ${step.tool} has handler="ai-route" but no aiOp`);
+      }
+      // Only thread priorOutput as text when it's actually text — JSON
+      // stubs (output_type starts with "json/") aren't useful as text
+      // input to summarize/etc.
+      const priorText =
+        priorOutput &&
+        priorOutput.type &&
+        !priorOutput.type.startsWith("json/")
+          ? priorOutput.ref
+          : undefined;
+
+      const r = await dispatchAiStep({
+        step,
+        aiOp,
+        userId: ctx.userId,
+        runId: ctx.runId,
+        priorOutput: priorText,
+        priorOutputType: priorOutput?.type ?? undefined,
+      });
       return {
         status: "succeeded",
-        outputRef: JSON.stringify({
-          stub: true,
-          tool: step.tool,
-          aiOp: _aiOp,
-          params: step.params,
-          message:
-            "AI step recorded as no-op pending file-storage infrastructure (H6).",
-          runDirectlyAt: `/tool/${step.tool}`,
-        }),
-        outputType: "json/stub-ai",
-        costCredits: 0,
+        outputRef: r.outputRef,
+        outputType: r.outputType,
+        costCredits: r.costCredits,
       };
+    }
 
     case "wasm-node":
       // H6 will run pdf-lib server-side via shared lib/wasm-server/<tool>.ts
