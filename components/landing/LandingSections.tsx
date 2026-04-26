@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { SmartCta } from "@/components/marketing/SmartCta";
+import { TOOL_STATS } from "@/lib/tools";
 
 type IconKey = keyof typeof I;
 
@@ -476,7 +477,7 @@ export function HowItWorks() {
     {
       n: "01",
       t: "Start free",
-      d: "All 8 core tools are free forever. No signup to merge, split, or convert. No watermarks, no page limits.",
+      d: `All ${TOOL_STATS.free} free tools work forever. No signup to merge, split, or convert. No watermarks, no page limits.`,
     },
     {
       n: "02",
