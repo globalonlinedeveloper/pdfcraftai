@@ -290,11 +290,37 @@ export default function AgentInteractive() {
   // runPlan / saveMacroFromPlan can branch on it.
   const { status: sessionStatus } = useSession();
 
-  // Hydrate credits from localStorage on mount
+  // Hydrate credits. H7.2: signed-in users see their REAL balance
+  // from /api/account/balance; anon users see the localStorage demo
+  // balance. Refresh on every stage change so the chip is fresh after
+  // a run completes.
   React.useEffect(() => {
-    setCredits(getDemoCredits());
+    let cancelled = false;
+    if (sessionStatus === "authenticated") {
+      fetch("/api/account/balance", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (cancelled) return;
+          if (d && typeof d.balance === "number") setCredits(d.balance);
+        })
+        .catch(() => {
+          // Silently fall back to demo balance — we don't want a
+          // network blip to make the chip disappear.
+          if (!cancelled) setCredits(getDemoCredits());
+        });
+    } else if (sessionStatus === "unauthenticated") {
+      setCredits(getDemoCredits());
+    }
     return () => {
-      // Clear any pending timers if the user navigates away mid-run
+      cancelled = true;
+    };
+    // Re-run whenever the run stage transitions (planning → done) so
+    // we re-fetch after a successful charge.
+  }, [sessionStatus, stage]);
+
+  // Cleanup timers on unmount.
+  React.useEffect(() => {
+    return () => {
       tickTimers.current.forEach((t) => clearTimeout(t));
       tickTimers.current = [];
     };
@@ -415,6 +441,11 @@ export default function AgentInteractive() {
       "ai-rewrite": "Edit",
       "ai-compare": "Compare",
     };
+    // Prefer the planner's prompt-derived filename (H7.2). Fall back
+    // to the legacy "Result.<type>" only when the planner didn't ship
+    // a name (older cached plans, or a future planner that opts out).
+    const outputName =
+      bp.output.name ?? `Result.${bp.output.type}`;
     return {
       steps: bp.steps.map((s) => ({
         tool: ICON_MAP[s.tool] ?? "Flow",
@@ -423,7 +454,7 @@ export default function AgentInteractive() {
         cost: s.estCredits > 0 ? s.estCredits : undefined,
       })),
       credits: bp.totalEstCredits,
-      output: { name: `Result.${bp.output.type}`, type: bp.output.type },
+      output: { name: outputName, type: bp.output.type },
       fileCount: 0,
     };
   }
@@ -1201,7 +1232,16 @@ export default function AgentInteractive() {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = `agent-${runId.slice(0, 8)}-step-${last.tool}.${ext}`;
+                    // H7.2 download filename:
+                    //   1. Prefer the planner-suggested name (already
+                    //      includes a meaningful slug + extension).
+                    //   2. Fallback to agent-<runId>-step-<tool> for
+                    //      legacy plans without an output.name.
+                    const planName = plan?.output?.name?.trim();
+                    a.download =
+                      planName && /\.[a-z0-9]{2,4}$/i.test(planName)
+                        ? planName
+                        : `agent-${runId.slice(0, 8)}-step-${last.tool}.${ext}`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);

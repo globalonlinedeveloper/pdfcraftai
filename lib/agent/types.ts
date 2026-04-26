@@ -75,7 +75,16 @@ export interface AgentPlan {
   /** Sum of estCredits across all steps. */
   totalEstCredits: number;
   /** Predicted final output type (drives the "you'll get a .docx" preview). */
-  output: { type: "pdf" | "docx" | "xlsx" | "zip" | "csv" | "txt" | "md"; description: string };
+  output: {
+    type: "pdf" | "docx" | "xlsx" | "zip" | "csv" | "txt" | "md";
+    description: string;
+    /**
+     * Suggested filename including extension (H7.2). Optional —
+     * pre-H7.2 plans don't have it and the UI falls back to the
+     * legacy "Result.<type>" placeholder.
+     */
+    name?: string;
+  };
   /** Plan-level confidence (0-1) returned by the planner LLM. */
   confidence: number;
   /** Anything the planner LLM wants the user to know before approving. */

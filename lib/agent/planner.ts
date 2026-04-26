@@ -51,9 +51,20 @@ saying "I can answer this directly" or "the tools are PDF-only". The
 ai-* tools accept BOTH file_id AND raw text input — when the user pastes
 text in their prompt and asks for a summary/translation/etc., pass that
 text via the \`text\` param. Examples:
-  • "Summarize this: Q3 revenue grew 23%..."     → ai-tldr(text="Q3...")
+  • "TL;DR this: <text>"                         → ai-tldr(text="<text>")
+  • "Summarize in 2 paragraphs: <text>"          → ai-summarize(text="<text>", depth="standard")
+  • "Detailed summary with sections: <text>"     → ai-summarize(text="<text>", depth="detailed")
   • "Translate to French: Hello world"           → ai-translate(text="Hello world", target_lang="fr")
   • "Rewrite this in a friendly tone: <text>"    → ai-rewrite(text="<text>", tone="friendly")
+
+Choosing between ai-tldr and ai-summarize:
+  • ai-tldr    → ONE compact paragraph, executive-summary length. Use when
+                 the user says "tl;dr", "in one paragraph", "brief", "the
+                 key takeaway", or doesn't specify length/structure.
+  • ai-summarize → Multi-paragraph or sectioned output. Use when the
+                 user says "two paragraphs", "three paragraphs", "in
+                 sections", "with bullet points", "detailed", "longer",
+                 or any request that implies more than one paragraph.
 
 Rules:
 1. Use the smallest plan that achieves the goal. A summary of one document
@@ -271,7 +282,7 @@ export async function generatePlan(
       prompt: input.prompt,
       steps,
       totalEstCredits,
-      output: inferOutput(steps),
+      output: inferOutput(steps, input.prompt),
       confidence: rejectedSteps.length === 0 ? 0.95 : 0.7,
       notes:
         rejectedSteps.length > 0
@@ -324,20 +335,87 @@ function truncate(s: string, n: number): string {
 }
 
 /**
- * Best-effort output inference. Looks at the last non-system step.
+ * Best-effort output inference. Looks at the last non-system step,
+ * picks an output type, and (since H7.2) suggests a meaningful
+ * filename derived from the prompt + tool — replaces the hardcoded
+ * "Result.md" placeholder the demo path used.
+ *
+ * The filename is just a hint; the executor + Download button can
+ * still override (e.g. to include the runId for disambiguation when
+ * the same plan ran multiple times). Keep it short — the OS file
+ * picker will truncate long names anyway.
  */
-function inferOutput(steps: AgentStep[]): AgentPlan["output"] {
+function inferOutput(
+  steps: AgentStep[],
+  prompt: string,
+): AgentPlan["output"] {
+  // Find the deliverable step (last non-system).
+  let lastTool: string | undefined;
   for (let i = steps.length - 1; i >= 0; i--) {
     const tool = steps[i]!.tool;
-    if (tool.startsWith("sys.")) continue;
-    if (tool === "ai-table") return { type: "xlsx", description: "Excel file with extracted tables" };
-    if (tool === "split") return { type: "zip", description: "Zip of split PDFs" };
-    if (tool === "ai-generate") return { type: "pdf", description: "Generated PDF" };
-    if (tool === "ai-translate") return { type: "pdf", description: "Translated PDF" };
-    if (tool === "ai-summarize" || tool === "ai-tldr") return { type: "md", description: "Markdown summary" };
-    return { type: "pdf", description: "Processed PDF" };
+    if (!tool.startsWith("sys.")) {
+      lastTool = tool;
+      break;
+    }
   }
-  return { type: "pdf", description: "Result" };
+
+  // Slug the prompt: first 4-5 meaningful words, lowercase, hyphen-joined.
+  // Example: "Summarize this text in two short paragraphs: Q3 revenue..."
+  // → "summarize-this-text-in-two-short-paragraphs"
+  // The leading verb usually reflects the user's intent better than the
+  // tool name does (e.g. "tldr" vs "ai-tldr"). Falls back to the tool
+  // when the prompt has no usable words.
+  const slug = sluggifyPrompt(prompt) || (lastTool ?? "result").replace(/^ai-/, "");
+
+  switch (lastTool) {
+    case "ai-table":
+      return { type: "xlsx", description: "Excel file with extracted tables", name: `${slug}.xlsx` };
+    case "split":
+      return { type: "zip", description: "Zip of split PDFs", name: `${slug}.zip` };
+    case "ai-generate":
+      return { type: "pdf", description: "Generated PDF", name: `${slug}.pdf` };
+    case "ai-translate":
+      return { type: "pdf", description: "Translated PDF", name: `${slug}.pdf` };
+    case "ai-summarize":
+      return { type: "md", description: "Markdown summary", name: `${slug}.md` };
+    case "ai-tldr":
+      return { type: "md", description: "TL;DR (one paragraph)", name: `${slug}.md` };
+    case undefined:
+      return { type: "pdf", description: "Result", name: "result.pdf" };
+    default:
+      return { type: "pdf", description: "Processed PDF", name: `${slug}.pdf` };
+  }
+}
+
+/**
+ * Convert a prompt into a short kebab-case filename slug.
+ * Strips punctuation, lowercases, takes first 5 words, drops common
+ * stopwords. Returns "" if nothing usable remains.
+ */
+function sluggifyPrompt(prompt: string): string {
+  const STOPWORDS = new Set([
+    "a", "an", "the", "this", "that", "these", "those",
+    "is", "are", "was", "were", "be", "been", "being",
+    "of", "in", "on", "at", "to", "from", "with", "for", "by",
+    "and", "or", "but", "as", "if", "so", "then",
+    "can", "could", "would", "should", "will", "may",
+    "i", "you", "we", "they", "it", "my", "your", "our",
+  ]);
+  const words = prompt
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 1 && !STOPWORDS.has(w));
+  // Cap at 5 words AND 48 chars total — whichever hits first.
+  const picked: string[] = [];
+  let len = 0;
+  for (const w of words) {
+    if (picked.length >= 5) break;
+    if (len + w.length + (picked.length > 0 ? 1 : 0) > 48) break;
+    picked.push(w);
+    len += w.length + (picked.length > 1 ? 1 : 0);
+  }
+  return picked.join("-");
 }
 
 // Re-export the risk type for callers that wire UI labels.
