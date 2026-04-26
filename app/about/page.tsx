@@ -49,6 +49,8 @@ export default function AboutPage() {
           <div className="eyebrow" style={{ marginBottom: 10 }}>
             WHY WE BUILT THIS
           </div>
+          {/* Stays h2 — /about's h1 is owned by MarketingHero above.
+              Section heading uses inline 32px which is fine for a sub-section. */}
           <h2 style={{ fontSize: 32, letterSpacing: "-0.02em", marginTop: 0 }}>
             Every other PDF site hides the free tools behind a paywall.
           </h2>

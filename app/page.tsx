@@ -54,7 +54,7 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 style={{ maxWidth: 900, margin: "0 auto", fontSize: 72, letterSpacing: "-0.04em" }}>
+          <h1 className="hero-jumbo" style={{ maxWidth: 900, margin: "0 auto" }}>
             Every PDF tool you need.
             <br />
             <span

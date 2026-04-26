@@ -36,6 +36,14 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+  /* Bundle G2 (2026-04-26): standardized container max-width palette
+     so every page picks one of three widths instead of inventing its
+     own. Migrate inline `maxWidth: 880` → `max-width: var(--w-standard)`. */
+  --w-narrow: 720px;     /* long-form reading: blog post bodies, legal pages, single-column FAQs */
+  --w-standard: 880px;   /* most landing pages: pricing, use-cases, alternatives, blog index */
+  --w-wide: 1080px;      /* multi-column grids: tools catalog, use-case grid, testimonial walls */
+  --w-jumbo: 1200px;     /* full-bleed marketing: home hero */
 }
 
 [data-theme="light"] {
@@ -139,6 +147,76 @@ h4 {
   color: var(--fg-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+/* ---------- Page hero typography tier system (Bundle G2, 2026-04-26)
+   Pre-G2 audit found 6 different H1 sizes (16, 32, 40, 48, 56, 72)
+   across 11 marketing pages with no rationale — pages were inventing
+   their own scale. The 4-tier system collapses that to one of:
+
+     .hero-jumbo  → 64-72px (home only — biggest aspirational headline)
+     .hero-major  → 48-56px (high-conversion landings: pricing, use-cases,
+                              alternatives, SEO landing heros)
+     .hero-standard → 36-44px (browse / catalog / index pages: tools,
+                               blog, help, blog post titles)
+     .hero-utility → 24-32px (sub-routes, settings, secondary pages,
+                              about, careers, contact)
+
+   Each tier has tight letter-spacing for the geometric Geist Sans;
+   line-height optimised for the size; mobile media queries that
+   step the size down at 768px and again at 480px so heroes never
+   overflow narrow viewports. ---------- */
+.hero-jumbo {
+  font-size: 72px;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0;
+}
+.hero-major {
+  font-size: 56px;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  margin: 0;
+}
+.hero-standard {
+  font-size: 44px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0;
+}
+.hero-utility {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* Mobile step-downs — keep heros readable + non-overflowing on narrow
+   viewports. Same breakpoints as the rest of Bundle C's mobile work. */
+@media (max-width: 768px) {
+  .hero-jumbo { font-size: 56px; }
+  .hero-major { font-size: 44px; }
+  .hero-standard { font-size: 36px; }
+  .hero-utility { font-size: 24px; }
+}
+@media (max-width: 480px) {
+  .hero-jumbo { font-size: 44px; }
+  .hero-major { font-size: 36px; }
+  .hero-standard { font-size: 28px; }
+  .hero-utility { font-size: 22px; }
+}
+
+/* Standardised sub-paragraph — pairs with any hero tier. Always ~50%
+   the hero size at the standard tier scale, with comfortable reading
+   line-height. Avoids the per-page 17/18/19/20px fontSize drift. */
+.hero-sub {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  margin: 20px 0 0;
+}
+@media (max-width: 480px) {
+  .hero-sub { font-size: 16px; }
 }
 
 /* ---------- Layout ---------- */

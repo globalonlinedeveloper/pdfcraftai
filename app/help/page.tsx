@@ -31,13 +31,7 @@ export default function HelpPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             HELP CENTER
           </div>
-          <h1
-            style={{
-              fontSize: 48,
-              letterSpacing: "-0.03em",
-              marginBottom: 16,
-            }}
-          >
+          <h1 className="hero-standard" style={{ marginBottom: 16 }}>
             How can we help?
           </h1>
           <p

@@ -18,10 +18,10 @@ export default function AlternativesIndexPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             ALTERNATIVES
           </div>
-          <h1 style={{ fontSize: 56, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 20 }}>
+          <h1 className="hero-major" style={{ marginBottom: 20 }}>
             Comparing pdfcraft ai to the alternatives
           </h1>
-          <p className="muted" style={{ fontSize: 19, lineHeight: 1.55, marginBottom: 8 }}>
+          <p className="hero-sub" style={{ marginTop: 0, marginBottom: 8 }}>
             We did the side-by-side work for you. Each comparison is honest about
             where the other tool still wins — and includes a migration guide for
             common workflows so you can switch (or not) with eyes open.

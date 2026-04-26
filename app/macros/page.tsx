@@ -62,9 +62,11 @@ export default function MacrosPage() {
             <div className="eyebrow" style={{ marginBottom: 10 }}>
               WHAT&apos;S IN THE BOX
             </div>
-            <h2 style={{ fontSize: 32, letterSpacing: "-0.02em", margin: 0 }}>
+            {/* Bundle G2: promoted from h2 to h1 — /macros previously had no h1
+                (SEO + a11y issue). Uses hero-utility tier. */}
+            <h1 className="hero-utility" style={{ margin: 0 }}>
               The missing automation layer for PDFs.
-            </h2>
+            </h1>
           </div>
           <div
             style={{

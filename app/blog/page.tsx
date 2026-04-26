@@ -28,7 +28,7 @@ export default function BlogPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             BLOG
           </div>
-          <h1 style={{ fontSize: 48, letterSpacing: "-0.03em" }}>Field notes from the PDF factory.</h1>
+          <h1 className="hero-standard">Field notes from the PDF factory.</h1>
         </div>
       </section>
 

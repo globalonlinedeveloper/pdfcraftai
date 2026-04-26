@@ -18,10 +18,10 @@ export default function UseCasesIndexPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             USE CASES
           </div>
-          <h1 style={{ fontSize: 56, letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 20 }}>
+          <h1 className="hero-major" style={{ marginBottom: 20 }}>
             What people actually do with pdfcraft ai
           </h1>
-          <p className="muted" style={{ fontSize: 19, lineHeight: 1.55 }}>
+          <p className="hero-sub" style={{ marginTop: 0 }}>
             Each guide walks through a real workflow — what tools to use, what
             order to use them in, what mistakes to avoid, and what to expect at
             the end.

@@ -61,23 +61,17 @@ export function MarketingHero({
           </div>
         )}
 
-        <h1
-          style={{
-            maxWidth: 880,
-            margin: "0 auto",
-            fontSize: 60,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.05,
-          }}
-        >
+        {/* Bundle G2 (2026-04-26): migrated from inline styles to the
+            standardized hero-major / hero-sub typography tier classes
+            so /agent, /bulk, /about, /contact (and any future
+            MarketingHero consumer) all use the same scale + mobile
+            step-downs as /pricing, /use-cases, /alternatives. */}
+        <h1 className="hero-major" style={{ maxWidth: 880, margin: "0 auto" }}>
           {title}
         </h1>
 
         {subtitle && (
-          <p
-            className="muted"
-            style={{ fontSize: 19, maxWidth: 620, margin: "24px auto 0", lineHeight: 1.5 }}
-          >
+          <p className="hero-sub" style={{ maxWidth: 620, margin: "24px auto 0" }}>
             {subtitle}
           </p>
         )}

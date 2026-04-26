@@ -37,7 +37,7 @@ export default function PricingPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             PRICING
           </div>
-          <h1 style={{ fontSize: 56, letterSpacing: "-0.03em" }}>Credits, not commitments.</h1>
+          <h1 className="hero-major">Credits, not commitments.</h1>
           <p className="muted" style={{ fontSize: 18, maxWidth: 620, margin: "20px auto 0", lineHeight: 1.55 }}>
             Every free tool runs in your browser — $0 forever. Top up credits for AI features. Paid
             credits never expire.

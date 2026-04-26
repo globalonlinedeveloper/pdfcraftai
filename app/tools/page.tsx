@@ -33,7 +33,7 @@ export default function ToolsPage() {
           <div className="eyebrow" style={{ marginBottom: 8 }}>
             ALL TOOLS
           </div>
-          <h1 style={{ fontSize: 40, marginBottom: 24 }}>Pick a tool, drop a file.</h1>
+          <h1 className="hero-standard" style={{ marginBottom: 24 }}>Pick a tool, drop a file.</h1>
 
           {/* Bulk mode promo */}
           <Link
