@@ -125,6 +125,69 @@ export function PdfInspectorTool() {
     setCopied(false);
   };
 
+  /**
+   * P7: download the full inspection as a JSON file. Useful for
+   * auditors and batch workflows where the user wants programmatic
+   * access to the stats without screen-scraping the result card.
+   *
+   * Filename mirrors the source PDF (.pdf → .inspection.json) so a
+   * batch of 50 inspections lands as 50 differently-named files.
+   * Pure browser-side blob — no network round-trip.
+   */
+  const downloadJson = () => {
+    if (!result) return;
+    const dimsInches = {
+      width: Number(pointsToInches(result.firstPageDimensions.width).toFixed(2)),
+      height: Number(pointsToInches(result.firstPageDimensions.height).toFixed(2)),
+    };
+    const payload = {
+      // Echo the source so the JSON is self-describing.
+      file: { name: result.fileName, size_bytes: result.fileSize },
+      // Inspection results.
+      pages: result.pageCount,
+      page_size: {
+        label: describePageSize(result.firstPageDimensions),
+        points: {
+          width: result.firstPageDimensions.width,
+          height: result.firstPageDimensions.height,
+        },
+        inches: dimsInches,
+      },
+      uniform_dimensions: result.uniformDimensions,
+      word_count: result.wordCount,
+      word_count_estimated: result.wordCountEstimated,
+      reading_time: formatReadingTime(result.wordCount),
+      looks_like_scan: result.looksLikeScan,
+      // Metadata block. Empty fields preserved here (vs. clipboard
+      // copy which strips them) so consumers parsing the JSON can
+      // assume the schema is stable.
+      metadata: result.metadata,
+      // Provenance — helpful when this JSON ends up in a batch
+      // pipeline three months from now.
+      generated_by: "pdfcraft.ai PDF Inspector",
+      generated_at: new Date().toISOString(),
+      schema_version: 1,
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      // Strip .pdf and append .inspection.json. Defensive against
+      // weird casing.
+      const base = result.fileName.replace(/\.pdf$/i, "");
+      a.download = `${base}.inspection.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      // Revoke immediately — the click triggers the download
+      // synchronously, so we don't need to keep the blob alive.
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const copySummary = async () => {
     if (!result) return;
     const dimsIn = `${pointsToInches(result.firstPageDimensions.width).toFixed(1)} × ${pointsToInches(result.firstPageDimensions.height).toFixed(1)} in`;
@@ -300,23 +363,37 @@ export function PdfInspectorTool() {
                 in {truncateFilename(result.fileName, 36)}
               </div>
             </div>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline"
-              onClick={copySummary}
-              aria-label="Copy summary to clipboard"
-              style={{ minWidth: 110 }}
-            >
-              {copied ? (
-                <>
-                  <I.Check size={12} /> Copied
-                </>
-              ) : (
-                <>
-                  <I.Copy size={12} /> Copy stats
-                </>
-              )}
-            </button>
+            <div className="row" style={{ gap: 6 }}>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline"
+                onClick={copySummary}
+                aria-label="Copy summary to clipboard"
+                style={{ minWidth: 110 }}
+              >
+                {copied ? (
+                  <>
+                    <I.Check size={12} /> Copied
+                  </>
+                ) : (
+                  <>
+                    <I.Copy size={12} /> Copy stats
+                  </>
+                )}
+              </button>
+              {/* P7: JSON export. Downloads as <filename>.inspection.json.
+                  Useful for batch audits + pipeline integrations where
+                  Copy-paste isn't an option. */}
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                onClick={downloadJson}
+                aria-label="Download inspection as JSON"
+                title="Download as JSON"
+              >
+                <I.Download size={12} /> JSON
+              </button>
+            </div>
           </div>
 
           <div
