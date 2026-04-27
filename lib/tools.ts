@@ -16,9 +16,16 @@ export type Tool = {
 };
 
 export const TOOLS: readonly Tool[] = [
-  // ----- Free -----
-  // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
-  // Sprint B — 5 Indian financial wedges (Tier 3 §3.1).
+  // ----- Free (PDFium-powered, post-nuke rebuild) -----
+  // Build 1 (2026-04-27, commit after 33f0785):
+  //   First tool restored on Google's PDFium engine via @hyzyla/pdfium.
+  //   Proof-of-concept that the lib/pdf/ pipeline works end-to-end.
+  //   The remaining 5 PDFium-applicable tools (pdf-to-jpg, pdf-to-text,
+  //   pdf-to-html, pdf-to-markdown, extract-images) ship in Build 2
+  //   using this same pattern. The other 34 nuked tools require a
+  //   writable engine (pdf-lib, mupdf commercial, or server-side qpdf)
+  //   and stay deleted until that engine decision lands.
+  { id: "page-count", name: "Page Counter", desc: "Count the pages in any PDF — instant, in-browser, free forever.", icon: "Pages", free: true, cost: "free", group: "Organize" },
 
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },

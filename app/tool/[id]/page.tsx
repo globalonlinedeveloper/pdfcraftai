@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { I } from "@/components/icons/Icons";
+import { PageCountTool } from "@/components/tools/PageCountTool";
 import { TOOLS, toolById } from "@/lib/tools";
 import { TOOL_INTROS } from "@/lib/tool-intros";
 import { findSeoForTool } from "@/lib/seo-pages";
@@ -634,6 +635,9 @@ function ToolRunner({ id }: { id: string }) {
       return <GeneratePdfTool />;
     case "ai-sign":
       return <SignPdfTool />;
+    // PDFium-powered free tools (post-nuke rebuild, Build 1).
+    case "page-count":
+      return <PageCountTool />;
     default:
       return null;
   }

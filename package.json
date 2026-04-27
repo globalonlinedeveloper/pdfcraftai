@@ -20,6 +20,7 @@
     "@auth/drizzle-adapter": "1.7.4",
     "@cantoo/pdf-lib": "^2.6.5",
     "@google/generative-ai": "^0.24.1",
+    "@hyzyla/pdfium": "^2.1.12",
     "bcryptjs": "2.4.3",
     "clsx": "2.1.1",
     "docx": "^9.6.1",
