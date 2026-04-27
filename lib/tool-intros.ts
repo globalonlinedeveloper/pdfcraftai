@@ -58,6 +58,16 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     related: { id: "pdf-inspector", label: "PDF Inspector" },
   },
 
+  // Tier 2 — Extract / Delete Pages share the PageGridTool base.
+  "extract-pages": {
+    text: "What you'll get: a brand-new PDF containing only the pages you click — visual thumbnail grid, no text-range typing, runs entirely in your browser via pdf-lib.",
+    related: { id: "delete-pages", label: "Delete Pages" },
+  },
+  "delete-pages": {
+    text: "What you'll get: a trimmed PDF with the pages you click removed — visual thumbnail grid with dimmed previews of pages marked for removal, lossless save.",
+    related: { id: "extract-pages", label: "Extract Pages" },
+  },
+
   // --------- Common utility free tools ---------
   "free-draw": {
     text: "What you'll get: free-hand pen annotations over any PDF page in 5 colors and adjustable widths. Useful for casual markup and quick reviews.",

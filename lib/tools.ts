@@ -95,6 +95,13 @@ export const TOOLS: readonly Tool[] = [
   { id: "rotate", name: "Rotate PDF", desc: "Rotate selected pages by 90°/180°/270°. Lossless via pdf-lib's /Rotate adjustment — runs in milliseconds.", icon: "Rotate", free: true, cost: "free", group: "Edit" },
   { id: "unlock", name: "Unlock PDF", desc: "Remove owner restrictions (no-print, no-copy, no-edit) from a PDF. For files that don't require a password to open.", icon: "Unlock", free: true, cost: "free", group: "Security" },
 
+  // Tier 2 (2026-04-27): Extract Pages + Delete Pages — both run on
+  // the shared PageGridTool base component. Same UI shape, mirrored
+  // semantics. Both ids were already in LIVE_TOOL_IDS as orphaned
+  // pre-nuke entries; this commit makes those routes actually render.
+  { id: "extract-pages", name: "Extract Pages", desc: "Pick pages from a PDF via thumbnail grid and save them as a new PDF. Click to select, runs in your browser.", icon: "Pages", free: true, cost: "free", group: "Organize" },
+  { id: "delete-pages", name: "Delete Pages", desc: "Remove pages from a PDF via thumbnail grid. Click pages to mark for deletion, save the trimmed file.", icon: "Trash", free: true, cost: "free", group: "Organize" },
+
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },
   { id: "ai-summarize", name: "Summarize PDF", desc: "Executive summary + section bullets.", icon: "Summary", free: false, cost: "3 credits per doc", group: "AI" },

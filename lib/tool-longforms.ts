@@ -1635,6 +1635,183 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  // ----- Tier 2: Extract / Delete Pages (PageGridTool base) -------
+  "extract-pages": {
+    useCasesTitle: "Why people extract PDF pages",
+    useCasesIntro:
+      "Most documents bundle many things — chapters, appendices, supporting evidence, supplementary tables — into one PDF. Extracting lets you isolate the bits that matter so they can be shared, filed, or studied without distributing the entire bundle.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Sharing a single chapter",
+        text: "Send only chapter 4 to a study group instead of forwarding the whole 300-page textbook. Click the pages, save the new PDF, attach.",
+      },
+      {
+        icon: "Receipt",
+        title: "Pulling specific receipts",
+        text: "Bank statements bundle months of receipts. Extract just the three transactions for an expense report rather than the whole month.",
+      },
+      {
+        icon: "Shield",
+        title: "Compliance evidence",
+        text: "Audit packages need specific exhibit pages without the surrounding context. Extract pages 7, 12, 23 into a single evidence PDF.",
+      },
+      {
+        icon: "Book",
+        title: "Citing a passage",
+        text: "Legal briefs and academic papers often cite specific pages. Extract those pages alone for a court exhibit or reference attachment.",
+      },
+      {
+        icon: "Pages",
+        title: "Selective sharing",
+        text: "Share pages 4–7 with one reviewer and pages 8–11 with another, without exposing the rest of the document. One PDF in, two extracts out.",
+      },
+      {
+        icon: "Convert",
+        title: "Building a custom table-of-contents",
+        text: "Extract introduction + summary + conclusion pages from a long doc to make a 5-page executive briefing. Page order in the output mirrors selection order.",
+      },
+    ],
+    howWorksTitle: "How Extract Pages works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. PDFium renders every page as a thumbnail in your browser — no upload, files never leave your device.",
+      },
+      {
+        step: "2",
+        title: "Click pages to keep",
+        text: "Each thumbnail toggles selected/unselected on click. Selected pages get an accent border and a &lsquo;Keep&rsquo; badge. Bulk &lsquo;Select all&rsquo; / &lsquo;Invert&rsquo; / &lsquo;Clear&rsquo; cover the common cases.",
+      },
+      {
+        step: "3",
+        title: "Save the new PDF",
+        text: "We copy your selected pages into a brand-new PDF via pdf-lib and trigger the download. Original is untouched.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is anything uploaded?",
+        a: "No. PDFium and pdf-lib both run as JavaScript / WebAssembly in your browser. The PDF never touches our servers. Verifiable in DevTools → Network.",
+      },
+      {
+        q: "What&rsquo;s the difference between Extract Pages and Split PDF?",
+        a: "Split PDF turns one PDF into multiple PDFs at split points (sections of the original). Extract Pages produces ONE new PDF with only the pages you picked — useful when you want a single curated subset, not several pieces. Extract is also non-contiguous: you can pick pages 1, 4, 7 and they all end up in one output.",
+      },
+      {
+        q: "Are extracted pages in the original order?",
+        a: "Yes. The output preserves source page order regardless of which order you clicked them. So clicking page 7 first then page 2 still produces an output where page 2 appears before page 7.",
+      },
+      {
+        q: "Will bookmarks, links, and form fields work in the extracted PDF?",
+        a: "Page-level content is preserved exactly. Cross-page bookmarks/links that point INTO your selection still work; ones pointing OUTSIDE the selection become dangling refs (the page no longer exists in the output). pdf-lib v1.17 doesn&rsquo;t remap these — for production-grade bookmark surgery use server-side qpdf.",
+      },
+      {
+        q: "Is there a hard limit on input size or page count?",
+        a: "100 MB input. PDFs with hundreds of pages will take a few seconds to render thumbnails — a progress card shows the count. The actual extract is fast (milliseconds even on 1000-page docs).",
+      },
+      {
+        q: "Will the output file be smaller than the input?",
+        a: "Roughly proportional to the page count. If you extract 5 pages from a 100-page 10 MB PDF, expect an output around 0.5–1 MB. Embedded fonts and images for those specific pages are copied in full (pdf-lib doesn&rsquo;t subset across documents). For aggressive shrinking, run a server-side compressor afterwards.",
+      },
+    ],
+    cta: {
+      title: "Want to remove pages instead?",
+      text: "Delete Pages does the inverse: click pages to mark for removal, save the trimmed PDF. Same thumbnail grid, mirrored semantics.",
+      linkHref: "/tool/delete-pages",
+      linkLabel: "Try Delete Pages",
+    },
+  },
+
+  "delete-pages": {
+    useCasesTitle: "Why people delete pages from PDFs",
+    useCasesIntro:
+      "PDFs accumulate noise — blank pages from print drivers, draft cover sheets, scratch pages from scanners, pages with sensitive info that need to come out before sharing. Removing pages is the most common cleanup operation in document workflows.",
+    useCases: [
+      {
+        icon: "Scan",
+        title: "Blank scanner pages",
+        text: "Office scanners produce blank pages when paper double-feeds or the last page fails to register. Mark them and remove with two clicks.",
+      },
+      {
+        icon: "Edit",
+        title: "Cover-sheet trimming",
+        text: "Draft cover sheets and routing slips that came along with a document — strip them before forwarding, archiving, or printing the clean version.",
+      },
+      {
+        icon: "Shield",
+        title: "Privacy redaction",
+        text: "Remove pages containing personal info, internal notes, or confidential exhibits before sharing externally. Cleaner than redacting individual fields when the whole page is out of scope.",
+      },
+      {
+        icon: "Book",
+        title: "Reading-pack cleanup",
+        text: "Scanned textbooks often include exam-prep pages, advertisements, or pages from a different chapter. Remove the noise to get a clean study pack.",
+      },
+      {
+        icon: "Receipt",
+        title: "Statement clean-up",
+        text: "Bank or credit-card statements include marketing inserts and disclaimers. Remove those pages to keep only the transaction history for record-keeping.",
+      },
+      {
+        icon: "Pages",
+        title: "Print-prep",
+        text: "Some pages aren&rsquo;t needed for the printed version (digital-only links, navigation hints, &lsquo;page intentionally blank&rsquo;). Strip them before sending to press.",
+      },
+    ],
+    howWorksTitle: "How Delete Pages works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. PDFium renders every page as a thumbnail in your browser — no upload, no server.",
+      },
+      {
+        step: "2",
+        title: "Click pages to remove",
+        text: "Each thumbnail you click gets a red border, dims to 50% opacity, and shows a &lsquo;Remove&rsquo; badge — visual feedback that the page is going away. The bulk &lsquo;Invert&rsquo; button is handy when you want to keep most pages but drop a few.",
+      },
+      {
+        step: "3",
+        title: "Save the trimmed PDF",
+        text: "We copy the un-marked pages into a new PDF via pdf-lib and trigger the download. We refuse to delete every page (the result would be empty); maximum is total - 1.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is anything uploaded?",
+        a: "No. PDFium and pdf-lib both run locally in your browser. The PDF never touches our servers — important when you&rsquo;re removing sensitive pages and don&rsquo;t want a copy on someone else&rsquo;s infrastructure.",
+      },
+      {
+        q: "Why does it dim the thumbnails I select instead of highlighting them?",
+        a: "Convention. In Extract Pages selected = &lsquo;keep&rsquo; (highlight). In Delete Pages selected = &lsquo;remove&rsquo; (fade). Dimming reads as &lsquo;going away&rsquo; — matches Photoshop&rsquo;s layer-visibility convention and Adobe Acrobat&rsquo;s page-thumbnail panel.",
+      },
+      {
+        q: "Can I delete every page?",
+        a: "No. The output PDF would be empty, which is invalid. The button caps your selection at total - 1. To clear an entire document, just don&rsquo;t use this tool.",
+      },
+      {
+        q: "Are forms, links, signatures preserved on the kept pages?",
+        a: "Page content is preserved exactly. Form-field values that lived on kept pages survive. Cross-page links that pointed into deleted pages become dangling — pdf-lib v1.17 doesn&rsquo;t reroute. Signatures invalidate the moment the document changes (cryptographic guarantee), so re-sign after if needed.",
+      },
+      {
+        q: "Will bookmarks update to point to the right pages after deletion?",
+        a: "Bookmarks pointing to KEPT pages may now point to wrong page numbers (since pages shifted). Bookmarks pointing to DELETED pages become dangling. pdf-lib doesn&rsquo;t remap these. Most users aren&rsquo;t affected; if you have heavy bookmark dependencies, flag it.",
+      },
+      {
+        q: "Is the output smaller than the input?",
+        a: "Yes, roughly proportionally. Removing 30 of 100 pages produces an output ~70% the size of the original. Resources unique to deleted pages (their embedded images and fonts) are dropped. Resources shared across pages stay.",
+      },
+    ],
+    cta: {
+      title: "Want to extract pages instead?",
+      text: "Extract Pages does the inverse: click pages to keep, save them as a new PDF. Same thumbnail grid, mirrored semantics.",
+      linkHref: "/tool/extract-pages",
+      linkLabel: "Try Extract Pages",
+    },
+  },
+
   unlock: {
     useCasesTitle: "Why people unlock PDFs",
     useCasesIntro:

@@ -32,6 +32,9 @@ import { PdfMergeTool } from "@/components/tools/PdfMergeTool";
 import { PdfSplitTool } from "@/components/tools/PdfSplitTool";
 import { PdfRotateTool } from "@/components/tools/PdfRotateTool";
 import { PdfUnlockTool } from "@/components/tools/PdfUnlockTool";
+// Tier 2 (2026-04-27): Extract / Delete Pages on shared PageGridTool base.
+import { PdfExtractPagesTool } from "@/components/tools/PdfExtractPagesTool";
+import { PdfDeletePagesTool } from "@/components/tools/PdfDeletePagesTool";
 import {
   PdfInspectorLongform,
   PDF_INSPECTOR_FAQ,
@@ -440,6 +443,11 @@ export default function ToolRunnerPage({ params }: Params) {
     // for the click-to-mark-split-points grid (Visual mode default;
     // Advanced text-mode still available as a toggle).
     "split",
+    // Tier 2 — Extract / Delete Pages render a thumbnail grid via
+    // the shared PageGridTool. Both rely on the PDFium rasterizer
+    // for the per-page previews before pdf-lib does the actual op.
+    "extract-pages",
+    "delete-pages",
   ]);
   const usesPdfium = PDFIUM_BACKED_TOOLS.has(tool.id);
 
@@ -936,6 +944,11 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfRotateTool />;
     case "unlock":
       return <PdfUnlockTool />;
+    // Tier 2 — Extract / Delete Pages (shared PageGridTool base).
+    case "extract-pages":
+      return <PdfExtractPagesTool />;
+    case "delete-pages":
+      return <PdfDeletePagesTool />;
     default:
       return null;
   }
