@@ -35,7 +35,9 @@ type Result = {
 type LoadStage = "idle" | "loading-engine" | "counting" | "done";
 
 export function PageCountTool() {
-  useTrackToolView("page-count", "Organize");
+  // P6: capture tracker so we can fire upload/success/error in addition
+  // to the auto-fired tool_view. Funnel parity with PDF Inspector.
+  const tracker = useTrackToolView("page-count", "Organize");
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<LoadStage>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -48,27 +50,32 @@ export function PageCountTool() {
     return () => clearTimeout(t);
   }, [copied]);
 
-  const onFiles = useCallback((files: File[]) => {
-    setError(null);
-    setResult(null);
-    const f = files[0];
-    if (!f) return;
-    if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
-      setError("Please drop a PDF file.");
-      return;
-    }
-    if (f.size > 100 * 1024 * 1024) {
-      setError("File over 100 MB — try a smaller one.");
-      return;
-    }
-    setFile(f);
-  }, []);
+  const onFiles = useCallback(
+    (files: File[]) => {
+      setError(null);
+      setResult(null);
+      const f = files[0];
+      if (!f) return;
+      if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
+        setError("Please drop a PDF file.");
+        return;
+      }
+      if (f.size > 100 * 1024 * 1024) {
+        setError("File over 100 MB — try a smaller one.");
+        return;
+      }
+      setFile(f);
+      tracker.upload(f);
+    },
+    [tracker],
+  );
 
   const run = async () => {
     if (!file) return;
     setError(null);
 
     setStage("loading-engine");
+    const t0 = performance.now();
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       // Reuse the full inspect op — we only need pageCount, but going
@@ -83,12 +90,22 @@ export function PageCountTool() {
         fileSize: file.size,
       });
       setStage("done");
+      tracker.success({
+        creditCost: 0,
+        pageCount: inspection.pageCount,
+        processingMs: Math.round(performance.now() - t0),
+      });
     } catch (err) {
       console.error("page-count failed", err);
-      setError(
-        err instanceof Error ? err.message : "Could not read the PDF. Is it valid?",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Could not read the PDF. Is it valid?";
+      setError(msg);
       setStage("idle");
+      const errorCode =
+        err instanceof Error && /pdfium|wasm/i.test(err.message)
+          ? "engine_load"
+          : "parse_failed";
+      tracker.error({ errorCode });
     }
   };
 
@@ -183,6 +200,9 @@ export function PageCountTool() {
             alignItems: "center",
             gap: 12,
           }}
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
         >
           <span
             className="pulse-soft"
@@ -215,6 +235,9 @@ export function PageCountTool() {
             alignItems: "center",
             gap: 20,
           }}
+          role="status"
+          aria-live="polite"
+          aria-label={`Page count result: ${result.pageCount} pages`}
         >
           <div
             style={{

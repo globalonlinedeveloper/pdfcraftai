@@ -39,7 +39,10 @@ type Result = DocumentInspection & {
 type LoadStage = "idle" | "loading-engine" | "inspecting" | "done";
 
 export function PdfInspectorTool() {
-  useTrackToolView("pdf-inspector", "Organize");
+  // P6: capture the tracker so we can fire upload/success/error events,
+  // not just view. Was previously discarded — we got tool_view for
+  // free but no funnel beyond that.
+  const tracker = useTrackToolView("pdf-inspector", "Organize");
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<LoadStage>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -52,26 +55,34 @@ export function PdfInspectorTool() {
     return () => clearTimeout(t);
   }, [copied]);
 
-  const onFiles = useCallback((files: File[]) => {
-    setError(null);
-    setResult(null);
-    const f = files[0];
-    if (!f) return;
-    if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
-      setError("Please drop a PDF file.");
-      return;
-    }
-    if (f.size > 100 * 1024 * 1024) {
-      setError("File over 100 MB — try a smaller one.");
-      return;
-    }
-    setFile(f);
-  }, []);
+  const onFiles = useCallback(
+    (files: File[]) => {
+      setError(null);
+      setResult(null);
+      const f = files[0];
+      if (!f) return;
+      if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
+        setError("Please drop a PDF file.");
+        return;
+      }
+      if (f.size > 100 * 1024 * 1024) {
+        setError("File over 100 MB — try a smaller one.");
+        return;
+      }
+      setFile(f);
+      // P6: fire tool_upload as soon as the user accepts a file (not
+      // when they click Inspect). Captures intent even if they
+      // abandon before running.
+      tracker.upload(f);
+    },
+    [tracker],
+  );
 
   const run = async () => {
     if (!file) return;
     setError(null);
     setStage("loading-engine");
+    const t0 = performance.now();
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const { inspectPdf } = await import("@/lib/pdf/ops/inspect");
@@ -83,12 +94,26 @@ export function PdfInspectorTool() {
         fileSize: file.size,
       });
       setStage("done");
+      // P6: tool_run_success — credit cost is 0 (free tool), but
+      // logging it lets us compute funnel conversion vs other tools.
+      tracker.success({
+        creditCost: 0,
+        pageCount: inspection.pageCount,
+        processingMs: Math.round(performance.now() - t0),
+      });
     } catch (err) {
       console.error("inspect failed", err);
-      setError(
-        err instanceof Error ? err.message : "Could not read the PDF. Is it valid?",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Could not read the PDF. Is it valid?";
+      setError(msg);
       setStage("idle");
+      // P6: classify error coarsely for analytics — distinguishes
+      // engine-load failures from parse failures.
+      const errorCode =
+        err instanceof Error && /pdfium|wasm/i.test(err.message)
+          ? "engine_load"
+          : "parse_failed";
+      tracker.error({ errorCode });
     }
   };
 
@@ -207,6 +232,9 @@ export function PdfInspectorTool() {
             alignItems: "center",
             gap: 12,
           }}
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
         >
           <span
             className="pulse-soft"
@@ -230,7 +258,13 @@ export function PdfInspectorTool() {
       )}
 
       {result && (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <div
+          className="card"
+          style={{ padding: 0, overflow: "hidden" }}
+          role="status"
+          aria-live="polite"
+          aria-label={`Inspection results: ${result.pageCount} pages`}
+        >
           <div
             style={{
               padding: "20px 24px",
