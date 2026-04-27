@@ -78,11 +78,11 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   // can upgrade or downgrade the level of detail mid-session without
   // backtracking to /tools.
   "page-count": {
-    text: "What you'll get: the exact page count for any PDF (up to 100 MB), big and copyable in one click. Same engine Chrome's PDF viewer uses, runs entirely in your browser. For dimensions, word count, reading time, and mixed-size warnings, try",
+    text: "What you'll get: the exact page count for any PDF (up to 100 MB), big and copyable in one click. Same engine Chrome's PDF viewer uses, runs entirely in your browser.",
     related: { id: "pdf-inspector", label: "PDF Inspector" },
   },
   "pdf-inspector": {
-    text: "What you'll get: page count, file size, page dimensions, page-size classification (A4 / Letter / Legal etc.) with orientation, word count, reading-time estimate, and a mixed-page-size warning if your PDF mixes orientations. All from one PDFium parse, in your browser. Just need the count? Try",
+    text: "What you'll get: page count, file size, page dimensions, page-size classification (A4 / Letter / Legal etc.) with orientation, word count, reading-time estimate, and a mixed-page-size warning if your PDF mixes orientations. All from one PDFium parse, in your browser.",
     related: { id: "page-count", label: "Page Counter" },
   },
 

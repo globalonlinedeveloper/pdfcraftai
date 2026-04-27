@@ -21,7 +21,6 @@
 //   - SEO surface: two tools, two pages, two ranking opportunities
 
 import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -263,41 +262,11 @@ export function PageCountTool() {
         </div>
       )}
 
-      {/* Cross-promo to PDF Inspector — visible at all times so users
-          who realise mid-flow they want more (word count, dimensions,
-          reading time) can jump straight there. The two tools share
-          the same PDFium parse, so the upgrade path is honest. */}
-      <div
-        className="card"
-        style={{
-          padding: 14,
-          background: "var(--bg-1)",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          fontSize: 13,
-        }}
-      >
-        <span style={{ color: "var(--fg-subtle)" }}>
-          <I.Search size={16} />
-        </span>
-        <div style={{ flex: 1, color: "var(--fg-muted)" }}>
-          Want more than a count? Try{" "}
-          <Link
-            href="/tool/pdf-inspector"
-            style={{
-              color: "var(--accent)",
-              textDecoration: "underline",
-              textDecorationStyle: "dotted",
-              textUnderlineOffset: 3,
-            }}
-          >
-            PDF Inspector
-          </Link>{" "}
-          for page dimensions, word count, reading time, and mixed-size
-          warnings — same single PDFium parse.
-        </div>
-      </div>
+      {/* Cross-promo to PDF Inspector previously rendered here. Removed
+          because the same cross-link is already provided by the
+          ToolIntroPanel above the dropzone (via TOOL_INTROS) AND by
+          the Related Tools row at the bottom of the runner page. Three
+          cross-promos for one tool was overkill. */}
 
       <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
         {file && (

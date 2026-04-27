@@ -18,7 +18,6 @@
 // instead of one.
 
 import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -312,41 +311,10 @@ export function PdfInspectorTool() {
         </div>
       )}
 
-      {/* Cross-promo: just want a number? Send them to Page Counter.
-          Renders only when no file is loaded so it doesn't clutter the
-          result card. */}
-      {!file && !busy && (
-        <div
-          className="card"
-          style={{
-            padding: 14,
-            background: "var(--bg-1)",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            fontSize: 13,
-          }}
-        >
-          <span style={{ color: "var(--fg-subtle)" }}>
-            <I.Pages size={16} />
-          </span>
-          <div style={{ flex: 1, color: "var(--fg-muted)" }}>
-            Just need the page count? The lighter{" "}
-            <Link
-              href="/tool/page-count"
-              style={{
-                color: "var(--accent)",
-                textDecoration: "underline",
-                textDecorationStyle: "dotted",
-                textUnderlineOffset: 3,
-              }}
-            >
-              Page Counter
-            </Link>{" "}
-            gives you one number, one click to copy.
-          </div>
-        </div>
-      )}
+      {/* Cross-promo to Page Counter previously rendered here. Removed
+          because the same cross-link is already provided by the
+          ToolIntroPanel above the dropzone (via TOOL_INTROS) AND by
+          the Related Tools row at the bottom of the runner page. */}
 
       <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
         {file && (
