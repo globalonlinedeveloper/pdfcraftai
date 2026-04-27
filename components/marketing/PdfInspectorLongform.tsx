@@ -256,6 +256,110 @@ export function PdfInspectorLongform() {
         </ul>
       </section>
 
+      {/* PDF health checklist — Inspector P9 (2026-04-27).
+          Educational section that ties the inspector's outputs back
+          to a "healthy PDF" framework. Targets a different search
+          intent ("is my PDF correct/healthy/QC-passing?") than the
+          existing longform sections cover. Each item maps to
+          something the Inspector actually surfaces, so it's not just
+          generic advice — it's "here's what to check, here's what
+          we'll tell you about it."
+
+          Why this is here, not as a separate page: it's only ~250
+          words and works best alongside the Inspector itself —
+          users read it AFTER seeing their result and learn what to
+          act on. Standalone, it'd be thin content. */}
+      <section style={{ marginTop: 48 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px" }}>
+          PDF health checklist — what makes a PDF actually healthy?
+        </h2>
+        <p className="muted" style={{ fontSize: 14, marginTop: 0, marginBottom: 24 }}>
+          A "healthy" PDF prints cleanly, lets readers search and copy
+          text, doesn&apos;t leak metadata, and opens reliably across
+          viewers. Here&apos;s what to check, and what PDF Inspector
+          flags for you.
+        </p>
+
+        <ul
+          style={{
+            paddingLeft: 0,
+            margin: 0,
+            listStyle: "none",
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          {[
+            {
+              t: "Searchable text on every page",
+              b: "Image-only pages (typical of scans) make Ctrl-F useless and break copy-paste, summaries, and translation. Even a single scanned page in an otherwise digital PDF can sink a downstream workflow.",
+              s: "Inspector flags fully-scanned PDFs (“Looks like a scanned PDF”) and hybrid PDFs where some pages are scanned (“N of M pages have extractable text”), with a one-click CTA to make the PDF searchable.",
+            },
+            {
+              t: "Consistent page size and orientation",
+              b: "Mixed page sizes break batch printing — most printers default to one paper size and silently scale or crop the rest. Mixed orientation messes up two-up reading and ePaper devices.",
+              s: "Inspector confirms when all pages share dimensions (“✓ All pages share the same size and orientation”) and warns when they don’t.",
+            },
+            {
+              t: "Clean, accurate metadata",
+              b: "Title, Author, and Creator can leak who made the file and when. That matters for redacted documents, anonymous submissions, and compliance workflows. Conversely, missing metadata makes documents harder to search in DMS tools.",
+              s: "Inspector parses the full Info dictionary (Title, Author, Subject, Keywords, Creator, Producer, CreationDate, ModDate) so you can audit before sharing.",
+            },
+            {
+              t: "Modern PDF version",
+              b: "PDF 1.4 (Acrobat 5, c. 2001) is still legal but lacks features modern viewers expect. PDF 1.7 (ISO 32000-1) is the current baseline. PDF 2.0 (ISO 32000-2) is the future. Older versions can fail in newer viewers and miss security improvements.",
+              s: "Inspector shows the PDF version as a chip in the metadata block.",
+            },
+            {
+              t: "Reasonable file size",
+              b: "Bloat usually comes from unoptimized embedded images. A 50-page text-only PDF should be under 1 MB; 50 pages with one image per page might run 5–10 MB. Anything dramatically larger means images aren’t being compressed.",
+              s: "Inspector shows the file size so you can spot outliers; pair it with a Compress PDF tool when needed.",
+            },
+            {
+              t: "Appropriate encryption posture",
+              b: "Permission-only encryption (“you can read it but not print”) is fine for share-restricted documents. Open-password encryption blocks readers entirely, including search engines and accessibility tools, so use it sparingly.",
+              s: "Inspector surfaces an “Encrypted” badge in the metadata block when an /Encrypt entry is present.",
+            },
+          ].map((item) => (
+            <li
+              key={item.t}
+              className="row"
+              style={{ gap: 12, alignItems: "flex-start" }}
+            >
+              <span
+                style={{
+                  color: "var(--accent)",
+                  marginTop: 2,
+                  flexShrink: 0,
+                }}
+              >
+                <I.Check size={16} />
+              </span>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{item.t}</div>
+                <div
+                  className="muted"
+                  style={{ fontSize: 13, lineHeight: 1.55, marginTop: 2 }}
+                >
+                  {item.b}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    marginTop: 6,
+                    color: "var(--accent)",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {item.s}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* FAQ */}
       <section style={{ marginTop: 48 }}>
         <h2 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 16px" }}>
