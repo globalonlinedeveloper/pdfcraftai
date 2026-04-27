@@ -1588,17 +1588,17 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       {
         step: "1",
         title: "Drop your PDF",
-        text: "Up to 100 MB. pdf-lib parses page tree locally — no upload.",
+        text: "Up to 100 MB. PDFium renders every page as a small thumbnail in your browser — no upload, files never leave your device.",
       },
       {
         step: "2",
-        title: "Pick angle and pages",
-        text: "90° / 180° / 270° clockwise. Specify pages as &lsquo;all&rsquo;, individual numbers (&lsquo;1, 5, 12&rsquo;), or ranges (&lsquo;7-12&rsquo;).",
+        title: "Click pages to rotate",
+        text: "Each thumbnail is clickable. Click once for 90°, again for 180°, again for 270°, again to reset. Bulk buttons rotate all pages at once.",
       },
       {
         step: "3",
-        title: "Download",
-        text: "We adjust the /Rotate entry on each affected page and re-save. Lossless — the underlying content stream is untouched. Runs in milliseconds even on huge files.",
+        title: "Apply &amp; download",
+        text: "We adjust the /Rotate entry per page via pdf-lib and re-save. Lossless — the underlying content stream is untouched. Runs in milliseconds even on huge files.",
       },
     ],
     faqs: [

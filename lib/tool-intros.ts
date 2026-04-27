@@ -50,7 +50,7 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     related: { id: "merge", label: "Merge PDFs" },
   },
   rotate: {
-    text: "What you'll get: a PDF with the pages you choose rotated 90°/180°/270° — lossless, runs in milliseconds via pdf-lib's /Rotate adjustment.",
+    text: "What you'll get: a PDF with the pages you click rotated 90°/180°/270° — visual thumbnail picker, lossless via pdf-lib, runs entirely in your browser.",
     related: { id: "pdf-inspector", label: "PDF Inspector" },
   },
   unlock: {

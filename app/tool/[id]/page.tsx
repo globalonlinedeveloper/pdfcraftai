@@ -432,6 +432,10 @@ export default function ToolRunnerPage({ params }: Params) {
     // Build 2 Wave 3 — both call PDFium read-only.
     "pdf-search",
     "extract-images",
+    // Wave 9 visual rotate UX — Rotate tool now renders per-page
+    // thumbnails via the PDFium rasterizer for the click-to-rotate
+    // grid, before handing off to pdf-lib for the actual save.
+    "rotate",
   ]);
   const usesPdfium = PDFIUM_BACKED_TOOLS.has(tool.id);
 
