@@ -36,7 +36,12 @@ export const TOOLS: readonly Tool[] = [
   // matching search intent (and fixing the URL/title mismatch where
   // /tool/page-count visibly said "PDF Inspector"). Each tool
   // cross-promos the other so users can upgrade or downgrade as needed.
-  { id: "page-count", name: "Page Counter", desc: "Count pages in any PDF — fast, free, in-browser. One number, one click to copy.", icon: "Pages", free: true, cost: "free", group: "Organize" },
+  // 2026-04-27 (Inspector P3 polish): renamed "Page Counter" → "Page
+  // Count" so the visible name exactly matches the URL slug
+  // /tool/page-count. Matches the BreadcrumbList JSON-LD and the
+  // competitor convention (iLovePDF, Smallpdf both maintain strict
+  // slug↔name alignment). No URL change, zero SEO cost.
+  { id: "page-count", name: "Page Count", desc: "Count pages in any PDF — fast, free, in-browser. One number, one click to copy.", icon: "Pages", free: true, cost: "free", group: "Organize" },
   { id: "pdf-inspector", name: "PDF Inspector", desc: "See everything inside a PDF — pages, dimensions, word count, reading time + mixed-size warnings. Free, in-browser.", icon: "Search", free: true, cost: "free", group: "Organize" },
 
   // ----- AI -----

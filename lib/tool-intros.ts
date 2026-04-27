@@ -83,7 +83,7 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
   "pdf-inspector": {
     text: "What you'll get: page count, file size, page dimensions, page-size classification (A4 / Letter / Legal etc.) with orientation, word count, reading-time estimate, and a mixed-page-size warning if your PDF mixes orientations. All from one PDFium parse, in your browser.",
-    related: { id: "page-count", label: "Page Counter" },
+    related: { id: "page-count", label: "Page Count" },
   },
 
   // --------- AI tools with dedicated runners (no SummarizeVariantTool) ---------
