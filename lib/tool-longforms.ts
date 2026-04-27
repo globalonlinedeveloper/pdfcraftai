@@ -811,6 +811,482 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  // -------- Wave 8 (2026-04-27) — byte-parser tools --------------
+
+  "pdf-links": {
+    useCasesTitle: "Why people extract links from PDFs",
+    useCasesIntro:
+      "PDFs collect links over their lifetime — citations, tracking pixels, dead URLs from a 2017 deck. Auditing what's actually in there is its own job.",
+    useCases: [
+      {
+        icon: "Search",
+        title: "Link-rot audits",
+        text: "PDFs published 5 years ago link to URLs that no longer resolve. Pull every link, run a HEAD-status check, replace dead ones before reposting.",
+      },
+      {
+        icon: "Shield",
+        title: "Privacy / tracking review",
+        text: "Some PDFs carry tracking pixels disguised as link annotations. Knowing every external URL surfaces what your file phones home to.",
+      },
+      {
+        icon: "Convert",
+        title: "Content migration",
+        text: "Moving a PDF library to a CMS or static site. Links need to be re-anchored to the new URL structure — first you need the full list.",
+      },
+      {
+        icon: "Book",
+        title: "Citation verification",
+        text: "Academic and legal documents reference URLs. Auditing the link list confirms every citation actually points where claimed.",
+      },
+      {
+        icon: "Edit",
+        title: "Internal-doc QA",
+        text: "Internal PDF guides often link to outdated wiki pages or moved Confluence URLs. Audit before redistributing to avoid sending readers to 404s.",
+      },
+    ],
+    howWorksTitle: "How Extract Links works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser walks every page's /Annots array in your browser.",
+      },
+      {
+        step: "2",
+        title: "Click Extract links",
+        text: "We surface every /Subtype /Link annotation, classify external (URI) vs internal (Dest), record the page each appears on.",
+      },
+      {
+        step: "3",
+        title: "Copy or export",
+        text: "Copy as JSON for pipelines, or download as CSV for spreadsheets and link-checkers.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does it find links that are just text in the PDF, not clickable?",
+        a: "No. We only find link annotations — the clickable rectangles. Plain-text URLs that happen to look like links but aren't anchored as link annotations don't count. For those, use Search in PDF and search for 'http' or your domain.",
+      },
+      {
+        q: "Does it check whether the links are alive or dead?",
+        a: "Not yet. We list URLs; checking which ones still resolve requires HTTP requests we don't make in-browser (CORS would block most of them anyway). Run a desktop link-checker like linkchecker or htmlproofer on the exported CSV.",
+      },
+      {
+        q: "Internal links — what do those look like?",
+        a: "Internal links jump within the PDF, e.g. 'Page 3 of contents' linking to page 47. We surface them as 'Page object N' or 'Named: <name>' depending on which destination form the PDF uses.",
+      },
+      {
+        q: "What's the difference vs PDF Annotations Export?",
+        a: "Different annotation types. /Link is its own /Subtype — that's what this tool surfaces. Other annotations (highlights, comments, sticky notes, drawings) go to PDF Annotations Export. The two tools are complementary scans of the same /Annots array.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser.",
+      },
+    ],
+    cta: {
+      title: "Want comments + highlights too?",
+      text: "PDF Annotations Export pulls every comment, highlight, and sticky note — same single byte-stream pass.",
+      linkHref: "/tool/pdf-annotations",
+      linkLabel: "Try PDF Annotations Export",
+    },
+  },
+
+  "pdf-annotations": {
+    useCasesTitle: "Why people export PDF annotations",
+    useCasesIntro:
+      "Annotations are the layer most PDF tools hide. Exporting them turns a markup-heavy PDF into a structured review log you can sort, filter, and act on.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Manuscript review",
+        text: "Editors and academic reviewers leave comments throughout a draft. Export the annotations log so authors get a clean change list instead of having to scroll the source.",
+      },
+      {
+        icon: "Shield",
+        title: "Legal redline tracking",
+        text: "Multiple lawyers annotate a contract. Export consolidates every comment with author and timestamp — far more reviewable than the PDF itself.",
+      },
+      {
+        icon: "Search",
+        title: "Research note-taking",
+        text: "Highlights and sticky notes across a research paper. Export to .csv, paste into Notion / Obsidian, build a structured reading-notes archive.",
+      },
+      {
+        icon: "Convert",
+        title: "Feedback consolidation",
+        text: "Design or product reviews where multiple stakeholders annotate the same PDF. Export turns 50 scattered comments into a sortable spreadsheet.",
+      },
+      {
+        icon: "Book",
+        title: "Audit trail",
+        text: "Compliance workflows where annotations need to be archived separately from the source PDF. Export creates a permanent record with author + date.",
+      },
+    ],
+    howWorksTitle: "How PDF Annotations Export works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser walks every page's /Annots array.",
+      },
+      {
+        step: "2",
+        title: "Click Export annotations",
+        text: "We surface every annotation except /Link (those go to Extract Links). Subtype, author, date, color, content text per annotation.",
+      },
+      {
+        step: "3",
+        title: "Copy or export",
+        text: "Copy as JSON for pipelines, or download as CSV for spreadsheets. Annotations are grouped by page in the visible output.",
+      },
+    ],
+    faqs: [
+      {
+        q: "What annotation types does it surface?",
+        a: "Highlights, underlines, strikeouts, sticky notes, FreeText, ink drawings, stamps, shapes, and other comment-like types. Skipped: /Link (use Extract Links), /Widget (form fields — use PDF Form Inspector), /Popup (those are auxiliary to comments, not standalone).",
+      },
+      {
+        q: "Do exported annotations include the actual highlighted text?",
+        a: "We include the /Contents text, which is the comment body the annotator typed. We do NOT include the underlying text the highlight covers — that would require coordinate-based text extraction we don't yet do. Use Search in PDF if you need the highlighted source text.",
+      },
+      {
+        q: "What if the annotation has no content?",
+        a: "Many highlights and underlines don't have a typed comment — just the markup. We still list them with empty content so you can see the markup pattern. Filter on non-empty content for comments only.",
+      },
+      {
+        q: "Color information — what's the format?",
+        a: "Hex color codes (#RRGGBB) for visual reference. Useful for filtering — many review workflows use color conventions (yellow = important, red = blocker, green = approved).",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser.",
+      },
+    ],
+    cta: {
+      title: "Need links too?",
+      text: "Extract Links from PDF surfaces /Link annotations specifically — separate scan, complementary output.",
+      linkHref: "/tool/pdf-links",
+      linkLabel: "Try Extract Links",
+    },
+  },
+
+  "pdf-javascript": {
+    useCasesTitle: "Why people scan PDFs for JavaScript",
+    useCasesIntro:
+      "PDFs can contain JavaScript that fires on open, on form fill, on link click. Most users don't expect this — and most malicious PDFs use it. Knowing what's in there matters.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Security review",
+        text: "Suspicious PDF in your inbox? Scan for embedded JS before opening. High-severity handlers (network requests, file system access) are red flags for phishing or malware.",
+      },
+      {
+        icon: "Search",
+        title: "Compliance audit",
+        text: "PDF/A and many regulatory standards forbid JavaScript. Quickly verify a document is JS-free before submitting to an archive or compliance pipeline.",
+      },
+      {
+        icon: "Convert",
+        title: "Migration / re-export",
+        text: "Forms with JS validation behave differently across viewers. If you're re-exporting an old form, knowing the JS surface helps you reproduce or replace it.",
+      },
+      {
+        icon: "Edit",
+        title: "Documentation",
+        text: "Inheriting a fillable PDF from a previous developer. Scan for JS handlers to understand the form's behavior before modifying it.",
+      },
+      {
+        icon: "Book",
+        title: "Forensic analysis",
+        text: "Investigating a suspicious document — the JS handler list shows triggers (open, form-fill, link-click) and code previews to assess attack surface.",
+      },
+    ],
+    howWorksTitle: "How PDF JavaScript Detector works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser scans for /JS and /JavaScript tokens across the entire document.",
+      },
+      {
+        step: "2",
+        title: "Click Scan for JavaScript",
+        text: "We surface every JS handler with its trigger, location (document/page/form-field/link/named), and a 200-char code preview.",
+      },
+      {
+        step: "3",
+        title: "Review severity",
+        text: "Each handler gets a heuristic severity: high (network/file system access), medium (form manipulation), low (cosmetic). High-severity ones deserve careful review.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is the severity classification reliable?",
+        a: "Heuristic, not authoritative. We classify based on JS API patterns (xhr/fetch/launchURL = high; getField/setField = medium; everything else = low). It's a triage signal — high-severity handlers in an unsolicited PDF deserve a careful read; low-severity is usually benign form math.",
+      },
+      {
+        q: "Does it execute the JavaScript?",
+        a: "No. We only read the code as static text — it never runs. That's the whole point: you can inspect a suspicious PDF safely without opening it in a viewer that would execute its handlers.",
+      },
+      {
+        q: "What if the PDF has no JavaScript?",
+        a: "We tell you clearly with a 'No JavaScript detected' headline. That's the safer state — a PDF without scripts is statically readable, which is what archive standards require and what cautious viewers expect.",
+      },
+      {
+        q: "Why might my PDF have JavaScript I didn't put there?",
+        a: "Form-builder tools (Adobe LiveCycle, FormCalc) inject JS for validation and calculation. Print-driver software sometimes adds open-actions for analytics. Older Acrobat Pro features add helper scripts. Most of these are low-severity — 'high' is the one to focus on.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser. The whole point of a security tool is not to upload the suspicious file you're checking.",
+      },
+    ],
+    cta: {
+      title: "Want full archive compliance?",
+      text: "PDF/A Compliance Check confirms whether your PDF meets archive standards — JS-free is one of the requirements.",
+      linkHref: "/tool/pdf-a-check",
+      linkLabel: "Try PDF/A Check",
+    },
+  },
+
+  "pdf-accessibility": {
+    useCasesTitle: "Why people audit PDF accessibility",
+    useCasesIntro:
+      "Accessible PDFs aren't optional anymore — DOJ ADA Title II, Section 508, EN 301 549, AODA. The deadlines are real, the lawsuits are real, and most PDFs fail.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "ADA / Section 508 compliance",
+        text: "U.S. public entities must meet WCAG 2.1 AA for digital content under DOJ Title II. PDFs are explicitly in scope. Audit yours before deadlines or complaint investigations.",
+      },
+      {
+        icon: "Edit",
+        title: "Pre-publish QA",
+        text: "Marketing teams shipping a customer-facing PDF (whitepaper, brochure). Accessibility isn't just law — it's reach. Tagged PDFs are searchable, reflowable, and AT-friendly.",
+      },
+      {
+        icon: "Book",
+        title: "Education / textbook prep",
+        text: "Schools and publishers face strict accessibility rules. Audit textbooks and course materials before distribution to confirm screen-reader compatibility.",
+      },
+      {
+        icon: "Search",
+        title: "Procurement / vendor review",
+        text: "Buying software or content from a vendor. Their PDFs are part of your accessibility footprint. Audit before signing contracts.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Document remediation triage",
+        text: "Accessibility teams have backlogs of PDFs to fix. Audit to score severity, prioritize the worst offenders, batch the easy fixes.",
+      },
+    ],
+    howWorksTitle: "How PDF Accessibility Checker works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser reads structural markers in your browser.",
+      },
+      {
+        step: "2",
+        title: "Click Audit accessibility",
+        text: "We check tagged-PDF flag, structure tree presence, language, title metadata, alt-text presence on tagged figures, encryption, and JS interference.",
+      },
+      {
+        step: "3",
+        title: "Review the score",
+        text: "0–100 score with per-check pass/fail and severity (must-fix vs should-fix). Each finding includes guidance for how to fix.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this a substitute for a real accessibility audit?",
+        a: "No. We check structural markers — necessary but not sufficient for true accessibility. Color contrast, reading-order quality, alt-text correctness, and color-as-only-information violations require human review or rendered-pixel analysis we don't do. Use this as a triage tool, not a final verdict.",
+      },
+      {
+        q: "What WCAG / standards does this map to?",
+        a: "The structural checks align with WCAG 2.1 SC 1.3.1 (Info and Relationships), 1.3.2 (Meaningful Sequence), 3.1.1 (Language of Page), 4.1.2 (Name, Role, Value). PDF/UA-1 (ISO 14289-1) is the PDF-specific accessibility standard and these checks form a baseline — not a complete validation.",
+      },
+      {
+        q: "Why does my PDF score 0 even though it 'looks fine'?",
+        a: "Visual appearance and structural accessibility are different things. A PDF that LOOKS accessible to sighted readers can be completely opaque to screen readers if it isn't tagged. Score 0 means missing the must-fix structural foundation.",
+      },
+      {
+        q: "How do I fix the issues?",
+        a: "Most must-fix items (tagged PDF, structure tree, language) require re-exporting from the source application with accessibility options enabled. Acrobat Pro can also retroactively tag a PDF and add language. Alt text for images requires a human author — software can detect missing alt, not invent it.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser.",
+      },
+    ],
+    cta: {
+      title: "Want to confirm archive standard?",
+      text: "PDF/A Compliance Check verifies whether the document meets PDF/A archive standards (which often align with accessibility requirements).",
+      linkHref: "/tool/pdf-a-check",
+      linkLabel: "Try PDF/A Check",
+    },
+  },
+
+  "pdf-a-check": {
+    useCasesTitle: "Why people check PDF/A compliance",
+    useCasesIntro:
+      "PDF/A is the archive standard — government records, legal filings, library acquisitions. Non-compliant files get rejected; compliant ones get preserved correctly for decades.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Government / legal filing",
+        text: "Court e-filing systems and government records portals often require PDF/A. Verify before submission so a non-compliant file doesn't get bounced back.",
+      },
+      {
+        icon: "Book",
+        title: "Library / repository deposit",
+        text: "Institutional repositories, journal archives, and digital libraries mandate PDF/A for long-term preservation. Confirm compliance before deposit.",
+      },
+      {
+        icon: "Search",
+        title: "Compliance audit",
+        text: "Periodic checks across an organization's PDF library to confirm archived materials still meet PDF/A. Issues like un-embedded fonts can creep in via re-export.",
+      },
+      {
+        icon: "Edit",
+        title: "Re-export QA",
+        text: "Confirming a 're-saved as PDF/A' export actually meets the standard. Some PDF software claims PDF/A export but produces non-compliant output.",
+      },
+      {
+        icon: "Convert",
+        title: "Migration prep",
+        text: "Moving a document archive to a system that requires PDF/A. Audit the existing files first to understand the scope of remediation needed.",
+      },
+    ],
+    howWorksTitle: "How PDF/A Check works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser reads XMP markers + composite checks (fonts, encryption, JS).",
+      },
+      {
+        step: "2",
+        title: "Click Check PDF/A compliance",
+        text: "We surface the declared level (PDF/A-1a/1b/2a/2b/2u/3a/3b/3u or none) plus per-requirement pass/fail.",
+      },
+      {
+        step: "3",
+        title: "Review findings",
+        text: "Headline verdict + itemized checks. Failures include guidance for fixing (typically: re-export with embed-fonts, no-encryption, no-JS).",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this a substitute for veraPDF or Acrobat Pro?",
+        a: "No — heuristic only. veraPDF runs hundreds of structural validations including color-profile correctness, transparency rules, and metadata-XMP cross-references. We surface the major signals (declaration markers, fonts embedded, no encryption/JS, XMP present) to give you a fast triage. For authoritative compliance, run veraPDF or use Acrobat Pro's Preflight.",
+      },
+      {
+        q: "What's the difference between the levels?",
+        a: "Part 1/2/3: PDF/A-1 is the strictest (PDF 1.4 base, no transparency); -2 added PDF 1.7 features; -3 allows attachments. Conformance a/b/u: 'b' = visually accurate, 'a' = accessible (tagged), 'u' = unicode mapping. Most archive workflows accept any level; some specify a minimum (often -2b or -3b).",
+      },
+      {
+        q: "My PDF says 'Not PDF/A'. How do I make it one?",
+        a: "Re-export from the source application with 'PDF/A' selected as the format (Word, Acrobat, LibreOffice all support this). Or use Acrobat Pro's 'Save As Other > Archivable PDF (PDF/A)' to convert in place. Make sure all fonts embed and metadata is filled.",
+      },
+      {
+        q: "Why might a PDF declare PDF/A but fail my checks?",
+        a: "PDFs can claim PDF/A in metadata while violating actual requirements (this is annoyingly common). Possibilities: a font got swapped during a re-save, an encryption was added, a script was injected. Our checks catch these gaps; veraPDF would catch many more.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser.",
+      },
+    ],
+    cta: {
+      title: "For print production instead?",
+      text: "PDF/X Compliance Check is the print-prep counterpart — verifies fonts embedded, output intent, trim box, and the other PDF/X requirements.",
+      linkHref: "/tool/pdf-x-check",
+      linkLabel: "Try PDF/X Check",
+    },
+  },
+
+  "pdf-x-check": {
+    useCasesTitle: "Why people check PDF/X compliance",
+    useCasesIntro:
+      "PDF/X is the print-production standard. Print shops require it. Non-compliant files come back substituted, color-shifted, or rejected entirely.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Print shop submission",
+        text: "Most commercial print shops require PDF/X-1a, X-3, or X-4. Verify before sending — a rejected file means a delayed deadline and re-export work.",
+      },
+      {
+        icon: "Shield",
+        title: "Brand / agency QA",
+        text: "Agencies producing customer-facing print collateral. Confirm every PDF is PDF/X compliant before client review or vendor handoff.",
+      },
+      {
+        icon: "Convert",
+        title: "Re-export verification",
+        text: "InDesign, QuarkXPress, Affinity all export PDF/X — but settings matter. Confirm the output actually has the markers, embedded fonts, and output intent the standard requires.",
+      },
+      {
+        icon: "Book",
+        title: "Magazine / book production",
+        text: "Editorial workflows where every issue must meet PDF/X for the printer. Audit before deadline so issues don't surface at the final stage.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Spec compliance",
+        text: "Vendors specifying PDF/X-4 (with transparency) for modern print, or PDF/X-1a (no transparency) for legacy presses. Confirm the right version.",
+      },
+    ],
+    howWorksTitle: "How PDF/X Check works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Byte parser reads XMP / trailer markers + composite checks (fonts, output intent, trim/bleed boxes).",
+      },
+      {
+        step: "2",
+        title: "Click Check PDF/X compliance",
+        text: "We surface the declared version (PDF/X-1a, X-3, X-4 or none) plus per-requirement pass/fail.",
+      },
+      {
+        step: "3",
+        title: "Review findings",
+        text: "Headline verdict + itemized checks. Failures include guidance — typically: embed all fonts, declare an Output Intent ICC profile, define TrimBox on every page.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this a substitute for a real PDF/X validator?",
+        a: "No — heuristic only. Adobe Acrobat's Preflight or callas pdfaPilot run hundreds of additional checks (transparency rules per version, color-space restrictions, separation handling). We surface the major signals to give you a fast triage. For authoritative validation, run Preflight before sending to print.",
+      },
+      {
+        q: "Which version should I use?",
+        a: "PDF/X-1a (2001/2003) is legacy CMYK-only — wide press support but no transparency. PDF/X-3 added device-independent color (RGB+ICC). PDF/X-4 (2010) added transparency and is the modern default for most digital printing. Ask your print shop which they require — many spec PDF/X-4 today.",
+      },
+      {
+        q: "My PDF fails 'Output intent declared' — what's that?",
+        a: "PDF/X requires you to declare the target print conditions (paper, ink, press) via an ICC profile. Common ones: 'Coated FOGRA39' for European coated press, 'GRACoL 2013' for North American coated. Set it during PDF export or via Acrobat Pro's Output Preview.",
+      },
+      {
+        q: "Why does my PDF need a trim box?",
+        a: "PDF/X requires every page to have a /TrimBox or /ArtBox defining the final trimmed page edge — separate from the bleed area. Without it, the print shop doesn't know where to cut. Most print-prep apps set this automatically when 'PDF/X' export is selected.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Pure byte-stream parsing in your browser.",
+      },
+    ],
+    cta: {
+      title: "For archives instead of print?",
+      text: "PDF/A Compliance Check is the archive-standard counterpart — verifies fonts, no encryption, no JS, and the other PDF/A requirements.",
+      linkHref: "/tool/pdf-a-check",
+      linkLabel: "Try PDF/A Check",
+    },
+  },
+
   "pdf-fonts": {
     useCasesTitle: "Why people inspect PDF fonts",
     useCasesIntro:
