@@ -33,6 +33,16 @@ export type SeoPageSlug =
   // at /tool/page-count to preserve existing SEO equity for
   // "page count" queries — both are canonical to themselves.
   | "pdf-inspector"
+  // Build 2 Wave 3+4 (2026-04-27): SEO landings for the new
+  // PDFium-backed tools and byte-parser tools. Each pairs with a
+  // /tool/* runner; canonical URLs use natural-search variants
+  // matching iLovePDF/Smallpdf conventions.
+  | "search-in-pdf"
+  | "extract-images-from-pdf"
+  | "pdf-bookmarks"
+  | "pdf-form-fields"
+  | "pdf-attachments-viewer"
+  | "pdf-fonts-inspector"
   // 2026-04-24 wave 2: Tier 1 ships for PDF → TXT, Resize Pages, and
   // Remove Metadata. All three target high-intent Google queries where
   // iLovePDF / Smallpdf rank on the first page — long-tail money.
@@ -613,6 +623,122 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Does it work for scanned PDFs?", a: "Page count, dimensions, and the mixed-size warning all work on scans. Word count will read 0 because there's no extractable text — run AI · OCR first to make the scan searchable, then come back here." },
     ],
     related: ["page-count", "pdf-metadata", "ai-summarize", "ai-ocr"],
+  },
+
+  // Build 2 Wave 3+4 (2026-04-27): SEO landings for the new tools.
+
+  "search-in-pdf": {
+    tool: "pdf-search",
+    h1: "Search inside a PDF — find any text, free, in your browser",
+    sub: "Drop a PDF and search every page for a word or phrase. Case-sensitive and whole-word options. No upload, no signup. Up to 200 matches per query.",
+    canonical: "/search-in-pdf",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Parsed by Google PDFium in your browser — never uploaded." },
+      { t: "Type a query", d: "Word or phrase. Press Enter. Toggle case-sensitive or whole-word if needed." },
+      { t: "Read results in context", d: "Every match shows surrounding text and the page it came from. Click into a new search to refine." },
+    ],
+    faq: [
+      { q: "Does it work on scanned PDFs?", a: "Only if the scan has an OCR text layer. Image-only scans have no extractable text — run Make PDF Searchable first to OCR them, then come back to search." },
+      { q: "How many matches can it return?", a: "Up to 200 per query. Beyond that, refine your query — long lists become unhelpful and the page slows down. Whole-word matching usually trims results meaningfully." },
+      { q: "Does it search bookmarks / metadata too?", a: "No, just the page text. For bookmarks, use the PDF Outline Viewer. For metadata (title, author, etc.), use PDF Inspector." },
+      { q: "Is anything uploaded?", a: "No. PDFium runs as WebAssembly in your browser. Verify in your browser's Network panel — there's no upload." },
+    ],
+    related: ["pdf-search", "pdf-inspector", "ai-searchable-pdf", "ai-semantic-search"],
+  },
+
+  "extract-images-from-pdf": {
+    tool: "extract-images",
+    h1: "Extract images from a PDF — every embedded image as PNG",
+    sub: "Pull every embedded raster image out of a PDF at original resolution. Single download or zip bundle. Free, in-browser, no upload.",
+    canonical: "/extract-images-from-pdf",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. PDFium parses the document in your browser." },
+      { t: "Click Extract images", d: "We walk every page, find embedded raster images, and decode them to PNG at native resolution." },
+      { t: "Download", d: "Single image → one .png. Multiple images → one .zip. Or click any thumbnail to download just that image." },
+    ],
+    faq: [
+      { q: "Does it render the whole page as an image?", a: "No, that's PDF to PNG. This tool extracts the SOURCE images embedded in the PDF — at original resolution, exactly as the PDF author placed them. Use PDF to PNG if you want the full rendered page." },
+      { q: "What about vector graphics?", a: "Vectors aren't images — they're path objects. Only raster images (JPG, PNG, etc. embedded in the PDF) are extracted. PDFs that are entirely vector will return zero images." },
+      { q: "Why are some images missing?", a: "Rare codecs (JBIG2 under encryption, etc.) can fail to decode. We log and skip those rather than failing the whole extraction. Common formats (JPEG, PNG, raw bitmaps) work." },
+      { q: "Is anything uploaded?", a: "No. Pure browser-side. Verify in your Network panel." },
+    ],
+    related: ["extract-images", "pdf-to-png", "pdf-to-jpg", "pdf-inspector"],
+  },
+
+  "pdf-bookmarks": {
+    tool: "pdf-outline",
+    h1: "PDF bookmarks viewer — see the table of contents of any PDF",
+    sub: "View the bookmark / outline tree of any PDF, with page numbers next to each entry. Useful for previewing long docs before reading. Free, in-browser.",
+    canonical: "/pdf-bookmarks",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. We parse the bookmark tree directly from the PDF bytes in your browser." },
+      { t: "Click View outline", d: "We walk the outline tree, decode titles, resolve destinations to 1-based page numbers." },
+      { t: "Copy or export", d: "Copy as indented text, or export as JSON for programmatic use." },
+    ],
+    faq: [
+      { q: "What if the PDF has no bookmarks?", a: "We tell you clearly. Many PDFs (especially scanned or auto-generated ones) have no outline tree. For those, try PDF Inspector for high-level stats or Search in PDF to find specific text." },
+      { q: "Are nested bookmarks shown?", a: "Yes, with indent depth. The export preserves the hierarchy — JSON has a depth field; copied text uses two-space indent per level." },
+      { q: "Why is no page number shown for some entries?", a: "PDF allows two destination styles: direct page refs and named destinations (an extra dereference layer). We resolve direct refs cleanly; named destinations show the bookmark title without a page number. Most modern PDFs use direct refs." },
+      { q: "Is anything uploaded?", a: "No. Pure byte-stream parsing in your browser." },
+    ],
+    related: ["pdf-outline", "pdf-inspector", "page-count", "pdf-search"],
+  },
+
+  "pdf-form-fields": {
+    tool: "pdf-forms",
+    h1: "PDF form field inspector — see every fillable field in a PDF",
+    sub: "List every AcroForm field — name, type, current value, required/read-only flags. Export as CSV for spreadsheets or JSON for pipelines. Free, in-browser.",
+    canonical: "/pdf-form-fields",
+    howTo: [
+      { t: "Drop your fillable PDF", d: "Up to 100 MB. We parse the AcroForm dictionary in your browser." },
+      { t: "Click Inspect form fields", d: "Every field with a /T name and /FT type is surfaced — text inputs, checkboxes, radios, choice lists, signatures." },
+      { t: "Export", d: "Copy as JSON for pipelines, or download as CSV for spreadsheets. Field names use dotted-path notation (Parent.Child) for nested forms." },
+    ],
+    faq: [
+      { q: "Does it fill the form for me?", a: "No, this tool inspects only — it tells you what fields exist and their current values. To fill in fields, use the Fill PDF Forms tool." },
+      { q: "What field types does it recognize?", a: "All four AcroForm types: Tx (text inputs), Btn (buttons — checkbox, radio, pushbutton), Ch (choice — list/combo box), Sig (signature). Plus a flags column showing required, read-only, multiline, password." },
+      { q: "Why are some fields blank?", a: "Either they haven't been filled in (form was not submitted), or the value is in a non-string format we don't yet decode (e.g. complex dictionaries). Required + readonly flags still show correctly even if the value is empty." },
+      { q: "Is anything uploaded?", a: "No. Byte-stream parser runs in your browser." },
+    ],
+    related: ["pdf-forms", "fill-forms", "pdf-inspector", "extract-form-data"],
+  },
+
+  "pdf-attachments-viewer": {
+    tool: "pdf-attachments",
+    h1: "PDF attachments viewer — list embedded files in any PDF",
+    sub: "Show every embedded file inside a PDF — filename, description, MIME type, size. Useful for compliance audits, security review, and PDF/A validation. Free, in-browser.",
+    canonical: "/pdf-attachments-viewer",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Byte parser walks the /Names tree in your browser." },
+      { t: "Click List attachments", d: "We surface every Filespec dict from /EmbeddedFiles — Unicode filenames preferred, MIME types decoded." },
+      { t: "Copy or export", d: "Copy as text (filename + size + description), or export as JSON for downstream pipelines." },
+    ],
+    faq: [
+      { q: "Does it download the actual file bytes?", a: "Not yet. We list metadata (name, MIME, size) but extracting the streams requires handling FlateDecode and other compression filters — separate work. For now, open the PDF in Acrobat/Preview to save individual attachments." },
+      { q: "Why does this matter for compliance?", a: "Embedded files can leak PII, source documents, or working notes. Auditors need to know what's hiding inside. PDF/A validators also care — the spec restricts embedded file types." },
+      { q: "What if no attachments exist?", a: "We tell you clearly. Most PDFs don't have any. Common cases that DO: technical reports with embedded datasets, regulatory filings with supporting docs, archive PDFs with original source files." },
+      { q: "Is anything uploaded?", a: "No. Pure byte-stream parsing in your browser." },
+    ],
+    related: ["pdf-attachments", "pdf-inspector", "extract-pdf-attachments", "pdf-forms"],
+  },
+
+  "pdf-fonts-inspector": {
+    tool: "pdf-fonts",
+    h1: "PDF font inspector — see every font in a PDF, embedded or not",
+    sub: "List every font referenced in a PDF, flag embedded vs not, see which pages use each. Critical for print prep — non-embedded fonts get substituted at the printer. Free, in-browser.",
+    canonical: "/pdf-fonts-inspector",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Byte parser walks every page's font resources in your browser." },
+      { t: "Click Inspect fonts", d: "We dedupe fonts by object number, check FontDescriptor for /FontFile* refs (embedded), and detect subsetted fonts via the 6-letter prefix pattern." },
+      { t: "Review and export", d: "Color-coded badges for embedded vs not. Page list per font. Copy as JSON or download as CSV." },
+    ],
+    faq: [
+      { q: "Why does font embedding matter?", a: "Non-embedded fonts get substituted at the printer with whatever's installed. Result: visibly wrong glyphs, inconsistent spacing, sometimes complete unreadability. Print shops universally require embedded fonts. PDF/A and PDF/X compliance also require it." },
+      { q: "What does 'subsetted' mean?", a: "Modern PDFs often embed only the glyphs actually used in the document — saves file size dramatically. The PDF spec marks subsetted fonts with a 6-letter random prefix (e.g. ABCDEF+TimesNewRoman). Subsetted fonts are still embedded — the prefix just signals the optimization." },
+      { q: "What if the inspector shows non-embedded fonts?", a: "Use a tool like Acrobat Pro to embed them, or re-export the source document with 'Embed all fonts' checked. Standard 14 PDF fonts (Helvetica, Times, Courier etc.) are technically allowed unembedded but most modern workflows embed everything for safety." },
+      { q: "Is anything uploaded?", a: "No. Byte-stream parser runs in your browser." },
+    ],
+    related: ["pdf-fonts", "pdf-inspector", "page-count", "compress"],
   },
 
   "pdf-to-text": {
