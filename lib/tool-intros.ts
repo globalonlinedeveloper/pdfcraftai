@@ -71,6 +71,22 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a PDF with pages in the order you arrange them — drag-and-drop thumbnails to reorder, with one-click Reverse and Reset bulk actions.",
     related: { id: "extract-pages", label: "Extract Pages" },
   },
+  "page-numbers": {
+    text: "What you'll get: a PDF with page numbers stamped on every page — pick position (six corners), format (1, 1 of N, Page 1, Page 1 of N), and font size. Lossless overlay via pdf-lib.",
+    related: { id: "rotate", label: "Rotate PDF" },
+  },
+  "repair-pdf": {
+    text: "What you'll get: a re-saved clean copy of a mildly malformed PDF — fixes dangling xref pointers, stale trailers, and bad object streams via pdf-lib's permissive parser.",
+    related: { id: "pdf-inspector", label: "PDF Inspector" },
+  },
+  "strip-links": {
+    text: "What you'll get: a PDF with every clickable hyperlink removed — print-ready, compliance-friendly. Other annotations (highlights, comments, form fields) preserved.",
+    related: { id: "pdf-links", label: "Extract Links" },
+  },
+  "flatten-pdf": {
+    text: "What you'll get: a PDF with form field values baked into the page content — recipients see filled values but can't edit them. Lossless for the page content.",
+    related: { id: "pdf-forms", label: "PDF Form Inspector" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {

@@ -37,6 +37,13 @@ import { PdfExtractPagesTool } from "@/components/tools/PdfExtractPagesTool";
 import { PdfDeletePagesTool } from "@/components/tools/PdfDeletePagesTool";
 // Tier 2 (continued): Sort Pages — drag-to-reorder thumbnail grid.
 import { PdfSortPagesTool } from "@/components/tools/PdfSortPagesTool";
+// Tier 3 (2026-04-28): 4 simple pdf-lib tools.
+import { PdfPageNumbersTool } from "@/components/tools/PdfPageNumbersTool";
+import {
+  PdfRepairTool,
+  PdfStripLinksTool,
+  PdfFlattenTool,
+} from "@/components/tools/PdfSimpleOpsTool";
 import {
   PdfInspectorLongform,
   PDF_INSPECTOR_FAQ,
@@ -957,6 +964,15 @@ function ToolRunner({ id }: { id: string }) {
     // Tier 2 — Sort Pages (drag-to-reorder thumbnail grid).
     case "sort-pages":
       return <PdfSortPagesTool />;
+    // Tier 3 — 4 simple pdf-lib tools.
+    case "page-numbers":
+      return <PdfPageNumbersTool />;
+    case "repair-pdf":
+      return <PdfRepairTool />;
+    case "strip-links":
+      return <PdfStripLinksTool />;
+    case "flatten-pdf":
+      return <PdfFlattenTool />;
     default:
       return null;
   }

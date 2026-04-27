@@ -105,6 +105,14 @@ export const TOOLS: readonly Tool[] = [
   // reorder via HTML5 native DnD (same approach Merge uses for files).
   { id: "sort-pages", name: "Sort Pages", desc: "Reorder pages in a PDF via drag-and-drop on a thumbnail grid. Reverse, restore, or rearrange — runs in your browser.", icon: "Pages", free: true, cost: "free", group: "Organize" },
 
+  // Tier 3 (2026-04-28): 4 pdf-lib tools — page numbers, repair,
+  // strip links, flatten. All previously orphaned ids in
+  // LIVE_TOOL_IDS; this batch lights them up with real ops + runners.
+  { id: "page-numbers", name: "Add Page Numbers", desc: "Stamp page numbers onto every page — pick position, format, and font size. pdf-lib drawText overlay, runs in your browser.", icon: "Pages", free: true, cost: "free", group: "Edit" },
+  { id: "repair-pdf", name: "Repair PDF", desc: "Fix mildly malformed PDFs by reparsing through pdf-lib and re-saving. Recovers from dangling xref, stale trailer dicts, bad object streams.", icon: "Edit", free: true, cost: "free", group: "Edit" },
+  { id: "strip-links", name: "Strip Hyperlinks", desc: "Remove every clickable hyperlink from a PDF. Print prep, compliance, and accidental-tap-proofing. Other annotations preserved.", icon: "Edit", free: true, cost: "free", group: "Edit" },
+  { id: "flatten-pdf", name: "Flatten PDF Forms", desc: "Bake AcroForm field values into static page content. Recipients see filled values but can&apos;t edit them. Lossless for the page content.", icon: "Edit", free: true, cost: "free", group: "Edit" },
+
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },
   { id: "ai-summarize", name: "Summarize PDF", desc: "Executive summary + section bullets.", icon: "Summary", free: false, cost: "3 credits per doc", group: "AI" },

@@ -1812,6 +1812,118 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  "page-numbers": {
+    useCasesTitle: "Why people add page numbers",
+    useCasesIntro:
+      "Page numbers turn a PDF from a bag of pages into a navigable document. They&rsquo;re mandatory for legal exhibits, expected for academic submissions, and just plain useful when someone needs to reference &lsquo;page 47.&rsquo;",
+    useCases: [
+      { icon: "Shield", title: "Legal exhibits", text: "Court filings often require pagination on every supporting exhibit. Stamp Bates-style numbers on a binder of evidence in seconds." },
+      { icon: "Book", title: "Academic submissions", text: "Theses, journal manuscripts, and conference papers expect page numbers. Add &lsquo;Page 1 of N&rsquo; before submission." },
+      { icon: "File", title: "Multi-section reports", text: "When you concatenate sections from different sources, the original page numbers get out of sync. Re-number end-to-end so the table of contents matches." },
+      { icon: "Receipt", title: "Reference packages", text: "Sales decks and proposals reviewed in meetings need pagination so attendees can call out &lsquo;back to page 12.&rsquo;" },
+      { icon: "Edit", title: "Print-prep", text: "Print shops process paginated docs faster — saves a back-and-forth when re-prints are needed for specific pages." },
+      { icon: "Pages", title: "Scan archives", text: "After scanning a stack of paper, page numbers help future-you find the page you need without flipping through the whole archive." },
+    ],
+    howWorksTitle: "How Add Page Numbers works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. Files stay in your browser — pdf-lib reads and writes locally." },
+      { step: "2", title: "Pick position + format", text: "Six positions (corners + bottom/top center). Four formats: bare number, &lsquo;1 of N&rsquo;, &lsquo;Page 1&rsquo;, &lsquo;Page 1 of N.&rsquo; Font size from 6–48 pt." },
+      { step: "3", title: "Apply &amp; download", text: "We embed Helvetica and stamp each page via drawText. Lossless overlay — the underlying content stream is untouched." },
+    ],
+    faqs: [
+      { q: "Is anything uploaded?", a: "No. pdf-lib runs in your browser. The PDF never touches our servers." },
+      { q: "Will the numbers overlap with existing content?", a: "Possibly — we draw on top of whatever&rsquo;s on the page. If the page already has a footer at the position you choose, the new number will overlap. Pick a different position, or strip existing footers first." },
+      { q: "Can I number only certain pages?", a: "The current version numbers every page. A startPage option exists in the op but isn&rsquo;t exposed in the UI yet — for now, use Extract Pages first to isolate the pages, number them, and merge back." },
+      { q: "What about Roman numerals or section-specific numbering?", a: "Not in v1. Most users want simple Arabic numerals. Section-aware numbering (&lsquo;i, ii, iii&rsquo; for front matter then &lsquo;1, 2, 3&rsquo; for the body) is on the roadmap." },
+      { q: "Does the font support non-Latin scripts?", a: "Helvetica covers Latin + Western European characters. CJK scripts (Chinese, Japanese, Korean) need different fonts; not supported in v1." },
+    ],
+    cta: { title: "Need to rotate or reorder pages first?", text: "Rotate fixes upside-down pages before numbering. Sort Pages reorders before numbers go on.", linkHref: "/tool/rotate", linkLabel: "Try Rotate PDF" },
+  },
+
+  "repair-pdf": {
+    useCasesTitle: "Why people repair PDFs",
+    useCasesIntro:
+      "PDFs break in surprising ways — interrupted downloads, broken export pipelines, unusual generators that produce technically-invalid-but-mostly-fine files. pdf-lib&rsquo;s permissive parser can rescue many of these without an Acrobat license.",
+    useCases: [
+      { icon: "Edit", title: "Interrupted downloads", text: "A network blip during download leaves the PDF with a corrupt xref. Reparse + re-save fixes it — no need to re-download." },
+      { icon: "Convert", title: "Bad export pipelines", text: "Some generators (older office suites, custom report tools) produce PDFs with stale trailer dicts that strict viewers reject. pdf-lib accepts them; the re-save makes them universally valid." },
+      { icon: "Shield", title: "Pre-archive cleanup", text: "Before archiving important docs, run them through repair so future viewers (10 years from now) can open them without quirks." },
+      { icon: "File", title: "Email gateways", text: "Some corporate email scanners reject PDFs with unusual structure. Repair normalizes them so they pass through." },
+      { icon: "Scan", title: "Scanner output", text: "Multifunction printers occasionally produce PDFs that open in Acrobat but break in browser viewers. Repair fixes the inconsistency." },
+      { icon: "Pages", title: "Concatenated outputs", text: "When you cat two PDF files together (sometimes done by sloppy automation), you get a structurally invalid result. Repair recovers the document tree." },
+    ],
+    howWorksTitle: "How Repair PDF works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. Even files that other viewers can&rsquo;t open often parse fine in pdf-lib." },
+      { step: "2", title: "Click Repair", text: "We load with throwOnInvalidObject=false so pdf-lib swallows recoverable errors, then re-save with object streams for a clean output." },
+      { step: "3", title: "Download", text: "Output is structurally clean: valid xref, well-formed trailer, normalized object streams. Page content is byte-identical." },
+    ],
+    faqs: [
+      { q: "What can&rsquo;t this fix?", a: "Truncated files (the bytes after the truncation just don&rsquo;t exist), encrypted PDFs whose content streams are scrambled by a forgotten password, and content streams whose internal PostScript-style commands are themselves corrupt. For deeper damage, qpdf --repair (server-side) or Adobe Acrobat are the tools to try." },
+      { q: "Will the page content change?", a: "No. We re-save the structural envelope; the page content streams pass through pdf-lib&rsquo;s parser into the new document unchanged. Visually identical." },
+      { q: "Why does the output sometimes get smaller?", a: "We re-save with modern object streams (compact format). Older PDFs without object streams can shrink 5-15% during repair without any quality loss." },
+      { q: "Is anything uploaded?", a: "No. pdf-lib parses + re-saves entirely in your browser." },
+      { q: "Should I run this on every PDF as preventative maintenance?", a: "No need. Most PDFs are fine. Only run when a viewer flags errors, when archiving important docs long-term, or when a downstream tool rejects the file." },
+    ],
+    cta: { title: "Need to inspect the PDF first?", text: "PDF Inspector tells you what&rsquo;s inside before you repair — page count, encryption, metadata, mixed-orientation warnings.", linkHref: "/tool/pdf-inspector", linkLabel: "Try PDF Inspector" },
+  },
+
+  "strip-links": {
+    useCasesTitle: "Why people strip hyperlinks",
+    useCasesIntro:
+      "Hyperlinks are great in screens, problematic on paper, and explicitly forbidden in some compliance regimes. Removing them is the single most common annotation-cleanup task before sharing a PDF outside its original context.",
+    useCases: [
+      { icon: "Edit", title: "Print prep", text: "Hyperlinks are decorative ink on paper — they consume blue ink, they create visual clutter, and they&rsquo;re unclickable. Strip before sending to press." },
+      { icon: "Shield", title: "Archive compliance", text: "Some retention policies require static documents — no live URLs that could rot, redirect, or expose internal infrastructure. Strip before depositing into long-term archive." },
+      { icon: "File", title: "External sharing", text: "Internal docs sometimes contain URLs to systems behind your VPN. Strip them before forwarding externally so recipients don&rsquo;t hit broken links." },
+      { icon: "Receipt", title: "Touch-screen reading", text: "Reading PDFs on phones / tablets — accidental taps on links are jarring. Strip for a smoother reading experience." },
+      { icon: "Book", title: "Academic distribution", text: "Some journals and submission portals reject PDFs with active URLs. Strip before upload." },
+      { icon: "Convert", title: "Pipeline normalization", text: "When ingesting PDFs into a content pipeline (RAG, search, LLM context), live URLs sometimes confuse downstream tooling. Strip first to get clean text." },
+    ],
+    howWorksTitle: "How Strip Hyperlinks works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. Files stay in your browser." },
+      { step: "2", title: "Click Remove all links", text: "We walk every page&rsquo;s /Annots array, identify entries with /Subtype = /Link, and drop them. Other annotations (highlights, comments, form widgets) stay." },
+      { step: "3", title: "Download", text: "Output has the visible link text intact (if it was rendered as page content) but no clickable behavior. Save and share." },
+    ],
+    faqs: [
+      { q: "Will the URL text still be visible?", a: "Yes, if it was rendered as actual page content. Hyperlink annotations are an OVERLAY that makes a region clickable — the underlying text (e.g. &lsquo;visit example.com&rsquo;) is part of the page content stream and is preserved." },
+      { q: "What about other annotations?", a: "Highlights, comments, sticky notes, form fields, and signature widgets are ALL preserved. We touch only annotations whose /Subtype is /Link." },
+      { q: "Does this remove URLs that aren&rsquo;t hyperlinks?", a: "No. URLs that exist only as text (someone typed &lsquo;https://...&rsquo;) without being made into clickable links are left alone — there&rsquo;s no annotation to remove." },
+      { q: "Is anything uploaded?", a: "No. pdf-lib runs in your browser." },
+      { q: "Will internal cross-references (bookmarks pointing within the PDF) be removed?", a: "No. Internal navigation goes through bookmarks (the outline tree), not /Link annotations. Bookmarks are preserved." },
+    ],
+    cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
+  },
+
+  "flatten-pdf": {
+    useCasesTitle: "Why people flatten PDF forms",
+    useCasesIntro:
+      "Filled-out forms exist in two states. In their native state, the values live in form fields that anyone can edit. After flattening, the values become part of the page content — visible to everyone, editable by no one. Flattening freezes a form so it can be safely circulated.",
+    useCases: [
+      { icon: "Pen", title: "Send a completed form", text: "You&rsquo;ve filled out a tax form, application, or contract template. Flatten before emailing so the recipient can&rsquo;t accidentally (or maliciously) modify your answers." },
+      { icon: "Shield", title: "Compliance archiving", text: "Audit-grade copies of completed forms must be non-editable. Flatten before depositing into the records system." },
+      { icon: "Pages", title: "Print previewing", text: "Some printers render form fields differently from final content. Flatten first so what you see in preview is exactly what comes out of the printer." },
+      { icon: "Convert", title: "Fixing rendering quirks", text: "Some PDF viewers don&rsquo;t render form values until you click into the field. Flatten to bake values into the page so every viewer shows them." },
+      { icon: "Receipt", title: "Bulk form processing", text: "When you&rsquo;ve filled many forms via automation, flatten them all before downstream tools (OCR, archival, distribution) handle them." },
+      { icon: "File", title: "Standardize for review", text: "Reviewers shouldn&rsquo;t accidentally tab into a form field while reading. Flatten makes the document strictly read-only." },
+    ],
+    howWorksTitle: "How Flatten PDF Forms works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. We load the form structure with pdf-lib." },
+      { step: "2", title: "Click Flatten forms", text: "pdf-lib&rsquo;s PDFForm.flatten() walks every AcroForm field, reads its current value, and draws it into the page&rsquo;s content stream. Then it removes the interactive widgets." },
+      { step: "3", title: "Download", text: "Output looks identical to viewers but the forms are no longer fields — just static text. Recipients see filled values, can&rsquo;t edit them." },
+    ],
+    faqs: [
+      { q: "Will signature fields be preserved?", a: "Visually yes — the visible signature appearance becomes part of the page content. Cryptographically no — flattening invalidates the signature&rsquo;s integrity binding (which is the whole point of cryptographic signing). Don&rsquo;t flatten anything that needs to remain a verifiable signed document." },
+      { q: "Are XFA forms supported?", a: "No. XFA is a separate (deprecated) form format that pdf-lib doesn&rsquo;t handle. The op surfaces a friendly error if it encounters one. Use Adobe Acrobat for XFA flattening." },
+      { q: "What if my PDF has no forms?", a: "The op completes successfully with a &lsquo;No forms to flatten&rsquo; message and returns a clean re-saved copy. No harm done." },
+      { q: "Can I un-flatten afterwards?", a: "No. Flattening is one-way — the field metadata is gone. Always keep an unflattened copy as your master." },
+      { q: "Is anything uploaded?", a: "No. pdf-lib flattens locally." },
+    ],
+    cta: { title: "Need to inspect form fields first?", text: "PDF Form Inspector lists every field — name, type, value, flags. Run before flattening to confirm what will be baked in.", linkHref: "/tool/pdf-forms", linkLabel: "Try PDF Form Inspector" },
+  },
+
   "sort-pages": {
     useCasesTitle: "Why people reorder PDF pages",
     useCasesIntro:
