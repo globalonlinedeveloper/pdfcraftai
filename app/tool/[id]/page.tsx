@@ -27,6 +27,8 @@ import {
   PageCountLongform,
   PAGE_COUNT_FAQ,
 } from "@/components/marketing/PageCountLongform";
+import { ToolRunnerLongform } from "@/components/marketing/ToolRunnerLongform";
+import { TOOL_LONGFORMS } from "@/lib/tool-longforms";
 import { TOOLS, toolById } from "@/lib/tools";
 import { TOOL_INTROS } from "@/lib/tool-intros";
 import { findSeoForTool } from "@/lib/seo-pages";
@@ -288,6 +290,12 @@ export default function ToolRunnerPage({ params }: Params) {
   const PER_TOOL_FAQ: Record<string, Array<{ q: string; a: string }>> = {
     "pdf-inspector": PDF_INSPECTOR_FAQ,
     "page-count": PAGE_COUNT_FAQ,
+    // Build 2 Wave 5: pull bespoke FAQs from the shared longform
+    // data so the FAQPage JSON-LD on each runner page matches
+    // exactly what's visible in the longform's FAQ section.
+    ...Object.fromEntries(
+      Object.entries(TOOL_LONGFORMS).map(([id, data]) => [id, data.faqs]),
+    ),
   };
   const faqSource = PER_TOOL_FAQ[tool.id] ?? seoLanding?.faq ?? null;
   const faqLd = faqSource
@@ -564,6 +572,14 @@ export default function ToolRunnerPage({ params }: Params) {
               weight before the next-step nudges. */}
           {tool.id === "pdf-inspector" && <PdfInspectorLongform />}
           {tool.id === "page-count" && <PageCountLongform />}
+          {/* Build 2 Wave 5 (2026-04-27): every other PDFium-backed
+              tool gets the shared longform via the TOOL_LONGFORMS
+              data file. Closes the structural-parity gap — every
+              tool now has the same editorial depth as Inspector +
+              Page Count. */}
+          {TOOL_LONGFORMS[tool.id] && tool.id !== "pdf-inspector" && tool.id !== "page-count" && (
+            <ToolRunnerLongform data={TOOL_LONGFORMS[tool.id]} />
+          )}
 
           {/* Related tools — same-group siblings. Improves on-page
               context for users + passes PageRank between related
