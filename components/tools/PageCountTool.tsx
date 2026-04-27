@@ -21,6 +21,7 @@
 //   - SEO surface: two tools, two pages, two ranking opportunities
 
 import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -30,6 +31,13 @@ type Result = {
   pageCount: number;
   fileName: string;
   fileSize: number;
+  /**
+   * P10: carry the scan-detection signal through from inspect.ts even
+   * though Page Count doesn't show the rest of the inspector stats.
+   * A scanned 10-page legal exhibit dropped here would otherwise
+   * silently report "10 pages" with no hint that OCR is needed.
+   */
+  looksLikeScan: boolean;
 };
 
 type LoadStage = "idle" | "loading-engine" | "counting" | "done";
@@ -88,6 +96,7 @@ export function PageCountTool() {
         pageCount: inspection.pageCount,
         fileName: file.name,
         fileSize: file.size,
+        looksLikeScan: inspection.looksLikeScan,
       });
       setStage("done");
       tracker.success({
@@ -285,6 +294,44 @@ export function PageCountTool() {
         </div>
       )}
 
+      {/* P10: scan warning (mirrors the same nudge on PDF Inspector).
+          Page Count's narrow purpose still benefits from this signal
+          — a user who dropped a scan into Page Count is going to
+          immediately wonder why their PDF doesn't seem searchable.
+          Surfacing the OCR CTA here saves them the round-trip. */}
+      {result?.looksLikeScan && (
+        <div
+          className="card"
+          style={{
+            padding: "10px 16px",
+            background: "var(--accent-soft)",
+            color: "var(--accent)",
+            fontSize: 13,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <I.Scan size={14} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            Looks like a scanned PDF — text isn&apos;t searchable. Run{" "}
+            <Link
+              href="/tool/ai-searchable-pdf"
+              style={{
+                color: "var(--accent)",
+                fontWeight: 500,
+                textDecoration: "underline",
+                textDecorationStyle: "dotted",
+                textUnderlineOffset: 3,
+              }}
+            >
+              Make PDF Searchable
+            </Link>{" "}
+            to OCR it.
+          </div>
+        </div>
+      )}
+
       {/* Cross-promo to PDF Inspector previously rendered here. Removed
           because the same cross-link is already provided by the
           ToolIntroPanel above the dropzone (via TOOL_INTROS) AND by
@@ -292,25 +339,35 @@ export function PageCountTool() {
           cross-promos for one tool was overkill. */}
 
       <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
-        {file && (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={reset}
-            disabled={busy}
-          >
-            Reset
+        {/* P10: mirror PDF Inspector's pattern — when a result is
+            shown, the action button changes from a quiet ghost
+            "Reset" to a primary "Count another PDF" CTA, encouraging
+            repeat use rather than feeling terminal. */}
+        {result ? (
+          <button type="button" className="btn btn-primary" onClick={reset}>
+            Count another PDF
           </button>
-        )}
-        {!result && (
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!file || busy}
-            onClick={run}
-          >
-            {busy ? "Counting…" : "Count pages"}
-          </button>
+        ) : (
+          <>
+            {file && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={reset}
+                disabled={busy}
+              >
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!file || busy}
+              onClick={run}
+            >
+              {busy ? "Counting…" : "Count pages"}
+            </button>
+          </>
         )}
       </div>
     </div>

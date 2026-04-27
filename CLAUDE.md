@@ -100,6 +100,7 @@ HOSTINGER_SSH_PRIVATE_KEY_PATH=/sessions/gifted-funny-franklin/mnt/pdfcraftai.co
 
 - `CLAUDE.md` (this file) — session bootstrap (credentials + infra)
 - **`docs/STATUS.md` — live punch list: what's DONE, what's PENDING, who owns each. Read this IMMEDIATELY after CLAUDE.md at session start.**
+- **`docs/TOOL_PATTERN.md` — canonical structure every new tool must follow. Read BEFORE shipping any new tool. The PDF Inspector saga (P0–P9) hardened this pattern; treat `/tool/page-count` and `/tool/pdf-inspector` as reference implementations.**
 - `docs/DEPLOYMENT_NOTES.md` — detailed env vars, integration status, recovery playbook
 - `app/layout.tsx` — analytics / tracking scripts live here
 - `auth.ts` / `auth.config.ts` — NextAuth v5 Google provider wiring
