@@ -158,6 +158,7 @@ export function PdfInspectorTool() {
       word_count_estimated: result.wordCountEstimated,
       reading_time: formatReadingTime(result.wordCount),
       looks_like_scan: result.looksLikeScan,
+      pages_with_text: result.pagesWithText,
       // Metadata block. Empty fields preserved here (vs. clipboard
       // copy which strips them) so consumers parsing the JSON can
       // assume the schema is stable.
@@ -495,6 +496,47 @@ export function PdfInspectorTool() {
               to OCR it.
             </div>
           )}
+
+          {/* Inspector P8: hybrid PDF detection. Some pages have text,
+              some don't — typically a mix of scanned content + a
+              cover page or a digital chapter inserted into a scan
+              stack. The fully-scanned case is already covered above
+              by looksLikeScan; the fully-textual case needs no
+              warning. The middle case (some but not all) is what we
+              flag here. */}
+          {!result.looksLikeScan &&
+            result.pagesWithText > 0 &&
+            result.pagesWithText < result.pageCount && (
+              <div
+                style={{
+                  padding: "10px 24px",
+                  borderTop: "1px solid var(--border)",
+                  fontSize: 12,
+                  color: "var(--fg-muted)",
+                  background: "var(--bg-1)",
+                }}
+              >
+                <I.Info size={12} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                Hybrid PDF: {result.pagesWithText} of {result.pageCount} page
+                {result.pageCount === 1 ? "" : "s"} have extractable text
+                {result.wordCountEstimated && " (sampled)"}. The other{" "}
+                {result.pageCount - result.pagesWithText} may be scanned or blank
+                — consider running{" "}
+                <Link
+                  href="/tool/ai-searchable-pdf"
+                  style={{
+                    color: "var(--accent)",
+                    fontWeight: 500,
+                    textDecoration: "underline",
+                    textDecorationStyle: "dotted",
+                    textUnderlineOffset: 3,
+                  }}
+                >
+                  Make PDF Searchable
+                </Link>{" "}
+                if Ctrl-F isn&apos;t finding what you expect.
+              </div>
+            )}
         </div>
       )}
 

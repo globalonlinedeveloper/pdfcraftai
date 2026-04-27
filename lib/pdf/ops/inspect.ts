@@ -55,6 +55,16 @@ export interface DocumentInspection {
    * defaults so the inspector still renders the rest gracefully.
    */
   metadata: PdfMetadata;
+  /**
+   * Inspector P8 (2026-04-27): how many pages contain at least 5
+   * extractable words. For ≤100-page PDFs this is an exact count
+   * (we iterate every page for word count anyway). For >100-page
+   * PDFs it's an extrapolation from the sample — see
+   * `wordCountEstimated`. Combined with pageCount, this surfaces
+   * hybrid PDFs (e.g., 1 cover page + 50 scanned pages) that the
+   * binary `looksLikeScan` flag misses.
+   */
+  pagesWithText: number;
 }
 
 /**
@@ -182,30 +192,47 @@ export async function inspectPdf(
       }
     }
 
-    // Word count — sample-and-extrapolate for >100 page docs to keep
-    // big PDFs responsive. Whitespace split is deliberately rough;
-    // the user-facing label says "approximately N words" so we don't
-    // need linguist-grade tokenization.
+    // Word count + per-page text presence — sample-and-extrapolate for
+    // >100 page docs to keep big PDFs responsive. Whitespace split is
+    // deliberately rough; the user-facing label says "approximately N
+    // words" so we don't need linguist-grade tokenization.
+    //
+    // P8: track pagesWithText alongside wordCount in the same loop.
+    // Threshold: ≥5 words to count as "has text" — anything less is
+    // either a fully blank page or a scanned/image-only page where
+    // the only "words" would be OCR-able pixels we don't read.
+    const TEXT_PRESENCE_WORD_THRESHOLD = 5;
     let wordCount = 0;
     let wordCountEstimated = false;
+    let pagesWithText = 0;
     if (pageCount <= 100) {
       for (let i = 0; i < pageCount; i++) {
         const p = doc.getPage(i);
         const text = p.getText();
-        wordCount += countWords(text);
+        const w = countWords(text);
+        wordCount += w;
+        if (w >= TEXT_PRESENCE_WORD_THRESHOLD) pagesWithText += 1;
       }
     } else {
       const sampledIndices: number[] = [];
       for (let i = 0; i < 20; i++) sampledIndices.push(i);
       for (let i = pageCount - 5; i < pageCount; i++) sampledIndices.push(i);
       let sampleWords = 0;
+      let sampleWithText = 0;
       for (const i of sampledIndices) {
         const p = doc.getPage(i);
-        sampleWords += countWords(p.getText());
+        const w = countWords(p.getText());
+        sampleWords += w;
+        if (w >= TEXT_PRESENCE_WORD_THRESHOLD) sampleWithText += 1;
       }
       const avgPerPage = sampleWords / sampledIndices.length;
       wordCount = Math.round(avgPerPage * pageCount);
       wordCountEstimated = true;
+      // Extrapolate text presence at the same ratio. Round so the
+      // displayed count is a plausible integer.
+      pagesWithText = Math.round(
+        (sampleWithText / sampledIndices.length) * pageCount,
+      );
     }
 
     // Inspector P4: scan-detection heuristic. If a multi-page doc has
@@ -233,6 +260,7 @@ export async function inspectPdf(
       wordCountEstimated,
       looksLikeScan,
       metadata,
+      pagesWithText,
     };
   });
 }
