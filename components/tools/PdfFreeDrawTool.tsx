@@ -11,6 +11,13 @@
 // through freeDrawPdf op once per page. Color and width persist across
 // page navigation (only strokes get cleared by resetPageContent).
 //
+// 2026-04-28 (#190): stroke move + hit-testing. Adds a Draw/Move mode
+// toggle. In Move mode, pointerdown does point-to-segment-distance
+// hit-testing (within strokeWidth/2 + 6px slack); if it lands inside a
+// stroke, drag-translates ALL points in that stroke by the delta from
+// pointer start. Otherwise it no-ops with a "click on a stroke" hint.
+// Mode toggle persists across page navigation alongside color + width.
+//
 // State shape: array of complete strokes (each is a list of points
 // in image-pixel coords plus color/width). The current in-progress
 // stroke lives in component-local useState since it's transient and
@@ -37,18 +44,23 @@ interface PixelStroke {
   width: number;
 }
 
+type ToolMode = "draw" | "move";
+
 interface FreeDrawState {
   strokes: PixelStroke[];
   /** Current pen color. */
   color: string;
   /** Current pen width in screen pixels (will scale to PDF points at apply). */
   width: number;
+  /** Draw new strokes vs move existing ones. */
+  mode: ToolMode;
 }
 
 const INITIAL_STATE: FreeDrawState = {
   strokes: [],
   color: "#000000",
   width: 3,
+  mode: "draw",
 };
 
 const COLOR_SWATCHES: Array<{ value: string; label: string }> = [
@@ -73,7 +85,7 @@ export function PdfFreeDrawTool() {
       initialState={INITIAL_STATE}
       multiPage={true}
       hasEdits={(s) => realStrokes(s.strokes).length > 0}
-      // Keep pen color and width across pages — only clear the strokes.
+      // Keep pen color, width, and mode across pages — only clear the strokes.
       resetPageContent={(s) => ({ ...s, strokes: [] })}
       disabledReason={(entries) => {
         const total = entries.reduce(
@@ -175,11 +187,15 @@ function FreeDrawConfigPanel({
         style={{ justifyContent: "space-between", alignItems: "center" }}
       >
         <div style={{ fontSize: 13 }}>
-          {realStrokes.length === 0
-            ? "Click and drag to draw freehand. Lift the pen to start a new stroke."
-            : pageCount > 1
-              ? `${realStrokes.length} stroke${realStrokes.length === 1 ? "" : "s"} · ${totalPoints} points on page ${currentPage}`
-              : `${realStrokes.length} stroke${realStrokes.length === 1 ? "" : "s"} · ${totalPoints} points`}
+          {state.mode === "move"
+            ? realStrokes.length === 0
+              ? "Move mode: nothing to move yet — switch to Draw and add a stroke."
+              : "Move mode: click and drag a stroke to reposition it."
+            : realStrokes.length === 0
+              ? "Click and drag to draw freehand. Lift the pen to start a new stroke."
+              : pageCount > 1
+                ? `${realStrokes.length} stroke${realStrokes.length === 1 ? "" : "s"} · ${totalPoints} points on page ${currentPage}`
+                : `${realStrokes.length} stroke${realStrokes.length === 1 ? "" : "s"} · ${totalPoints} points`}
         </div>
         <div className="row" style={{ gap: 6 }}>
           <button
@@ -199,6 +215,51 @@ function FreeDrawConfigPanel({
             Clear all
           </button>
         </div>
+      </div>
+
+      {/* Mode toggle: Draw (default) vs Move existing strokes. */}
+      <div
+        role="radiogroup"
+        aria-label="Tool mode"
+        className="row"
+        style={{
+          gap: 0,
+          alignSelf: "flex-start",
+          border: "1px solid var(--border)",
+          borderRadius: 6,
+          overflow: "hidden",
+        }}
+      >
+        {(
+          [
+            { v: "draw", label: "Draw" },
+            { v: "move", label: "Move" },
+          ] as Array<{ v: ToolMode; label: string }>
+        ).map((opt, i) => (
+          <button
+            key={opt.v}
+            type="button"
+            role="radio"
+            aria-checked={state.mode === opt.v}
+            onClick={() => setState((s) => ({ ...s, mode: opt.v }))}
+            disabled={busy}
+            style={{
+              padding: "6px 14px",
+              border: "none",
+              borderLeft: i > 0 ? "1px solid var(--border)" : "none",
+              background:
+                state.mode === opt.v ? "var(--accent-soft)" : "var(--bg-1)",
+              color:
+                state.mode === opt.v ? "var(--accent)" : "var(--fg-muted)",
+              fontWeight: state.mode === opt.v ? 600 : 400,
+              cursor: busy ? "default" : "pointer",
+              fontSize: 13,
+              fontFamily: "inherit",
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 500 }}>Pen color</div>
@@ -365,6 +426,17 @@ function FreeDrawEditorOverlay({
   // short stroke and bloat the path output).
   const lastPointRef = useRef<PixelPoint | null>(null);
 
+  // Move-mode drag state. Snapshot the original points at pointerdown
+  // so all moves are absolute deltas off the original — incremental
+  // drift would compound rounding errors and feel "draggy" in tests.
+  const movingRef = useRef<{
+    strokeIndex: number;
+    originX: number;
+    originY: number;
+    origPoints: PixelPoint[];
+  } | null>(null);
+  const [movingIndex, setMovingIndex] = useState<number | null>(null);
+
   const pointerToPx = (e: React.PointerEvent): PixelPoint => {
     if (!overlayRef.current) return { x: 0, y: 0 };
     const rect = overlayRef.current.getBoundingClientRect();
@@ -379,10 +451,37 @@ function FreeDrawEditorOverlay({
   const onPointerDown = (e: React.PointerEvent) => {
     if (busy) return;
     const p = pointerToPx(e);
+
+    // MOVE mode: hit-test against existing strokes. We walk the
+    // strokes in REVERSE order (visually-topmost first) and pick the
+    // first one whose closest-point-on-any-segment falls within
+    // strokeWidth/2 + slack pixels of the click. Slack=6px gives users
+    // a forgiving target without making selection ambiguous.
+    if (state.mode === "move") {
+      const realIdx = hitTestStrokes(state.strokes, p, 6);
+      if (realIdx === -1) return; // empty click in move mode = no-op
+      const origPoints = state.strokes[realIdx].points.map((pt) => ({
+        x: pt.x,
+        y: pt.y,
+      }));
+      movingRef.current = {
+        strokeIndex: realIdx,
+        originX: p.x,
+        originY: p.y,
+        origPoints,
+      };
+      setMovingIndex(realIdx);
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    // DRAW mode (default): start a new stroke.
     setDrawing(true);
     lastPointRef.current = p;
-    // Start a new stroke with the first point. Subsequent points are
-    // appended to this same stroke until pointer up.
     setState((s) => ({
       ...s,
       strokes: [
@@ -394,6 +493,39 @@ function FreeDrawEditorOverlay({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    // MOVE mode: translate the captured stroke by the absolute delta.
+    if (movingRef.current) {
+      const p = pointerToPx(e);
+      const dx = p.x - movingRef.current.originX;
+      const dy = p.y - movingRef.current.originY;
+      const idx = movingRef.current.strokeIndex;
+      const orig = movingRef.current.origPoints;
+      // Clamp delta so no point goes off-page.
+      let minX = Infinity,
+        maxX = -Infinity,
+        minY = Infinity,
+        maxY = -Infinity;
+      for (const pt of orig) {
+        if (pt.x < minX) minX = pt.x;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.y > maxY) maxY = pt.y;
+      }
+      const clampedDx = Math.max(-minX, Math.min(pageRender.pxWidth - maxX, dx));
+      const clampedDy = Math.max(-minY, Math.min(pageRender.pxHeight - maxY, dy));
+      const moved = orig.map((pt) => ({
+        x: pt.x + clampedDx,
+        y: pt.y + clampedDy,
+      }));
+      setState((s) => {
+        if (idx >= s.strokes.length) return s;
+        const next = s.strokes.slice();
+        next[idx] = { ...next[idx], points: moved };
+        return { ...s, strokes: next };
+      });
+      return;
+    }
+
     if (!drawing) return;
     const p = pointerToPx(e);
     // Throttle: only record points that are at least 2 px from the
@@ -419,6 +551,18 @@ function FreeDrawEditorOverlay({
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    // MOVE mode: release the captured stroke.
+    if (movingRef.current) {
+      movingRef.current = null;
+      setMovingIndex(null);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
     if (!drawing) return;
     setDrawing(false);
     lastPointRef.current = null;
@@ -438,6 +582,15 @@ function FreeDrawEditorOverlay({
     });
   };
 
+  // Cursor: crosshair while drawing; grab/grabbing in move mode.
+  const cursor = busy
+    ? "default"
+    : state.mode === "move"
+      ? movingIndex !== null
+        ? "grabbing"
+        : "grab"
+      : "crosshair";
+
   return (
     <div
       ref={overlayRef}
@@ -449,7 +602,7 @@ function FreeDrawEditorOverlay({
         position: "relative",
         width: "100%",
         aspectRatio: `${pageRender.pxWidth} / ${pageRender.pxHeight}`,
-        cursor: busy ? "default" : "crosshair",
+        cursor,
         background: "var(--bg-2)",
         borderRadius: 8,
         overflow: "hidden",
@@ -488,21 +641,106 @@ function FreeDrawEditorOverlay({
           // native quadratic-Bezier renderer handles the smoothing on
           // the browser side; we only need to emit the path string.
           const d = buildSmoothPath(stroke.points);
+          const isMoving = movingIndex === i;
           return (
-            <path
-              key={i}
-              d={d}
-              fill="none"
-              stroke={stroke.color}
-              strokeWidth={stroke.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <g key={i}>
+              {/* Soft halo behind the stroke being moved. */}
+              {isMoving && (
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="rgba(37, 99, 235, 0.35)"
+                  strokeWidth={stroke.width + 8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+              <path
+                d={d}
+                fill="none"
+                stroke={stroke.color}
+                strokeWidth={stroke.width}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
           );
         })}
       </svg>
+      {state.mode === "move" && state.strokes.filter((s) => s.points.length >= 2).length === 0 && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              padding: "8px 14px",
+              borderRadius: 999,
+              background: "rgba(0,0,0,0.6)",
+              color: "white",
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            Switch to Draw to add a stroke first
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+/**
+ * Hit-test a click point against an array of strokes. Returns the
+ * index of the topmost stroke (last drawn = visually highest) whose
+ * closest-segment-distance is within `strokeWidth / 2 + slack` of the
+ * click. Returns -1 if no stroke is hit.
+ *
+ * Uses standard point-to-segment-distance: project the click onto each
+ * (P_i, P_{i+1}) segment, clamp the projection parameter to [0,1], and
+ * measure Euclidean distance.
+ */
+function hitTestStrokes(
+  strokes: PixelStroke[],
+  click: PixelPoint,
+  slackPx: number,
+): number {
+  for (let i = strokes.length - 1; i >= 0; i--) {
+    const s = strokes[i];
+    if (s.points.length < 2) continue;
+    const tolerance = s.width / 2 + slackPx;
+    const tolSq = tolerance * tolerance;
+    for (let j = 0; j < s.points.length - 1; j++) {
+      const a = s.points[j];
+      const b = s.points[j + 1];
+      const ax = a.x;
+      const ay = a.y;
+      const bx = b.x;
+      const by = b.y;
+      const dx = bx - ax;
+      const dy = by - ay;
+      const lenSq = dx * dx + dy * dy;
+      let t = 0;
+      if (lenSq > 0) {
+        t = ((click.x - ax) * dx + (click.y - ay) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+      }
+      const projX = ax + t * dx;
+      const projY = ay + t * dy;
+      const ddx = click.x - projX;
+      const ddy = click.y - projY;
+      if (ddx * ddx + ddy * ddy <= tolSq) {
+        return i;
+      }
+    }
+  }
+  return -1;
 }
 
 function formatSize(bytes: number): string {
