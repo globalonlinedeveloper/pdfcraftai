@@ -167,7 +167,7 @@ function LinksConfigPanel({
           ? "Drag a rectangle on the page to start. Then type a URL to link it to."
           : state.pending
             ? "Type the URL for the rectangle you just drew, then Save link."
-            : `${state.saved.length} link${state.saved.length === 1 ? "" : "s"} saved. Drag to add another.`}
+            : `${state.saved.length} link${state.saved.length === 1 ? "" : "s"} saved. Drag a saved rect to reposition it, or drag empty space to add another.`}
       </div>
 
       {state.pending && (
@@ -323,6 +323,20 @@ function LinksEditorOverlay({
     };
   };
 
+  // Drag-to-reposition state for saved rects (#180). When the user
+  // pointer-downs on a saved rect, we capture the pointer offset
+  // inside the rect so subsequent pointermoves update the rect's
+  // top-left in pixel space without snapping the cursor to the
+  // rect corner. Using a ref instead of useState because we mutate
+  // it on every pointermove and don't want React reconciliation
+  // overhead in the move loop.
+  const movingRef = useRef<{
+    index: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+  const [movingIndex, setMovingIndex] = useState<number | null>(null);
+
   const onPointerDown = (e: React.PointerEvent) => {
     if (busy) return;
     // If there&rsquo;s already a pending link, drawing replaces it (user
@@ -337,6 +351,34 @@ function LinksEditorOverlay({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    // Saved-rect move takes priority — when movingRef is active, we
+    // skip the drawing-new-rect path entirely. (movingRef gets set
+    // by the saved-rect's own onPointerDown, which stopPropagations,
+    // so the parent shouldn't even see the down event in normal
+    // flow — but we guard here against React event-ordering races.)
+    if (movingRef.current) {
+      const { x, y } = pointerToPx(e);
+      const { index, offsetX, offsetY } = movingRef.current;
+      setState((s) => {
+        if (index < 0 || index >= s.saved.length) return s;
+        const target = s.saved[index];
+        const newX = Math.max(
+          0,
+          Math.min(pageRender.pxWidth - target.rect.w, x - offsetX),
+        );
+        const newY = Math.max(
+          0,
+          Math.min(pageRender.pxHeight - target.rect.h, y - offsetY),
+        );
+        const next = [...s.saved];
+        next[index] = {
+          ...target,
+          rect: { ...target.rect, x: newX, y: newY },
+        };
+        return { ...s, saved: next };
+      });
+      return;
+    }
     if (!drawing) return;
     const { x, y } = pointerToPx(e);
     const x0 = Math.min(drawing.startX, x);
@@ -351,6 +393,16 @@ function LinksEditorOverlay({
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    if (movingRef.current) {
+      movingRef.current = null;
+      setMovingIndex(null);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      return;
+    }
     if (!drawing) return;
     setDrawing(null);
     try {
@@ -366,6 +418,65 @@ function LinksEditorOverlay({
       }
       return s;
     });
+  };
+
+  // Saved-rect drag start. Calculates the pointer offset inside the
+  // rect so subsequent moves preserve the grab point — without this,
+  // the rect would snap to have its top-left under the cursor every
+  // time. stopPropagation prevents the parent overlay's
+  // onPointerDown from firing (which would start a new draw).
+  const onSavedRectPointerDown = (e: React.PointerEvent, index: number) => {
+    if (busy) return;
+    e.stopPropagation();
+    const { x, y } = pointerToPx(e);
+    const target = state.saved[index];
+    if (!target) return;
+    movingRef.current = {
+      index,
+      offsetX: x - target.rect.x,
+      offsetY: y - target.rect.y,
+    };
+    setMovingIndex(index);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  // Forwarded pointermove on the saved rect — same logic as the
+  // overlay's onPointerMove move-branch, but separate handler is
+  // needed because pointer capture binds events to the rect element
+  // (not the overlay).
+  const onSavedRectPointerMove = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    const { x, y } = pointerToPx(e);
+    const { index, offsetX, offsetY } = movingRef.current;
+    setState((s) => {
+      if (index < 0 || index >= s.saved.length) return s;
+      const target = s.saved[index];
+      const newX = Math.max(
+        0,
+        Math.min(pageRender.pxWidth - target.rect.w, x - offsetX),
+      );
+      const newY = Math.max(
+        0,
+        Math.min(pageRender.pxHeight - target.rect.h, y - offsetY),
+      );
+      const next = [...s.saved];
+      next[index] = {
+        ...target,
+        rect: { ...target.rect, x: newX, y: newY },
+      };
+      return { ...s, saved: next };
+    });
+  };
+
+  const onSavedRectPointerUp = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    movingRef.current = null;
+    setMovingIndex(null);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -412,21 +523,43 @@ function LinksEditorOverlay({
         const top = (s.rect.y / pageRender.pxHeight) * 100;
         const width = (s.rect.w / pageRender.pxWidth) * 100;
         const height = (s.rect.h / pageRender.pxHeight) * 100;
+        const isMoving = movingIndex === i;
         return (
           <div
             key={i}
-            aria-hidden="true"
+            // 2026-04-28 (#180): saved rects are draggable. pointerEvents:
+            // auto + onPointerDown wires up the move; the overlay's parent
+            // pointerdown is stopPropagation'd so it doesn't kick off a
+            // new draw on top of the rect. Cursor reads "move" on hover,
+            // "grabbing" while dragging — standard drag affordance.
+            // The X delete chip retains its own stopPropagation so X
+            // clicks still delete instead of starting a move.
+            onPointerDown={(e) => onSavedRectPointerDown(e, i)}
+            onPointerMove={onSavedRectPointerMove}
+            onPointerUp={onSavedRectPointerUp}
+            onPointerCancel={onSavedRectPointerUp}
+            role="button"
+            tabIndex={busy ? -1 : 0}
+            aria-label={`Hyperlink to ${s.url} — drag to reposition`}
             style={{
               position: "absolute",
               left: `${left}%`,
               top: `${top}%`,
               width: `${width}%`,
               height: `${height}%`,
-              background: "rgba(29, 78, 216, 0.22)",
+              background: isMoving
+                ? "rgba(29, 78, 216, 0.34)"
+                : "rgba(29, 78, 216, 0.22)",
               border: "2px solid rgb(29, 78, 216)",
-              boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.4)",
-              pointerEvents: "none",
+              boxShadow: isMoving
+                ? "0 4px 12px rgba(29, 78, 216, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.4)"
+                : "inset 0 0 0 1px rgba(255, 255, 255, 0.4)",
+              pointerEvents: busy ? "none" : "auto",
               overflow: "hidden",
+              cursor: busy ? "default" : isMoving ? "grabbing" : "move",
+              touchAction: "none",
+              userSelect: "none",
+              transition: isMoving ? "none" : "box-shadow 0.15s ease",
             }}
           >
             <span
@@ -445,6 +578,7 @@ function LinksEditorOverlay({
                 maxWidth: "100%",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                pointerEvents: "none",
               }}
             >
               {s.url}
