@@ -173,8 +173,8 @@ function RedactConfigPanel({
       >
         <div style={{ fontSize: 13 }}>
           {realRects.length === 0
-            ? "Drag a rectangle on the page to redact. Drag again for more."
-            : `${realRects.length} redaction${realRects.length === 1 ? "" : "s"} on page ${currentPage}`}
+            ? "Drag a rectangle on the page to redact. Drag a placed redaction to reposition it."
+            : `${realRects.length} redaction${realRects.length === 1 ? "" : "s"} on page ${currentPage} · drag to reposition`}
         </div>
         <button
           type="button"
@@ -226,6 +226,14 @@ function RedactEditorOverlay({
     null,
   );
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  // 2026-04-28 (#186): drag-to-reposition saved rects, mirroring
+  // Add Hyperlinks #180 + Highlight #186.
+  const movingRef = useRef<{
+    index: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+  const [movingIndex, setMovingIndex] = useState<number | null>(null);
 
   const pointerToPx = (e: React.PointerEvent): { x: number; y: number } => {
     if (!overlayRef.current) return { x: 0, y: 0 };
@@ -249,6 +257,10 @@ function RedactEditorOverlay({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (movingRef.current) {
+      applyMove(e);
+      return;
+    }
     if (!drawing) return;
     const { x, y } = pointerToPx(e);
     const x0 = Math.min(drawing.startX, x);
@@ -264,6 +276,16 @@ function RedactEditorOverlay({
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    if (movingRef.current) {
+      movingRef.current = null;
+      setMovingIndex(null);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      return;
+    }
     if (!drawing) return;
     setDrawing(null);
     try {
@@ -279,6 +301,58 @@ function RedactEditorOverlay({
       }
       return s;
     });
+  };
+
+  const applyMove = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    const { x, y } = pointerToPx(e);
+    const { index, offsetX, offsetY } = movingRef.current;
+    setState((s) => {
+      if (index < 0 || index >= s.rects.length) return s;
+      const target = s.rects[index];
+      const newX = Math.max(
+        0,
+        Math.min(pageRender.pxWidth - target.w, x - offsetX),
+      );
+      const newY = Math.max(
+        0,
+        Math.min(pageRender.pxHeight - target.h, y - offsetY),
+      );
+      const next = [...s.rects];
+      next[index] = { ...target, x: newX, y: newY };
+      return { ...s, rects: next };
+    });
+  };
+
+  const onSavedRectPointerDown = (e: React.PointerEvent, index: number) => {
+    if (busy) return;
+    e.stopPropagation();
+    const { x, y } = pointerToPx(e);
+    const target = state.rects[index];
+    if (!target || target.w < 8 || target.h < 8) return;
+    movingRef.current = {
+      index,
+      offsetX: x - target.x,
+      offsetY: y - target.y,
+    };
+    setMovingIndex(index);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onSavedRectPointerMove = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    applyMove(e);
+  };
+
+  const onSavedRectPointerUp = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    movingRef.current = null;
+    setMovingIndex(null);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -319,8 +393,10 @@ function RedactEditorOverlay({
         const height = (r.h / pageRender.pxHeight) * 100;
         const isLastBeingDrawn =
           i === state.rects.length - 1 && drawing !== null;
-        const showDelete =
+        const isMoving = movingIndex === i;
+        const isMovable =
           !isLastBeingDrawn && r.w >= 8 && r.h >= 8 && !busy;
+        const showDelete = isMovable;
         // Delete button needs to be readable against either dark
         // (#000) or light (#FFF) redaction colors. We pick a chip
         // background that contrasts with whatever the user picked.
@@ -330,13 +406,31 @@ function RedactEditorOverlay({
         return (
           <div
             key={i}
+            // 2026-04-28 (#186): saved rects draggable to reposition,
+            // matching Add Hyperlinks #180 + Highlight #186. Tiny
+            // mid-creation rects skip the wiring (isMovable false).
+            onPointerDown={
+              isMovable
+                ? (e) => onSavedRectPointerDown(e, i)
+                : undefined
+            }
+            onPointerMove={isMovable ? onSavedRectPointerMove : undefined}
+            onPointerUp={isMovable ? onSavedRectPointerUp : undefined}
+            onPointerCancel={isMovable ? onSavedRectPointerUp : undefined}
             style={{
               position: "absolute",
               left: `${left}%`,
               top: `${top}%`,
               width: `${width}%`,
               height: `${height}%`,
-              pointerEvents: "none",
+              pointerEvents: isMovable ? "auto" : "none",
+              cursor: isMovable
+                ? isMoving
+                  ? "grabbing"
+                  : "move"
+                : "default",
+              touchAction: "none",
+              userSelect: "none",
             }}
           >
             <div
@@ -349,6 +443,10 @@ function RedactEditorOverlay({
                 border: isLastBeingDrawn
                   ? "1px solid rgba(255,255,255,0.6)"
                   : "none",
+                boxShadow: isMoving
+                  ? "0 4px 12px rgba(0,0,0,0.45)"
+                  : "none",
+                transition: isMoving ? "none" : "box-shadow 0.15s ease",
               }}
             />
             {showDelete && (

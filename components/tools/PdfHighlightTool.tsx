@@ -161,8 +161,8 @@ function HighlightConfigPanel({
       >
         <div style={{ fontSize: 13 }}>
           {realRects.length === 0
-            ? "Drag a rectangle on the page to add a highlight. Drag again for more."
-            : `${realRects.length} highlight${realRects.length === 1 ? "" : "s"} on page ${currentPage}`}
+            ? "Drag a rectangle on the page to add a highlight. Drag a placed highlight to reposition it."
+            : `${realRects.length} highlight${realRects.length === 1 ? "" : "s"} on page ${currentPage} · drag to reposition`}
         </div>
         <button
           type="button"
@@ -234,6 +234,15 @@ function HighlightEditorOverlay({
 }: PageEditorEditorProps<HighlightState>) {
   const [drawing, setDrawing] = useState<{ startX: number; startY: number } | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  // 2026-04-28 (#186): drag-to-reposition saved rects, mirroring
+  // the pattern shipped on Add Hyperlinks in #180. Ref drives the
+  // per-pointermove math; useState is for visual amplification only.
+  const movingRef = useRef<{
+    index: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+  const [movingIndex, setMovingIndex] = useState<number | null>(null);
 
   const pointerToPx = (e: React.PointerEvent): { x: number; y: number } => {
     if (!overlayRef.current) return { x: 0, y: 0 };
@@ -258,6 +267,13 @@ function HighlightEditorOverlay({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    // Saved-rect move takes priority over drawing. movingRef gets
+    // set by the saved-rect's pointerdown (which stopPropagations);
+    // this branch is the fallback when capture is on the overlay.
+    if (movingRef.current) {
+      applyMove(e);
+      return;
+    }
     if (!drawing) return;
     const { x, y } = pointerToPx(e);
     const x0 = Math.min(drawing.startX, x);
@@ -274,6 +290,16 @@ function HighlightEditorOverlay({
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
+    if (movingRef.current) {
+      movingRef.current = null;
+      setMovingIndex(null);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      return;
+    }
     if (!drawing) return;
     setDrawing(null);
     try {
@@ -290,6 +316,60 @@ function HighlightEditorOverlay({
       }
       return s;
     });
+  };
+
+  // Move math, shared between saved-rect pointermove and the
+  // overlay's pointermove fallback path.
+  const applyMove = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    const { x, y } = pointerToPx(e);
+    const { index, offsetX, offsetY } = movingRef.current;
+    setState((s) => {
+      if (index < 0 || index >= s.rects.length) return s;
+      const target = s.rects[index];
+      const newX = Math.max(
+        0,
+        Math.min(pageRender.pxWidth - target.w, x - offsetX),
+      );
+      const newY = Math.max(
+        0,
+        Math.min(pageRender.pxHeight - target.h, y - offsetY),
+      );
+      const next = [...s.rects];
+      next[index] = { ...target, x: newX, y: newY };
+      return { ...s, rects: next };
+    });
+  };
+
+  const onSavedRectPointerDown = (e: React.PointerEvent, index: number) => {
+    if (busy) return;
+    e.stopPropagation();
+    const { x, y } = pointerToPx(e);
+    const target = state.rects[index];
+    if (!target || target.w < 8 || target.h < 8) return;
+    movingRef.current = {
+      index,
+      offsetX: x - target.x,
+      offsetY: y - target.y,
+    };
+    setMovingIndex(index);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onSavedRectPointerMove = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    applyMove(e);
+  };
+
+  const onSavedRectPointerUp = (e: React.PointerEvent) => {
+    if (!movingRef.current) return;
+    movingRef.current = null;
+    setMovingIndex(null);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -330,21 +410,44 @@ function HighlightEditorOverlay({
         const height = (r.h / pageRender.pxHeight) * 100;
         const isLastBeingDrawn =
           i === state.rects.length - 1 && drawing !== null;
+        const isMoving = movingIndex === i;
         // Hide the per-rect delete button on the rect currently being
         // drawn (stray click on a 0×0 rect would delete itself before
-        // the user finishes the drag).
-        const showDelete =
+        // the user finishes the drag). Same gate decides when a rect
+        // is "saved" enough to be draggable — tiny stray-click rects
+        // are still mid-creation.
+        const isMovable =
           !isLastBeingDrawn && r.w >= 8 && r.h >= 8 && !busy;
+        const showDelete = isMovable;
         return (
           <div
             key={i}
+            // 2026-04-28 (#186): saved rects are draggable. Same
+            // pattern as Add Hyperlinks #180 — pointerdown
+            // stopPropagation prevents the parent overlay's
+            // draw-new-rect from firing on top of the rect.
+            onPointerDown={
+              isMovable
+                ? (e) => onSavedRectPointerDown(e, i)
+                : undefined
+            }
+            onPointerMove={isMovable ? onSavedRectPointerMove : undefined}
+            onPointerUp={isMovable ? onSavedRectPointerUp : undefined}
+            onPointerCancel={isMovable ? onSavedRectPointerUp : undefined}
             style={{
               position: "absolute",
               left: `${left}%`,
               top: `${top}%`,
               width: `${width}%`,
               height: `${height}%`,
-              pointerEvents: "none",
+              pointerEvents: isMovable ? "auto" : "none",
+              cursor: isMovable
+                ? isMoving
+                  ? "grabbing"
+                  : "move"
+                : "default",
+              touchAction: "none",
+              userSelect: "none",
             }}
           >
             <div
@@ -353,12 +456,22 @@ function HighlightEditorOverlay({
                 position: "absolute",
                 inset: 0,
                 background: state.color,
-                opacity: state.opacity,
+                // Slightly amplified opacity while moving so users
+                // can see exactly which rect is following their
+                // pointer when several overlap.
+                opacity: isMoving
+                  ? Math.min(1, state.opacity + 0.15)
+                  : state.opacity,
                 // Only show a border on the rect being drawn so
-                // committed highlights look clean.
+                // committed highlights look clean. Add a soft drop
+                // shadow while moving for the same reason.
                 border: isLastBeingDrawn
                   ? "1px solid rgba(0,0,0,0.4)"
                   : "none",
+                boxShadow: isMoving
+                  ? "0 4px 12px rgba(0,0,0,0.25)"
+                  : "none",
+                transition: isMoving ? "none" : "box-shadow 0.15s ease",
               }}
             />
             {showDelete && (
