@@ -57,6 +57,8 @@ import { PdfRedactTool } from "@/components/tools/PdfRedactTool";
 import { PdfSignTool } from "@/components/tools/PdfSignTool";
 // Tier 6 (continued): sixth visual editor — pen tool over canvas.
 import { PdfFreeDrawTool } from "@/components/tools/PdfFreeDrawTool";
+// Tier 6 (final): seventh visual editor — drag-rect + URL input.
+import { PdfAddLinksTool } from "@/components/tools/PdfAddLinksTool";
 // Tier 5 (2026-04-28): Watermark / N-up / Resize / Image Watermark.
 import { PdfStampTool } from "@/components/tools/PdfStampTool";
 import { PdfNUpTool } from "@/components/tools/PdfNUpTool";
@@ -485,6 +487,8 @@ export default function ToolRunnerPage({ params }: Params) {
     "sign-pdf-free",
     // Free Draw — sixth visual editor (pen tool).
     "free-draw-pdf",
+    // Add Hyperlinks — seventh visual editor (drag-rect + URL).
+    "add-links",
     // Tier 2 — Extract / Delete Pages render a thumbnail grid via
     // the shared PageGridTool. Both rely on the PDFium rasterizer
     // for the per-page previews before pdf-lib does the actual op.
@@ -1030,6 +1034,8 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfSignTool />;
     case "free-draw-pdf":
       return <PdfFreeDrawTool />;
+    case "add-links":
+      return <PdfAddLinksTool />;
     default:
       return null;
   }

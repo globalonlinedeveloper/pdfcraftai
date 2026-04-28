@@ -1896,6 +1896,37 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
   },
 
+  "add-links": {
+    useCasesTitle: "Why people add hyperlinks to PDFs",
+    useCasesIntro:
+      "Static PDFs become navigable when you add clickable regions. A logo links to the company site, a footer links to a privacy policy, a product code links to its catalog page. The pattern matches what HTML does for the web — except viewers honor it without any extra plugin.",
+    useCases: [
+      { icon: "Edit", title: "Branding + footer links", text: "Add a clickable logo or company-site URL on a finalized one-pager so recipients can jump to your site." },
+      { icon: "Receipt", title: "Product / SKU pages", text: "On a printable catalog or invoice, link each line item to its product page or detail view." },
+      { icon: "Book", title: "Citation refs", text: "Add a clickable DOI / arXiv link in a research summary so readers can verify the source." },
+      { icon: "Shield", title: "Policy + terms links", text: "Add &lsquo;Privacy Policy&rsquo; / &lsquo;Terms&rsquo; links to a contract footer so legal references are one click away." },
+      { icon: "File", title: "Cross-doc references", text: "Link to other PDFs hosted on your team&rsquo;s shared drive — recipients click through instead of hunting for the file." },
+      { icon: "Pages", title: "Marketing + RSVP", text: "Link an &lsquo;RSVP&rsquo; button on an event flyer to a Google Form. Link a &lsquo;Reserve&rsquo; button on a sales sheet to your booking page." },
+    ],
+    howWorksTitle: "How Add Hyperlinks works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. PDFium renders page 1 at 1.5× as the editor canvas." },
+      { step: "2", title: "Drag a rectangle", text: "Click and drag on the page to define the clickable region. The rectangle gets an accent border + dashed outline (because it doesn&rsquo;t have a URL yet)." },
+      { step: "3", title: "Type the URL + Save", text: "URL field appears in the config panel. Type the destination (https://… or mailto:…). Click Save link to commit. The rect turns solid blue. Drag again to add another." },
+      { step: "4", title: "Apply &amp; download", text: "All saved links are stamped as /Link annotations on page 1 via pdf-lib. Every viewer (Acrobat, Apple Preview, Chrome, Firefox) shows them as clickable." },
+    ],
+    faqs: [
+      { q: "Will the links work in every viewer?", a: "Yes. /Link annotations with /URI actions are spec-compliant since PDF 1.0 (1993). Acrobat, Apple Preview, Chrome, Firefox, mobile readers — all respect them. Some terminal-style viewers (pdftotext output) don&rsquo;t render the click area but the URL itself is preserved in the annotation dict." },
+      { q: "Why is the rectangle invisible after save?", a: "Standard hyperlink annotations use a &lsquo;no border&rsquo; setting (Border [0 0 0]) so they don&rsquo;t visually mark the page. The link is invisible until hovered. If you want a visible underline, run our Highlight PDF afterwards on the same region." },
+      { q: "Does this support text-aware linking (auto-detect URLs in text)?", a: "Not in v1. v1 = drag a region, type a URL. Auto-detecting existing URL strings in the text and making them clickable would need PDFium text-position math — useful future work." },
+      { q: "Can I add links on every page?", a: "v1 = page 1 only. Multi-page link addition needs page navigation in the editor. Workaround: extract the page → add link → merge back." },
+      { q: "What URL schemes work?", a: "https://, http://, mailto: are universally honored. file:// works in some viewers but is often blocked for security. Custom schemes (myapp://) work if the viewer supports the scheme." },
+      { q: "Will the link survive saving / re-saving the PDF?", a: "Yes. /Link annotations are first-class PDF objects, not page-content overlays. They persist through any standard re-save. Form-flattening tools (including our Flatten PDF Forms) don&rsquo;t touch link annotations." },
+      { q: "Is anything uploaded?", a: "No. PDFium renders the preview locally; pdf-lib applies the annotations locally. The PDF never leaves your browser." },
+    ],
+    cta: { title: "Need to remove links instead?", text: "Strip Hyperlinks removes every clickable annotation from a PDF. Useful for print prep where active links are dead ink.", linkHref: "/tool/strip-links", linkLabel: "Try Strip Hyperlinks" },
+  },
+
   "free-draw-pdf": {
     useCasesTitle: "Why people draw freehand on PDFs",
     useCasesIntro:

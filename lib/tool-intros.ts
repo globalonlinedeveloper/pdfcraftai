@@ -131,6 +131,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a PDF with freehand pen strokes drawn on page 1 — color and width pickers, multi-stroke support, undo / clear all. Lossless overlay via pdf-lib drawLine segments.",
     related: { id: "highlight-pdf", label: "Highlight PDF" },
   },
+  "add-links": {
+    text: "What you'll get: a PDF with clickable hyperlink regions on page 1 — drag a rectangle, type a URL, repeat. Standard /Link annotations every PDF viewer honors.",
+    related: { id: "strip-links", label: "Strip Hyperlinks" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {
