@@ -22,20 +22,17 @@
 // For huge PDFs (>100 pages), thumbnail rendering can take a few
 // seconds. We show a progress card during the render with a count.
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useTrackToolView } from "./useToolTracking";
+import { usePdfThumbnails, type PdfThumbnail } from "./usePdfThumbnails";
 
-interface PageState {
-  /** 1-based page number for display. */
-  pageNumber: number;
-  /** Object URL for the rendered thumbnail (rasterize.ts output). */
-  thumbnailUrl: string;
-  /** Natural width / height after PDFium render (used for aspect-ratio). */
-  width: number;
-  height: number;
+// Rotate enriches the base PdfThumbnail with a `rotation` field
+// (0/90/180/270) tracked per-page — same enrich-on-top pattern as
+// PdfSortPagesTool with sourceIndex.
+interface PageState extends PdfThumbnail {
   /** User-applied rotation, ADDITIVE to original (0 / 90 / 180 / 270). */
   rotation: number;
 }
@@ -57,17 +54,13 @@ export function PdfRotateTool() {
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RotateResultState | null>(null);
-  const [progress, setProgress] = useState<{ done: number; total: number }>({
-    done: 0,
-    total: 0,
-  });
-
-  // Revoke object URLs on cleanup so we don't leak memory across resets.
-  useEffect(() => {
-    return () => {
-      pages.forEach((p) => URL.revokeObjectURL(p.thumbnailUrl));
-    };
-  }, [pages]);
+  // 2026-04-28 (#182): migrated from raw rasterizePdf to the streaming
+  // hook. Hook owns blob → URL conversion + progress + URL cleanup,
+  // and crucially streams thumbnails as each page renders (Task #173)
+  // so users see thumbnails appearing live on huge PDFs instead of
+  // staring at a spinner. Same pattern as Sort.
+  const { progress, render: renderThumbnails, reset: resetThumbnails } =
+    usePdfThumbnails();
 
   const onFiles = useCallback(
     async (files: File[]) => {
@@ -91,29 +84,12 @@ export function PdfRotateTool() {
       try {
         const bytes = new Uint8Array(await f.arrayBuffer());
         setPdfBytes(bytes);
-
-        const { rasterizePdf } = await import("@/lib/pdf/ops/rasterize");
-        // 0.5× scale produces a ~400×566px thumbnail for letter-sized
-        // pages — sharp enough to read page content while staying
-        // memory-bounded for huge docs.
-        const rendered = await rasterizePdf(bytes, {
-          format: "jpeg",
-          scale: 0.5,
-          quality: 0.7,
-          onProgress: (done, total) => setProgress({ done, total }),
-        });
-
-        const newPages: PageState[] = rendered.map((r) => {
-          const blob = new Blob([r.bytes], { type: "image/jpeg" });
-          return {
-            pageNumber: r.pageNumber,
-            thumbnailUrl: URL.createObjectURL(blob),
-            width: r.width,
-            height: r.height,
-            rotation: 0,
-          };
-        });
-
+        const rendered = await renderThumbnails(bytes);
+        // Enrich with rotation: 0 — Rotate's per-page state.
+        const newPages: PageState[] = rendered.map((t) => ({
+          ...t,
+          rotation: 0,
+        }));
         setPages(newPages);
         setStage("ready");
       } catch (err) {
@@ -129,14 +105,16 @@ export function PdfRotateTool() {
   );
 
   const reset = () => {
-    pages.forEach((p) => URL.revokeObjectURL(p.thumbnailUrl));
+    // resetThumbnails revokes blob URLs owned by the hook; Rotate's
+    // pages array still holds those (now-dead) URL strings until we
+    // clear it here, but nothing references them across the gap.
+    resetThumbnails();
     setPages([]);
     setFile(null);
     setPdfBytes(null);
     setError(null);
     setResult(null);
     setStage("idle");
-    setProgress({ done: 0, total: 0 });
   };
 
   const cyclePageRotation = (idx: number) => {
@@ -273,18 +251,56 @@ export function PdfRotateTool() {
       {stage === "rendering-thumbnails" && (
         <div
           className="card"
-          style={{ padding: 16, background: "var(--bg-1)", display: "flex", gap: 12 }}
+          style={{ padding: 16, background: "var(--bg-1)", display: "flex", flexDirection: "column", gap: 10 }}
           role="status"
           aria-live="polite"
           aria-busy="true"
+          aria-valuemin={0}
+          aria-valuemax={progress.total || undefined}
+          aria-valuenow={progress.done || undefined}
         >
-          <span className="pulse-soft" style={{ color: "var(--accent)" }}>
-            <I.Sparkle size={16} />
-          </span>
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>
-            Rendering page previews
-            {progress.total > 0 ? ` · ${progress.done} / ${progress.total}` : "…"}
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span className="pulse-soft" style={{ color: "var(--accent)" }}>
+              <I.Sparkle size={16} />
+            </span>
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>
+              {progress.total > 0
+                ? pages.length > 0
+                  ? `Rendering page previews · ${progress.done} / ${progress.total} (showing as they finish)`
+                  : `Rendering page previews · ${progress.done} / ${progress.total}`
+                : "Rendering page previews…"}
+            </div>
+            {progress.total > 0 && (
+              <span
+                className="subtle"
+                style={{ fontSize: 12, fontVariantNumeric: "tabular-nums", minWidth: 38, textAlign: "right" }}
+              >
+                {Math.round((progress.done / progress.total) * 100)}%
+              </span>
+            )}
           </div>
+          {progress.total > 0 && (
+            <div
+              aria-hidden="true"
+              style={{
+                width: "100%",
+                height: 4,
+                borderRadius: 2,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.max(2, (progress.done / progress.total) * 100)}%`,
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, var(--accent-soft, #93c5fd) 0%, var(--accent, #3b82f6) 100%)",
+                  transition: "width 0.2s ease",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -305,7 +321,11 @@ export function PdfRotateTool() {
         </div>
       )}
 
-      {stage === "ready" && pages.length > 0 && !result && (
+      {/* 2026-04-28 (#182): show grid as soon as the FIRST thumbnail
+          arrives via the streaming hook, not gated on stage="ready".
+          Apply button stays gated on stage="ready" below so users
+          can't apply mid-stream. */}
+      {pages.length > 0 && !result && stage !== "applying" && (
         <>
           {/* Toolbar */}
           <div

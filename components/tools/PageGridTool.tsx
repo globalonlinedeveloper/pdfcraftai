@@ -347,21 +347,61 @@ export function PageGridTool(props: PageGridToolProps) {
       {stage === "rendering-thumbnails" && (
         <div
           className="card"
-          style={{ padding: 16, background: "var(--bg-1)", display: "flex", gap: 12 }}
+          style={{ padding: 16, background: "var(--bg-1)", display: "flex", flexDirection: "column", gap: 10 }}
           role="status"
           aria-live="polite"
           aria-busy="true"
+          aria-valuemin={0}
+          aria-valuemax={progress.total || undefined}
+          aria-valuenow={progress.done || undefined}
         >
-          <span className="pulse-soft" style={{ color: "var(--accent)" }}>
-            <I.Sparkle size={16} />
-          </span>
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>
-            {progress.total > 0
-              ? thumbnails.length > 0
-                ? `Rendering page previews · ${progress.done} / ${progress.total} (showing as they finish)`
-                : `Rendering page previews · ${progress.done} / ${progress.total}`
-              : "Rendering page previews…"}
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span className="pulse-soft" style={{ color: "var(--accent)" }}>
+              <I.Sparkle size={16} />
+            </span>
+            <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>
+              {progress.total > 0
+                ? thumbnails.length > 0
+                  ? `Rendering page previews · ${progress.done} / ${progress.total} (showing as they finish)`
+                  : `Rendering page previews · ${progress.done} / ${progress.total}`
+                : "Rendering page previews…"}
+            </div>
+            {progress.total > 0 && (
+              <span
+                className="subtle"
+                style={{ fontSize: 12, fontVariantNumeric: "tabular-nums", minWidth: 38, textAlign: "right" }}
+              >
+                {Math.round((progress.done / progress.total) * 100)}%
+              </span>
+            )}
           </div>
+          {/* Visual progress bar — text gives the count, the bar gives
+              instant glanceable progress. Only renders when total is
+              known (after first onProgress fires). Gradient fill from
+              accent-soft to accent makes the bar feel alive vs a
+              flat block. */}
+          {progress.total > 0 && (
+            <div
+              aria-hidden="true"
+              style={{
+                width: "100%",
+                height: 4,
+                borderRadius: 2,
+                background: "var(--border)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.max(2, (progress.done / progress.total) * 100)}%`,
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, var(--accent-soft, #93c5fd) 0%, var(--accent, #3b82f6) 100%)",
+                  transition: "width 0.2s ease",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
