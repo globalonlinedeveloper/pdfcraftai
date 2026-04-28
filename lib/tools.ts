@@ -122,6 +122,9 @@ export const TOOLS: readonly Tool[] = [
   { id: "remove-metadata", name: "Remove PDF Metadata", desc: "Strip Title, Author, Producer, Creator, dates, and XMP metadata before sharing externally. Page content untouched.", icon: "Shield", free: true, cost: "free", group: "Security" },
   // Tier 5 (continued): image watermark / logo overlay (config-only v1).
   { id: "image-watermark", name: "Image Watermark", desc: "Add a PNG or JPG watermark (logo, signature, brand mark) to every page — pick position, opacity, and size. Lossless overlay via pdf-lib.", icon: "Image", free: true, cost: "free", group: "Edit" },
+  // Tier 6 (2026-04-28): second visual editor on the new
+  // <PageEditorTool> base. Click-to-place + text input + style.
+  { id: "add-text-box", name: "Add Text to PDF", desc: "Click on the page to place a text box, type your label, pick font size + color. Stamps on every page at the same position.", icon: "Edit", free: true, cost: "free", group: "Edit" },
 
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },

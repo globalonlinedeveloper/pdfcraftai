@@ -111,6 +111,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a PDF with your logo / brand mark / signature stamped on every page — drop a PNG or JPG, pick a 3×3 position, set opacity and size. pdf-lib drawImage overlay.",
     related: { id: "stamp-pdf", label: "Watermark PDF" },
   },
+  "add-text-box": {
+    text: "What you'll get: a PDF with text stamped at a specific position on every page — click on page 1 to place it, type your label, pick font size + color. Visual click-to-place editor.",
+    related: { id: "stamp-pdf", label: "Watermark PDF" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {

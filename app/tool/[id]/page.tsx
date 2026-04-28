@@ -47,6 +47,8 @@ import {
 } from "@/components/tools/PdfSimpleOpsTool";
 // Tier 4 (2026-04-28): first visual editor — Crop PDF.
 import { PdfCropTool } from "@/components/tools/PdfCropTool";
+// Tier 6 (2026-04-28): second visual editor on shared <PageEditorTool> base.
+import { PdfAddTextBoxTool } from "@/components/tools/PdfAddTextBoxTool";
 // Tier 5 (2026-04-28): Watermark / N-up / Resize / Image Watermark.
 import { PdfStampTool } from "@/components/tools/PdfStampTool";
 import { PdfNUpTool } from "@/components/tools/PdfNUpTool";
@@ -465,6 +467,8 @@ export default function ToolRunnerPage({ params }: Params) {
     "merge",
     // Crop PDF — renders page 1 at 1.5× as the editor canvas.
     "crop-pdf",
+    // Add Text Box — second visual editor on PageEditorTool base.
+    "add-text-box",
     // Tier 2 — Extract / Delete Pages render a thumbnail grid via
     // the shared PageGridTool. Both rely on the PDFium rasterizer
     // for the per-page previews before pdf-lib does the actual op.
@@ -1000,6 +1004,8 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfRemoveMetadataTool />;
     case "image-watermark":
       return <PdfImageWatermarkTool />;
+    case "add-text-box":
+      return <PdfAddTextBoxTool />;
     default:
       return null;
   }

@@ -1896,6 +1896,36 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
   },
 
+  "add-text-box": {
+    useCasesTitle: "Why people add text to PDFs",
+    useCasesIntro:
+      "Sometimes the PDF is fine but it&rsquo;s missing a label — a header, a footer, a reference number, a recipient name. Adding text is the most common annotation task that doesn&rsquo;t fit Watermark or Page Numbers exactly: arbitrary text at an arbitrary position.",
+    useCases: [
+      { icon: "Edit", title: "Custom headers / footers", text: "Stamp your team name, recipient label, or routing code at the top or bottom of every page without re-exporting the source." },
+      { icon: "Receipt", title: "Reference numbers", text: "Add invoice numbers, case IDs, or tracking codes to forms before sending. Same number on every page." },
+      { icon: "File", title: "Recipient labels", text: "Personalize a generic PDF with a recipient name (For: Alice) before forwarding. Faster than rebuilding in Word." },
+      { icon: "Shield", title: "Status flags", text: "Add &lsquo;APPROVED 2025-Q4&rsquo; or &lsquo;PENDING REVIEW&rsquo; labels at a specific position so the status is unmissable." },
+      { icon: "Book", title: "Copyright / source attribution", text: "Stamp a copyright notice or source URL at the bottom of distributed materials." },
+      { icon: "Pages", title: "Versioning marks", text: "&lsquo;v3 - 2026-04-28&rsquo; in the corner so the recipient knows which print-out they&rsquo;re holding when versions diverge." },
+    ],
+    howWorksTitle: "How Add Text to PDF works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. PDFium renders page 1 at 1.5× as the editor canvas." },
+      { step: "2", title: "Type + click to place", text: "Type your text in the panel above the page. Click anywhere on the page to place it. The marker shows where the text will appear; click again to move." },
+      { step: "3", title: "Pick font size + color", text: "6–72 pt font size, any hex color via the picker. The marker updates live." },
+      { step: "4", title: "Apply &amp; download", text: "We embed Helvetica and call drawText at the same position on every page. Lossless overlay — original page content untouched." },
+    ],
+    faqs: [
+      { q: "Can I add multiple text boxes per page?", a: "Not in v1 — one position, one text label, applied to every page (header / footer use case). Multi-text-box support is a v2 enhancement." },
+      { q: "Does the text appear on every page or just page 1?", a: "Every page. Same text + position. If you want different text per page, run the tool multiple times with the source PDF you got back from the previous run." },
+      { q: "What fonts are supported?", a: "Helvetica only (the standard PDF font, no embedding required). Custom fonts are a future extension." },
+      { q: "Will the text overlap with existing content?", a: "It draws on top of whatever&rsquo;s on the page. If you click in a spot that already has content, the text overlaps. Use a margin position or a fresh region of the page." },
+      { q: "Does this support non-Latin scripts?", a: "Helvetica covers Latin + Western European characters. CJK scripts (Chinese, Japanese, Korean) need different fonts; not supported in v1." },
+      { q: "Is anything uploaded?", a: "No. PDFium renders the preview locally; pdf-lib applies the text locally. The PDF never leaves your browser." },
+    ],
+    cta: { title: "Want a watermark instead?", text: "Watermark PDF stamps DRAFT / CONFIDENTIAL-style overlays at standard positions with rotation and opacity. Different tool for diagonal-watermark use cases.", linkHref: "/tool/stamp-pdf", linkLabel: "Try Watermark PDF" },
+  },
+
   "image-watermark": {
     useCasesTitle: "Why people add image watermarks",
     useCasesIntro:
