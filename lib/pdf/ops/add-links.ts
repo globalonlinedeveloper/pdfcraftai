@@ -8,6 +8,20 @@
 // construct the /Link annotation dict manually via context.obj() and
 // append it to the page&rsquo;s /Annots array. PDF spec ref: ISO 32000
 // §12.5.6.5 (Link annotations) + §12.6.4.7 (URI actions).
+//
+// 2026-04-28 (#178) bugfixes after a user reported the output PDF
+// not carrying the link:
+//   1. ALWAYS call node.set(/Annots, annotsArr) — even when reusing
+//      an existing array. Pages whose /Annots is reached via an
+//      indirect-ref chain or page-tree inheritance can serialize
+//      with the OLD reference if we only mutate via push().
+//   2. Set /F 4 (Print bit, ISO 32000 §12.5.3) — without it,
+//      Chrome's PDF viewer and several browser-embedded viewers
+//      suppress the link entirely. Acrobat is forgiving but a lot
+//      of users land on the Chrome rail.
+//   3. Build the /A action dict with PDFString URI from the start
+//      (instead of context.obj + post-patch) so the on-disk shape
+//      is unambiguous.
 
 import {
   PDFDocument,
@@ -71,7 +85,6 @@ export async function addLinksPdf(
     annotsArr = existing;
   } else {
     annotsArr = doc.context.obj([]) as PDFArray;
-    node.set(annotsName, annotsArr);
   }
 
   let added = 0;
@@ -79,12 +92,25 @@ export async function addLinksPdf(
     if (link.width <= 0 || link.height <= 0) continue;
     if (!link.url.trim()) continue;
 
+    // Build the /A URI action dict explicitly. Building via
+    // context.obj({...}) converts string values to PDFNames, but
+    // /URI must be a literal string (PDFString). Constructing the
+    // dict and setting each key separately avoids the pitfall.
+    const action = doc.context.obj({
+      Type: "Action",
+      S: "URI",
+    }) as PDFDict;
+    action.set(PDFName.of("URI"), PDFString.of(link.url.trim()));
+
     // Build the /Link annotation dict.
     //   /Type /Annot
     //   /Subtype /Link
     //   /Rect [x1 y1 x2 y2]   (lower-left + upper-right corners)
     //   /Border [0 0 0]       (no visible border)
-    //   /A << /Type /Action /S /URI /URI (https://...) >>
+    //   /F 4                   (Print flag — required by Chrome PDF
+    //                           viewer and many browser-embedded
+    //                           renderers per ISO 32000 §12.5.3)
+    //   /A <<...>>             (URI action, set below)
     const annot = doc.context.obj({
       Type: "Annot",
       Subtype: "Link",
@@ -95,18 +121,9 @@ export async function addLinksPdf(
         link.y + link.height,
       ],
       Border: [0, 0, 0],
-      A: {
-        Type: "Action",
-        S: "URI",
-        // context.obj treats strings as PDFName; for the actual URL
-        // string we need PDFString. Build the Action dict via
-        // context.obj first, then overwrite the URI key.
-      },
+      F: 4,
     }) as PDFDict;
-    // Now patch the /A subdict with a real URL string. context.obj
-    // converted nested literals to PDFNames; the URI must be a string.
-    const action = annot.lookup(PDFName.of("A")) as PDFDict;
-    action.set(PDFName.of("URI"), PDFString.of(link.url.trim()));
+    annot.set(PDFName.of("A"), action);
 
     // Register the annotation as an indirect object — Acrobat is more
     // permissive with inline annotations but other viewers (Apple
@@ -115,6 +132,14 @@ export async function addLinksPdf(
     annotsArr.push(ref);
     added++;
   }
+
+  // ALWAYS write the array reference back to the page node, even when
+  // we reused an existing /Annots array. Pages whose /Annots is
+  // reached via indirect-ref chain or inherited from the page tree
+  // can serialize with the old reference if we only mutate via
+  // push() — node.set() ensures the page dict points at the array we
+  // just appended to. No-op if it's already pointing at this array.
+  node.set(annotsName, annotsArr);
 
   if (added === 0) {
     throw new Error("All links had zero size or empty URL.");

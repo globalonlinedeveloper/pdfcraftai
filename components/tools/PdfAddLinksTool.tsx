@@ -399,7 +399,14 @@ function LinksEditorOverlay({
           pointerEvents: "none",
         }}
       />
-      {/* Saved links — shown as faint blue rects with URL labels */}
+      {/* Saved links — visible blue rects with URL labels.
+          2026-04-28 (#178): bumped fill opacity from 12% → 22% +
+          added a 4px hatch inset so the rect reads against busy
+          backgrounds (forms, scanned pages). Original 12% was
+          effectively invisible on cream/red form backgrounds. The
+          URL label sits in the top-left of the rect so users can
+          eyeball-verify each saved link's destination without
+          consulting the side panel. */}
       {state.saved.map((s, i) => {
         const left = (s.rect.x / pageRender.pxWidth) * 100;
         const top = (s.rect.y / pageRender.pxHeight) * 100;
@@ -415,11 +422,34 @@ function LinksEditorOverlay({
               top: `${top}%`,
               width: `${width}%`,
               height: `${height}%`,
-              background: "rgba(29, 78, 216, 0.12)",
-              border: "1.5px solid rgb(29, 78, 216)",
+              background: "rgba(29, 78, 216, 0.22)",
+              border: "2px solid rgb(29, 78, 216)",
+              boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.4)",
               pointerEvents: "none",
+              overflow: "hidden",
             }}
-          />
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                background: "rgb(29, 78, 216)",
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 500,
+                padding: "2px 6px",
+                borderBottomRightRadius: 4,
+                fontFamily: "var(--mono, monospace)",
+                whiteSpace: "nowrap",
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {s.url}
+            </span>
+          </div>
         );
       })}
       {/* Pending rect — accent border, dashed if empty URL */}
