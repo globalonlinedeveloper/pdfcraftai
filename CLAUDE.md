@@ -78,6 +78,7 @@ HOSTINGER_SSH_PRIVATE_KEY_PATH=/sessions/gifted-funny-franklin/mnt/pdfcraftai.co
 ## 5. Known operational gotchas
 
 - **503 after deploy** → hPanel → Resource Usage → **Stop running process** → app auto-restarts → 503 clears.
+- **Stale-worker hold (`/api/health` reports an OLD commit even though deploy succeeded)** → SSH and `pkill -9 -u u692382124 -f "next-server\|server.js"` to force the runtime to respawn against the fresh `.next` build. Diagnose first: SSH to `~/domains/pdfcraftai.com/public_html/.builds/last-source` and `git log --oneline -1` — if THAT shows the latest SHA, the build pipeline is fine and the stuck runtime is the only problem. Don't bother with empty-commit nudges (those only help when auto-pull itself is jammed — much rarer than this case). Verified working 2026-04-28 on the #175 deploy.
 - **Do NOT push-force to main** — Hostinger's GitHub App treats it as a normal push and may redeploy mid-state.
 - **Env var changes require "Save and redeploy"** in Hostinger → this restarts the runtime but doesn't pull new code; pushing to main pulls new code AND restarts.
 
