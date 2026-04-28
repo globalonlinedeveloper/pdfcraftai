@@ -350,6 +350,9 @@ function RedactEditorOverlay({
               }}
             />
             {showDelete && (
+              // 40×40 transparent tap target with visible 20×20 chip
+              // centered inside — same pattern as Highlight, finger-
+              // friendly without expanding the visual footprint.
               <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
@@ -364,15 +367,13 @@ function RedactEditorOverlay({
                 title="Remove redaction"
                 style={{
                   position: "absolute",
-                  top: -8,
-                  right: -8,
-                  width: 20,
-                  height: 20,
+                  top: -18,
+                  right: -18,
+                  width: 40,
+                  height: 40,
                   borderRadius: "50%",
-                  border: isDarkColor
-                    ? "1.5px solid rgba(255,255,255,0.85)"
-                    : "1.5px solid rgba(0,0,0,0.6)",
-                  background: isDarkColor ? "#1a1a1a" : "var(--bg-1)",
+                  border: "none",
+                  background: "transparent",
                   color: isDarkColor ? "#fff" : "var(--fg)",
                   display: "flex",
                   alignItems: "center",
@@ -380,10 +381,26 @@ function RedactEditorOverlay({
                   cursor: "pointer",
                   pointerEvents: "auto",
                   padding: 0,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
                 }}
               >
-                <I.X size={11} />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    border: isDarkColor
+                      ? "1.5px solid rgba(255,255,255,0.85)"
+                      : "1.5px solid rgba(0,0,0,0.6)",
+                    background: isDarkColor ? "#1a1a1a" : "var(--bg-1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
+                  }}
+                >
+                  <I.X size={11} />
+                </span>
               </button>
             )}
           </div>

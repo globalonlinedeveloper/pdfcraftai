@@ -360,6 +360,14 @@ function HighlightEditorOverlay({
               }}
             />
             {showDelete && (
+              // 40×40 transparent button is the actual tap target; the
+              // visible 20×20 chip is centered inside via flex. Keeps
+              // mobile finger-tap-friendly (per Apple HIG / Material
+              // Design 44×44) without bloating the visual footprint.
+              // Pointer events propagate through the transparent
+              // padding because we stopPropagation on the BUTTON's
+              // pointerdown, not on a wrapper — drag-to-add still
+              // works around the chip.
               <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
@@ -374,13 +382,13 @@ function HighlightEditorOverlay({
                 title="Remove highlight"
                 style={{
                   position: "absolute",
-                  top: -8,
-                  right: -8,
-                  width: 20,
-                  height: 20,
+                  top: -18,
+                  right: -18,
+                  width: 40,
+                  height: 40,
                   borderRadius: "50%",
-                  border: "1.5px solid rgba(0,0,0,0.6)",
-                  background: "var(--bg-1)",
+                  border: "none",
+                  background: "transparent",
                   color: "var(--fg)",
                   display: "flex",
                   alignItems: "center",
@@ -388,11 +396,24 @@ function HighlightEditorOverlay({
                   cursor: "pointer",
                   pointerEvents: "auto",
                   padding: 0,
-                  // shadow so the chip floats above the highlight
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
                 }}
               >
-                <I.X size={11} />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    border: "1.5px solid rgba(0,0,0,0.6)",
+                    background: "var(--bg-1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  <I.X size={11} />
+                </span>
               </button>
             )}
           </div>
