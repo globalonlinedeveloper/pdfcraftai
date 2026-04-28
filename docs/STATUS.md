@@ -24,6 +24,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### Visual editors — multi-page support
+
+- [x] **Task #170: Multi-page support for PageEditorTool visual editors.** Commit `b004141` (2026-04-28). Five visual editors (Free Draw, Sign, Add Hyperlinks, Highlight, Redact) were locked to page 1 — useless on real-world multi-page PDFs. Now `PageEditorTool` renders one page at a time and surfaces a prev/next/page-number-input navigator above the config panel when `pageCount > 1`. New `lib/pdf/ops/rasterize-page.ts` (single-page render, separate from `rasterize.ts` which renders all pages for grid tools). `PageRender` interface gained `pageIndex` + `pageCount`; on file drop we inspect `pageCount` cheaply via `withPdfDocument` then render only page 0. New `goToPage` callback re-renders the chosen page and resets editor state to `initialState` (per-page state persistence is v2 — switching pages clears in-progress edits). 5 consumers now pass `render.pageIndex` to their pdf-lib op and reflect actual page number in success-card headlines (e.g. "Added 3 highlights to page 4"). Crop and Add Text Box untouched — they apply to ALL pages by design, so the navigator stays hidden for them. Verified: `tsc --noEmit` clean; `/tool/free-draw-pdf` `/tool/sign-pdf-free` `/tool/highlight-pdf` `/tool/redact-free` `/tool/add-links` all return 200 with correct titles post-deploy; `/api/health` reports `commit:"b00414147e64"`.
+
 ### Infra
 
 - [x] **Cloudflare proxy in front of Hostinger** — verified via `cf-ray` + `server: cloudflare` on every response. (2026-04-19)
