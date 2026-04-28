@@ -120,7 +120,7 @@ export function RedactPdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to redact.");
+      setError("Drop a PDF first.");
       return;
     }
 

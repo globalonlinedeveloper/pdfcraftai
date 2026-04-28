@@ -244,7 +244,7 @@ export function SearchablePdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF first.");
+      setError("Drop a PDF first.");
       return;
     }
     if (peekError) {

@@ -154,7 +154,7 @@ export function SignPdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to fill & sign.");
+      setError("Drop a PDF first.");
       return;
     }
     if (fullName.trim().length === 0) {

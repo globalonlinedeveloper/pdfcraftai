@@ -81,7 +81,7 @@ export function TableExtractTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to extract tables from.");
+      setError("Drop a PDF first.");
       return;
     }
 

@@ -159,7 +159,7 @@ export function StructuredVariantTool(props: {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF first.");
+      setError("Drop a PDF first.");
       return;
     }
     const fresh = await getSession();

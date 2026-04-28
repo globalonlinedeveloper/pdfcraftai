@@ -147,7 +147,7 @@ export function SummarizeVariantTool(props: {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF first.");
+      setError("Drop a PDF first.");
       return;
     }
     if (props.queryField?.required && !query.trim()) {

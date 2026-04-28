@@ -114,7 +114,7 @@ export function RewritePdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to rewrite.");
+      setError("Drop a PDF first.");
       return;
     }
 

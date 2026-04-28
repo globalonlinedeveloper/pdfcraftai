@@ -67,7 +67,7 @@ export function TldrPdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to TL;DR.");
+      setError("Drop a PDF first.");
       return;
     }
 

@@ -206,7 +206,7 @@ export function SummarizePdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to summarize.");
+      setError("Drop a PDF first.");
       return;
     }
 

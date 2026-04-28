@@ -218,7 +218,7 @@ export function TranslatePdfTool() {
 
   const run = async () => {
     if (!file) {
-      setError("Attach a PDF to translate.");
+      setError("Drop a PDF first.");
       return;
     }
     const targetLang = effectiveLang();

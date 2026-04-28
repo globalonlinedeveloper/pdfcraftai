@@ -37,7 +37,7 @@ export function PdfFontsTool() {
       const f = files[0];
       if (!f) return;
       if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
-        setError("Please drop a PDF file.");
+        setError("That's not a PDF. Drop a .pdf file to continue.");
         return;
       }
       if (f.size > 100 * 1024 * 1024) {
