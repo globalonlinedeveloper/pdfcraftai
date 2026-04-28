@@ -129,6 +129,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "highlight-pdf", name: "Highlight PDF", desc: "Drag to add yellow / green / pink / blue highlights on page 1. Multiple highlights per session, opacity adjustable, lossless overlay.", icon: "Edit", free: true, cost: "free", group: "Edit" },
   // Tier 6 (continued): fourth visual editor — drag-to-redact (visual cover only).
   { id: "redact-free", name: "Redact PDF", desc: "Drag opaque rectangles over sensitive content on page 1. Visual cover only — see FAQ on what this does and doesn&apos;t do.", icon: "Shield", free: true, cost: "free", group: "Security" },
+  // Tier 6 (continued): fifth visual editor — click-to-place signature image.
+  { id: "sign-pdf-free", name: "Sign PDF", desc: "Place a signature image on page 1 — click to position, slider for size. Visual signature, not cryptographic e-sign (see FAQ).", icon: "Pen", free: true, cost: "free", group: "Edit" },
 
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },

@@ -123,6 +123,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a PDF with opaque black / white / gray rectangles covering sensitive content on page 1. Visual cover only — for high-stakes redaction (court filings, FOIA), see FAQ.",
     related: { id: "highlight-pdf", label: "Highlight PDF" },
   },
+  "sign-pdf-free": {
+    text: "What you'll get: a PDF with your signature image placed at a clicked position on page 1 — adjustable size, lossless overlay. Visual signature only, not a cryptographic e-sign (see FAQ).",
+    related: { id: "image-watermark", label: "Image Watermark" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {

@@ -1896,6 +1896,37 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
   },
 
+  "sign-pdf-free": {
+    useCasesTitle: "Why people sign PDFs visually",
+    useCasesIntro:
+      "Most signature requests aren&rsquo;t legally binding contracts — they&rsquo;re forms that need a recognizable mark, expense reports that need approval, internal docs routed for sign-off. A pasted-in signature image solves the common case in seconds.",
+    useCases: [
+      { icon: "Pen", title: "Internal approval", text: "Stamp your signature on expense reports, time-off requests, or routine internal forms before sending up the chain." },
+      { icon: "File", title: "Filling out forms", text: "Tax forms, school enrollment, gym waivers — fields that ask for a signature but don&rsquo;t require cryptographic binding." },
+      { icon: "Receipt", title: "Routine paperwork", text: "Vendor onboarding forms, expense pre-approvals, NDAs that don&rsquo;t need DocuSign-grade audit trail." },
+      { icon: "Edit", title: "Cover letters", text: "Add a signature to job application cover letters when the employer expects to see one." },
+      { icon: "Book", title: "Academic submissions", text: "Permission slips, recommendation letter sign-offs, grant agreement annexes." },
+      { icon: "Shield", title: "Form sign-offs", text: "Liability waivers, photo releases, treatment consent — internal-process forms that move the document through the workflow." },
+    ],
+    howWorksTitle: "How Sign PDF works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. PDFium renders page 1 at 1.5× as the editor canvas." },
+      { step: "2", title: "Pick a signature image", text: "PNG (with transparency works best — drops cleanly onto the form line) or JPG, up to 10 MB. The image preview appears in the config panel." },
+      { step: "3", title: "Click + size", text: "Click anywhere on the page to place the signature. Drag the size slider (5–60% of page width) until it fits the signature line. Click elsewhere to move it." },
+      { step: "4", title: "Apply &amp; download", text: "We embed the image and drawImage at the chosen position via pdf-lib. Lossless overlay; original page content untouched." },
+    ],
+    faqs: [
+      { q: "Is this a real (cryptographic) e-signature?", a: "No. This places a signature IMAGE on the page — there&rsquo;s no signing certificate, no integrity hash, no signer identity. Anyone with the PDF can add or remove signatures. For binding contracts (real estate, employment, NDAs of consequence), use DocuSign, Adobe Sign, HelloSign, or another service that produces a signed PDF with an audit trail." },
+      { q: "When IS this enough?", a: "When the recipient just needs to see a signature mark — internal expense forms, school permission slips, gym waivers, routine paperwork. The legal threshold is usually &lsquo;reasonable evidence the signer agreed.&rsquo; A pasted signature image clears that bar for most informal contexts. Talk to a lawyer for specific cases." },
+      { q: "Why does my signature look pixelated?", a: "Either the source image is small (try a higher-res scan of your signature) or the size slider is set too high (a 200×80 px image stretched to 50% of an 8.5\" page = visible pixelation). For best results, scan at 300 DPI and use 15-25% size on the slider." },
+      { q: "Will the signature show on every page?", a: "v1 = page 1 only. Multi-page signing (e.g. initials on every page + final signature on page N) needs page navigation in the editor — a v2 enhancement." },
+      { q: "Can I add multiple signature images?", a: "Not in v1 — one click position, one image. To add date / initials / multi-line signature blocks alongside the image, run Add Text to PDF afterwards on the signed output." },
+      { q: "Is anything uploaded?", a: "No. PDFium renders the preview locally; pdf-lib applies the image locally. Both your PDF and your signature image stay in your browser — important for sensitive forms." },
+      { q: "Do PNG transparency channels work?", a: "Yes. Transparent PNGs let the form line / page content show through where the image is transparent. JPEGs don&rsquo;t support transparency, so they always render as opaque rectangles — use PNG for signatures whenever possible." },
+    ],
+    cta: { title: "Need to add a date or printed name?", text: "Add Text to PDF places typed text at a click position — the natural pairing with a signature image.", linkHref: "/tool/add-text-box", linkLabel: "Try Add Text to PDF" },
+  },
+
   "redact-free": {
     useCasesTitle: "Why people redact PDFs",
     useCasesIntro:
