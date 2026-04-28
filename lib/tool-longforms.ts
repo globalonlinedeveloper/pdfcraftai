@@ -1896,6 +1896,48 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
   },
 
+  "redact-free": {
+    useCasesTitle: "Why people redact PDFs",
+    useCasesIntro:
+      "Redaction covers sensitive information before sharing. Names, addresses, account numbers, internal pricing, customer data — everything you want to hide from a wider audience. Our free redact is VISUAL: an opaque rectangle drawn over the content. Read the FAQ before using this on anything high-stakes.",
+    useCases: [
+      { icon: "Shield", title: "Anonymizing screenshots", text: "Hide names, emails, or session tokens in a screenshot before sharing it in a bug report or public docs." },
+      { icon: "Edit", title: "Hiding pricing in proposals", text: "Cover the pricing tables before passing a proposal around internally for review without revealing commercial terms." },
+      { icon: "File", title: "Personal info on printouts", text: "Cover account numbers or DOB on a statement before stapling it to an expense form." },
+      { icon: "Receipt", title: "Internal-only routing notes", text: "Hide internal annotations before sending a finalized doc to a customer." },
+      { icon: "Book", title: "Source quotes in research", text: "When sharing a passage, cover the parts of the surrounding paragraph not relevant to the quote." },
+      { icon: "Scan", title: "Pre-archive cleanup", text: "Cover sensitive sections of scanned old documents before archiving on a shared drive." },
+    ],
+    howWorksTitle: "How Redact PDF works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. PDFium renders page 1 at 1.5× as the editor canvas." },
+      { step: "2", title: "Drag to add redaction boxes", text: "Click and drag anywhere on the page to draw an opaque rectangle. Drag again to add more. Pick black, white (erase effect), or gray." },
+      { step: "3", title: "Apply &amp; download", text: "We draw opaque rectangles on top of page 1 via pdf-lib drawRectangle. Lossless to other content; the underlying objects remain in the file." },
+    ],
+    faqs: [
+      {
+        q: "Is this real redaction or just a visual cover?",
+        a: "Visual cover. The original text and images still exist in the PDF&rsquo;s content stream — they&rsquo;re just visually hidden behind a black rectangle. Anyone with PDF tooling (pdftotext, qpdf, Adobe Acrobat&rsquo;s text extract, even copy-paste in some viewers) can recover what was under the box. Use this for low-stakes uses only.",
+      },
+      {
+        q: "What should I use for true redaction?",
+        a: "Three practical options. (1) Rasterize the page first (PDF → JPG → PDF) — the page becomes a flat image, nothing recoverable. We ship Rasterize as a separate tool. (2) Adobe Acrobat&rsquo;s Pro redaction feature destroys the underlying objects. (3) Server-side qpdf or pdfcpu with a destructive redact op. We&rsquo;re evaluating shipping a server-side true-redact op as a credit-paid AI tool.",
+      },
+      {
+        q: "Why does the tool exist if it isn&rsquo;t real redaction?",
+        a: "Because most people&rsquo;s actual use case is &lsquo;hide a name on a screenshot before sharing,&rsquo; not &lsquo;publish a court filing with FOIA-grade redactions.&rsquo; A free, fast, in-browser visual cover serves the common case. The longform and config-panel warning surface the limitation upfront so high-stakes users go elsewhere.",
+      },
+      {
+        q: "Can I redact every page?",
+        a: "v1 = page 1 only. Multi-page redaction needs page navigation in the editor (a v2 enhancement). Workaround: extract the page → redact → merge back.",
+      },
+      { q: "What colors are supported?", a: "Black (default), white (erase effect — useful when the underlying content has a colored background), and gray (less alarming visually than black for low-stakes documents)." },
+      { q: "Is anything uploaded?", a: "No. PDFium renders the preview locally; pdf-lib applies the rectangles locally. The PDF never leaves your browser — important when you&rsquo;re working with sensitive content." },
+      { q: "Will the redacted content still appear in PDF-to-text exports?", a: "Yes. Our PDF to Text tool extracts text from the underlying content stream, which still exists. If you need to verify what&rsquo;s recoverable, run the redacted output through PDF to Text and see what comes back." },
+    ],
+    cta: { title: "Need a true privacy strip?", text: "Remove PDF Metadata strips Title, Author, Producer, dates, and XMP metadata — different operation, addresses metadata leaks rather than visible content.", linkHref: "/tool/remove-metadata", linkLabel: "Try Remove Metadata" },
+  },
+
   "highlight-pdf": {
     useCasesTitle: "Why people highlight PDFs",
     useCasesIntro:

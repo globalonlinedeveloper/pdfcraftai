@@ -119,6 +119,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a PDF with yellow / green / pink / blue highlight rectangles drawn over page 1 — drag to add multiple highlights, adjustable opacity, lossless overlay.",
     related: { id: "add-text-box", label: "Add Text to PDF" },
   },
+  "redact-free": {
+    text: "What you'll get: a PDF with opaque black / white / gray rectangles covering sensitive content on page 1. Visual cover only — for high-stakes redaction (court filings, FOIA), see FAQ.",
+    related: { id: "highlight-pdf", label: "Highlight PDF" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {

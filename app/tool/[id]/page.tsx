@@ -51,6 +51,8 @@ import { PdfCropTool } from "@/components/tools/PdfCropTool";
 import { PdfAddTextBoxTool } from "@/components/tools/PdfAddTextBoxTool";
 // Tier 6 (continued): third visual editor — drag-to-highlight.
 import { PdfHighlightTool } from "@/components/tools/PdfHighlightTool";
+// Tier 6 (continued): fourth visual editor — drag-to-redact.
+import { PdfRedactTool } from "@/components/tools/PdfRedactTool";
 // Tier 5 (2026-04-28): Watermark / N-up / Resize / Image Watermark.
 import { PdfStampTool } from "@/components/tools/PdfStampTool";
 import { PdfNUpTool } from "@/components/tools/PdfNUpTool";
@@ -473,6 +475,8 @@ export default function ToolRunnerPage({ params }: Params) {
     "add-text-box",
     // Highlight PDF — third visual editor on PageEditorTool base.
     "highlight-pdf",
+    // Redact PDF — fourth visual editor on PageEditorTool base.
+    "redact-free",
     // Tier 2 — Extract / Delete Pages render a thumbnail grid via
     // the shared PageGridTool. Both rely on the PDFium rasterizer
     // for the per-page previews before pdf-lib does the actual op.
@@ -1012,6 +1016,8 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfAddTextBoxTool />;
     case "highlight-pdf":
       return <PdfHighlightTool />;
+    case "redact-free":
+      return <PdfRedactTool />;
     default:
       return null;
   }

@@ -127,6 +127,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "add-text-box", name: "Add Text to PDF", desc: "Click on the page to place a text box, type your label, pick font size + color. Stamps on every page at the same position.", icon: "Edit", free: true, cost: "free", group: "Edit" },
   // Tier 6 (continued): third visual editor — drag-to-highlight.
   { id: "highlight-pdf", name: "Highlight PDF", desc: "Drag to add yellow / green / pink / blue highlights on page 1. Multiple highlights per session, opacity adjustable, lossless overlay.", icon: "Edit", free: true, cost: "free", group: "Edit" },
+  // Tier 6 (continued): fourth visual editor — drag-to-redact (visual cover only).
+  { id: "redact-free", name: "Redact PDF", desc: "Drag opaque rectangles over sensitive content on page 1. Visual cover only — see FAQ on what this does and doesn&apos;t do.", icon: "Shield", free: true, cost: "free", group: "Security" },
 
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },
