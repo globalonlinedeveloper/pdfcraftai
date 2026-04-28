@@ -1896,6 +1896,36 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     cta: { title: "Want to extract links instead?", text: "Extract Links from PDF lists every hyperlink with page references and CSV/JSON export. Useful for inventorying URLs before stripping them.", linkHref: "/tool/pdf-links", linkLabel: "Try Extract Links" },
   },
 
+  "image-watermark": {
+    useCasesTitle: "Why people add image watermarks",
+    useCasesIntro:
+      "Logos, signatures, and brand marks turn a generic PDF into a branded artifact. Image watermarks are the visual identity layer — they communicate ownership and source at a glance.",
+    useCases: [
+      { icon: "Shield", title: "Brand identity", text: "Stamp your company logo on every page of a deck or proposal so the source is visible regardless of how it&rsquo;s shared or printed." },
+      { icon: "Pen", title: "Signature stamps", text: "Add a scanned signature image to forms or letters that don&rsquo;t need cryptographic signing." },
+      { icon: "Edit", title: "Draft / approval marks", text: "Use a graphical DRAFT or APPROVED stamp instead of plain text — more visually distinctive in mixed-document workflows." },
+      { icon: "Receipt", title: "Letterhead overlay", text: "Add letterhead imagery to plain documents without rebuilding them in Word — drop the PDF, stamp the logo, done." },
+      { icon: "File", title: "Watermark for sample sharing", text: "Apply a SAMPLE or PREVIEW image watermark to chapter excerpts you share publicly so the full version stays paid." },
+      { icon: "Book", title: "Educational copyright marks", text: "Course material distributed to students often gets a school logo + copyright notice as an image overlay." },
+    ],
+    howWorksTitle: "How Image Watermark works",
+    howWorks: [
+      { step: "1", title: "Drop your PDF", text: "Up to 100 MB. Files stay in your browser." },
+      { step: "2", title: "Pick a watermark image", text: "PNG or JPG up to 10 MB. Transparent PNGs let the page content show through where the image is transparent." },
+      { step: "3", title: "Pick position + opacity + size", text: "3×3 grid for placement (corners, edges, center). Opacity 5–100%. Size 5–100% of page width — height scales proportionally." },
+      { step: "4", title: "Apply &amp; download", text: "We embed the image once and drawImage on every page at the chosen position. Resources are reused so output stays compact." },
+    ],
+    faqs: [
+      { q: "Are transparent PNGs supported?", a: "Yes. Transparency in the source PNG is preserved — page content shows through where the image is transparent. JPEGs don&rsquo;t support transparency, so they always render as opaque rectangles." },
+      { q: "Can I position the watermark by dragging?", a: "Not in v1 — you pick from a 3×3 position grid. Drag-to-position is a v2 enhancement once we have a shared visual-editor base across multiple tools." },
+      { q: "Will the watermark print?", a: "Yes. Anything visible in viewers prints by default." },
+      { q: "Is the original PDF modified?", a: "No. We produce a new PDF with the watermark drawn on top of the original page content. Your original file is untouched." },
+      { q: "What&rsquo;s the difference between this and Watermark PDF?", a: "Watermark PDF stamps TEXT (DRAFT, CONFIDENTIAL, etc.). Image Watermark stamps an IMAGE (logo, signature, brand mark). Different inputs, same drawing concept." },
+      { q: "Is anything uploaded?", a: "No. pdf-lib runs in your browser; the PDF and the watermark image both stay local." },
+    ],
+    cta: { title: "Want a text watermark instead?", text: "Watermark PDF stamps text like DRAFT or CONFIDENTIAL with rotation and opacity controls. Different tool, same idea.", linkHref: "/tool/stamp-pdf", linkLabel: "Try Watermark PDF" },
+  },
+
   "stamp-pdf": {
     useCasesTitle: "Why people watermark PDFs",
     useCasesIntro:

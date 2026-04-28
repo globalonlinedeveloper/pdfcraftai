@@ -107,6 +107,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a clean copy of your PDF with Title, Author, Producer, Creator, dates, and XMP metadata stripped. Page content untouched — useful before sending externally.",
     related: { id: "pdf-inspector", label: "PDF Inspector" },
   },
+  "image-watermark": {
+    text: "What you'll get: a PDF with your logo / brand mark / signature stamped on every page — drop a PNG or JPG, pick a 3×3 position, set opacity and size. pdf-lib drawImage overlay.",
+    related: { id: "stamp-pdf", label: "Watermark PDF" },
+  },
 
   // --------- Common utility free tools ---------
   "free-draw": {

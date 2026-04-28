@@ -120,6 +120,8 @@ export const TOOLS: readonly Tool[] = [
   { id: "n-up-pdf", name: "N-up PDF", desc: "Pack 2 or 4 source pages onto each output sheet — paper-saving prints, handouts, multi-page reading.", icon: "Pages", free: true, cost: "free", group: "Edit" },
   { id: "resize-pdf", name: "Resize PDF", desc: "Resize every page to Letter / Legal / A4 / A3 / A5. Content scales to fit, aspect ratio preserved.", icon: "Edit", free: true, cost: "free", group: "Edit" },
   { id: "remove-metadata", name: "Remove PDF Metadata", desc: "Strip Title, Author, Producer, Creator, dates, and XMP metadata before sharing externally. Page content untouched.", icon: "Shield", free: true, cost: "free", group: "Security" },
+  // Tier 5 (continued): image watermark / logo overlay (config-only v1).
+  { id: "image-watermark", name: "Image Watermark", desc: "Add a PNG or JPG watermark (logo, signature, brand mark) to every page — pick position, opacity, and size. Lossless overlay via pdf-lib.", icon: "Image", free: true, cost: "free", group: "Edit" },
 
   // ----- AI -----
   { id: "ai-chat", name: "Chat with PDF", desc: "Ask questions. Get answers cited to pages.", icon: "Chat", free: false, cost: "1 credit per question", group: "AI" },

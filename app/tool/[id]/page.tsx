@@ -47,10 +47,11 @@ import {
 } from "@/components/tools/PdfSimpleOpsTool";
 // Tier 4 (2026-04-28): first visual editor — Crop PDF.
 import { PdfCropTool } from "@/components/tools/PdfCropTool";
-// Tier 5 (2026-04-28): Watermark / N-up / Resize.
+// Tier 5 (2026-04-28): Watermark / N-up / Resize / Image Watermark.
 import { PdfStampTool } from "@/components/tools/PdfStampTool";
 import { PdfNUpTool } from "@/components/tools/PdfNUpTool";
 import { PdfResizeTool } from "@/components/tools/PdfResizeTool";
+import { PdfImageWatermarkTool } from "@/components/tools/PdfImageWatermarkTool";
 import {
   PdfInspectorLongform,
   PDF_INSPECTOR_FAQ,
@@ -997,6 +998,8 @@ function ToolRunner({ id }: { id: string }) {
       return <PdfResizeTool />;
     case "remove-metadata":
       return <PdfRemoveMetadataTool />;
+    case "image-watermark":
+      return <PdfImageWatermarkTool />;
     default:
       return null;
   }
