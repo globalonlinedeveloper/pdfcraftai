@@ -110,7 +110,7 @@ small, a few (M21, M23, M24) are real refactors.
 |---|---|---|---|
 | M3 | **SHIPPED** (`430aea0`, 2026-04-28) | — | `lib/client/download.ts` `suffixedFilename()` |
 | M5 | **SHIPPED** parts 1+2 (`36ece46` + `9498285`, 2026-04-29) | — | AbortController plumbing through `rasterize.ts` → `usePdfThumbnails` → 3 consumer tools (PageGrid/Split/Sort) with Cancel buttons |
-| M9 | "Open in another tool" workflow on success card | 2h | 1-click handoff to compatible tools; passes blob URL via session storage |
+| M9 | **SHIPPED** (`be39236`, 2026-04-29) | — | `lib/client/handoff.ts` window-scoped Blob registry + `tool-suggestions.ts` curated map; PageEditorTool consumes `?handoff=` on mount and offers "Open in [Tool]" buttons on success card |
 | M14 | **SHIPPED** (`ecf0427`, 2026-04-28) | — | `@media print` block hides chrome, forces light theme |
 | M17 | **SHIPPED** (`1ab0221`, 2026-04-28) | — | `mapPdfOpError` extended to 25 AI/inspector catch sites |
 
@@ -160,13 +160,14 @@ small, a few (M21, M23, M24) are real refactors.
 
 (M17 / M3 / M5 / M22 / M6 / M19 etc. all SHIPPED — see Tier tables above for SHA references.)
 
-Remaining 12 of 25 M-items, ranked:
+Remaining 11 of 25 M-items, ranked:
 
-1. **M9** (open in another tool) — 2h, real user value: needs IndexedDB or window-scoped Blob handoff (sessionStorage too small for big PDFs); register output bytes under a key, add "Open in [N suggestions]" buttons on the success card, target tool checks for the key on mount.
-2. **M21** (`PdfReadOpsTool` extraction) — 6h dedicated session; biggest single LOC reduction (~3000 LOC across 18 inspectors).
-3. **M18** (AI tools first-page preview) — 3h; apply `useFirstPagePreview` to Summarize / Chat / Resume Parser / etc. so users can see what they uploaded before paying credits.
-4. Remaining tier 4 (M8 / M10 / M13 / M20 / M23 / M25) — pick based on user complaints.
-5. **M16** (focus return on error) — probably skip; `role="alert"` already announces and moving focus on error can disrupt user flow per WCAG guidance.
+1. **M21** (`PdfReadOpsTool` extraction) — 6h dedicated session; biggest single LOC reduction (~3000 LOC across 18 inspectors).
+2. **M18** (AI tools first-page preview) — 3h; apply `useFirstPagePreview` to Summarize / Chat / Resume Parser / etc. so users can see what they uploaded before paying credits.
+3. **M9 part 2** (extend handoff to non-PageEditor tools) — 1-2h; PageGridTool / PdfSplitTool / PdfMergeTool / PdfSimpleOpsTool all have their own success cards that don't yet show "Open in" buttons. Add to each.
+4. **M20** (AI tool retry on transient network failure) — 2h; backoff + idempotency for the 5xx / network-error path on AI op routes.
+5. Remaining tier 4 (M8 / M10 / M13 / M23 / M25) — pick based on user complaints.
+6. **M16** (focus return on error) — probably skip; `role="alert"` already announces and moving focus on error can disrupt user flow per WCAG guidance.
 
 ---
 
