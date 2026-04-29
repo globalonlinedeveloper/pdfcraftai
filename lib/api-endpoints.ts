@@ -16,11 +16,11 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
   { method: "POST", path: "/v1/merge",        desc: "Merge 2+ PDFs into a single document",          price: "free",           anchor: "ep-merge",     group: "Free" },
   { method: "POST", path: "/v1/split",        desc: "Split into per-page files or page ranges",      price: "free",           anchor: "ep-split",     group: "Free" },
   { method: "POST", path: "/v1/convert",      desc: "PDF ↔ Office (.docx, .xlsx, .pptx) conversions", price: "free",           anchor: "ep-convert",   group: "Free" },
-  { method: "POST", path: "/v1/ai/chat",      desc: "Conversational Q&A over a PDF with citations",  price: "5 credits/Q",    anchor: "ep-chat",      group: "AI" },
-  { method: "POST", path: "/v1/ai/summarize", desc: "Executive or bullet summary of a document",     price: "8 credits",      anchor: "ep-summarize", group: "AI" },
-  { method: "POST", path: "/v1/ai/translate", desc: "Layout-preserving translation across 60+ languages", price: "1 credit/page", anchor: "ep-translate", group: "AI" },
-  { method: "POST", path: "/v1/ai/ocr",       desc: "OCR + structured field/table extraction",       price: "2 credits/page", anchor: "ep-ocr",       group: "AI" },
-  { method: "POST", path: "/v1/ai/redact",    desc: "Auto-detect and redact PII (names, emails, IDs)", price: "2 credits/page", anchor: "ep-redact",    group: "AI" },
+  { method: "POST", path: "/v1/ai/chat",      desc: "Conversational Q&A over a PDF with citations",  price: "1 credit per question",  anchor: "ep-chat",      group: "AI" },
+  { method: "POST", path: "/v1/ai/summarize", desc: "Executive or bullet summary of a document",     price: "3 credits per doc",      anchor: "ep-summarize", group: "AI" },
+  { method: "POST", path: "/v1/ai/translate", desc: "Layout-preserving translation across 60+ languages", price: "5 credits per doc", anchor: "ep-translate", group: "AI" },
+  { method: "POST", path: "/v1/ai/ocr",       desc: "OCR + structured field/table extraction",       price: "2 credits per page",     anchor: "ep-ocr",       group: "AI" },
+  { method: "POST", path: "/v1/ai/redact",    desc: "Auto-detect and redact PII (names, emails, IDs)", price: "2 credits per page",   anchor: "ep-redact",    group: "AI" },
 ];
 
 export const API_QUICKSTART = `# Install
