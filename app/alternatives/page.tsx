@@ -41,9 +41,13 @@ export default function AlternativesIndexPage() {
             {COMPETITOR_SLUGS.map((slug) => {
               const c = COMPETITORS[slug];
               return (
+                // #20 (2026-04-29): prefetch={false} on the alternatives
+                // card grid. Same fix as the tool grids — disables the
+                // viewport-enter RSC prefetch flood.
                 <Link
                   key={slug}
                   href={`/alternatives/${slug}`}
+                  prefetch={false}
                   className="card card-hover"
                   style={{ padding: 28 }}
                 >

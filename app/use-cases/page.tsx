@@ -40,9 +40,13 @@ export default function UseCasesIndexPage() {
             {USE_CASE_SLUGS.map((slug) => {
               const u = USE_CASES[slug];
               return (
+                // #20 (2026-04-29): prefetch={false} on the use-cases
+                // grid. ~10 use-case landings at a time; same flood
+                // pattern as the other card grids.
                 <Link
                   key={slug}
                   href={`/use-cases/${slug}`}
+                  prefetch={false}
                   className="card card-hover"
                   style={{ padding: 24 }}
                 >

@@ -92,7 +92,11 @@ export default function BlogPage() {
             }}
           >
             {rest.map((p) => (
-              <Link key={p.slug} href={`/blog/${p.slug}`} className="card card-hover" style={{ padding: 0, overflow: "hidden" }}>
+              // #20 (2026-04-29): prefetch={false} on the blog card grid.
+              // The featured-post card above keeps prefetch on (single
+              // intent-aligned link); only the iterated grid is the
+              // flood risk.
+              <Link key={p.slug} href={`/blog/${p.slug}`} prefetch={false} className="card card-hover" style={{ padding: 0, overflow: "hidden" }}>
                 <div
                   style={{
                     background: "var(--bg-2)",

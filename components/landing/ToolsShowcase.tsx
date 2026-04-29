@@ -42,7 +42,15 @@ export function ToolsShowcase() {
               {grouped[group].map((t) => {
                 const Ic = I[t.icon];
                 return (
-                  <Link key={t.id} href={`/tool/${t.id}`} className="card card-hover" style={{ padding: 18 }}>
+                  // #20 (2026-04-29): prefetch={false} on the homepage
+                  // tool grid. Same fix as ToolFilter.tsx (the /tools
+                  // index). The homepage is the highest-traffic page on
+                  // the site — its tool grid was the worst contributor
+                  // to the LSAPI 503 cascade. Hover-prefetch still
+                  // works for explicitly-set false (Next default), so
+                  // navigation feels instant once a user actually aims
+                  // at a card.
+                  <Link key={t.id} href={`/tool/${t.id}`} prefetch={false} className="card card-hover" style={{ padding: 18 }}>
                     <div className="row" style={{ justifyContent: "space-between", marginBottom: 16 }}>
                       <div
                         style={{

@@ -154,8 +154,16 @@ export function UseCasePage({ data }: { data: UseCaseData }) {
                     </div>
                   </div>
                   {tool && (
+                    // #20 (2026-04-29): prefetch={false} — each use-case
+                    // page renders 3-5 step links iterated from
+                    // data.steps. Scroll-to-bottom triggers prefetch
+                    // for all of them in parallel. Adds up across the
+                    // ~10 use-case pages × SERP traffic. The single
+                    // primary CTAs above (lines 107, 299) keep prefetch
+                    // on because they're intent-aligned.
                     <Link
                       href={`/tool/${step.tool}`}
+                      prefetch={false}
                       className="btn btn-ghost"
                       style={{ flexShrink: 0 }}
                     >
@@ -247,9 +255,13 @@ export function UseCasePage({ data }: { data: UseCaseData }) {
                 const r = USE_CASES[slug];
                 if (!r) return null;
                 return (
+                  // #20 (2026-04-29): prefetch={false} on the related
+                  // use-cases grid. Same flood-mitigation as the tool
+                  // grids — disables viewport-enter RSC prefetch.
                   <Link
                     key={slug}
                     href={`/use-cases/${slug}`}
+                    prefetch={false}
                     className="card card-hover"
                     style={{ padding: 20 }}
                   >
