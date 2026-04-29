@@ -481,6 +481,14 @@ const SUITES = [
     name: "tier1-expansion",
     file: "test-tier1-expansion.mjs",
   },
+  // M24 follow-up: pin TOOLS ↔ LIVE_TOOL_IDS ↔ ToolRunner switch
+  // consistency. Catches the "tool registered + lit but no dispatcher
+  // case" drift that would render a blank tool body. tier1-expansion
+  // pins a curated 12-tool subset; this one is exhaustive.
+  {
+    name: "tool-runner-coverage",
+    file: "test-tool-runner-coverage.mjs",
+  },
   // schema-drift pins Task #28 — the migration-drift boot-time guard.
   // After the errno-150 incident on 0009, we learned migrations can
   // silently fail to land on Hostinger-managed MariaDB. lib/db/schema-

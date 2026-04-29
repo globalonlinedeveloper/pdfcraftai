@@ -32,46 +32,38 @@ import { AdSlot } from "@/components/marketing/AdSlot";
 
 type Params = { params: { id: string } };
 
-// Tools whose client runners ship in Phase 3 (free, in-browser) + Phase
-// 5.1 (AI · Summarize) + Phase 5.2 (AI · Translate) + Phase 5.3 (AI ·
-// Compare) + Phase 5.4 (AI · OCR) + Phase 5.6 (AI · Rewrite, AI · Table,
-// AI · Redact, AI · Generate, AI · Sign) + `pdf-to-office` (free but
-// server-side — pdfjs worker + docx lib are Node-only; see
-// lib/tools-server/pdf-to-office.ts for the why).
-// Adding a tool here: register the id, then append a case to the
-// ToolRunner switch below.
+// Tools whose client runners are wired in components/tools/ToolRunner.tsx.
+// An id in this Set means: render <ToolRunner id={...} />; an id NOT in
+// this set means: render the "Coming Soon" placeholder (see
+// ComingSoonRunner below). The set must stay in sync with the switch
+// in ToolRunner.tsx — scripts/test-tool-runner-coverage.mjs pins the
+// invariant so any drift fails CI.
+//
+// Cleaned 2026-04-29 (M24 follow-up): removed 15 stale ids that aren't
+// in lib/tools.ts at all. Those entries never affected rendering
+// because toolById() returns undefined → notFound() fires before this
+// Set is consulted, but they accumulated noise over many tool removals
+// (Task #100 India sweep, Task #99 govt ID reversal, etc.).
 const LIVE_TOOL_IDS = new Set<string>([
-  // Build 2 Wave 9 (2026-04-27): pdf-lib-backed writable tools.
-  // merge / split / rotate were registered pre-nuke and stayed in
-  // LIVE_TOOL_IDS as orphaned ids (no entry in lib/tools.ts, no
-  // dispatch case → routes 404'd). Wave 9 lights them up properly
-  // with real ops + runners + tools.ts entries. `unlock` is new.
+  // pdf-lib writable tools (Build 2 Wave 9, 2026-04-27).
   "merge",
   "split",
   "rotate",
   "unlock",
-  "compress",
   "page-numbers",
-  "to-pdf",
-  "protect",
-  "pdf-to-office",
-  // Tier 1 P0 expansion — all 6 are client-side (pdf-lib + pdfjs-dist),
-  // so they still qualify for the "stays in your browser" reassurance
-  // copy. The ToolRunner switch below maps each id to its component.
+  // Tier 1 P0 expansion — client-side (pdf-lib + pdfjs-dist).
   "extract-pages",
   "delete-pages",
   "pdf-to-jpg",
-  // Build 2 Wave 2 — PNG companion to pdf-to-jpg (added 2026-04-27).
   "pdf-to-png",
-  // Build 2 Wave 3 — search across PDF text.
   "pdf-search",
   "extract-images",
-  // Build 2 Wave 4 — byte-parser tools, no PDFium needed.
+  // Build 2 Wave 4 — byte-parser tools.
   "pdf-outline",
   "pdf-forms",
   "pdf-attachments",
   "pdf-fonts",
-  // Build 2 Wave 8 — 6 byte-parser tools.
+  // Build 2 Wave 8 — 6 more byte-parser tools.
   "pdf-links",
   "pdf-annotations",
   "pdf-javascript",
@@ -82,10 +74,8 @@ const LIVE_TOOL_IDS = new Set<string>([
   // 2026-04-27 split — PDF Inspector is the rich sibling of Page Counter,
   // mounted at /tool/pdf-inspector with its own runner component.
   "pdf-inspector",
-  "pdf-metadata",
   "flatten-pdf",
   "crop-pdf",
-  "fill-forms",
   "pdf-to-text",
   "resize-pdf",
   "remove-metadata",
@@ -93,31 +83,20 @@ const LIVE_TOOL_IDS = new Set<string>([
   "add-text-box",
   "highlight-pdf",
   "redact-free",
-  "extract-attachments",
-  "edit-pdf",
   "sign-pdf-free",
   "repair-pdf",
-  "markdown-to-pdf",
-  "text-to-pdf",
   "pdf-to-markdown",
   "pdf-to-html",
-  "extract-form-data",
   "sort-pages",
-  "extract-contacts",
-  "extract-dates",
-  // Task #93 — client-side gap fillers
+  // Task #93 — client-side gap fillers.
   "stamp-pdf",
   "n-up-pdf",
-  "grayscale-pdf",
-  // Task #94 — more client-side gap fillers
   "strip-links",
-  "booklet-pdf",
-  // Task #95 — canvas-overlay free-draw annotation
+  // Task #95 — canvas-overlay free-draw annotation.
   "free-draw-pdf",
-  // Task #96 — add hyperlinks (inverse of strip-links)
+  // Task #96 — add hyperlinks (inverse of strip-links).
   "add-links",
-  // Sprint A REVERTED in Task #99 — 5 govt ID parsers removed.
-  // Sprint B — 5 Indian financial wedges (Tier 3 §3.1)
+  // AI tools.
   "ai-summarize",
   "ai-tldr",
   "ai-key-points",
@@ -182,7 +161,12 @@ const LIVE_TOOL_IDS = new Set<string>([
 // Free tools that run server-side rather than on-device. These still
 // count as `tool.free` (no auth, no credit spend) but the reassurance
 // row must NOT claim "stays in your browser" — that would be a lie.
-const SERVER_SIDE_FREE_TOOLS = new Set<string>(["pdf-to-office"]);
+//
+// 2026-04-29: emptied during the M24 LIVE_TOOL_IDS cleanup. The only
+// historical entry, `pdf-to-office`, was never registered in TOOLS so
+// the route hit notFound() anyway. If a future server-side free tool
+// ships, register the id here AND in TOOLS AND in LIVE_TOOL_IDS.
+const SERVER_SIDE_FREE_TOOLS = new Set<string>();
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ id: t.id }));
