@@ -29,6 +29,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { COMMON_TARGET_LANGUAGES } from "@/lib/ai/translate-langs";
 import { MacroBar, type MacroBarItem } from "./MacroBar";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { UploadedFilePreview } from "./UploadedFilePreview";
 import {
   createMacroAction,
   deleteMacroAction,
@@ -353,9 +354,7 @@ export function TranslatePdfTool() {
             padding: "14px 16px",
           }}
         >
-          <span style={{ color: "var(--fg-subtle)" }}>
-            <I.File size={16} />
-          </span>
+          <UploadedFilePreview file={file} maxHeight={80} />
           <div style={{ flex: 1, overflow: "hidden" }}>
             <div
               title={file.name}

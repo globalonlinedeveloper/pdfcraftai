@@ -44,6 +44,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useToolTracking } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { UploadedFilePreview } from "./UploadedFilePreview";
 
 // Keep in sync with server-side `MAX_OCR_PAGES` in lib/ai/ocr.ts.
 // We can't import the server module (it's "server-only"), so the
@@ -303,9 +304,7 @@ export function OcrPdfTool() {
             padding: "14px 16px",
           }}
         >
-          <span style={{ color: "var(--fg-subtle)" }}>
-            <I.File size={16} />
-          </span>
+          <UploadedFilePreview file={file} maxHeight={80} />
           <div style={{ flex: 1, overflow: "hidden" }}>
             <div
               title={file.name}

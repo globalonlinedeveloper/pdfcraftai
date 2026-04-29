@@ -32,6 +32,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { UploadedFilePreview } from "./UploadedFilePreview";
 
 // Keep in sync with VALID_MODES in /api/ai/rewrite/route.ts.
 type Mode = "simplify" | "formal" | "casual" | "concise" | "expand";
@@ -230,9 +231,7 @@ export function RewritePdfTool() {
             padding: "14px 16px",
           }}
         >
-          <span style={{ color: "var(--fg-subtle)" }}>
-            <I.File size={16} />
-          </span>
+          <UploadedFilePreview file={file} maxHeight={80} />
           <div style={{ flex: 1, overflow: "hidden" }}>
             <div
               title={file.name}

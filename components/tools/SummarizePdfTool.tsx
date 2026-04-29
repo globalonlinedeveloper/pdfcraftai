@@ -41,6 +41,7 @@ import {
   listMacrosForToolAction,
 } from "@/lib/macro-actions";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { UploadedFilePreview } from "./UploadedFilePreview";
 
 type Depth = "tldr" | "standard" | "detailed";
 
@@ -334,9 +335,11 @@ export function SummarizePdfTool() {
             padding: "14px 16px",
           }}
         >
-          <span style={{ color: "var(--fg-subtle)" }}>
-            <I.File size={16} />
-          </span>
+          {/* M18 (#193, 2026-04-29): page-1 preview thumbnail. Lets
+              users verify they uploaded the right doc before paying
+              credits. The M25 cache means handoff users see this
+              instantly; first-time uploads see a brief loading icon. */}
+          <UploadedFilePreview file={file} maxHeight={80} />
           <div style={{ flex: 1, overflow: "hidden" }}>
             <div
               title={file.name}
