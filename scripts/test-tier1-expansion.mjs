@@ -26,10 +26,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 
 const TOOLS_SRC = readFileSync(resolve(ROOT, "lib", "tools.ts"), "utf8");
-const DISPATCHER_SRC = readFileSync(
+const PAGE_SRC = readFileSync(
   resolve(ROOT, "app", "tool", "[id]", "page.tsx"),
   "utf8"
 );
+// M24 (2026-04-29): the per-tool dispatch was extracted from page.tsx
+// into a "use client" file so each tool can be code-split via
+// next/dynamic. The tool-component imports + switch cases now live
+// in components/tools/ToolRunner.tsx; page.tsx still owns LIVE_TOOL_IDS
+// and routes through <ToolRunner id={id} />.
+const RUNNER_SRC = readFileSync(
+  resolve(ROOT, "components", "tools", "ToolRunner.tsx"),
+  "utf8"
+);
+// Combined source for "is this tool wired anywhere" checks. Section B
+// and Section D regexes match against this concatenation so the test
+// keeps working regardless of which file holds the wire-up.
+const DISPATCHER_SRC = `${PAGE_SRC}\n${RUNNER_SRC}`;
 
 let pass = 0;
 let fail = 0;
@@ -93,14 +106,26 @@ for (const tool of NEW_TOOLS) {
 // SECTION B — app/tool/[id]/page.tsx imports the 6 component files
 // =============================================================================
 
+// M24 (2026-04-29): a tool is now wired in either of two shapes:
+//   STATIC: `import { Foo } from "@/components/tools/Foo"`  — for
+//     server-shared utilities, marketing components, longform.
+//   DYNAMIC: `import("@/components/tools/Foo").then((m) => ({ default:
+//     m.Foo }))` — for the per-tool runner imports inside ToolRunner.tsx
+//     so each tool gets its own webpack chunk.
+// Either is acceptable; both prove the dispatcher knows how to find
+// the component by its known path + named export.
 for (const tool of NEW_TOOLS) {
-  const importRe = new RegExp(
-    `import\\s*\\{\\s*${tool.component}\\s*\\}\\s*from\\s*"@/components/tools/${tool.component}"`
+  const fromPath = `@/components/tools/${tool.component}`;
+  const staticImportRe = new RegExp(
+    `import\\s*\\{[^}]*\\b${tool.component}\\b[^}]*\\}\\s*from\\s*"${fromPath}"`
+  );
+  const dynamicImportRe = new RegExp(
+    `import\\("${fromPath}"\\)[\\s\\S]{0,80}m\\.${tool.component}\\b`
   );
   assert(
-    `B.${tool.id} component ${tool.component} is imported`,
-    importRe.test(DISPATCHER_SRC),
-    `The dispatcher must import ${tool.component} from @/components/tools/${tool.component}. A typoed or missing import fails the build at first reference to the symbol.`
+    `B.${tool.id} component ${tool.component} is imported (static or dynamic)`,
+    staticImportRe.test(DISPATCHER_SRC) || dynamicImportRe.test(DISPATCHER_SRC),
+    `The dispatcher must import ${tool.component} from ${fromPath} either statically (\`import { ${tool.component} } from "..."\`) or dynamically (\`import("...").then((m) => ({ default: m.${tool.component} }))\`). A typoed name or missing import fails the build at first reference to the symbol.`
   );
 }
 
