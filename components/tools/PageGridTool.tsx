@@ -626,8 +626,22 @@ export function PageGridTool(props: PageGridToolProps) {
                           fontWeight: 500,
                           background: softBg,
                           color: accentColor,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
                         }}
                       >
+                        {/* G11: prefix the label with a glyph so users
+                            who can't distinguish accent vs neutral
+                            border colors (color-blind, glare, etc) get
+                            an unambiguous selected indicator. ✓ for
+                            keep / additive selections, ✗ for
+                            destructive (delete) selections. */}
+                        <span aria-hidden="true">
+                          {props.selectionStyle === "destructive"
+                            ? "✗"
+                            : "✓"}
+                        </span>
                         {props.selectedBadgeLabel}
                       </span>
                     )}
