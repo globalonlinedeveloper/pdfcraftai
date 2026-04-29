@@ -117,7 +117,16 @@ export function ToolFilter() {
 function ToolCard({ tool: t }: { tool: Tool }) {
   const Ic = I[t.icon];
   return (
-    <Link href={`/tool/${t.id}`} className="card card-hover" style={{ padding: 18 }}>
+    // #20 (2026-04-29): prefetch={false} disables Next.js's default
+    // viewport-enter RSC prefetch. /tools renders ~94 cards; without
+    // this, scrolling triggers ~94 parallel RSC requests in production
+    // and saturates Hostinger LSAPI's cgroup thread budget — that's
+    // the recurring 503 cascade pattern (CLAUDE.md §5). Users still
+    // get fast navigation: Next.js prefetches on hover/focus, so
+    // the moment a user actually aims for a card the RSC payload
+    // is in flight. The visual flood is what kills the workers, not
+    // the eventual click.
+    <Link href={`/tool/${t.id}`} prefetch={false} className="card card-hover" style={{ padding: 18 }}>
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 16 }}>
         <div
           style={{

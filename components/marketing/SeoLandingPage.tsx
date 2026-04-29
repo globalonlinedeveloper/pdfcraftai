@@ -480,7 +480,13 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
               if (!t) return null;
               const TIc = I[t.icon];
               return (
-                <Link key={id} href={`/tool/${id}`} className="card card-hover" style={{ padding: 18 }}>
+                // #20 (2026-04-29): prefetch={false} on the related-
+                // tools grid. SEO landings render 4-8 sibling cards;
+                // multiplied across all the SEO landings + the search-
+                // engine-driven traffic that hits them, the prefetch
+                // flood adds up. See ToolFilter.tsx for the full
+                // rationale — same fix, same reason.
+                <Link key={id} href={`/tool/${id}`} prefetch={false} className="card card-hover" style={{ padding: 18 }}>
                   <div className="row" style={{ justifyContent: "space-between", marginBottom: 14 }}>
                     <div
                       style={{

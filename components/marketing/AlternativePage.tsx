@@ -404,7 +404,11 @@ export function AlternativePage({ data }: { data: CompetitorData }) {
               if (!t) return null;
               const Ic = I[t.icon];
               return (
-                <Link key={id} href={`/tool/${id}`} className="card card-hover" style={{ padding: 18 }}>
+                // #20 (2026-04-29): prefetch={false} on related-tools
+                // grid. Same fix as ToolFilter.tsx — disables the
+                // viewport-enter RSC prefetch flood that saturates
+                // Hostinger LSAPI threads.
+                <Link key={id} href={`/tool/${id}`} prefetch={false} className="card card-hover" style={{ padding: 18 }}>
                   <div className="row" style={{ justifyContent: "space-between", marginBottom: 14 }}>
                     <div
                       style={{

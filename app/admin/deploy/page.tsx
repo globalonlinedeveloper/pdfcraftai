@@ -12,6 +12,26 @@
 
 import { getDeploySnapshot } from "@/lib/admin/queries";
 import { microsToUsd, bpsToPercent } from "@/lib/admin/format";
+
+// Lightweight ISO → "5m ago" / "3h ago" formatter. Inline because it's
+// only used here and the projectwide format helpers are scoped to
+// numeric / currency formatting. Renders fully on the server (no Date
+// hydration mismatch risk) — `getDeploySnapshot` runs in the RSC pass.
+function formatRelativeTime(iso: string): string {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return iso;
+  const diffMs = Date.now() - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 30) return `${diffDay}d ago`;
+  const diffMo = Math.floor(diffDay / 30);
+  if (diffMo < 12) return `${diffMo}mo ago`;
+  return `${Math.floor(diffMo / 12)}y ago`;
+}
 import {
   SectionTitle,
   StatCard,
@@ -171,6 +191,69 @@ export default async function AdminDeployPage() {
           + push to <code>main</code>. There is no runtime override knob — the
           numbers you see here are exactly what the nightly margin cron will
           use tonight.
+        </p>
+      </section>
+
+      <section style={{ marginTop: 24 }}>
+        <SectionTitle>Recent commits</SectionTitle>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {snap.recentCommits.length === 0 ? (
+            <div
+              style={{
+                padding: 16,
+                fontSize: 13,
+                color: "var(--fg-muted)",
+              }}
+            >
+              (no commit log baked into this build — git may have been
+              unavailable when the bundle was created)
+            </div>
+          ) : (
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <Th>SHA</Th>
+                  <Th>When</Th>
+                  <Th>Author</Th>
+                  <Th>Subject</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {snap.recentCommits.map((c) => {
+                  const link = `https://github.com/${githubRepo}/commit/${c.sha}`;
+                  // Show relative time for recency at a glance + ISO on
+                  // hover so operators can pin the exact deploy moment
+                  // when correlating with logs.
+                  const when = formatRelativeTime(c.isoDate);
+                  return (
+                    <tr key={c.sha}>
+                      <Td mono>
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "inherit" }}
+                        >
+                          {c.sha}
+                        </a>
+                      </Td>
+                      <Td mono>
+                        <span title={c.isoDate}>{when}</span>
+                      </Td>
+                      <Td>{c.author}</Td>
+                      <Td>{c.subject}</Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+          Last 25 non-merge commits at build time, baked in via
+          <code> BUILD_RECENT_COMMITS</code>. The list moves on every push
+          to <code>main</code> + redeploy — if you don&apos;t see your
+          latest commit here, the build hasn&apos;t rolled out yet.
         </p>
       </section>
 

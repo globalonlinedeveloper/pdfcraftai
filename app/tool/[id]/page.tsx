@@ -637,6 +637,14 @@ function RelatedTools({ currentId, group }: { currentId: string; group: string }
           <Link
             key={t.id}
             href={`/tool/${t.id}`}
+            // #20 (2026-04-29): prefetch={false} — every /tool/{id}
+            // page renders this Related Tools grid (4-6 cards).
+            // Multiplied across ~90 tool pages with the prefetch flood,
+            // hover/scroll on any tool page used to crash workers via
+            // the LSAPI thread cap. Hover-prefetch (Next default for
+            // explicitly-set false) still gets the user's actual click
+            // ahead of the navigation.
+            prefetch={false}
             className="card"
             style={{
               padding: 14,

@@ -24,6 +24,37 @@ try {
   // git not available at build time — leave SHA null.
 }
 
+// --- Build-time recent-commit log ----------------------------------------
+//
+// 2026-04-29: bake the last 25 commits into the build so /admin/deploy
+// can render a "what's deployed" punch list without needing a GitHub API
+// call. Format: a JSON-stringified array of { sha, author, isoDate,
+// subject }. 25 entries covers a full session of work without bloating
+// the env var (~3KB ceiling).
+//
+// We use `--no-merges` so merge commits don't crowd out the actual ship-
+// commits operators care about. `` as a field delimiter (instead
+// of `|`) so commit subjects containing pipes don't break the split.
+let BUILD_RECENT_COMMITS = "[]";
+try {
+  const raw = execSync(
+    "git log -n 25 --no-merges --pretty=format:%h%an%cI%s",
+    { stdio: ["ignore", "pipe", "ignore"] },
+  )
+    .toString()
+    .trim();
+  const commits = raw
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const [sha, author, isoDate, subject] = line.split("");
+      return { sha, author, isoDate, subject };
+    });
+  BUILD_RECENT_COMMITS = JSON.stringify(commits);
+} catch (_) {
+  // git unavailable — bake empty array; /admin/deploy renders "(unavailable)".
+}
+
 // --- PCI DSS SAQ-A scope lockdown -----------------------------------------
 //
 // Our SAQ-A eligibility rests on card data NEVER touching our origin.
@@ -171,6 +202,11 @@ const nextConfig = {
   env: {
     BUILD_COMMIT_SHA: BUILD_COMMIT_SHA ?? "",
     BUILD_TIMESTAMP: new Date().toISOString(),
+    // JSON array of { sha, author, isoDate, subject }. /admin/deploy
+    // renders this as a "Recent commits" table so operators can see at
+    // a glance what's deployed. Parsing happens in lib/admin/queries.ts
+    // because the env-var inlining loses TypeScript types.
+    BUILD_RECENT_COMMITS,
   },
   // Hostinger Node.js app — standalone output keeps the deploy small
   // and lets us run `node .next/standalone/server.js` directly.

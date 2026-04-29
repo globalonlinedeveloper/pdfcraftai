@@ -1832,6 +1832,13 @@ export async function getTaxSnapshot(opts: {
 
 // --- Runtime env snapshot for /admin/deploy --------------------------
 
+export type DeployCommit = {
+  sha: string;
+  author: string;
+  isoDate: string;
+  subject: string;
+};
+
 export type DeploySnapshot = {
   commitSha: string | null;
   nodeVersion: string;
@@ -1840,6 +1847,10 @@ export type DeploySnapshot = {
   infraMonthlyUsdMicros: number;
   refundReserveBps: number;
   referenceUsdMicrosPerCredit: number;
+  /** Last 25 commits at build time (newest first). Empty if git was
+   *  unavailable when the bundle was built. See next.config.mjs §Build-
+   *  time recent-commit log. */
+  recentCommits: DeployCommit[];
 };
 
 export function getDeploySnapshot(): DeploySnapshot {
@@ -1872,6 +1883,30 @@ export function getDeploySnapshot(): DeploySnapshot {
       : null) ??
     process.env.DEPLOY_TIMESTAMP ??
     null;
+  // Recent commits — baked into BUILD_RECENT_COMMITS at build time by
+  // next.config.mjs. Defaults to "[]" if git was unavailable. We swallow
+  // parse errors silently because /admin/deploy renders a graceful
+  // "(unavailable)" state on empty arrays — we never want a malformed
+  // env var to crash the deploy page.
+  let recentCommits: DeployCommit[] = [];
+  try {
+    const raw = process.env.BUILD_RECENT_COMMITS;
+    if (raw && raw.length > 0) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        recentCommits = parsed.filter(
+          (c): c is DeployCommit =>
+            c &&
+            typeof c.sha === "string" &&
+            typeof c.author === "string" &&
+            typeof c.isoDate === "string" &&
+            typeof c.subject === "string",
+        );
+      }
+    }
+  } catch {
+    // malformed JSON — leave empty.
+  }
   return {
     commitSha: sha,
     nodeVersion: process.version,
@@ -1880,6 +1915,7 @@ export function getDeploySnapshot(): DeploySnapshot {
     infraMonthlyUsdMicros: INFRA_MONTHLY_USD_MICROS,
     refundReserveBps: REFUND_RESERVE_BPS,
     referenceUsdMicrosPerCredit: REFERENCE_USD_MICROS_PER_CREDIT,
+    recentCommits,
   };
 }
 
