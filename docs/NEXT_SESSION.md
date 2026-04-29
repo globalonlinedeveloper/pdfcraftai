@@ -121,7 +121,7 @@ small, a few (M21, M23, M24) are real refactors.
 | M11 | **SHIPPED** (`c1b9e43`, 2026-04-29) | — | Switched 11 `touchAction:"none"` → `"pinch-zoom"` across 5 visual editors |
 | M12 | **SHIPPED** (`62d3754`, 2026-04-29) | — | onFocus handler on PdfAddLinksTool's URL input calls `scrollIntoView({block:"center"})` after a 280ms delay (matches iOS/Android keyboard animation). Covers both autoFocus-on-mount and user-tap re-focus |
 | M21 | **CLOSED at 4/4 applicable** (`4fc67fc` + `4d8ada8`, 2026-04-29) | — | `PdfReadOpsTool` slot-based base. PdfLinks/Annotations/Forms/Fonts migrated (1573 → 666 LOC + 362 base = -545 LOC, 907 LOC of duplication removed). Post-batch landscape audit found the "9-inspector" framing was wrong: PdfChecklistTool is already-DRY (own base for 4 audit tools); PdfOutlineTool + PdfAttachmentsTool have intentional UX divergence (Copy-as-text + JSON-download, not Copy-JSON + CSV); no separate Wave 8 byte-parser components exist. Future work to unify Outline/Attachments would require adding `copyText?` + `jsonDownload?` slots to the base (API extension, not mechanical migration) |
-| M24 | Code-split free vs AI tool bundles | 4h | Next.js dynamic imports per tool group |
+| M24 | **SHIPPED** (`5327cb7`, 2026-04-29) | — | Extracted ToolRunner from page.tsx into `components/tools/ToolRunner.tsx` ("use client") and replaced 51 static imports with `next/dynamic({ ssr: false })`. Each tool now ships as its own webpack chunk. `/tool/[id]` page-specific JS dropped from bundling 60+ tool components to **3.7 kB**. 116 chunks generated. Build clean, 3246/0 tests, tsc clean |
 | M22 | **SHIPPED** (`3e86d9f`, 2026-04-29) + part 2 closed as vacuous (`2c9c575`) | — | `lib/client/csv.ts` canonical writer, 4 inspector consumers migrated, 20 unit-test assertions. Part 2 (BOM-on-load) vacuous: no consumer reads CSVs |
 
 ### Tier 3 — polish (~7h total)
@@ -158,17 +158,15 @@ small, a few (M21, M23, M24) are real refactors.
 
 ### Recommended next-session priority order
 
-25 of 25 M-items shipped; 3 verified-canonical (M8, M13, M15); M21 closed
-at full applicable scope (4 of 4 — see SESSION_2026-04-29 §M21 landscape
-audit: PdfChecklistTool already-DRY, Outline + Attachments have intentional
-UX divergence, no separate Wave 8 byte-parser components exist).
+**M-series fully complete: 25 of 25 shipped + 3 verified-canonical (M8,
+M13, M15); M21 closed at full applicable scope (4 of 4 — see
+SESSION_2026-04-29 §M21 landscape audit: PdfChecklistTool already-DRY,
+Outline + Attachments have intentional UX divergence, no separate Wave 8
+byte-parser components exist).**
 
-The M-series sweep is complete. Genuine remaining work for the next
-session:
-
-1. **M24** Code-split free vs AI tool bundles (~4h) — Next.js dynamic
-   imports per tool group; biggest remaining bundle-size win. The only
-   M-item not closed.
+There is no genuine pending work remaining from the M-series. Future
+sessions should look at the optional scope-extension below or pick up
+unrelated work from STATUS.md.
 
 **Optional scope extension** (not in original M-series, but logical
 follow-up): add `copyText?` + `jsonDownload?` slots to PdfReadOpsTool,

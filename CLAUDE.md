@@ -135,6 +135,7 @@ When wiring a new tool runner, prefer these shared modules over re-implementing 
 | `components/tools/PdfReadOpsTool.tsx` | Shared base for read-only inspector tools (slot-fill: parser + headline + renderBody + optional csvExport/jsonExport) | M21 |
 | `public/pdfium-sw.js` | Single-purpose Service Worker — caches `/pdfium.wasm` only | M23 |
 | `components/PdfiumServiceWorker.tsx` | Idle-callback SW registration helper | M23 |
+| `components/tools/ToolRunner.tsx` | Per-tool code-split dispatcher — replaces 60+ static imports in `app/tool/[id]/page.tsx` with `next/dynamic({ ssr: false })`. Each tool ships as its own webpack chunk | M24 |
 
 **CI guards** (under `scripts/test-*.mjs`) codify these patterns and fail the build on regressions:
 - `test-objecturl-revocation.mjs` — every `createObjectURL` has a matching `revokeObjectURL`
