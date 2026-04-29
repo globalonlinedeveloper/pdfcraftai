@@ -7,6 +7,7 @@ import { MarketingChrome } from "@/components/nav/MarketingChrome";
 import { SessionProviderWrapper } from "@/components/providers/SessionProviderWrapper";
 import { CookieConsent } from "@/components/compliance/CookieConsent";
 import { WebVitalsReporter } from "@/components/analytics/WebVitalsReporter";
+import { PdfiumServiceWorker } from "@/components/PdfiumServiceWorker";
 import {
   CONSENT_COOKIE_NAME,
   analyticsAllowed,
@@ -287,6 +288,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <WebVitalsReporter />
           </>
         ) : null}
+        {/* M23 (#193, 2026-04-29): register the PDFium WASM service
+            worker. Single-purpose — caches /pdfium.wasm only. Saves
+            ~4MB of repeat downloads for users who hit multiple tools
+            within a session OR return after the browser HTTP cache
+            evicted (mobile Safari is aggressive about this). Runs
+            outside the consent gate because it's not analytics — it
+            doesn't observe or report user activity. */}
+        <PdfiumServiceWorker />
       </body>
     </html>
   );
