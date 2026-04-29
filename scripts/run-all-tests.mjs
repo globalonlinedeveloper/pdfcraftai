@@ -658,6 +658,14 @@ const SUITES = [
   // pure static-parse harness (no route imports, no DB), orthogonal to
   // every earlier suite.
   { name: "promos", file: "test-promos.mjs" },
+  // M6 (#193, 2026-04-29): static audit that every `createObjectURL`
+  // call has a matching `revokeObjectURL`. The 2026-04-29 baseline run
+  // counted 36 sites across components/tools + 3 in lib — all clean
+  // (28 with 1:1 pairs, 8 with defensive over-revoke). This suite
+  // guards against regressions where a new tool forgets to revoke.
+  // Pure static parse — no DB, no fetches — always last so a leak
+  // failure shows up after the heavier suites have already passed.
+  { name: "objecturl-revocation", file: "test-objecturl-revocation.mjs" },
 ];
 
 /**
