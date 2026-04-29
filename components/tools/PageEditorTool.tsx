@@ -438,6 +438,14 @@ export function PageEditorTool<TState>(props: PageEditorToolProps<TState>) {
       }
       setResult(r);
       setStage("ready");
+      // M7 (#193): release the input bytes after success — the result
+      // card occupies the screen post-apply, the editor canvas is gone,
+      // and the only path forward is download or reset(). Holding ~100MB
+      // of input on top of ~100MB of output for no reason is hostile to
+      // mobile Safari (1.5GB heap cap). reset() and the file-drop path
+      // both null pdfBytes anyway; this just frees memory ~30 seconds
+      // earlier on a typical user flow.
+      setPdfBytes(null);
       tracker.success({
         creditCost: 0,
         pageCount: props.multiPage

@@ -174,6 +174,10 @@ export function PdfSplitTool() {
         sourcePageCount: r.sourcePageCount,
       });
       setStage("ready");
+      // M7 (#193): release input bytes after success. The split-tool
+      // result is a list of N output blobs; the input is no longer
+      // needed until the user resets and re-uploads.
+      setPdfBytes(null);
       tracker.success({
         creditCost: 0,
         pageCount: r.sourcePageCount,

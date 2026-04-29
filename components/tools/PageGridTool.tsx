@@ -242,6 +242,11 @@ export function PageGridTool(props: PageGridToolProps) {
       // to pass it through.
       setResult({ ...r, sourcePageCount: thumbnails.length });
       setStage("ready");
+      // M7 (#193): release input bytes after success. PageGridTool's
+      // grid is hidden when result is set, so pdfBytes is no longer
+      // referenced by any render path until the user resets and
+      // re-uploads.
+      setPdfBytes(null);
       tracker.success({
         creditCost: 0,
         pageCount: r.selectedCount,
