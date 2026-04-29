@@ -29,6 +29,28 @@ interface SimpleOpResult {
   detail: string;
 }
 
+/**
+ * G2 (#193, 2026-04-28): "before" inspection result. When a consumer
+ * provides an `inspect` callback, the shell runs it after file drop
+ * and shows the headline + detail in a card BEFORE the user clicks
+ * the action. Lets users see exactly what the op will touch (e.g.
+ * "Found 23 hyperlinks across 8 pages — strip them?") instead of
+ * running blind. The tone is neutral / pre-action; the success card
+ * stays the actual confirmation that something happened.
+ */
+interface SimpleOpInspect {
+  /** Pre-action headline (e.g. "Found 23 hyperlinks"). */
+  headline: string;
+  /** Subline detail (e.g. "across 8 pages"). */
+  detail: string;
+  /**
+   * Optional flag — if set true and no items were found, the action
+   * button can be relabeled to "Save a clean copy" and the helper
+   * text shifts to make the no-op outcome explicit.
+   */
+  empty?: boolean;
+}
+
 interface SimpleOpToolProps {
   toolId: string;
   toolGroup: ToolGroup;
@@ -39,6 +61,14 @@ interface SimpleOpToolProps {
   actionLabel: string;
   successCta: string;
   errorCode: string;
+  /**
+   * Optional pre-action inspector. Runs after file drop, before the
+   * user clicks the action button. The shell renders the headline +
+   * detail in an inspection card so users know what the op will do.
+   * Failures fall back silently — no point blocking the action just
+   * because we couldn't pre-count.
+   */
+  inspect?: (bytes: Uint8Array) => Promise<SimpleOpInspect>;
   apply: (bytes: Uint8Array, file: File) => Promise<SimpleOpResult>;
 }
 
@@ -48,11 +78,17 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SimpleOpResult | null>(null);
+  // G2 (#193): cached inspection result from props.inspect. Stored
+  // separately from the action result so both can coexist (inspect
+  // runs once on file drop; result appears after Apply).
+  const [inspect, setInspect] = useState<SimpleOpInspect | null>(null);
+  const [inspecting, setInspecting] = useState(false);
 
   const onFiles = useCallback(
-    (files: File[]) => {
+    async (files: File[]) => {
       setError(null);
       setResult(null);
+      setInspect(null);
       const f = files[0];
       if (!f) return;
       if (!f.type.includes("pdf") && !f.name.toLowerCase().endsWith(".pdf")) {
@@ -65,14 +101,34 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
       }
       setFile(f);
       tracker.upload(f);
+
+      // Kick off pre-action inspection if the consumer provided one.
+      // Failures fall back silently — pre-counting is informational,
+      // not a hard prerequisite for running the op.
+      if (props.inspect) {
+        setInspecting(true);
+        try {
+          const bytes = new Uint8Array(await f.arrayBuffer());
+          const r = await props.inspect(bytes);
+          setInspect(r);
+        } catch (err) {
+          // Don't surface — inspection is best-effort.
+          console.warn(`${props.toolId} inspect failed`, err);
+        } finally {
+          setInspecting(false);
+        }
+      }
     },
-    [tracker],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tracker, props.toolId],
   );
 
   const reset = () => {
     setFile(null);
     setError(null);
     setResult(null);
+    setInspect(null);
+    setInspecting(false);
     setBusy(false);
   };
 
@@ -142,6 +198,44 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
       {file && !result && props.explainer && (
         <div className="card" style={{ padding: 14, background: "var(--bg-1)", fontSize: 12, color: "var(--fg-muted)" }}>
           {props.explainer}
+        </div>
+      )}
+
+      {/* G2: pre-action inspection card. Shows what the op will
+          touch BEFORE the user commits. Renders only when the
+          consumer wires `inspect` — for the four PdfSimpleOpsTool
+          consumers (Repair / Strip Links / Flatten / Remove
+          Metadata) this means users know what they're stripping
+          before they strip it. */}
+      {file && !result && inspecting && (
+        <div
+          className="card"
+          style={{ padding: 14, background: "var(--bg-1)", fontSize: 12, color: "var(--fg-muted)" }}
+          role="status"
+          aria-live="polite"
+        >
+          Inspecting…
+        </div>
+      )}
+      {file && !result && inspect && !inspecting && (
+        <div
+          className="card"
+          style={{
+            padding: "14px 16px",
+            background: inspect.empty ? "var(--bg-1)" : "var(--accent-soft)",
+            border: inspect.empty
+              ? "1px solid var(--border)"
+              : "1px solid var(--accent)",
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)" }}>
+            {inspect.headline}
+          </div>
+          <div className="subtle" style={{ fontSize: 12, marginTop: 2 }}>
+            {inspect.detail}
+          </div>
         </div>
       )}
 
@@ -241,6 +335,29 @@ export function PdfStripLinksTool() {
           widgets) — only /Link annotations are removed.
         </>
       }
+      inspect={async (bytes) => {
+        const { extractLinks } = await import("@/lib/pdf/ops/links");
+        const r = extractLinks(bytes);
+        const total = r.totalCount;
+        if (total === 0) {
+          return {
+            headline: "No hyperlinks found",
+            detail: "This PDF has no /Link annotations to remove.",
+            empty: true,
+          };
+        }
+        const pagesWithLinks = new Set(r.links.map((l) => l.pageNumber)).size;
+        const breakdown =
+          r.externalCount > 0 && r.internalCount > 0
+            ? `${r.externalCount} external · ${r.internalCount} internal`
+            : r.externalCount > 0
+              ? `${r.externalCount} external`
+              : `${r.internalCount} internal`;
+        return {
+          headline: `Found ${total} hyperlink${total === 1 ? "" : "s"}`,
+          detail: `${breakdown} across ${pagesWithLinks} page${pagesWithLinks === 1 ? "" : "s"} — click "Remove all links" to strip them.`,
+        };
+      }}
       apply={async (bytes, file) => {
         const { stripLinks } = await import("@/lib/pdf/ops/strip-links");
         const r = await stripLinks(bytes);
@@ -282,6 +399,33 @@ export function PdfRemoveMetadataTool() {
           it was.
         </>
       }
+      inspect={async (bytes) => {
+        const { extractPdfMetadata } = await import(
+          "@/lib/pdf/ops/metadata"
+        );
+        const m = extractPdfMetadata(bytes);
+        const fields: string[] = [];
+        if (m.title) fields.push("Title");
+        if (m.author) fields.push("Author");
+        if (m.subject) fields.push("Subject");
+        if (m.keywords) fields.push("Keywords");
+        if (m.producer) fields.push("Producer");
+        if (m.creator) fields.push("Creator");
+        if (m.creationDate) fields.push("CreationDate");
+        if (m.modDate) fields.push("ModDate");
+        if (fields.length === 0) {
+          return {
+            headline: "No /Info metadata fields found",
+            detail:
+              "This PDF doesn't expose /Info dict fields. (XMP streams may still be present and will be stripped.)",
+            empty: true,
+          };
+        }
+        return {
+          headline: `Found ${fields.length} /Info field${fields.length === 1 ? "" : "s"}`,
+          detail: `Will clear: ${fields.join(", ")}. Embedded XMP streams (if any) will also be removed.`,
+        };
+      }}
       apply={async (bytes, file) => {
         const { removePdfMetadata } = await import("@/lib/pdf/ops/remove-metadata");
         const r = await removePdfMetadata(bytes);
@@ -327,6 +471,31 @@ export function PdfFlattenTool() {
           and signature-bound fields need Adobe Acrobat to flatten correctly.
         </>
       }
+      inspect={async (bytes) => {
+        const { extractFormFields } = await import("@/lib/pdf/ops/forms");
+        const r = extractFormFields(bytes);
+        const total = r.fields.length;
+        if (total === 0) {
+          return {
+            headline: "No form fields found",
+            detail: "This PDF has no AcroForm fields to flatten.",
+            empty: true,
+          };
+        }
+        const filled = r.fields.filter(
+          (f) =>
+            f.value !== null &&
+            f.value !== undefined &&
+            String(f.value).trim() !== "",
+        ).length;
+        return {
+          headline: `Found ${total} form field${total === 1 ? "" : "s"}`,
+          detail:
+            filled > 0
+              ? `${filled} filled · ${total - filled} empty. Flattening bakes filled values into the page; empty fields disappear.`
+              : `All fields are empty. Flattening will remove the form layer; the page content stays as-is.`,
+        };
+      }}
       apply={async (bytes, file) => {
         const { flattenPdf } = await import("@/lib/pdf/ops/flatten");
         const r = await flattenPdf(bytes);
