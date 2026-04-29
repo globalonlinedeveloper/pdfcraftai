@@ -25,6 +25,8 @@ import { suffixedFilename } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import { usePdfThumbnails, type PdfThumbnail } from "./usePdfThumbnails";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
+import { useHandoffConsumer } from "./useHandoffConsumer";
+import { HandoffSuggestions } from "./HandoffSuggestions";
 
 // Sort enriches the base PdfThumbnail with sourceIndex (the position
 // in the SOURCE PDF — used by the reorder op to map "output position
@@ -121,6 +123,9 @@ export function PdfSortPagesTool() {
     },
     [tracker, renderThumbnails],
   );
+
+  // M9 part 2 (#193, 2026-04-29): consume incoming handoff.
+  useHandoffConsumer(onFiles);
 
   const reset = () => {
     // resetThumbnails revokes blob URLs; Sort's pages/originalOrder
@@ -527,6 +532,12 @@ export function PdfSortPagesTool() {
               <I.Download size={12} /> Download
             </button>
           </div>
+          {/* M9 part 2 (#193, 2026-04-29): handoff suggestions. */}
+          <HandoffSuggestions
+            sourceToolId="sort-pages"
+            outputBytes={result.outputBytes}
+            outputFileName={result.outputFileName}
+          />
         </div>
       )}
 

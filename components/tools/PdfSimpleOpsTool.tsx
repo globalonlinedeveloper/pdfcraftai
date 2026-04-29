@@ -19,6 +19,8 @@ import { humanSize } from "@/lib/client/pdf-utils";
 import { suffixedFilename } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
+import { useHandoffConsumer } from "./useHandoffConsumer";
+import { HandoffSuggestions } from "./HandoffSuggestions";
 import type { ToolGroup } from "@/lib/tools";
 
 interface SimpleOpResult {
@@ -123,6 +125,9 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tracker, props.toolId],
   );
+
+  // M9 part 2 (#193, 2026-04-29): consume incoming handoff.
+  useHandoffConsumer(onFiles);
 
   const reset = () => {
     setFile(null);
@@ -258,6 +263,12 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
             </div>
             <button type="button" className="btn btn-sm btn-outline" onClick={download}><I.Download size={12} /> Download</button>
           </div>
+          {/* M9 part 2 (#193, 2026-04-29): handoff suggestions. */}
+          <HandoffSuggestions
+            sourceToolId={props.toolId}
+            outputBytes={result.outputBytes}
+            outputFileName={result.outputFileName}
+          />
         </div>
       )}
 

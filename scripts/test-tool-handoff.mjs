@@ -120,24 +120,68 @@ console.log("handoffUrl shape (lib/client/handoff.ts):");
 }
 
 // ──────────────────────────────────────────────────────────────────
-// PageEditorTool wires consumeHandoff on mount.
+// Shared hook + component (M9 part 2 refactor) wire the registry.
 // ──────────────────────────────────────────────────────────────────
 console.log("");
-console.log("PageEditorTool consumes handoffs:");
+console.log("Shared handoff hook + component:");
 {
-  const editorSrc = fs.readFileSync(
-    path.join(ROOT, "components/tools/PageEditorTool.tsx"),
+  const hookSrc = fs.readFileSync(
+    path.join(ROOT, "components/tools/useHandoffConsumer.ts"),
     "utf8",
   );
-  assert(/consumeHandoff/.test(editorSrc), "PageEditorTool calls consumeHandoff");
-  assert(/registerHandoff/.test(editorSrc), "PageEditorTool calls registerHandoff (success-card buttons)");
+  assert(/consumeHandoff/.test(hookSrc), "useHandoffConsumer calls consumeHandoff");
   assert(
-    /handoffUrl\(/.test(editorSrc),
-    "PageEditorTool uses handoffUrl() for the success-card link",
+    /window\.history\.replaceState/.test(hookSrc),
+    "useHandoffConsumer strips ?handoff= from URL after consume (avoids stale param on refresh)",
+  );
+
+  const compSrc = fs.readFileSync(
+    path.join(ROOT, "components/tools/HandoffSuggestions.tsx"),
+    "utf8",
+  );
+  assert(/registerHandoff/.test(compSrc), "HandoffSuggestions calls registerHandoff");
+  assert(/handoffUrl\(/.test(compSrc), "HandoffSuggestions uses handoffUrl()");
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Each runner that should consume incoming handoffs imports the hook,
+// and each runner that should offer suggestions imports the component.
+// ──────────────────────────────────────────────────────────────────
+console.log("");
+console.log("Runners wired to handoff infrastructure:");
+const HANDOFF_CONSUMERS = [
+  "PageEditorTool.tsx",  // visual editors (Highlight, Redact, etc.)
+  "PageGridTool.tsx",    // Extract/Delete pages
+  "PdfSplitTool.tsx",    // Split (consume only — many-output)
+  "PdfSortPagesTool.tsx",// Sort
+  "PdfSimpleOpsTool.tsx",// Strip Links / Flatten / Repair / Remove Metadata
+];
+const HANDOFF_OFFERERS = [
+  "PageEditorTool.tsx",
+  "PageGridTool.tsx",
+  "PdfSortPagesTool.tsx",
+  "PdfSimpleOpsTool.tsx",
+];
+
+for (const name of HANDOFF_CONSUMERS) {
+  const src = fs.readFileSync(
+    path.join(ROOT, "components/tools", name),
+    "utf8",
   );
   assert(
-    /window\.history\.replaceState/.test(editorSrc),
-    "PageEditorTool strips ?handoff= from URL after consume (avoids stale param on refresh)",
+    /useHandoffConsumer/.test(src),
+    `${name} imports useHandoffConsumer`,
+  );
+}
+
+for (const name of HANDOFF_OFFERERS) {
+  const src = fs.readFileSync(
+    path.join(ROOT, "components/tools", name),
+    "utf8",
+  );
+  assert(
+    /<HandoffSuggestions/.test(src),
+    `${name} renders <HandoffSuggestions> on its success card`,
   );
 }
 

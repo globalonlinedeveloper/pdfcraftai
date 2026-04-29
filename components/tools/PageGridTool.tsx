@@ -33,6 +33,8 @@ import { useTrackToolView } from "./useToolTracking";
 import { usePdfThumbnails, type PdfThumbnail } from "./usePdfThumbnails";
 import { useVirtualGrid } from "./useVirtualGrid";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
+import { useHandoffConsumer } from "./useHandoffConsumer";
+import { HandoffSuggestions } from "./HandoffSuggestions";
 import type { ToolGroup } from "@/lib/tools";
 
 type PageThumb = PdfThumbnail;
@@ -125,6 +127,9 @@ export function PageGridTool(props: PageGridToolProps) {
     renderAbortRef.current?.abort();
   }, []);
 
+  // M9 part 2 (#193, 2026-04-29): consume incoming handoff. The hook
+  // is wired below after `onFiles` is defined.
+
   const onFiles = useCallback(
     async (files: File[]) => {
       setError(null);
@@ -178,6 +183,9 @@ export function PageGridTool(props: PageGridToolProps) {
     },
     [props.toolId, tracker, renderThumbnails],
   );
+
+  // M9 part 2: feed incoming ?handoff=<key> through onFiles on mount.
+  useHandoffConsumer(onFiles);
 
   const reset = () => {
     resetThumbnails();
@@ -823,6 +831,12 @@ export function PageGridTool(props: PageGridToolProps) {
               <I.Download size={12} /> Download
             </button>
           </div>
+          {/* M9 part 2 (#193, 2026-04-29): handoff suggestions. */}
+          <HandoffSuggestions
+            sourceToolId={props.toolId}
+            outputBytes={result.outputBytes}
+            outputFileName={result.outputFileName}
+          />
         </div>
       )}
 
