@@ -132,7 +132,7 @@ small, a few (M21, M23, M24) are real refactors.
 | M2 | **SHIPPED** (`0cc6f9b`, 2026-04-28) | — | Unified disabled state across all `.btn` variants in `app/globals.css` |
 | M4 | **SHIPPED** (`98c6914`, 2026-04-28) | — | Soft notice in `ToolDropzone` when multi-file drop hits a single-file tool |
 | M15 | **ALREADY-CANONICAL** | — | Inspect card already had `role="status"` + `aria-live="polite"` (verified during M19 audit) |
-| M16 | Focus return to error message on setError | 30min | Probably skip — `role="alert"` already announces; moving focus on error can disrupt user flow per WCAG guidance |
+| M16 | **SHIPPED** (`b526b47`, 2026-04-29) — reframed as scroll-into-view, not focus-steal | — | New `useScrollErrorIntoView` hook on null→string transition; respects prefers-reduced-motion |
 | M18 | AI tools first-page preview | 3h | Apply useFirstPagePreview to Summarize, Chat, Resume Parser, etc. |
 | M19 | **SHIPPED** (`d6592c6`, 2026-04-29) | — | `lib/api-endpoints.ts` price strings unified to "N credit[s] per <unit>" |
 
@@ -160,7 +160,7 @@ small, a few (M21, M23, M24) are real refactors.
 
 (M17 / M3 / M5 / M22 / M6 / M19 etc. all SHIPPED — see Tier tables above for SHA references.)
 
-Remaining 6 of 25 M-items, ranked:
+Remaining 5 of 25 M-items, ranked:
 
 1. **M21** (`PdfReadOpsTool` extraction) — 6h dedicated session; biggest single LOC reduction (~3000 LOC across 18 inspectors).
 2. **M18** (AI tools first-page preview) — 3h; apply `useFirstPagePreview` to Summarize / Chat / Resume Parser / etc. so users can see what they uploaded before paying credits. (M25 cache makes this cheaper than before — handoff users see the preview instantly on the second tool.)
@@ -168,7 +168,7 @@ Remaining 6 of 25 M-items, ranked:
 4. **M10** **SHIPPED** (`f4a47c2`, 2026-04-29) — `useFileUrlConsumer` hook fetches `?file=<url>` on mount with same-origin + MIME + size guards, strips the URL param before fetching, falls back silently on failure. Wired into the same 5 runners as M9 handoff. Test guard verifies all four security checks.
 5. **M13** **VERIFIED-CANONICAL** (`4e8133c`, 2026-04-29) — investigation found the architecture already handles orientation change: pointer coords convert to PDFium pixels (orientation-independent) and rects render via `% of pageRender.pxWidth` (auto-rescales on container re-flow). No code changes needed; 6 new assertions codify the invariant as a CI guard.
 6. Tier 4 leftover: **M23** (Service Worker for PDFium WASM caching, 4h).
-4. **M16** (focus return on error) — probably skip; `role="alert"` already announces and moving focus on error can disrupt user flow per WCAG guidance.
+4. **M16** **SHIPPED** (`b526b47`, 2026-04-29) — `useScrollErrorIntoView` scrolls error into view on null→string transition (no focus steal); wired into the same 5 shared runners.
 
 ---
 
