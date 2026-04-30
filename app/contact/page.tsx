@@ -166,11 +166,25 @@ export default function ContactPage() {
               </div>
               <p className="muted" style={{ margin: 0 }}>
                 Most answers live in the{" "}
-                <Link href="/help" style={{ color: "var(--accent)" }}>
+                <Link
+                  href="/help"
+                  style={{
+                    color: "var(--accent)",
+                    textDecoration: "underline",
+                    textUnderlineOffset: 2,
+                  }}
+                >
                   Help center
                 </Link>
                 . For release notes see{" "}
-                <Link href="/changelog" style={{ color: "var(--accent)" }}>
+                <Link
+                  href="/changelog"
+                  style={{
+                    color: "var(--accent)",
+                    textDecoration: "underline",
+                    textUnderlineOffset: 2,
+                  }}
+                >
                   Changelog
                 </Link>
                 .

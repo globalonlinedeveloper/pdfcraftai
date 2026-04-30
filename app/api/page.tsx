@@ -765,7 +765,7 @@ export default function ApiPage() {
                 Questions? Email{" "}
                 <a
                   href="mailto:support@pdfcraftai.com"
-                  style={{ color: "var(--accent)", textDecoration: "none" }}
+                  style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}
                 >
                   support@pdfcraftai.com
                 </a>

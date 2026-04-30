@@ -54,7 +54,7 @@ export default async function PlanPage() {
           pick a new one on{" "}
           <Link
             href="/pricing"
-            style={{ color: "var(--accent)", textDecoration: "none" }}
+            style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}
           >
             pricing
           </Link>
@@ -85,7 +85,7 @@ export default async function PlanPage() {
           <li>One credit ≈ one AI operation (chat turn, summary, translation, redaction pass).</li>
           <li>Credit packs are one-time purchases and don’t expire until used.</li>
           <li>Subscription credits top up monthly on the renewal date.</li>
-          <li>You can always top up on <Link href="/pricing" style={{ color: "var(--accent)", textDecoration: "none" }}>pricing</Link> regardless of plan.</li>
+          <li>You can always top up on <Link href="/pricing" style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}>pricing</Link> regardless of plan.</li>
         </ul>
       </section>
     </div>

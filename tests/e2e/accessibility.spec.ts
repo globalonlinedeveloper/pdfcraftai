@@ -20,6 +20,13 @@
 //   /tool/pdf-fonts      — read-only inspector
 //   /pricing             — funnel-critical
 //   /merge-pdf           — SEO landing
+//   /about               — body-text-heavy, lots of inline links
+//   /contact             — form + multiple inline links
+//   /help                — help index with inline article links
+//   /privacy, /terms     — legal text, dense inline links
+//   /cookies             — first link many users see
+//   /login, /register    — auth funnel
+//   /tool/pdf-inspector  — byte-parser tool
 //
 // Note on cookie banner: AdSense + GA4 may inject elements that axe
 // flags. The consent banner itself can have its own issues. We don't
@@ -35,8 +42,20 @@ const PAGES_TO_AUDIT: Array<{ path: string; label: string }> = [
   { path: "/tool/merge", label: "merge tool" },
   { path: "/tool/highlight-pdf", label: "highlight tool (visual editor)" },
   { path: "/tool/pdf-fonts", label: "pdf-fonts inspector" },
+  { path: "/tool/pdf-inspector", label: "pdf-inspector (byte-parser)" },
   { path: "/pricing", label: "pricing" },
   { path: "/merge-pdf", label: "merge-pdf SEO landing" },
+  // Body-text-heavy surfaces — most likely to surface
+  // link-in-text-block contrast / underline issues.
+  { path: "/about", label: "about" },
+  { path: "/contact", label: "contact" },
+  { path: "/help", label: "help index" },
+  { path: "/privacy", label: "privacy policy" },
+  { path: "/terms", label: "terms" },
+  { path: "/cookies", label: "cookies policy" },
+  // Auth funnel — small surface but every signup goes through here.
+  { path: "/login", label: "login" },
+  { path: "/register", label: "register" },
 ];
 
 for (const page of PAGES_TO_AUDIT) {

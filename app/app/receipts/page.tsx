@@ -62,7 +62,7 @@ export default async function ReceiptsPage() {
           see{" "}
           <Link
             href="/app/billing"
-            style={{ color: "var(--accent)", textDecoration: "none" }}
+            style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}
           >
             billing
           </Link>
@@ -104,7 +104,7 @@ export default async function ReceiptsPage() {
                   No receipts yet.{" "}
                   <Link
                     href="/pricing"
-                    style={{ color: "var(--accent)", textDecoration: "none" }}
+                    style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}
                   >
                     Buy credits →
                   </Link>

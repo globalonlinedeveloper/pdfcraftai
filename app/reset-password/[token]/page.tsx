@@ -34,7 +34,7 @@ export default async function ResetPasswordPage({ params }: RouteParams) {
             Need a new one?{" "}
             <Link
               href="/forgot-password"
-              style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}
+              style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}
             >
               Send another reset email
             </Link>
@@ -97,7 +97,7 @@ export default async function ResetPasswordPage({ params }: RouteParams) {
           Remembered the old one?{" "}
           <Link
             href="/login"
-            style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}
+            style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}
           >
             Back to sign in
           </Link>

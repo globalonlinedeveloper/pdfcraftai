@@ -147,11 +147,11 @@ export function RegisterForm() {
 
         <p className="muted" style={{ fontSize: 12, marginTop: 16, lineHeight: 1.5 }}>
           By creating an account you agree to our{" "}
-          <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "none" }}>
+          <Link href="/terms" style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}>
             Terms
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "none" }}>
+          <Link href="/privacy" style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}>
             Privacy Policy
           </Link>
           .

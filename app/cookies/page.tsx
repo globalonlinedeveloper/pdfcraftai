@@ -254,7 +254,11 @@ export default function CookiesPage() {
           Email{" "}
           <a
             href="mailto:support@pdfcraftai.com"
-            style={{ color: "var(--accent, #6aa9ff)" }}
+            style={{
+              color: "var(--accent, #6aa9ff)",
+              textDecoration: "underline",
+              textUnderlineOffset: 2,
+            }}
           >
             support@pdfcraftai.com
           </a>
@@ -268,7 +272,12 @@ export default function CookiesPage() {
 
 function CategoryPill({ category }: { category: "essential" | "analytics" }) {
   const isEssential = category === "essential";
-  const color = isEssential ? "#2f855a" : "#b7791f";
+  // 2026-04-30 a11y: contrast bump (axe color-contrast, serious).
+  // Was #2f855a / #b7791f against var(--bg-2, #1e2029) — both came in
+  // around 4.1:1, just under the 4.5:1 minimum for 10px bold text.
+  // Lifted both to the 500-tier of their hue (Tailwind-style:
+  // green-500 / yellow-500) which clears 6:1.
+  const color = isEssential ? "#48bb78" : "#ecc94b";
   const label = isEssential ? "ESSENTIAL" : "ANALYTICS";
   return (
     <span

@@ -149,7 +149,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         Changed your mind?{" "}
         <Link
           href="/login"
-          style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}
+          style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}
         >
           Back to sign in
         </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { I } from "@/components/icons/Icons";
 
 type State = "idle" | "loading" | "sent" | "error";
@@ -132,14 +132,26 @@ export function ContactForm() {
   );
 }
 
+// 2026-04-30 a11y: label/htmlFor association added (axe `label`,
+// critical). Without `htmlFor` + matching `id`, screen readers can't
+// announce field names when focus enters an input. Each FormInput /
+// FormSelect / FormTextarea now generates a stable id via useId() and
+// pairs it with the label.
 function FormInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }
 ) {
-  const { label, ...rest } = props;
+  const { label, id, ...rest } = props;
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
-      <input className="input" {...rest} style={{ width: "100%", height: 42 }} />
+      <label htmlFor={inputId} style={labelStyle}>{label}</label>
+      <input
+        id={inputId}
+        className="input"
+        {...rest}
+        style={{ width: "100%", height: 42 }}
+      />
     </div>
   );
 }
@@ -153,10 +165,12 @@ function FormSelect({
   label: string;
   options: string[];
 }) {
+  const id = useId();
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label htmlFor={id} style={labelStyle}>{label}</label>
       <select
+        id={id}
         name={name}
         className="input"
         defaultValue={options[0]}
@@ -175,11 +189,14 @@ function FormSelect({
 function FormTextarea(
   props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }
 ) {
-  const { label, ...rest } = props;
+  const { label, id, ...rest } = props;
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label htmlFor={inputId} style={labelStyle}>{label}</label>
       <textarea
+        id={inputId}
         className="input"
         rows={6}
         {...rest}

@@ -19,7 +19,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 500 }}>
+          <Link href="/login" style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}>
             Sign in
           </Link>
         </>

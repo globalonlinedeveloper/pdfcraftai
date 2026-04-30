@@ -192,7 +192,7 @@ function StatCard({
       <div style={{ fontSize: 30, letterSpacing: "-0.02em", fontWeight: 500 }}>{value}</div>
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <span className="subtle" style={{ fontSize: 12 }}>{hint}</span>
-        <Link href={cta.href} style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none" }}>
+        <Link href={cta.href} style={{ fontSize: 12, color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: 2 }}>
           {cta.text} →
         </Link>
       </div>
