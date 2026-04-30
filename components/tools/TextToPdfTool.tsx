@@ -15,8 +15,15 @@ import { I } from "@/components/icons/Icons";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { suffixedFilename } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
+import { useScrollErrorIntoView } from "./useScrollErrorIntoView";
+import { HandoffSuggestions } from "./HandoffSuggestions";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
 import type { TextFontFamily, PaperSize } from "@/lib/pdf/ops/text-to-pdf";
+
+// 2026-05-01 — standardization parity: see ImagesToPdfTool for the
+// 5-hook contract. text-to-pdf is exempt from useHandoffConsumer +
+// useFileUrlConsumer for the same reason (input is text, not PDF);
+// exemption codified in scripts/test-live-tool-standardization.mjs.
 
 const FONTS: Array<{ v: TextFontFamily; label: string; sample: string }> = [
   { v: "monospace", label: "Monospace (Courier)", sample: "for code" },
@@ -52,6 +59,8 @@ export function TextToPdfTool() {
   const [pageSize, setPageSize] = useState<PaperSize>("letter");
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  // M16 — scroll the error region into view on null→string.
+  const errorRef = useScrollErrorIntoView(error);
 
   const onFile = useCallback(
     async (file: File) => {
@@ -310,7 +319,11 @@ export function TextToPdfTool() {
       )}
 
       {error && (
-        <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>
+        <p
+          ref={errorRef as React.RefObject<HTMLParagraphElement>}
+          role="alert"
+          style={{ color: "var(--red)", fontSize: 13, margin: 0 }}
+        >
           {error}
         </p>
       )}
@@ -372,6 +385,12 @@ export function TextToPdfTool() {
               <I.Download size={12} /> Download
             </button>
           </div>
+          {/* M9 — cross-tool funnel panel. */}
+          <HandoffSuggestions
+            sourceToolId="text-to-pdf"
+            outputBytes={result.outputBytes}
+            outputFileName={result.outputFileName}
+          />
         </div>
       )}
 

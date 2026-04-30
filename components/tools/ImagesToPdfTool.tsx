@@ -30,8 +30,23 @@ import { I } from "@/components/icons/Icons";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { suffixedFilename } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
+import { useScrollErrorIntoView } from "./useScrollErrorIntoView";
+import { HandoffSuggestions } from "./HandoffSuggestions";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
 import type { PaperSize } from "@/lib/pdf/ops/images-to-pdf";
+
+// 2026-05-01 — standardization parity follow-up. The 4-hook
+// standardized infra for free tools is:
+//   1. useTrackToolView         — GA4 funnel (already wired)
+//   2. mapPdfOpError            — canonical user-facing errors (already wired)
+//   3. suffixedFilename         — collision-safe download names (already wired)
+//   4. useScrollErrorIntoView   — scroll error region into view on null→string
+//   5. HandoffSuggestions       — "Open this output in: [Tool] [Tool]" panel
+// Plus two PDF-input-only hooks NOT applicable here:
+//   - useHandoffConsumer   (handoff registry stores PDFs; this tool takes images)
+//   - useFileUrlConsumer   (?file= deep-link is PDF-only by design)
+// These two are intentionally exempt; the exemption is codified in
+// scripts/test-live-tool-standardization.mjs's NON_PDF_INPUT_TOOLS set.
 
 const PAPER_SIZES: Array<{ v: PaperSize; label: string }> = [
   { v: "letter", label: "US Letter" },
@@ -86,6 +101,9 @@ export function ImagesToPdfTool({
   const [landscape, setLandscape] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  // M16 — scroll the error region into view whenever error transitions
+  // null → string. Same pattern as PdfMergeTool, PdfSplitTool, etc.
+  const errorRef = useScrollErrorIntoView(error);
 
   // Revoke object URLs on unmount + on reset to avoid memory leaks.
   useEffect(() => {
@@ -416,7 +434,11 @@ export function ImagesToPdfTool({
       )}
 
       {error && (
-        <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>
+        <p
+          ref={errorRef as React.RefObject<HTMLParagraphElement>}
+          role="alert"
+          style={{ color: "var(--red)", fontSize: 13, margin: 0 }}
+        >
           {error}
         </p>
       )}
@@ -475,6 +497,13 @@ export function ImagesToPdfTool({
               <I.Download size={12} /> Download
             </button>
           </div>
+          {/* M9 — "Open this output in: [Tool] [Tool]" cross-tool funnel.
+              Suggestions defined in lib/client/tool-suggestions.ts. */}
+          <HandoffSuggestions
+            sourceToolId={toolId}
+            outputBytes={result.outputBytes}
+            outputFileName={result.outputFileName}
+          />
         </div>
       )}
 

@@ -56,6 +56,16 @@ export const TOOL_SUGGESTIONS: Record<string, readonly string[]> = {
   "strip-links": ["redact-free", "remove-metadata", "resize-pdf"],
   unlock: ["resize-pdf", "page-numbers", "highlight-pdf"],
   "repair-pdf": ["resize-pdf", "flatten-pdf", "page-numbers"],
+
+  // 2026-05-01 — Tier 1 image / text → PDF tools.
+  // Output is always a PDF; users typically follow up by combining
+  // with other PDFs (merge), adding identifying marks (page-numbers /
+  // stamp), or shrinking the result if image-heavy (resize).
+  "jpg-to-pdf": ["merge", "page-numbers", "resize-pdf"],
+  "png-to-pdf": ["merge", "page-numbers", "resize-pdf"],
+  // Text → PDF: most users want pagination metadata next, then to
+  // combine with a cover page (merge), then to add a watermark.
+  "text-to-pdf": ["page-numbers", "merge", "stamp-pdf"],
 };
 
 /** Look up suggestions, defaulting to empty if no entry. */

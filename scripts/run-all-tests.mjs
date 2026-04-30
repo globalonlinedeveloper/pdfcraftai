@@ -489,6 +489,20 @@ const SUITES = [
     name: "tool-runner-coverage",
     file: "test-tool-runner-coverage.mjs",
   },
+  // 2026-05-01: standardization-parity guard for client-side free
+  // tools. Pins the 7-hook contract (useTrackToolView + mapPdfOpError
+  // + suffixedFilename + useScrollErrorIntoView + HandoffSuggestions
+  // + useHandoffConsumer + useFileUrlConsumer) — every tool wired
+  // into LIVE_TOOL_IDS must either inherit a shared base or wire the
+  // hooks directly. Caught the jpg-to-pdf / png-to-pdf / text-to-pdf
+  // 2026-05-01 partial-standardization regression that ToolRunner-
+  // coverage missed (which only checks the dispatcher mapping).
+  // Placed immediately after tool-runner-coverage because both
+  // operate on the same surface (LIVE_TOOL_IDS ↔ ToolRunner.tsx).
+  {
+    name: "live-tool-standardization",
+    file: "test-live-tool-standardization.mjs",
+  },
   // Phase 2 (2026-04-30): functional parse-back tests for every Node-
   // runnable pdf-lib op. ~36 tests across writable ops (merge, split,
   // rotate, crop, etc.), visual editors (highlight, redact, etc.),
