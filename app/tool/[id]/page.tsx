@@ -374,10 +374,17 @@ export default function ToolRunnerPage({ params }: Params) {
   return (
     <main>
       {usesPdfium && (
+        // 2026-04-30: was href="/pdfium.wasm" — but lib/pdf/library.ts
+        // now loads via /api/pdfium-wasm (the static path serves with
+        // Content-Type: text/plain on Hostinger LiteSpeed/Passenger,
+        // breaking WebAssembly.compileStreaming). The preload must
+        // match the URL the runtime actually fetches AND the Content-
+        // Type the server actually returns, otherwise the browser's
+        // preload cache misses and the optimization is wasted.
         <link
           rel="preload"
           as="fetch"
-          href="/pdfium.wasm"
+          href="/api/pdfium-wasm"
           type="application/wasm"
           crossOrigin="anonymous"
         />

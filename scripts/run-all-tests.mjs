@@ -806,6 +806,16 @@ const SUITES = [
   // covers every literal href in every .tsx file in sub-second
   // time. Caught nothing on first run; preventive going forward.
   { name: "internal-links", file: "test-internal-links.mjs" },
+  // 2026-04-30 public-asset reference guard: every literal
+  // `src="/..."` / `href="/..."` pointing at a static file
+  // (.png, .jpg, .wasm, .mjs, etc.) must exist under /public/.
+  // First run caught a real bug — preload link in app/tool/[id]/
+  // page.tsx still pointed at /pdfium.wasm even after the WASM
+  // fix moved the runtime fetch to /api/pdfium-wasm. Also
+  // verifies critical files (og.png, pdfium.wasm, etc.) stay in
+  // place — removing og.png would silently break every social
+  // share preview.
+  { name: "public-asset-refs", file: "test-public-asset-refs.mjs" },
 ];
 
 /**

@@ -213,8 +213,14 @@ function resolveHref(href) {
     }
     return `no matching app/ route segment for "${seg}" under ${path.relative(ROOT, curPath)}`;
   }
+  // Accept either page.tsx (UI route) or route.ts/route.tsx/route.js
+  // (API handler — Next.js routes any of these as a Request handler).
+  // This covers preload links to /api/<x> routes that serve assets.
   if (fs.existsSync(path.join(curPath, "page.tsx"))) return null;
-  return `path resolves to ${path.relative(ROOT, curPath)} but no page.tsx`;
+  if (fs.existsSync(path.join(curPath, "route.ts"))) return null;
+  if (fs.existsSync(path.join(curPath, "route.tsx"))) return null;
+  if (fs.existsSync(path.join(curPath, "route.js"))) return null;
+  return `path resolves to ${path.relative(ROOT, curPath)} but no page.tsx or route.ts`;
 }
 
 // ---------------------------------------------------------------------------
