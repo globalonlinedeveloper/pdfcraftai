@@ -797,6 +797,15 @@ const SUITES = [
   // noopener for target=_blank since 2021, but Lighthouse + manual
   // security audits still flag the missing attribute.
   { name: "target-blank-rel", file: "test-target-blank-rel.mjs" },
+  // 2026-04-30 dead-link guard: every literal `<Link/a href="/...">`
+  // in JSX must resolve to a real route. Resolution rules cover
+  // top-level static routes, dynamic route surfaces (tool, blog,
+  // help, alternatives, use-cases, authors), and redirect sources.
+  // The runtime smoke specs catch this for some surfaces but only
+  // for routes a smoke spec actually visits — the static guard
+  // covers every literal href in every .tsx file in sub-second
+  // time. Caught nothing on first run; preventive going forward.
+  { name: "internal-links", file: "test-internal-links.mjs" },
 ];
 
 /**
