@@ -148,6 +148,10 @@ Real findings from the validation:
    + /pricing launch-notify link (commit `4dbba45`)
 
 **Latest pushed commits (this arc):**
+- `4f69c4b` — test(e2e): all-tools smoke spec — 94 tools tested
+- `ea83147` — docs(ops): worst-case thread-cap recovery playbook
+- `2f51d72` — test(a11y): CI guard against accent-link regression + 4 fixes
+- `2b832b2` — docs(status): close out a11y arc (16/16 prod pass)
 - `fe97049` — fix(a11y): contact form privacy notice underline (final cleanup)
 - `caf0c5a` — fix(a11y): sweep — 13 files, 17 inline links + form labels + badge contrast
 - `5fb9b36` — test(bundle-budget): skip on dev builds
@@ -157,6 +161,17 @@ Real findings from the validation:
 - `7395e02` — fix(wasm): route PDFium WASM through Next.js API handler
 - `baa948c` — test(e2e): Phase 1 spec fixes from live-prod validation
 - `29daf91` — fix(csp): allow cloudflareinsights origins
+
+**E2E coverage end-state (Chromium against prod):**
+- Phase 1: 6/6 specific-flow tests passing (homepage ×2, merge, split,
+  highlight, pdf-fonts) + 1 correctly skipped
+- Phase 3 (a11y): 16/16 expanded audit pages passing
+- All-tools smoke (commit `4f69c4b`): **94/94 tools** rendering
+  without console errors. Total test runs against prod this arc:
+  16 (a11y) + 7 (Phase 1) + 95 (smoke) = **118 tests, 117 passed,
+  1 correctly skipped, 0 failed**.
+- Total wall-clock for the smoke spec: 7.6 min on prod with
+  workers=4 — proves the cost is tolerable as a daily cron.
 
 ---
 
