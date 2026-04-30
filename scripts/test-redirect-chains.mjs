@@ -72,6 +72,39 @@ assert(
 );
 
 // ---------------------------------------------------------------------------
+// Section A.5 — duplicate source detection.
+//
+// Two redirects with the same `source:` is a silent Next.js footgun:
+// the first match wins, the second is ignored. Easy to introduce
+// during refactors (e.g. when moving redirects between code blocks
+// without noticing an existing entry above). Sub-second static check.
+// ---------------------------------------------------------------------------
+
+const seenSources = new Map();
+const dupes = [];
+for (const r of redirects) {
+  const prior = seenSources.get(r.source);
+  if (prior) {
+    dupes.push({ source: r.source, first: prior, second: r });
+  } else {
+    seenSources.set(r.source, r);
+  }
+}
+
+assert(
+  dupes.length === 0,
+  `Found ${dupes.length} duplicate redirect source(s) in next.config.mjs.\n` +
+    `Next.js silently keeps only the FIRST match — the second entry never fires. Either consolidate or rename the source.\n\n` +
+    `Dupes:\n` +
+    dupes
+      .map(
+        (d) =>
+          `  source="${d.source}"\n    first  → ${d.first.destination}\n    second → ${d.second.destination} (DEAD)`,
+      )
+      .join("\n"),
+);
+
+// ---------------------------------------------------------------------------
 // Section B — build source set, then check every destination.
 //
 // A chain exists when a destination matches another redirect's

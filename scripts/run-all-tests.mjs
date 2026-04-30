@@ -816,13 +816,16 @@ const SUITES = [
   // place — removing og.png would silently break every social
   // share preview.
   { name: "public-asset-refs", file: "test-public-asset-refs.mjs" },
-  // 2026-04-30 redirect-chain guard: no redirect destination should
-  // itself be a redirect source. 2+ hop chains waste round-trips
-  // and Google de-rates them. Initial run caught the legacy
-  // /tools/<slug> → /<slug> → /tool/<id> pattern (commits 89cd1e8
-  // + cadf27c made the second leg redirect, creating chains).
-  // Flattened in next.config.mjs to point /tools/<slug> directly
-  // at /tool/<id>.
+  // 2026-04-30 redirect health (chain + dupe): two adjacent checks
+  // on next.config.mjs redirects():
+  //   (a) chain: no destination should match another redirect's
+  //       source (2+ hop chains waste round-trips + Google de-rates
+  //       them). Caught the legacy /tools/<slug> → /<slug> →
+  //       /tool/<id> pattern that commits 89cd1e8 + cadf27c
+  //       accidentally created.
+  //   (b) dupe: no two redirects should share the same source —
+  //       Next.js silently keeps the first match and ignores the
+  //       second.
   { name: "redirect-chains", file: "test-redirect-chains.mjs" },
   // 2026-04-30 reverse-sweep — Razorpay /orders/<id>/payments
   // shape parsing for Task #24 (recovery cron). Originally orphaned
