@@ -123,7 +123,14 @@ export function ContactForm() {
       </button>
       <p className="muted" style={{ fontSize: 12, margin: 0, lineHeight: 1.5 }}>
         We use your message only to reply to you. See our{" "}
-        <a href="/privacy" style={{ color: "var(--accent)" }}>
+        <a
+          href="/privacy"
+          style={{
+            color: "var(--accent)",
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+          }}
+        >
           privacy policy
         </a>
         .
