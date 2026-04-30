@@ -824,6 +824,17 @@ const SUITES = [
   // Flattened in next.config.mjs to point /tools/<slug> directly
   // at /tool/<id>.
   { name: "redirect-chains", file: "test-redirect-chains.mjs" },
+  // 2026-04-30 reverse-sweep — Razorpay /orders/<id>/payments
+  // shape parsing for Task #24 (recovery cron). Originally orphaned
+  // (file existed but wasn't in SUITES) — caught + wired up by the
+  // aggregator-coverage guard below.
+  { name: "reverse-sweep", file: "test-reverse-sweep.mjs" },
+  // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
+  // and scripts/test-*.ts must be wired into the SUITES array
+  // above. Catches orphan test files that silently never run in
+  // `npm test` despite being green standalone. First run found
+  // test-reverse-sweep.mjs was orphaned for an unknown duration.
+  { name: "aggregator-coverage", file: "test-aggregator-coverage.mjs" },
 ];
 
 /**

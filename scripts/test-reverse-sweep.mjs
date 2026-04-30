@@ -187,4 +187,8 @@ const fake = new FakeRazorpay(responses);
   console.log("✓ 5xx propagates (caller counts as error)");
 }
 
-console.log("\nAll 7 reverse-sweep correctness checks passed.");
+// 2026-04-30 — output format aligned with aggregator regex
+// (`${name}: ${pass} passed, ${fail} failed`) so npm test can pick
+// it up. Without this line the aggregator counted the suite as
+// "0 passed, 0 failed" even when standalone runs were clean.
+console.log("\nreverse-sweep: 7 passed, 0 failed (of 7)");
