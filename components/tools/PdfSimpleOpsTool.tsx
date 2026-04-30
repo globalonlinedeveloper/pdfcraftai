@@ -25,7 +25,9 @@ import { useScrollErrorIntoView } from "./useScrollErrorIntoView";
 import { HandoffSuggestions } from "./HandoffSuggestions";
 import type { ToolGroup } from "@/lib/tools";
 
-interface SimpleOpResult {
+// 2026-04-30: exported so external consumers (PdfNUpTool, PdfResizeTool)
+// can type their `apply` returns without re-declaring the shape.
+export interface SimpleOpResult {
   outputBytes: Uint8Array;
   outputFileName: string;
   /** Headline for the success card. */
@@ -63,7 +65,13 @@ interface SimpleOpToolProps {
   /** Optional explainer card shown above the action button. */
   explainer?: React.ReactNode;
   busyLabel: string;
-  actionLabel: string;
+  /**
+   * Action button label. Function form lets the consumer derive the
+   * label from its own config state (e.g. "Build 2-up PDF" vs
+   * "Build 4-up PDF" based on the user's layout selection in the
+   * configPanel slot).
+   */
+  actionLabel: string | (() => string);
   successCta: string;
   errorCode: string;
   /**
@@ -74,10 +82,27 @@ interface SimpleOpToolProps {
    * because we couldn't pre-count.
    */
   inspect?: (bytes: Uint8Array) => Promise<SimpleOpInspect>;
+  /**
+   * 2026-04-30 (audit cluster C): optional config panel slot for ops
+   * that need user input before applying (n-up layout, paper-size,
+   * etc.). Renders as a styled card above the action button when a
+   * file is loaded but no result is shown yet. The consumer manages
+   * the config state and the `apply` callback closes over it.
+   *
+   * Use this for tools that previously couldn't migrate to
+   * PdfSimpleOpsTool because they needed config UI between drop
+   * and apply (n-up-pdf, resize-pdf, etc.).
+   */
+  configPanel?: React.ReactNode;
   apply: (bytes: Uint8Array, file: File) => Promise<SimpleOpResult>;
 }
 
-function PdfSimpleOpsTool(props: SimpleOpToolProps) {
+// 2026-04-30: exported (was locally-scoped) so external tool files
+// can wrap it directly. The 4 wrappers below stay co-located in
+// this file for the historical "4 tools share one chunk"
+// optimization, but new consumers (PdfNUpTool, PdfResizeTool) live
+// in their own files for clarity. Both patterns are valid.
+export function PdfSimpleOpsTool(props: SimpleOpToolProps) {
   const tracker = useTrackToolView(props.toolId, props.toolGroup);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -213,6 +238,13 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
         </div>
       )}
 
+      {/* 2026-04-30 (audit cluster C): config-panel slot for ops that
+          need user input before applying (n-up layout, paper-size).
+          Rendered as the consumer-supplied node — they control
+          styling so radio groups + selects can use full-strength
+          contrast rather than the muted-explainer treatment. */}
+      {file && !result && props.configPanel && props.configPanel}
+
       {/* G2: pre-action inspection card. Shows what the op will
           touch BEFORE the user commits. Renders only when the
           consumer wires `inspect` — for the four PdfSimpleOpsTool
@@ -284,7 +316,7 @@ function PdfSimpleOpsTool(props: SimpleOpToolProps) {
         ) : (
           <>
             {file && <button type="button" className="btn btn-ghost" onClick={reset} disabled={busy}>Reset</button>}
-            <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}>{busy ? props.busyLabel : props.actionLabel}</button>
+            <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}>{busy ? props.busyLabel : (typeof props.actionLabel === "function" ? props.actionLabel() : props.actionLabel)}</button>
           </>
         )}
       </div>
