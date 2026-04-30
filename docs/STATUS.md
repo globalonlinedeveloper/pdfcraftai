@@ -108,7 +108,32 @@ validation). Earlier commits this round: `29daf91` (CSP fix).
 
 ---
 
-## ⚠️ Open ops finding — .htaccess CSP override out of sync (2026-04-30)
+## ✅ Resolved ops finding — .htaccess CSP override out of sync (2026-04-30)
+
+**Fixed at 01:56 UTC via direct SSH edit.** The .htaccess hardcoded
+CSP was rewritten to match the canonical value extracted from the
+build's `routes-manifest.json`. Backed up to
+`.htaccess.bak.20260430` first.
+
+**Verification:**
+- `curl -I https://pdfcraftai.com/` now includes `cloudflareinsights`
+  + all 5 Paddle origins
+- Phase 1 homepage console-errors spec: **passes** (was failing on
+  the CSP violation)
+- Full Phase 1 suite against prod: **5/5 specs passing, 1 correctly
+  skipped**
+
+**Caveat for future deploys:** the .htaccess is NOT in the git repo,
+so any future change to `next.config.mjs` CSP will need a manual
+mirror update via SSH (or, ideally, the .htaccess should be added to
+git so deploys keep them in sync — see "Better long-term fix" below).
+
+---
+
+## Original finding — kept for context
+
+**Diagnosis via SSH (per CLAUDE.md §5):** the CSP fix in `29daf91`
+landed correctly in `next.config.mjs` and was baked into the build's
 
 **Diagnosis via SSH (per CLAUDE.md §5):** the CSP fix in `29daf91`
 landed correctly in `next.config.mjs` and was baked into the build's
