@@ -741,6 +741,14 @@ const SUITES = [
   // `//` line comment or `{/* */}` JSX block comment) silences false
   // positives like button-styled CTAs.
   { name: "inline-link-a11y", file: "test-inline-link-a11y.mjs" },
+  // 2026-04-30 SEO guard: every `tool:` field in lib/seo-pages.ts
+  // must resolve to a real `id:` in lib/tools.ts. Mismatch causes
+  // SeoLandingPage to return null → Next renders the layout's
+  // notFound boundary → page returns 200 OK with a "this page
+  // hasn't been ported yet" body. Caught 19 dead refs in the first
+  // run; KNOWN_DEAD_REFS allowlist whitelists "shipped ahead of
+  // tooling" cases so the guard fires only on NEW dead refs.
+  { name: "seo-pages-tool-mapping", file: "test-seo-pages-tool-mapping.mjs" },
 ];
 
 /**
