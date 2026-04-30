@@ -111,6 +111,7 @@ HOSTINGER_SSH_PRIVATE_KEY_PATH=/sessions/gifted-funny-franklin/mnt/pdfcraftai.co
 - `docs/DEPLOYMENT_NOTES.md` — detailed env vars, integration status, recovery playbook
 - `app/layout.tsx` — analytics / tracking scripts live here
 - `auth.ts` / `auth.config.ts` — NextAuth v5 Google provider wiring
+- **`scripts/run-all-tests.mjs` — aggregator entry. 38 commits in the 2026-04-30 auto-mode arc shipped 16 sub-second pre-flight CI guards across SEO (9), quality + security (6), and test infrastructure (1). Read the SUITES array comments to learn what each guard catches. Full inventory + arc summary in `docs/STATUS.md`.**
 
 ### 7a. Shared client-side infrastructure (M-series, 2026-04-29)
 

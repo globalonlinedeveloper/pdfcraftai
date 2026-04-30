@@ -3,10 +3,12 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-04-30 EOD (auto-mode arc, 34 commits since `29daf91`).
-**Live commit:** `8ba8291` (verified 200 OK on /api/health).
-**Aggregator:** 3407 passed across 54 suites in 3.6s.
+**Last updated:** 2026-04-30 EOD (auto-mode arc, 38 commits since `29daf91`).
+**Live commit:** `97e1d24` (verified 200 OK on /api/health).
+**Aggregator:** 3408 passed across 54 suites in 3.8s.
 **E2E re-run on prod (final sweep):** 181 + 23 = **204 specs**, 1 correctly skipped, 0 failed (all-tools 95, SEO landings 86, Phase 1 7, axe a11y 16).
+**Phase 4 baselines:** 6 committed in `c5cc51a` (homepage, tools, pricing, seo-landing-merge, tool-merge, tool-highlight) — visual regression now ACTIVE.
+**Phase 6 synthetic monitor:** verified active — 4 GitHub Actions runs since 2026-04-29 22:15 UTC have correctly caught real Hostinger 503 cascades. Slack delivery activates immediately when user adds `SLACK_WEBHOOK_URL` repo secret (the env-scope eval-order bug that would have kept it broken even after the secret was added is fixed in `97e1d24`).
 
 ---
 
@@ -17,7 +19,7 @@ suite, surfaced 12 distinct findings ranging from SEO catastrophes
 to perf regressions, and shipped 13 sub-second CI guards to prevent
 the same classes of bug from re-occurring.
 
-### Findings closed this arc (14)
+### Findings closed this arc (16)
 
 | # | Finding | Resolution | Commit |
 |---|---|---|---|
@@ -35,6 +37,8 @@ the same classes of bug from re-occurring.
 | 12 | Dead WASM preload `<link rel="preload" href="/pdfium.wasm">` | repointed to `/api/pdfium-wasm` after `7395e02` moved runtime | `2eab606` |
 | 13 | 2-hop legacy redirect chains (/tools/<slug> → /<slug> → /tool/<id>) | flattened 13 redirects to point directly at /tool/<id> | `85b665f` |
 | 14 | Orphan test file `test-reverse-sweep.mjs` never running in CI | wired into SUITES + aligned output format to aggregator regex | `8ba8291` |
+| 15 | Synthetic monitor "got 000000" cosmetic + cascade-spam vulnerability | bash quoting fix + `concurrency: synthetic-monitor` group | `606c956` |
+| 16 | Synthetic monitor Slack gate latent: env-scope eval-order trap | moved env from step-level to job-level so `if:` can read it | `97e1d24` |
 
 ### CI guards shipped (15 sub-second static checks)
 
