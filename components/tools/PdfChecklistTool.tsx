@@ -18,6 +18,17 @@ import { humanSize } from "@/lib/client/pdf-utils";
 import { useTrackToolView } from "./useToolTracking";
 import type { ToolGroup } from "@/lib/tools";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
+// 2026-04-30 (audit cluster B): brought into parity with
+// PdfReadOpsTool's shared-infra surface. PdfChecklistTool stays a
+// separate base because the audit-tools genuinely have a unique
+// shape (tone-colored headline + status-badge checklist), but it
+// was missing the M9/M10/M16 hooks that every other shared base
+// uses. Wiring them here lifts all 4 audit tools (PDF/A check,
+// PDF/X check, accessibility, JS detector) to the same standard
+// in one shot.
+import { useHandoffConsumer } from "./useHandoffConsumer";
+import { useFileUrlConsumer } from "./useFileUrlConsumer";
+import { useScrollErrorIntoView } from "./useScrollErrorIntoView";
 
 export interface ChecklistItem {
   label: string;
@@ -90,6 +101,17 @@ export function PdfChecklistTool({
     },
     [tracker],
   );
+
+  // 2026-04-30: shared infra hooks. Same as every other shared base.
+  // - useHandoffConsumer: auto-load a PDF passed via the in-tool
+  //   "Open in another tool" handoff registry (lib/client/handoff.ts)
+  // - useFileUrlConsumer: auto-load a PDF passed via `?file=<url>`
+  //   for same-origin curl/manual workflows
+  // - useScrollErrorIntoView: scrolls the inline error into view on
+  //   null→string transition so users on long pages don't miss it
+  useHandoffConsumer(onFiles);
+  useFileUrlConsumer(onFiles);
+  const errorRef = useScrollErrorIntoView(error);
 
   const run = async () => {
     if (!file) return;
@@ -215,7 +237,11 @@ export function PdfChecklistTool({
       )}
 
       {error && (
-        <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>
+        <p
+          ref={errorRef as React.RefObject<HTMLParagraphElement>}
+          role="alert"
+          style={{ color: "var(--red)", fontSize: 13, margin: 0 }}
+        >
           {error}
         </p>
       )}

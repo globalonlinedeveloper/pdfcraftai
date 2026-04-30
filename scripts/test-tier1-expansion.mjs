@@ -183,16 +183,23 @@ for (const tool of NEW_TOOLS) {
   // exempt from the ToolDropzone check — they have nothing to drop.
   const INTAKE_EXEMPT = new Set(["markdown-to-pdf", "text-to-pdf"]);
   // Wrapper components that compose around <ToolDropzone> internally:
-  // tools that mount <PageGridTool> or <PageEditorTool> get the
-  // dropzone via the shared base and don't reference ToolDropzone in
-  // their own source. Treat use of these wrappers as equivalent to
-  // ToolDropzone for the consistency check.
-  const usesSharedDropzone = /(PageGridTool|PageEditorTool)/.test(componentSrc);
+  // tools that mount one of these shared bases get the dropzone via
+  // the base and don't reference ToolDropzone in their own source.
+  // Treat use of any of these wrappers as equivalent to ToolDropzone
+  // for the consistency check.
+  //
+  // 2026-04-30: PdfReadOpsTool + PdfSimpleOpsTool + PdfChecklistTool
+  // added after the audit-cluster-A migration moved pdf-attachments
+  // + pdf-outline onto PdfReadOpsTool.
+  const usesSharedDropzone =
+    /(PageGridTool|PageEditorTool|PdfReadOpsTool|PdfSimpleOpsTool|PdfChecklistTool)/.test(
+      componentSrc,
+    );
   if (!INTAKE_EXEMPT.has(tool.id)) {
     assert(
-      `E.${tool.id} component uses <ToolDropzone> for file intake (directly or via PageGridTool/PageEditorTool)`,
+      `E.${tool.id} component uses <ToolDropzone> for file intake (directly or via a shared base)`,
       /ToolDropzone/.test(componentSrc) || usesSharedDropzone,
-      `All free client-side tools should use the shared <ToolDropzone> so the UX (size limit error, PDF-only accept, drag-over visuals) is consistent. PageGridTool and PageEditorTool both wrap ToolDropzone — using either counts.`
+      `All free client-side tools should use the shared <ToolDropzone> so the UX (size limit error, PDF-only accept, drag-over visuals) is consistent. The shared bases (PageGridTool / PageEditorTool / PdfReadOpsTool / PdfSimpleOpsTool / PdfChecklistTool) all wrap ToolDropzone — using any of them counts.`
     );
   }
 }
