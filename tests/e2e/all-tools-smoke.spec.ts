@@ -50,6 +50,32 @@ while ((match = TOOL_ID_RE.exec(TOOLS_SOURCE)) !== null) {
   TOOL_IDS.push(match[1]);
 }
 
+// 2026-05-01 — also parse LIVE_TOOL_IDS from app/tool/[id]/page.tsx
+// so the smoke spec can distinguish "should render the real runner"
+// from "should render the COMING SOON placeholder". Without this
+// distinction, the previous version of this spec passed for
+// jpg-to-pdf / png-to-pdf / text-to-pdf even though all 3 were
+// rendering the placeholder in prod — the placeholder page has a
+// valid h1 + zero console errors, which was the entire assertion.
+const PAGE_FILE = path.join(
+  __dirname,
+  "..",
+  "..",
+  "app",
+  "tool",
+  "[id]",
+  "page.tsx",
+);
+const PAGE_SOURCE = fs.readFileSync(PAGE_FILE, "utf8");
+const LIVE_BLOCK = PAGE_SOURCE.match(
+  /LIVE_TOOL_IDS\s*=\s*new\s+Set<string>\(\[([\s\S]*?)\]\)/,
+);
+const LIVE_TOOL_IDS = new Set<string>(
+  LIVE_BLOCK
+    ? [...LIVE_BLOCK[1].matchAll(/"([a-z0-9-]+)"/g)].map((m) => m[1])
+    : [],
+);
+
 // Sanity: should have 80+ tools. If we suddenly find <50, the regex
 // has drifted and we'd silently shrink coverage.
 test.describe("all-tools smoke", () => {
@@ -115,6 +141,23 @@ for (const id of TOOL_IDS) {
       // compile fires only when a tool needs it, but it can throw a
       // late console.error if /api/pdfium-wasm flakes.
       await page.waitForTimeout(800);
+
+      // 2026-05-01 — for tools in LIVE_TOOL_IDS, the page MUST
+      // render the real runner instead of the COMING SOON
+      // placeholder. The placeholder reads "COMING SOON · TOOL
+      // RUNNER LANDS IN PHASE 3" (free) or "PHASE 5" (AI). This
+      // assertion exists because of the jpg-to-pdf / png-to-pdf /
+      // text-to-pdf 2026-05-01 regression: the runner components
+      // and switch cases shipped, but LIVE_TOOL_IDS wasn't updated,
+      // so the page rendered the placeholder. The previous smoke
+      // assertions (h1 visible + no console errors) both passed on
+      // the placeholder page, which is exactly the gap this closes.
+      if (LIVE_TOOL_IDS.has(id)) {
+        const placeholder = page.getByText(
+          /COMING SOON\s*·\s*TOOL RUNNER LANDS IN/i,
+        );
+        await expect(placeholder).toHaveCount(0);
+      }
 
       if (consoleErrors.length > 0) {
         throw new Error(

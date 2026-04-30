@@ -96,6 +96,21 @@ const LIVE_TOOL_IDS = new Set<string>([
   "free-draw-pdf",
   // Task #96 — add hyperlinks (inverse of strip-links).
   "add-links",
+  // 2026-05-01 — Tier 1 dead-SEO-route fillers. Three new client-side
+  // pdf-lib-backed tools (lib/pdf/ops/images-to-pdf.ts +
+  // lib/pdf/ops/text-to-pdf.ts) wired into ToolRunner.tsx. Without
+  // adding them here the runner page falls back to the COMING SOON
+  // placeholder — the runtime gating is `LIVE_TOOL_IDS.has(tool.id)`,
+  // which is checked AFTER the ToolRunner.tsx switch was already
+  // updated. Three-step ship checklist: (1) lib/tools.ts, (2)
+  // ToolRunner.tsx, (3) THIS Set. The smoke spec passed because it
+  // only checks h1+no-console-errors — which a placeholder page also
+  // satisfies. test-tool-runner-coverage.mjs catches the
+  // ToolRunner↔TOOLS drift but not the LIVE_TOOL_IDS↔ToolRunner drift
+  // — that gap is being closed in a follow-up CI guard.
+  "jpg-to-pdf",
+  "png-to-pdf",
+  "text-to-pdf",
   // AI tools.
   "ai-summarize",
   "ai-tldr",

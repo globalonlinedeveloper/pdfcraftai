@@ -153,24 +153,35 @@ if (liveOrphans.length > 0) {
   );
 }
 
-// Switch cases not in LIVE_TOOL_IDS — would render "Coming Soon" instead
-// of the wired runner. Looks like a bug only if the tool exists in TOOLS.
+// 2026-05-01 — Promoted from warning to hard assertion after the
+// jpg-to-pdf / png-to-pdf / text-to-pdf regression (commit 96e538c
+// shipped the runner components and switch cases but missed the
+// LIVE_TOOL_IDS Set update — production rendered the COMING SOON
+// placeholder for all 3 tools and the smoke spec didn't catch it
+// because a placeholder page still has the h1 + zero console errors).
+//
+// A switch case for an id in TOOLS but NOT in LIVE_TOOL_IDS is
+// indistinguishable from a typo or a half-finished refactor: the
+// runner code is dead, the user sees COMING SOON, and the only
+// signal is this one. Treating it as a soft warning lets exactly
+// this category of bug ship to prod, so it's now a failure.
 const switchOnlyInRegistered = [...switchIds].filter(
   (id) => toolsIds.has(id) && !liveIds.has(id),
 );
-if (switchOnlyInRegistered.length > 0) {
-  console.log("");
-  console.log(
-    `WARNING: ${switchOnlyInRegistered.length} switch cases handle ids ` +
-      `that ARE in TOOLS but NOT in LIVE_TOOL_IDS:`,
-  );
-  for (const id of switchOnlyInRegistered.sort()) console.log(`  - "${id}"`);
-  console.log(
-    `  These tools have a runner wired up but the page renders "Coming Soon" ` +
-      `\n  because LIVE_TOOL_IDS gates the runner area. Either add to ` +
-      `\n  LIVE_TOOL_IDS or remove the switch case.`,
-  );
-}
+assert(
+  "Every wired runner is also in LIVE_TOOL_IDS",
+  switchOnlyInRegistered.length === 0,
+  switchOnlyInRegistered.length === 0
+    ? ""
+    : `These tools have a switch case in components/tools/ToolRunner.tsx ` +
+        `AND are registered in TOOLS — but they're missing from ` +
+        `LIVE_TOOL_IDS in app/tool/[id]/page.tsx. ` +
+        `LIVE_TOOL_IDS gates whether the runner area renders or shows ` +
+        `the COMING SOON placeholder, so the runner code is effectively ` +
+        `dead until you add the id here. Add the id to the LIVE_TOOL_IDS ` +
+        `Set, or remove the switch case if the runner isn't ready.\n\n  ` +
+        `Missing from LIVE_TOOL_IDS: ${switchOnlyInRegistered.sort().join(", ")}`,
+);
 
 // --------------------------------------------------------------------
 // Report
