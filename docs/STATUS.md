@@ -105,11 +105,31 @@ Real findings from the validation:
   (CSV when totalCount=0). Suites: homepage ×2, merge, split,
   highlight, pdf-fonts ×2.
 - **Phase 2 (test-pdf-ops):** 36/36 passing.
-- **Phase 3 (axe-core a11y) Chromium against prod:** **7/7 passing**
-  after fixing two `link-in-text-block` (serious) violations on
-  /pricing + /merge-pdf — see commit `4dbba45`. Pages audited:
-  homepage, /tools, /tool/merge, /tool/highlight-pdf, /tool/pdf-fonts,
-  /pricing, /merge-pdf SEO landing.
+- **Phase 3 (axe-core a11y) Chromium against prod:** **16/16 passing**
+  after expanding the audit from 7 → 16 pages and fixing three flavors
+  of WCAG 2.1 AA violations (commits `4dbba45` → `caf0c5a` → `fe97049`):
+  - **link-in-text-block (serious)** — 18 instances across 14 files,
+    all `color: var(--accent), textDecoration: "none"` patterns inside
+    body text. Brand-accent vs. surrounding muted-body contrast was
+    ~1.14:1 against the 3:1 surround minimum and there was no
+    non-color affordance. Fixed by adding `textDecoration: underline,
+    textUnderlineOffset: 2`. Affected: cookie consent, launch-notify,
+    LegalPage shared component (privacy + terms), help index + slug,
+    contact + ContactForm privacy notice, /api support email, /app/plan,
+    /app/receipts, /app/dashboard CTA, /cookies support email, all
+    auth funnel pages (login, register, forgot-password, reset-password
+    + RegisterForm + ResetPasswordForm).
+  - **label (critical)** — `components/marketing/ContactForm.tsx`
+    rendered `<label>` without `htmlFor` and `<input>` without `id`.
+    Threaded `useId()` through FormInput/FormSelect/FormTextarea.
+  - **color-contrast (serious)** — `/cookies` CategoryPill ESSENTIAL
+    / ANALYTICS badges (`#2f855a` / `#b7791f` on `var(--bg-2,
+    #1e2029)`) measured ~4.1:1 against the 4.5:1 minimum for 10px
+    bold text. Lifted to `#48bb78` / `#ecc94b` (clears 6:1).
+  - Pages audited: homepage, /tools, /tool/merge, /tool/highlight-pdf,
+    /tool/pdf-fonts, /tool/pdf-inspector, /pricing, /merge-pdf,
+    /about, /contact, /help, /privacy, /terms, /cookies, /login,
+    /register.
 - **Phase 5 (bundle-budget):** 4/4 passing against today's `.next` build.
 - **Phases 4, 6, 7:** shipped, need user-side activation per setup
   checklist.
@@ -128,7 +148,11 @@ Real findings from the validation:
    + /pricing launch-notify link (commit `4dbba45`)
 
 **Latest pushed commits (this arc):**
-- `4dbba45` — fix(a11y): underline inline accent links
+- `fe97049` — fix(a11y): contact form privacy notice underline (final cleanup)
+- `caf0c5a` — fix(a11y): sweep — 13 files, 17 inline links + form labels + badge contrast
+- `5fb9b36` — test(bundle-budget): skip on dev builds
+- `1dab226` — docs(status): record Phase 3 a11y results + this-arc bug list
+- `4dbba45` — fix(a11y): underline inline accent links (initial)
 - `5109364` — docs(ops): WASM-MIME finding resolution + spec fixes
 - `7395e02` — fix(wasm): route PDFium WASM through Next.js API handler
 - `baa948c` — test(e2e): Phase 1 spec fixes from live-prod validation
