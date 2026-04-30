@@ -516,6 +516,17 @@ const SUITES = [
     name: "tool-content-coverage",
     file: "test-tool-content-coverage.mjs",
   },
+  // 2026-05-01: paper-size naming convention guard. Locks in bare
+  // "Letter" / "Legal" / "Tabloid" in user-facing copy — country-
+  // prefixed forms ("US Letter" etc.) read parochially in a region-
+  // agnostic product. Drift surfaced across PdfResizeTool, the new
+  // ImagesToPdfTool / TextToPdfTool, 4 SEO landings, and 2 longform
+  // passages. Code comments + JSDoc describing the formal spec are
+  // allowed via stripCommentsAndFences before scanning.
+  {
+    name: "paper-size-naming",
+    file: "test-paper-size-naming.mjs",
+  },
   // Phase 2 (2026-04-30): functional parse-back tests for every Node-
   // runnable pdf-lib op. ~36 tests across writable ops (merge, split,
   // rotate, crop, etc.), visual editors (highlight, redact, etc.),

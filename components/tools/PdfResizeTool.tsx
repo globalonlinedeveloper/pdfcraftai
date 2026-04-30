@@ -16,8 +16,8 @@ import type { PaperSize } from "@/lib/pdf/ops/resize";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
 
 const SIZES: Array<{ v: PaperSize; label: string; pt: string }> = [
-  { v: "letter", label: "US Letter", pt: "612 × 792" },
-  { v: "legal", label: "US Legal", pt: "612 × 1008" },
+  { v: "letter", label: "Letter", pt: "612 × 792" },
+  { v: "legal", label: "Legal", pt: "612 × 1008" },
   { v: "a4", label: "A4", pt: "595 × 842" },
   { v: "a3", label: "A3", pt: "842 × 1191" },
   { v: "a5", label: "A5", pt: "420 × 595" },

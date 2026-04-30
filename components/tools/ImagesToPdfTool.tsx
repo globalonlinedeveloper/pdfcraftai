@@ -49,9 +49,9 @@ import type { PaperSize } from "@/lib/pdf/ops/images-to-pdf";
 // scripts/test-live-tool-standardization.mjs's NON_PDF_INPUT_TOOLS set.
 
 const PAPER_SIZES: Array<{ v: PaperSize; label: string }> = [
-  { v: "letter", label: "US Letter" },
+  { v: "letter", label: "Letter" },
   { v: "a4", label: "A4" },
-  { v: "legal", label: "US Legal" },
+  { v: "legal", label: "Legal" },
   { v: "a3", label: "A3" },
   { v: "a5", label: "A5" },
   { v: "fit", label: "Fit to image (no margins)" },

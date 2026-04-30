@@ -2514,7 +2514,7 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       {
         step: "2",
         title: "Reorder &amp; pick page size",
-        text: "Drag rows to reorder (top = first page). Pick US Letter / A4 / Legal / A3 / A5 with optional landscape, or &ldquo;Fit to image&rdquo; for no margins.",
+        text: "Drag rows to reorder (top = first page). Pick Letter / A4 / Legal / A3 / A5 with optional landscape, or &ldquo;Fit to image&rdquo; for no margins.",
       },
       {
         step: "3",
@@ -2597,7 +2597,7 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       {
         step: "2",
         title: "Reorder &amp; choose layout",
-        text: "Drag-reorder or use the ↑ / ↓ buttons. Pick US Letter / A4 / Legal / A3 / A5 with landscape toggle, or &ldquo;Fit to image&rdquo; for no margins.",
+        text: "Drag-reorder or use the ↑ / ↓ buttons. Pick Letter / A4 / Legal / A3 / A5 with landscape toggle, or &ldquo;Fit to image&rdquo; for no margins.",
       },
       {
         step: "3",

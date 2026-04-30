@@ -32,7 +32,7 @@ const FONTS: Array<{ v: TextFontFamily; label: string; sample: string }> = [
 ];
 
 const SIZES: Array<{ v: PaperSize; label: string }> = [
-  { v: "letter", label: "US Letter" },
+  { v: "letter", label: "Letter" },
   { v: "a4", label: "A4" },
 ];
 

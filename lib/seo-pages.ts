@@ -437,7 +437,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     ],
     faq: [
       { q: "Can I mix JPG and PNG?", a: "Yes — the Image-to-PDF tool accepts both. Also HEIC from iPhones." },
-      { q: "What page size do I get?", a: "A4 by default. Switch to US Letter or fit-to-image in the Options panel." },
+      { q: "What page size do I get?", a: "A4 by default. Switch to Letter or fit-to-image in the Options panel." },
       { q: "Free?", a: "Yes, unlimited. No watermarks, no signup." },
       { q: "Is metadata stripped?", a: "EXIF/GPS metadata is dropped when the image becomes a PDF page. Use the Metadata tool to also strip PDF-level fields." },
     ],
@@ -767,7 +767,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     canonical: "/resize-pdf",
     howTo: [
       { t: "Drop your PDF", d: "Processed client-side — never leaves your browser." },
-      { t: "Pick a target size", d: "Six presets: A4, A3, A5, US Letter, US Legal, US Tabloid." },
+      { t: "Pick a target size", d: "Six presets: A4, A3, A5, Letter, Legal, Tabloid." },
       { t: "Choose a fit mode", d: "Scale preserves aspect ratio. Stretch fills the new size. Crop keeps content at 1:1 and trims to fit." },
     ],
     faq: [
@@ -1990,7 +1990,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     howTo: [
       { t: "Drop the PDF", d: "Any size; 50 MB cap." },
       { t: "Pick a layout", d: "2-up (2×1), 4-up (2×2), 6-up (3×2), 8-up (4×2), or 9-up (3×3)." },
-      { t: "Pick output paper + spacing", d: "US Letter / A4 / Legal / A3 in landscape. Margin 0-72pt, gap between slots 0-48pt. Optional thin borders around each placed page." },
+      { t: "Pick output paper + spacing", d: "Letter / A4 / Legal / A3 in landscape. Margin 0-72pt, gap between slots 0-48pt. Optional thin borders around each placed page." },
       { t: "Combine and download", d: "Output is a fresh PDF with each sheet containing your tiled source pages, aspect-preserved and centered in each slot." },
     ],
     faq: [
@@ -2048,7 +2048,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
     canonical: "/booklet-pdf",
     howTo: [
       { t: "Drop the PDF", d: "Source is automatically padded to a multiple of 4 with blank pages at the end so the cover wrap math works out." },
-      { t: "Pick output paper", d: "US Letter / A4 / Legal / A3 — all in landscape (the only orientation where two portrait halves of a sheet make a booklet)." },
+      { t: "Pick output paper", d: "Letter / A4 / Legal / A3 — all in landscape (the only orientation where two portrait halves of a sheet make a booklet)." },
       { t: "Optional fold-line guide", d: "Faint center line drawn on each output page so you can fold cleanly. Toggle off for production print." },
       { t: "Print, fold, staple", d: "Print double-sided with flip-on-long-edge. Stack the printouts in order, fold the entire stack in half, staple along the fold (saddle stitch)." },
     ],

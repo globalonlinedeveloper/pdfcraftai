@@ -29,7 +29,7 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       {
         h: "What a PDF merge actually does",
         p: [
-          "When you merge PDFs we parse each input, copy its page tree (the ordered list of pages plus their associated content streams) into a new document, and then rebuild the cross-reference table so every page object points to the right place. Fonts, images, vector graphics, and form fields are copied by reference where the same resource appears in multiple inputs, which keeps the output file from ballooning. The merged document keeps every original page's exact dimensions — A4 pages stay A4, US Letter stays Letter, and a landscape report stays landscape. You don't lose any quality because nothing is re-rasterized; the page contents are transplanted byte-for-byte.",
+          "When you merge PDFs we parse each input, copy its page tree (the ordered list of pages plus their associated content streams) into a new document, and then rebuild the cross-reference table so every page object points to the right place. Fonts, images, vector graphics, and form fields are copied by reference where the same resource appears in multiple inputs, which keeps the output file from ballooning. The merged document keeps every original page's exact dimensions — A4 pages stay A4, Letter pages stay Letter, and a landscape report stays landscape. You don't lose any quality because nothing is re-rasterized; the page contents are transplanted byte-for-byte.",
           "Bookmarks (the side-panel outline you see in Acrobat) and named destinations are reconciled so anchors that pointed inside an input file now point to the corresponding pages in the merged file. Hyperlinks that pointed to web URLs survive untouched. Hyperlinks that pointed inside a single source PDF are rewritten to land on the right page in the merged output. Form fields are renamed when there are duplicate field names across inputs, so two forms with the same field 'name' don't collide and overwrite each other.",
         ],
       },
@@ -1304,7 +1304,7 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
             { b: "Scaling content with text under 7pt.", t: "Below that threshold, text becomes unreadable. Either pick a less aggressive scale or accept that some content will be illegible." },
             { b: "Ignoring aspect ratio.", t: "A 16:9 slide-deck PDF won't fit a 3:4 page without padding or cropping. Pick which loss you'd rather take." },
             { b: "Resizing then signing.", t: "Resizing rewrites the file. Cryptographic signatures break. Sign after final size is set." },
-            { b: "Forgetting to update the file's page-size metadata.", t: "Some workflows route based on page size (US Letter → US printer queue, A4 → EU printer queue). The resize tool updates this; manual scripts often don't." },
+            { b: "Forgetting to update the file's page-size metadata.", t: "Some workflows route based on page size (Letter → US printer queue, A4 → EU printer queue). The resize tool updates this; manual scripts often don't." },
           ],
         },
       },
