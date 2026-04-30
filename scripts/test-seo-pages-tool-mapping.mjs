@@ -137,10 +137,11 @@ const KNOWN_DEAD_REFS = new Map([
   ["word-to-pdf", "to-pdf"],
   ["excel-to-pdf", "to-pdf"],
   ["powerpoint-to-pdf", "to-pdf"],
-  ["jpg-to-pdf", "to-pdf"],
-  ["png-to-pdf", "to-pdf"],
+  // 2026-05-01: jpg-to-pdf, png-to-pdf, text-to-pdf REMOVED — real
+  // tools now exist in lib/tools.ts (commit shipping today). The
+  // SEO landings' tool: refs were updated to point at the new
+  // canonical IDs.
   ["markdown-to-pdf", "markdown-to-pdf"],
-  ["text-to-pdf", "text-to-pdf"],
   // Extract-X tools that are subset of inspectors but advertised as
   // their own action.
   ["extract-pdf-attachments", "extract-attachments"],

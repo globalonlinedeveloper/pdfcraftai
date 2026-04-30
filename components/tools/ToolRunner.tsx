@@ -124,6 +124,24 @@ const PdfToPngTool = dyn(() =>
   })),
 );
 
+// 2026-05-01: ImagesToPdfTool — two exports (jpg + png) share one
+// chunk. Pure pdf-lib, no PDFium import → tiny chunk size.
+const PdfJpgToPdfTool = dyn(() =>
+  import("@/components/tools/ImagesToPdfTool").then((m) => ({
+    default: m.PdfJpgToPdfTool,
+  })),
+);
+const PdfPngToPdfTool = dyn(() =>
+  import("@/components/tools/ImagesToPdfTool").then((m) => ({
+    default: m.PdfPngToPdfTool,
+  })),
+);
+const TextToPdfTool = dyn(() =>
+  import("@/components/tools/TextToPdfTool").then((m) => ({
+    default: m.TextToPdfTool,
+  })),
+);
+
 const SearchPdfTool = dyn(() =>
   import("@/components/tools/SearchPdfTool").then((m) => ({
     default: m.SearchPdfTool,
@@ -576,6 +594,12 @@ export function ToolRunner({ id }: { id: string }) {
       return <PdfToJpgTool />;
     case "pdf-to-png":
       return <PdfToPngTool />;
+    case "jpg-to-pdf":
+      return <PdfJpgToPdfTool />;
+    case "png-to-pdf":
+      return <PdfPngToPdfTool />;
+    case "text-to-pdf":
+      return <TextToPdfTool />;
     case "pdf-search":
       return <SearchPdfTool />;
     case "extract-images":

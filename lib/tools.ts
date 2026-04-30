@@ -60,6 +60,14 @@ export const TOOLS: readonly Tool[] = [
   { id: "pdf-to-jpg", name: "PDF to JPG", desc: "Convert PDF pages to JPG images at 1×/2×/3× resolution. Multi-page PDFs bundle into a zip. Free, in-browser.", icon: "Image", free: true, cost: "free", group: "Convert" },
   { id: "pdf-to-png", name: "PDF to PNG", desc: "Convert PDF pages to lossless PNG images at 1×/2×/3× resolution. Multi-page PDFs bundle into a zip. Free, in-browser.", icon: "Image", free: true, cost: "free", group: "Convert" },
 
+  // 2026-05-01: image/text → PDF tools (closes 3 dead SEO routes).
+  // Pure pdf-lib client-side — no PDFium, no server dependency. Native
+  // resolution preserved for images; output is text-selectable for
+  // text-to-pdf (no rasterization).
+  { id: "jpg-to-pdf", name: "JPG to PDF", desc: "Combine multiple JPG images into a single PDF — drag to reorder, choose page size, output preserves native image resolution. Free, in-browser.", icon: "Image", free: true, cost: "free", group: "Convert" },
+  { id: "png-to-pdf", name: "PNG to PDF", desc: "Combine multiple PNG images into a single PDF — lossless image embedding, drag to reorder, page-size selectable. Free, in-browser.", icon: "Image", free: true, cost: "free", group: "Convert" },
+  { id: "text-to-pdf", name: "Text to PDF", desc: "Convert plain text or .txt/.md/.csv files into a paginated PDF — pick a font, size, paper size; output is text-selectable + searchable.", icon: "Convert", free: true, cost: "free", group: "Convert" },
+
   // Build 2 Wave 3 (2026-04-27): Search + Extract Images. Both
   // PDFium-backed read-only ops.
   { id: "pdf-search", name: "Search in PDF", desc: "Find any word or phrase across every page of a PDF. Case-sensitive and whole-word options, with surrounding context. Free, in-browser.", icon: "Search", free: true, cost: "free", group: "Organize" },

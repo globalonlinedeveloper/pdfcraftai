@@ -351,8 +351,9 @@ const nextConfig = {
       { source: "/tools/pdf-to-word", destination: "/tool/pdf-to-text", permanent: true },
       { source: "/tools/pdf-to-excel", destination: "/tool/pdf-to-text", permanent: true },
       { source: "/tools/pdf-to-powerpoint", destination: "/tool/pdf-to-text", permanent: true },
-      { source: "/tools/png-to-pdf", destination: "/tools", permanent: true },
-      { source: "/tools/jpg-to-pdf", destination: "/tools", permanent: true },
+      // 2026-05-01: jpg-to-pdf + png-to-pdf are real tools now.
+      { source: "/tools/png-to-pdf", destination: "/tool/png-to-pdf", permanent: true },
+      { source: "/tools/jpg-to-pdf", destination: "/tool/jpg-to-pdf", permanent: true },
       { source: "/tools/word-to-pdf", destination: "/tools", permanent: true },
       { source: "/tools/excel-to-pdf", destination: "/tools", permanent: true },
       { source: "/tools/powerpoint-to-pdf", destination: "/tools", permanent: true },
@@ -410,8 +411,10 @@ const nextConfig = {
       { source: "/word-to-pdf", destination: "/tools", permanent: true },
       { source: "/excel-to-pdf", destination: "/tools", permanent: true },
       { source: "/powerpoint-to-pdf", destination: "/tools", permanent: true },
-      { source: "/jpg-to-pdf", destination: "/tools", permanent: true },
-      { source: "/png-to-pdf", destination: "/tools", permanent: true },
+      // 2026-05-01: real tools shipped — redirect to the canonical
+      // /tool/<id> instead of /tools index.
+      { source: "/jpg-to-pdf", destination: "/tool/jpg-to-pdf", permanent: true },
+      { source: "/png-to-pdf", destination: "/tool/png-to-pdf", permanent: true },
       { source: "/extract-pdf-pages", destination: "/tool/extract-pages", permanent: true },
       { source: "/delete-pdf-pages", destination: "/tool/delete-pages", permanent: true },
       { source: "/pdf-page-count", destination: "/tool/page-count", permanent: true },
@@ -427,7 +430,9 @@ const nextConfig = {
       { source: "/repair-pdf", destination: "/tool/repair-pdf", permanent: true },
       { source: "/flatten-pdf", destination: "/tool/flatten-pdf", permanent: true },
       { source: "/markdown-to-pdf", destination: "/tool/pdf-to-markdown", permanent: true },
-      { source: "/text-to-pdf", destination: "/tool/pdf-to-text", permanent: true },
+      // 2026-05-01: text-to-pdf is its own tool now (was redirected
+      // to /tool/pdf-to-text — the OPPOSITE direction. Bad pre-fix.)
+      { source: "/text-to-pdf", destination: "/tool/text-to-pdf", permanent: true },
       { source: "/extract-pdf-form-data", destination: "/tool/pdf-forms", permanent: true },
       { source: "/reorder-pdf-pages", destination: "/tool/sort-pages", permanent: true },
       { source: "/extract-emails-from-pdf", destination: "/tool/pdf-search", permanent: true },

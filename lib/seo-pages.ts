@@ -426,7 +426,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   },
 
   "jpg-to-pdf": {
-    tool: "to-pdf",
+    tool: "jpg-to-pdf",
     h1: "JPG to PDF — combine photos into a single PDF",
     sub: "Convert one or many images into a single PDF with custom page size and orientation.",
     canonical: "/jpg-to-pdf",
@@ -445,7 +445,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   },
 
   "png-to-pdf": {
-    tool: "to-pdf",
+    tool: "png-to-pdf",
     h1: "PNG to PDF — convert images to PDF online",
     sub: "Turn PNG screenshots or scans into a searchable-ready PDF.",
     canonical: "/png-to-pdf",
