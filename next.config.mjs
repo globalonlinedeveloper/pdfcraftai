@@ -316,9 +316,15 @@ const nextConfig = {
       // Why permanent (308 in Next 14): we never want these legacy
       // paths back. The 308 also preserves PageRank from any backlinks
       // that point at the old URLs.
-      { source: "/tools/merge-pdf", destination: "/merge-pdf", permanent: true },
-      { source: "/tools/split-pdf", destination: "/split-pdf", permanent: true },
-      { source: "/tools/compress-pdf", destination: "/compress-pdf", permanent: true },
+      // 2026-04-30 chain-flatten: these used to point at /<slug>
+      // which itself 308s to the canonical /tool/<id>, creating a
+      // 2-hop chain. Google de-rates chained redirects (and each hop
+      // is an extra round-trip for the user). Pointed directly at
+      // the final destination so /tools/<slug> → /tool/<id> in one
+      // hop.
+      { source: "/tools/merge-pdf", destination: "/tool/merge", permanent: true },
+      { source: "/tools/split-pdf", destination: "/tool/split", permanent: true },
+      { source: "/tools/compress-pdf", destination: "/tools", permanent: true },
       // 2026-04-30: was /tool/protect (dead — no "protect" tool in
       // lib/tools.ts). The redirect-destinations CI guard caught
       // this. Re-pointed to /tool/unlock (the closest security-
@@ -328,19 +334,28 @@ const nextConfig = {
       { source: "/tools/protect-pdf", destination: "/tool/unlock", permanent: true },
       { source: "/tools/unlock-pdf", destination: "/tool/unlock", permanent: true },
       { source: "/tools/organize-pdf", destination: "/tool/sort-pages", permanent: true },
-      { source: "/tools/remove-pages", destination: "/delete-pdf-pages", permanent: true },
-      { source: "/tools/extract-pages", destination: "/extract-pdf-pages", permanent: true },
+      // 2026-04-30 chain-flatten — same rationale as above
+      // (/tools/<slug> → /<slug> → /tool/<id> was 2 hops; now
+      // 1 hop direct to the canonical destination).
+      { source: "/tools/remove-pages", destination: "/tool/delete-pages", permanent: true },
+      { source: "/tools/extract-pages", destination: "/tool/extract-pages", permanent: true },
       { source: "/tools/rotate-pdf", destination: "/tool/rotate", permanent: true },
       { source: "/tools/pdf-to-jpg", destination: "/pdf-to-jpg", permanent: true },
       { source: "/tools/pdf-to-png", destination: "/pdf-to-png", permanent: true },
-      { source: "/tools/pdf-to-word", destination: "/pdf-to-word", permanent: true },
-      { source: "/tools/pdf-to-excel", destination: "/pdf-to-excel", permanent: true },
-      { source: "/tools/pdf-to-powerpoint", destination: "/pdf-to-powerpoint", permanent: true },
-      { source: "/tools/png-to-pdf", destination: "/png-to-pdf", permanent: true },
-      { source: "/tools/jpg-to-pdf", destination: "/jpg-to-pdf", permanent: true },
-      { source: "/tools/word-to-pdf", destination: "/word-to-pdf", permanent: true },
-      { source: "/tools/excel-to-pdf", destination: "/excel-to-pdf", permanent: true },
-      { source: "/tools/powerpoint-to-pdf", destination: "/powerpoint-to-pdf", permanent: true },
+      // 2026-04-30 chain-flatten — pdf-to-{word,excel,powerpoint}
+      // and {png,jpg,word,excel,powerpoint}-to-pdf all 308 to a
+      // canonical now (commits 89cd1e8 + cadf27c). Direct map.
+      // Note: /pdf-to-jpg + /pdf-to-png are LIVE routes (real
+      // app/<slug>/page.tsx files), not redirects, so leave those
+      // entries unchanged.
+      { source: "/tools/pdf-to-word", destination: "/tool/pdf-to-text", permanent: true },
+      { source: "/tools/pdf-to-excel", destination: "/tool/pdf-to-text", permanent: true },
+      { source: "/tools/pdf-to-powerpoint", destination: "/tool/pdf-to-text", permanent: true },
+      { source: "/tools/png-to-pdf", destination: "/tools", permanent: true },
+      { source: "/tools/jpg-to-pdf", destination: "/tools", permanent: true },
+      { source: "/tools/word-to-pdf", destination: "/tools", permanent: true },
+      { source: "/tools/excel-to-pdf", destination: "/tools", permanent: true },
+      { source: "/tools/powerpoint-to-pdf", destination: "/tools", permanent: true },
       // Catch-all for any other /tools/<slug> not covered above. The
       // /tools/ index is now /tools (no trailing /tools/<slug> paths
       // exist), so anything that lands here is a stale Google cache

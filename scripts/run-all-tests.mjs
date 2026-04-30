@@ -816,6 +816,14 @@ const SUITES = [
   // place — removing og.png would silently break every social
   // share preview.
   { name: "public-asset-refs", file: "test-public-asset-refs.mjs" },
+  // 2026-04-30 redirect-chain guard: no redirect destination should
+  // itself be a redirect source. 2+ hop chains waste round-trips
+  // and Google de-rates them. Initial run caught the legacy
+  // /tools/<slug> → /<slug> → /tool/<id> pattern (commits 89cd1e8
+  // + cadf27c made the second leg redirect, creating chains).
+  // Flattened in next.config.mjs to point /tools/<slug> directly
+  // at /tool/<id>.
+  { name: "redirect-chains", file: "test-redirect-chains.mjs" },
 ];
 
 /**
