@@ -466,4 +466,22 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
   },
 
   // --------- 5 free tools previously missing from TOOL_INTROS ---------
+
+  // --------- 2026-05-01 Tier 1 image / text → PDF tools ---------
+  // These three tools were shipped with the runner components but
+  // without intro / longform entries — the rendered page on prod
+  // showed the spartan dropzone-only layout while every other free
+  // tool had rich content. Added on 2026-05-01 follow-up.
+  "jpg-to-pdf": {
+    text: "What you'll get: a single PDF combining all your JPG images — drag to reorder, choose page size, native image resolution preserved.",
+    related: { id: "png-to-pdf", label: "PNG to PDF (lossless)" },
+  },
+  "png-to-pdf": {
+    text: "What you'll get: a single PDF from your PNG images with lossless embedding (no JPG re-encode) — every pixel preserved, ideal for diagrams and screenshots.",
+    related: { id: "jpg-to-pdf", label: "JPG to PDF (smaller files)" },
+  },
+  "text-to-pdf": {
+    text: "What you'll get: a paginated PDF from plain text or .txt/.md/.csv — pick a font, size, paper size; output is text-selectable + searchable.",
+    related: { id: "pdf-to-text", label: "PDF to Text (reverse)" },
+  },
 };

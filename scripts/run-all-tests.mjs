@@ -503,6 +503,19 @@ const SUITES = [
     name: "live-tool-standardization",
     file: "test-live-tool-standardization.mjs",
   },
+  // 2026-05-01: free-tool content-coverage guard. Pins TOOL_INTROS
+  // and TOOL_LONGFORMS coverage for every free tool wired into
+  // LIVE_TOOL_IDS. Caught the jpg-to-pdf / png-to-pdf / text-to-pdf
+  // 2026-05-01 regression where the runner shipped but the page
+  // rendered without the "What you'll get" intro and without the
+  // marketing longform block (use cases / how-it-works / FAQs / CTA).
+  // Visually obvious next to /tool/page-count and /tool/pdf-inspector
+  // which have rich content. Placed adjacent to the other LIVE_TOOL_IDS
+  // surface guards.
+  {
+    name: "tool-content-coverage",
+    file: "test-tool-content-coverage.mjs",
+  },
   // Phase 2 (2026-04-30): functional parse-back tests for every Node-
   // runnable pdf-lib op. ~36 tests across writable ops (merge, split,
   // rotate, crop, etc.), visual editors (highlight, redact, etc.),

@@ -2466,4 +2466,259 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       linkLabel: "Try PDF Inspector",
     },
   },
+
+  // -------- 2026-05-01: Tier 1 image / text → PDF tools -----------
+  // Shipped on 2026-05-01 with runner components only — the longform
+  // entries were missed and prod pages rendered the spartan dropzone-
+  // only layout while the rest of the catalog had rich content. Added
+  // in this commit. test-tool-content-coverage.mjs guards against the
+  // same gap shipping for any future tool.
+  "jpg-to-pdf": {
+    useCasesTitle: "Why people convert JPG to PDF",
+    useCasesIntro:
+      "PDF is the universal document format — every viewer opens it, every printer accepts it, every workflow integrates with it. Combining JPG images into a PDF is how you turn a photo collection into a shareable document.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Receipts &amp; invoices",
+        text: "Photograph each receipt with your phone, drop the JPGs in, get one PDF for expense reports. Beats stapling and scanning.",
+      },
+      {
+        icon: "Convert",
+        title: "Scanned documents",
+        text: "Phone-camera scans land as JPG by default. Combine each page into a single PDF before emailing, archiving, or filing.",
+      },
+      {
+        icon: "Image",
+        title: "Photo books &amp; portfolios",
+        text: "Stitch a curated photo set into a PDF for clients or as a print-ready proof. PDF preserves order and sequencing — JPG bundles don&rsquo;t.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Form submissions",
+        text: "Many government / HR portals require a single PDF, not separate image attachments. Combine your photo IDs, supporting documents, and proofs into one PDF before uploading.",
+      },
+      {
+        icon: "Book",
+        title: "Reading material",
+        text: "Comics, manga, magazine scans — typically distributed as JPG sets. Bundle into a PDF for a continuous reading experience in any PDF viewer.",
+      },
+    ],
+    howWorksTitle: "How JPG to PDF works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your JPG files",
+        text: "Up to 50 images, 20 MB each. Drag-drop or click to browse. Files are read in your browser — never uploaded.",
+      },
+      {
+        step: "2",
+        title: "Reorder &amp; pick page size",
+        text: "Drag rows to reorder (top = first page). Pick US Letter / A4 / Legal / A3 / A5 with optional landscape, or &ldquo;Fit to image&rdquo; for no margins.",
+      },
+      {
+        step: "3",
+        title: "Build &amp; download",
+        text: "pdf-lib embeds each JPG losslessly (no re-encoding). One image per page. Download a single PDF.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does this re-compress my JPGs?",
+        a: "No. pdf-lib&rsquo;s embedJpg() copies the original JPEG bytes directly into the PDF — no decode, no re-encode, no quality loss. The PDF file size is roughly the sum of input image sizes plus a few KB of PDF metadata.",
+      },
+      {
+        q: "What&rsquo;s the difference between &ldquo;Fit to image&rdquo; and a fixed page size?",
+        a: "Fit-to-image makes each PDF page exactly the dimensions of its source image — no margins, no scaling, perfect 1:1. A fixed page size (Letter / A4 / etc.) scales each image to fit within 0.5\" margins while preserving aspect ratio. Fit is best for photo books and screenshots; fixed is best for printable documents.",
+      },
+      {
+        q: "How do I change the page order?",
+        a: "Use the ↑ and ↓ buttons next to each row in the file list. Top row = page 1. Removing an image is the X button.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. JPG decoding and PDF generation both run in your browser via pdf-lib. Verifiable in DevTools → Network — you won&rsquo;t see any upload while you build.",
+      },
+      {
+        q: "Why JPG to PDF vs PNG to PDF?",
+        a: "JPG is smaller (often 5–15× smaller than PNG for photos) but lossy. PNG is lossless — better for diagrams, screenshots, charts. Pick by content: photos → JPG to PDF; screenshots / diagrams → PNG to PDF.",
+      },
+      {
+        q: "What&rsquo;s the max file count?",
+        a: "50 images per PDF, 20 MB each (1 GB total upper bound). For larger sets, build in batches and merge the PDFs afterwards using our Merge tool.",
+      },
+    ],
+    cta: {
+      title: "Need lossless image quality?",
+      text: "PNG to PDF preserves every pixel — no compression artefacts. Better for screenshots, diagrams, and any image with sharp edges or text.",
+      linkHref: "/tool/png-to-pdf",
+      linkLabel: "Try PNG to PDF",
+    },
+  },
+
+  "png-to-pdf": {
+    useCasesTitle: "Why people convert PNG to PDF",
+    useCasesIntro:
+      "PNG preserves every pixel — text edges, line art, transparency. Combining PNGs into a PDF gives you a portable document with the visual fidelity that JPG would compress away.",
+    useCases: [
+      {
+        icon: "Sparkle",
+        title: "Screenshots &amp; UI mockups",
+        text: "Designers and product teams ship UI walkthroughs as screenshots. PNG keeps the typography and gridlines crisp; bundling into a PDF makes the walkthrough sharable as one file.",
+      },
+      {
+        icon: "Convert",
+        title: "Technical diagrams",
+        text: "Schematics, flowcharts, architecture diagrams — anything with thin lines or sharp edges that JPG would smudge. PNG-to-PDF preserves every detail through to print.",
+      },
+      {
+        icon: "Pages",
+        title: "Scanned forms with text",
+        text: "PNG scans of contracts, applications, or registration forms. Combine into a PDF for filing or sending — text edges stay legible.",
+      },
+      {
+        icon: "Image",
+        title: "Charts &amp; data visualizations",
+        text: "Plotted figures from R / Python / Excel often export as PNG. Stitch into a PDF report or appendix without losing the antialiased curves.",
+      },
+      {
+        icon: "Book",
+        title: "Logos &amp; brand assets",
+        text: "Brand guidelines and asset packs often ship as PNG (transparency support). Bundle the asset set into a PDF for stakeholder review or archival.",
+      },
+    ],
+    howWorksTitle: "How PNG to PDF works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PNG files",
+        text: "Up to 50 images, 20 MB each. Files stay in your browser — nothing uploaded.",
+      },
+      {
+        step: "2",
+        title: "Reorder &amp; choose layout",
+        text: "Drag-reorder or use the ↑ / ↓ buttons. Pick US Letter / A4 / Legal / A3 / A5 with landscape toggle, or &ldquo;Fit to image&rdquo; for no margins.",
+      },
+      {
+        step: "3",
+        title: "Build &amp; download",
+        text: "pdf-lib embeds each PNG with embedPng() — fully lossless. One image per page. Download a single PDF.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Does PNG-to-PDF preserve transparency?",
+        a: "Yes. Transparent regions in your PNGs render as transparent in the PDF — useful when overlaying or compositing. If you&rsquo;d prefer a solid background, flatten the PNG against white before uploading.",
+      },
+      {
+        q: "Why are my PDFs larger than the originals?",
+        a: "PNG is already lossless and well-compressed; PDF adds object structure + metadata + cross-reference table. Expect ~5–10% overhead. If file size is a concern, consider JPG-to-PDF instead — typically 5–15× smaller for photos.",
+      },
+      {
+        q: "What&rsquo;s the difference between PNG-to-PDF and JPG-to-PDF?",
+        a: "Same flow, different image format. PNG = lossless (every pixel preserved, larger files, ideal for diagrams/screenshots/text). JPG = lossy (smaller files, ideal for photos and natural images). Pick by content type, not by habit.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. PNG decoding and PDF generation both run in your browser. Verify in DevTools → Network — there are no upload requests while you build.",
+      },
+      {
+        q: "Can I mix PNG and JPG in one PDF?",
+        a: "Not directly — this tool accepts only PNG. To mix formats, build separate PDFs (one PNG, one JPG) and combine them with our Merge tool.",
+      },
+      {
+        q: "What&rsquo;s the max file count?",
+        a: "50 images per PDF, 20 MB each. For larger collections, build in batches and merge the resulting PDFs.",
+      },
+    ],
+    cta: {
+      title: "Need smaller file sizes?",
+      text: "JPG to PDF compresses photos heavily (10–50% the size of PNG for typical pages). Use it when content is photographic and lossy compression won&rsquo;t be visible.",
+      linkHref: "/tool/jpg-to-pdf",
+      linkLabel: "Try JPG to PDF",
+    },
+  },
+
+  "text-to-pdf": {
+    useCasesTitle: "Why people convert text to PDF",
+    useCasesIntro:
+      "Plain text is portable but ugly to share. PDF is shareable but locked from edit. Text-to-PDF gives you the best of both: paginated, font-styled output that&rsquo;s text-selectable + searchable + printable.",
+    useCases: [
+      {
+        icon: "Convert",
+        title: "Code listings &amp; logs",
+        text: "Bug reports, audit trails, server logs — share a clean monospaced PDF instead of a wall-of-text email or a copy-paste that loses formatting.",
+      },
+      {
+        icon: "Pages",
+        title: "Plain-text reports",
+        text: "Markdown drafts, README files, meeting notes — convert to PDF for stakeholder review, signature workflows, or compliance archives.",
+      },
+      {
+        icon: "Book",
+        title: "Long-form writing",
+        text: "Drafts written in any plain editor (Vim, Sublime, Obsidian) can be PDF&rsquo;d for printing, beta-reading, or submission with consistent typography.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Tabular &amp; CSV data",
+        text: "A CSV becomes a paginated, monospaced PDF with one click — handy for offline review, audit trails, or printed copies of small datasets.",
+      },
+      {
+        icon: "Image",
+        title: "Generated content",
+        text: "AI outputs, scraped articles, transcripts. Convert the text to PDF to create a permanent, browseable artifact instead of leaving content trapped in chat history.",
+      },
+    ],
+    howWorksTitle: "How Text to PDF works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Paste or drop a file",
+        text: "Type / paste into the textarea, or drop a .txt / .md / .csv / .log / .json file (up to 5 MB). All processing stays in your browser.",
+      },
+      {
+        step: "2",
+        title: "Pick font &amp; page size",
+        text: "Monospace (Courier) for code, Sans-serif (Helvetica) for prose, Serif (Times) for documents. Sizes 8–18pt. Letter or A4 paper.",
+      },
+      {
+        step: "3",
+        title: "Build &amp; download",
+        text: "pdf-lib uses StandardFonts (no embed required) and word-wraps long lines. Output is text-selectable + searchable — not a raster.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is the output PDF searchable?",
+        a: "Yes. Unlike rasterized PDFs (where text is just pixels), Text-to-PDF writes real glyph runs — your output is fully searchable, copyable, and screen-reader accessible. Verify by Ctrl+F inside any PDF viewer.",
+      },
+      {
+        q: "Which font should I pick?",
+        a: "Monospace (Courier) is best for code, logs, JSON, CSV — every character takes the same width, so columns stay aligned. Sans-serif (Helvetica) is best for prose and reports — clean and modern. Serif (Times) is best for long-form documents — easier on the eyes for extended reading.",
+      },
+      {
+        q: "What&rsquo;s the max text length?",
+        a: "5 MB of text (~5 million characters, roughly 1,500 paginated pages at 11pt monospace). For longer texts, split into volumes and combine the PDFs with our Merge tool.",
+      },
+      {
+        q: "Does it support Markdown formatting?",
+        a: "No — Text-to-PDF treats Markdown as literal characters (# heading, **bold**, etc. render as-is). For rendered Markdown → PDF, paste your Markdown into a renderer (e.g. dillinger.io) and export. We&rsquo;re evaluating a dedicated markdown-to-pdf tool — for now, this tool is plain-text-only.",
+      },
+      {
+        q: "Why monospace by default?",
+        a: "Monospace is the safe default — it preserves alignment for code, logs, and tabular data, which is what people most often paste into a text-to-PDF tool. Switch to Helvetica or Times if you&rsquo;re converting prose.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. Text input and PDF generation both run in your browser via pdf-lib. Verifiable in DevTools → Network.",
+      },
+    ],
+    cta: {
+      title: "Going the other direction?",
+      text: "PDF to Text extracts every word from a PDF as plain .txt — useful for indexing, version-controlling, or feeding into AI tools.",
+      linkHref: "/tool/pdf-to-text",
+      linkLabel: "Try PDF to Text",
+    },
+  },
 };
