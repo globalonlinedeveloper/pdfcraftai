@@ -92,6 +92,21 @@ const KNOWN_MISSING_SEO_ROUTES = new Set([
   // point — these are the routes the user (or a future tool-shipping
   // session) needs to either build, redirect, or remove from
   // SEO_SLUGS.
+  //
+  // **Currently mitigated via 308 redirects in next.config.mjs**
+  // (commit shipped 2026-04-30). Each slug below now redirects to
+  // its closest live equivalent (most → /tool/<id>, a few → /tools
+  // category page when no specific tool exists). The user-facing
+  // 404 is fixed; the soft-404 SEO penalty clears on next crawl
+  // cycle.
+  //
+  // Why these stay in the list anyway: the long-term fix is to
+  // either (a) ship real app/<slug>/page.tsx landings (better SEO —
+  // unique content per keyword, internal linking) OR (b) remove
+  // the slug from SEO_SLUGS so the sitemap stops advertising it.
+  // The 308 is a stopgap. When a real landing lands, remove the
+  // slug from this list AND drop the matching redirect from
+  // next.config.mjs.
   "merge-pdf",
   "split-pdf",
   "compress-pdf",

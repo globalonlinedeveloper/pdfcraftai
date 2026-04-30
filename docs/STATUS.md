@@ -177,7 +177,37 @@ Real findings from the validation:
   1 correctly skipped (CSV when totalCount=0), 0 failed**, plus
   5 known-issue skips.
 
-## 🚨 Critical open finding — 30% of sitemap.xml is 404 (2026-04-30)
+## ✅ Resolved — 30% of sitemap.xml was 404 (2026-04-30)
+
+**Status: mitigated via 308 redirects.** All 35 dead URLs now
+redirect to their closest live equivalent in `next.config.mjs`.
+After next crawl cycle Google will:
+1. Replace its index entry with the redirect destination
+2. Transfer accumulated keyword equity to the new canonical URL
+3. Stop reporting the URLs as soft-404
+
+**Verification:** post-deploy curl of any redirected slug should
+return HTTP 308 with `Location: /tool/<id>` (or `/tools` for the
+6 generic-category slugs without a dedicated tool).
+
+**Mapping summary:**
+- 29 slugs → `/tool/<id>` (direct mapping when the slug names a
+  specific tool that exists in `lib/tools.ts`)
+- 6 slugs → `/tools` category page (compress-pdf, word-to-pdf,
+  excel-to-pdf, powerpoint-to-pdf, jpg-to-pdf, png-to-pdf,
+  edit-pdf, grayscale-pdf, booklet-pdf — these don't have a
+  dedicated runner)
+
+**Long-term follow-up:** the redirects are a stopgap. Better SEO
+play is to ship real `app/<slug>/page.tsx` landings with unique
+content per keyword. When that happens, remove the slug from
+`KNOWN_MISSING_SEO_ROUTES` in
+`scripts/test-sitemap-routes-exist.mjs` AND drop the matching
+redirect from `next.config.mjs`. The CI guard tracks the backlog.
+
+---
+
+## 🗄️ Original finding — 30% of sitemap.xml was 404 (2026-04-30)
 
 **Severity: high SEO impact, found by curl audit**
 

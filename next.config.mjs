@@ -356,6 +356,68 @@ const nextConfig = {
       // 404 is the correct answer for a URL that never had a real
       // audience. Kept this comment as a reminder: only add a 308 when
       // there's real traffic / link equity to migrate.
+      //
+      // 2026-04-30 — sitemap-404 fix.
+      // A bulk-curl audit (see docs/STATUS.md "30% of sitemap.xml is
+      // 404") found that 35 slugs in lib/seo-pages.ts SEO_SLUGS lack
+      // an app/<slug>/page.tsx, so sitemap.xml was advertising 35
+      // dead URLs to Google. The cleanest fix is a 308 to the
+      // closest live equivalent: search engines transfer the
+      // accumulated keyword equity to the destination, users land on
+      // a useful page instead of a 404, and the soft-404 SEO penalty
+      // clears on the next crawl cycle.
+      //
+      // Mapping rationale:
+      //   - "<slug>" → /tool/<id>: when the slug names a specific
+      //     tool that exists in lib/tools.ts, redirect there. Most
+      //     direct equity transfer.
+      //   - "<slug>" → /tools: when the slug names a tool category
+      //     that doesn't have a dedicated runner (compress, generic
+      //     "to-pdf" / "edit-pdf" surfaces, exotic transforms like
+      //     grayscale + booklet that aren't built). The /tools index
+      //     is the closest canonical destination — it lists every
+      //     tool, so users can self-route.
+      //
+      // CRITICAL — always 308 (permanent: true), not 307. 308 signals
+      // permanent move to crawlers and accumulates the keyword
+      // authority on the destination. 307 is for temporary aliases
+      // (like /signup → /register) where we want to keep the option
+      // to reclaim the URL.
+      { source: "/merge-pdf", destination: "/tool/merge", permanent: true },
+      { source: "/split-pdf", destination: "/tool/split", permanent: true },
+      { source: "/compress-pdf", destination: "/tools", permanent: true },
+      { source: "/word-to-pdf", destination: "/tools", permanent: true },
+      { source: "/excel-to-pdf", destination: "/tools", permanent: true },
+      { source: "/powerpoint-to-pdf", destination: "/tools", permanent: true },
+      { source: "/jpg-to-pdf", destination: "/tools", permanent: true },
+      { source: "/png-to-pdf", destination: "/tools", permanent: true },
+      { source: "/extract-pdf-pages", destination: "/tool/extract-pages", permanent: true },
+      { source: "/delete-pdf-pages", destination: "/tool/delete-pages", permanent: true },
+      { source: "/pdf-page-count", destination: "/tool/page-count", permanent: true },
+      { source: "/resize-pdf", destination: "/tool/resize-pdf", permanent: true },
+      { source: "/remove-pdf-metadata", destination: "/tool/remove-metadata", permanent: true },
+      { source: "/add-logo-to-pdf", destination: "/tool/image-watermark", permanent: true },
+      { source: "/add-text-to-pdf", destination: "/tool/add-text-box", permanent: true },
+      { source: "/highlight-pdf", destination: "/tool/highlight-pdf", permanent: true },
+      { source: "/redact-pdf-free", destination: "/tool/redact-free", permanent: true },
+      { source: "/extract-pdf-attachments", destination: "/tool/pdf-attachments", permanent: true },
+      { source: "/edit-pdf", destination: "/tools", permanent: true },
+      { source: "/sign-pdf-free", destination: "/tool/sign-pdf-free", permanent: true },
+      { source: "/repair-pdf", destination: "/tool/repair-pdf", permanent: true },
+      { source: "/flatten-pdf", destination: "/tool/flatten-pdf", permanent: true },
+      { source: "/markdown-to-pdf", destination: "/tool/pdf-to-markdown", permanent: true },
+      { source: "/text-to-pdf", destination: "/tool/pdf-to-text", permanent: true },
+      { source: "/extract-pdf-form-data", destination: "/tool/pdf-forms", permanent: true },
+      { source: "/reorder-pdf-pages", destination: "/tool/sort-pages", permanent: true },
+      { source: "/extract-emails-from-pdf", destination: "/tool/pdf-search", permanent: true },
+      { source: "/extract-entities-from-pdf", destination: "/tool/ai-entities", permanent: true },
+      { source: "/stamp-pdf", destination: "/tool/stamp-pdf", permanent: true },
+      { source: "/n-up-pdf", destination: "/tool/n-up-pdf", permanent: true },
+      { source: "/grayscale-pdf", destination: "/tools", permanent: true },
+      { source: "/strip-links", destination: "/tool/strip-links", permanent: true },
+      { source: "/booklet-pdf", destination: "/tools", permanent: true },
+      { source: "/free-draw-pdf", destination: "/tool/free-draw-pdf", permanent: true },
+      { source: "/add-links", destination: "/tool/add-links", permanent: true },
     ];
   },
 };
