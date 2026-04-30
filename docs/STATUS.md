@@ -100,19 +100,36 @@ Real findings from the validation:
    (b) fixing the PDFium WASM Content-Type via a Next.js route
        handler (commit `7395e02`, see WASM-MIME finding below).
 
-**Current end-state:**
-- 6/6 Phase 1 specs validated working against prod (Chromium): homepage
-  ×2, merge, split, highlight, pdf-fonts (1 skipped — CSV when
-  totalCount=0)
-- Phase 2 (test-pdf-ops): 36/36 passing
-- Phase 5 (bundle-budget): 4/4 passing against today's `.next` build
-- Phases 3, 4, 6, 7: shipped, need user-side activation per setup
-  checklist
-- Cross-browser (firefox/webkit/mobile-safari): browsers not installed
-  in current sandbox (`npx playwright install` needed); chromium-only
-  validation deemed sufficient for this round.
+**Current end-state (2026-04-30 03:20 UTC):**
+- **Phase 1 (E2E)** Chromium against prod: **6/6 passing**, 1 skipped
+  (CSV when totalCount=0). Suites: homepage ×2, merge, split,
+  highlight, pdf-fonts ×2.
+- **Phase 2 (test-pdf-ops):** 36/36 passing.
+- **Phase 3 (axe-core a11y) Chromium against prod:** **7/7 passing**
+  after fixing two `link-in-text-block` (serious) violations on
+  /pricing + /merge-pdf — see commit `4dbba45`. Pages audited:
+  homepage, /tools, /tool/merge, /tool/highlight-pdf, /tool/pdf-fonts,
+  /pricing, /merge-pdf SEO landing.
+- **Phase 5 (bundle-budget):** 4/4 passing against today's `.next` build.
+- **Phases 4, 6, 7:** shipped, need user-side activation per setup
+  checklist.
+- **Cross-browser (firefox/webkit/mobile-safari):** browsers not
+  installed in current sandbox (`npx playwright install` needed);
+  chromium-only validation deemed sufficient for this round.
 
-**Latest pushed commits:**
+**Real bugs caught + fixed by Phase 1 prod validation in this arc:**
+1. Cloudflare Web Insights CSP violation (commit `29daf91`)
+2. .htaccess CSP override out of sync with next.config.mjs (SSH fix)
+3. PDFium WASM Content-Type stripped to text/plain on the LiteSpeed/
+   Passenger static-handler path (commit `7395e02`)
+4. Stale `next-server` zombie processes saturating LVE thread limit
+   on every deploy (CLAUDE.md §5 update)
+5. axe a11y "link-in-text-block" serious violations on cookie consent
+   + /pricing launch-notify link (commit `4dbba45`)
+
+**Latest pushed commits (this arc):**
+- `4dbba45` — fix(a11y): underline inline accent links
+- `5109364` — docs(ops): WASM-MIME finding resolution + spec fixes
 - `7395e02` — fix(wasm): route PDFium WASM through Next.js API handler
 - `baa948c` — test(e2e): Phase 1 spec fixes from live-prod validation
 - `29daf91` — fix(csp): allow cloudflareinsights origins
