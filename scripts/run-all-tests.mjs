@@ -782,6 +782,13 @@ const SUITES = [
   // the class of regression where someone removes data entries or
   // renames the route file, silently shrinking sitemap surface.
   { name: "dynamic-route-coverage", file: "test-dynamic-route-coverage.mjs" },
+  // 2026-04-30 robots.txt safety guard: app/robots.ts (which Next
+  // uses to render /robots.txt) must keep /api/, /app/, /admin/,
+  // /_next/ in the disallow list AND must NOT accidentally disallow
+  // /tools, /pricing, /blog, /help. Catastrophic if /admin/ ever
+  // falls off the disallow list and gets indexed. Sub-second
+  // static parse.
+  { name: "robots-config", file: "test-robots-config.mjs" },
 ];
 
 /**
