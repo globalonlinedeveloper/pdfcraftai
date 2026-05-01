@@ -17,8 +17,8 @@
 //
 // Skipped ops (need browser/PDFium runtime):
 //   inspect, page-count, rasterize, search-text, text-export,
-//   extract-images. Those have their own coverage in the Playwright
-//   suite (Phase 1).
+//   extract-images, grayscale (PDFium-rasterize + canvas). Those
+//   have their own coverage in the Playwright suite (Phase 1).
 //
 // Run: node --experimental-strip-types scripts/test-pdf-ops.mts
 // Or:  npm test  (auto-included via the aggregator)
@@ -635,6 +635,174 @@ await test("text-to-pdf: empty input still produces valid PDF", async () => {
   const result = await textToPdf("", {});
   assertEq(result.pageCount, 1, "empty input → 1 blank page");
   assertPdfMagic(result.bytes, "empty text-to-pdf bytes");
+});
+
+// ===========================================================================
+// SECTION (new) — markdown-to-pdf — pure pdf-lib + custom block parser
+// ===========================================================================
+
+await test("markdown-to-pdf: heading + paragraph → 1 page, 2 blocks", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  const result = await markdownToPdf("# Hello\n\nThis is a paragraph.", {
+    paperSize: "letter",
+  });
+  assertEq(result.blockCount, 2, "expected 2 blocks (heading + paragraph)");
+  assertGte(result.pageCount, 1, "at least 1 page");
+  assertPdfMagic(result.bytes, "markdown-to-pdf bytes");
+});
+
+await test("markdown-to-pdf: long content paginates", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  const huge = Array(120)
+    .fill(0)
+    .map((_, i) => `## Section ${i}\n\nLorem ipsum dolor sit amet.`)
+    .join("\n\n");
+  const result = await markdownToPdf(huge, { paperSize: "a4" });
+  // 120 H2 + 120 paragraphs = 240 blocks, should overflow page 1.
+  assertGte(result.pageCount, 2, "long markdown should produce >= 2 pages");
+  assertEq(result.blockCount, 240, "expected 240 blocks (120 H2 + 120 P)");
+  assertPdfMagic(result.bytes, "paginated markdown-to-pdf bytes");
+});
+
+await test("markdown-to-pdf: list + code block + blockquote + hr parsed", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  const md = `- bullet 1
+- bullet 2
+
+\`\`\`
+console.log("hi");
+\`\`\`
+
+> wisdom
+
+---
+
+end`;
+  const result = await markdownToPdf(md, { paperSize: "letter" });
+  // 1 list + 1 code + 1 blockquote + 1 hr + 1 paragraph = 5 blocks.
+  assertEq(result.blockCount, 5, "expected 5 blocks");
+  assertPdfMagic(result.bytes, "mixed-block markdown-to-pdf bytes");
+});
+
+await test("markdown-to-pdf: empty input throws (vs text-to-pdf which produces blank page)", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  let threw = false;
+  try {
+    await markdownToPdf("   \n\n  \n", { paperSize: "letter" });
+  } catch {
+    threw = true;
+  }
+  if (!threw) {
+    throw new Error("expected empty markdown to throw, got success");
+  }
+});
+
+await test("markdown-to-pdf: H1-H6 all parsed at distinct levels", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  const md = "# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6";
+  const result = await markdownToPdf(md, { paperSize: "letter" });
+  assertEq(result.blockCount, 6, "expected 6 heading blocks");
+  assertPdfMagic(result.bytes, "all-heading-levels bytes");
+});
+
+await test("markdown-to-pdf: parses fontSize override", async () => {
+  const { markdownToPdf } = await import("../lib/pdf/ops/markdown-to-pdf");
+  // Smaller font size → more content fits per page → fewer total pages
+  // for the same input. Compare 11pt vs 9pt on identical input.
+  const md = "Body line.\n\n".repeat(60);
+  const r11 = await markdownToPdf(md, { paperSize: "letter", fontSize: 11 });
+  const r9 = await markdownToPdf(md, { paperSize: "letter", fontSize: 9 });
+  if (r9.pageCount > r11.pageCount) {
+    throw new Error(
+      `expected smaller font ≤ larger font in pages, got 9pt=${r9.pageCount} 11pt=${r11.pageCount}`,
+    );
+  }
+});
+
+// ===========================================================================
+// SECTION (new) — booklet-pdf — saddle-stitch imposition (pure pdf-lib)
+// ===========================================================================
+
+// Helper to build a synthetic N-page PDF with minimal content. pdf-lib's
+// embedPdf throws on pages that have no Contents stream — calling
+// drawText() ensures the page tree has a content entry, which is the
+// real-world shape for any practical PDF input.
+async function makeSyntheticPdf(pageCount: number): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < pageCount; i++) {
+    const p = doc.addPage([612, 792]);
+    p.drawText(`p${i + 1}`, { x: 50, y: 700, size: 12 });
+  }
+  return await doc.save();
+}
+
+await test("booklet-pdf: 4-page input → 2 sheets (no padding)", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const src = await makeSyntheticPdf(4);
+  const result = await bookletPdf(src, { paper: "letter" });
+  assertEq(result.sourcePageCount, 4, "source page count");
+  assertEq(result.paddedPageCount, 4, "no padding needed for multiple of 4");
+  assertEq(result.sheetCount, 2, "4 padded pages / 2 = 2 sheets");
+  assertPdfMagic(result.bytes, "4pp booklet bytes");
+});
+
+await test("booklet-pdf: 5-page input → padded to 8 → 4 sheets", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const src = await makeSyntheticPdf(5);
+  const result = await bookletPdf(src, { paper: "a4" });
+  assertEq(result.sourcePageCount, 5, "source pages = 5");
+  assertEq(result.paddedPageCount, 8, "padded to next multiple of 4 (8)");
+  assertEq(result.sheetCount, 4, "8 padded pages / 2 = 4 sheets");
+  assertPdfMagic(result.bytes, "padded booklet bytes");
+});
+
+await test("booklet-pdf: 1-page input → padded to 4 → 2 sheets", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const result = await bookletPdf(SINGLE, { paper: "letter" });
+  assertEq(result.paddedPageCount, 4, "1 padded to 4");
+  assertEq(result.sheetCount, 2, "2 sheets total");
+  assertPdfMagic(result.bytes, "1pp-padded booklet bytes");
+});
+
+await test("booklet-pdf: empty source PDF throws", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const tmp = await PDFDocument.create();
+  const empty = await tmp.save();
+  let threw = false;
+  try {
+    await bookletPdf(empty, { paper: "letter" });
+  } catch {
+    threw = true;
+  }
+  if (!threw) {
+    throw new Error("expected empty PDF to throw, got success");
+  }
+});
+
+await test("booklet-pdf: output sheet width = 2 × source portrait width", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const src = await makeSyntheticPdf(4);
+  const result = await bookletPdf(src, { paper: "letter" });
+  // Re-load output and inspect first sheet's dimensions.
+  const out = await PDFDocument.load(result.bytes);
+  const firstSheet = out.getPage(0);
+  const w = firstSheet.getWidth();
+  const h = firstSheet.getHeight();
+  // Letter portrait = 612 × 792; landscape booklet sheet = 1224 × 792.
+  assertEq(w, 1224, "sheet width = 2 × portrait width");
+  assertEq(h, 792, "sheet height = portrait height");
+});
+
+await test("booklet-pdf: foldLineGuide=false produces valid PDF", async () => {
+  const { bookletPdf } = await import("../lib/pdf/ops/booklet");
+  const src = await makeSyntheticPdf(4);
+  const result = await bookletPdf(src, {
+    paper: "letter",
+    foldLineGuide: false,
+  });
+  // Sheet count unchanged regardless of guide setting.
+  assertEq(result.sheetCount, 2, "fold guide doesn't affect sheet count");
+  assertPdfMagic(result.bytes, "no-fold-guide booklet bytes");
 });
 
 // ---------------------------------------------------------------------------
