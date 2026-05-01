@@ -94,6 +94,10 @@ export const TOOL_SUGGESTIONS: Record<string, readonly string[]> = {
   // pdf-form-fill → typical post-fill is sign + flatten + send.
   // Most users want a signature next, then to compile into a binder.
   "pdf-form-fill": ["sign-pdf-free", "flatten-pdf", "merge"],
+  // pdf-batch → output is a zip; not a single PDF. The handoff
+  // suggestions surface the underlying ops users may want to apply
+  // individually to specific files in the batch (after extracting).
+  "pdf-batch": ["merge", "page-numbers", "stamp-pdf"],
 };
 
 /** Look up suggestions, defaulting to empty if no entry. */

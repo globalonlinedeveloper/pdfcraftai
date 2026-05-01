@@ -993,6 +993,68 @@ await test("fill-form: flatten option produces valid output", async () => {
   assertPdfMagic(result.bytes, "flattened output bytes");
 });
 
+await test("batch: rotate-90 across 3 inputs all succeed", async () => {
+  const { batchProcess } = await import("../lib/pdf/ops/batch");
+  const inputs = [
+    { name: "a.pdf", bytes: SINGLE },
+    { name: "b.pdf", bytes: SINGLE },
+    { name: "c.pdf", bytes: MULTI },
+  ];
+  const result = await batchProcess(inputs, { op: "rotate-90" });
+  assertEq(result.successCount, 3, "all 3 succeed");
+  assertEq(result.failureCount, 0, "no failures");
+  assertEq(result.items.length, 3, "3 result items");
+  for (const it of result.items) {
+    if (!it.bytes) throw new Error(`expected bytes for ${it.inputName}, got undefined`);
+    assertPdfMagic(it.bytes, `${it.outputName} bytes`);
+  }
+});
+
+await test("batch: per-file error isolation — bad input doesn't fail batch", async () => {
+  const { batchProcess } = await import("../lib/pdf/ops/batch");
+  const garbage = new Uint8Array([0, 1, 2, 3]); // not a PDF
+  const inputs = [
+    { name: "good.pdf", bytes: SINGLE },
+    { name: "bad.pdf", bytes: garbage },
+    { name: "good2.pdf", bytes: SINGLE },
+  ];
+  const result = await batchProcess(inputs, { op: "remove-metadata" });
+  assertEq(result.successCount, 2, "2 succeeded");
+  assertEq(result.failureCount, 1, "1 failed (the garbage)");
+  assertEq(result.items[1].bytes, undefined, "bad.pdf has no bytes");
+  if (!result.items[1].error) throw new Error("expected error message on bad.pdf");
+});
+
+await test("batch: watermark requires text", async () => {
+  const { batchProcess } = await import("../lib/pdf/ops/batch");
+  const inputs = [{ name: "a.pdf", bytes: SINGLE }];
+  // Watermark without text → batchProcess wraps the per-file error,
+  // so result.failureCount should be 1 (not a top-level throw).
+  const result = await batchProcess(inputs, { op: "watermark" });
+  assertEq(result.failureCount, 1, "missing text fails the file");
+  assertEq(result.successCount, 0, "no success");
+});
+
+await test("batch: empty input array throws", async () => {
+  const { batchProcess } = await import("../lib/pdf/ops/batch");
+  let threw = false;
+  try {
+    await batchProcess([], { op: "rotate-90" });
+  } catch {
+    threw = true;
+  }
+  if (!threw) throw new Error("expected empty batch to throw");
+});
+
+await test("batch: output filenames carry op-specific suffix", async () => {
+  const { batchProcess } = await import("../lib/pdf/ops/batch");
+  const inputs = [{ name: "report.pdf", bytes: SINGLE }];
+  const r1 = await batchProcess(inputs, { op: "rotate-90" });
+  const r2 = await batchProcess(inputs, { op: "remove-metadata" });
+  assertEq(r1.items[0].outputName, "report-rotated.pdf", "rotate suffix");
+  assertEq(r2.items[0].outputName, "report-clean.pdf", "metadata-strip suffix");
+});
+
 await test("fill-form: missing field name in values is silently skipped", async () => {
   const { fillForm } = await import("../lib/pdf/ops/fill-form");
   const src = await makeFormPdf();

@@ -123,6 +123,7 @@ const LIVE_TOOL_IDS = new Set<string>([
   "csv-to-pdf",
   "pdf-overlay",
   "pdf-form-fill",
+  "pdf-batch",
   // AI tools.
   "ai-summarize",
   "ai-tldr",

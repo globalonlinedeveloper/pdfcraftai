@@ -3054,6 +3054,89 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  "pdf-batch": {
+    useCasesTitle: "Why people use batch PDF processing",
+    useCasesIntro:
+      "Most PDF tasks are one-off. Batch PDF processing is for the times when they aren&rsquo;t — when you have 30 scans to rotate, 50 invoices to watermark, or 100 contracts to strip metadata from. Repeating the same operation file by file is tedious and error-prone; doing it in one batch is the obvious answer.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Bulk scan correction",
+        text: "Phone-scanned documents often come in sideways or upside-down. Drop the whole stack, pick the rotation that fixes them, get a fixed batch back as a zip.",
+      },
+      {
+        icon: "Receipt",
+        title: "Invoice / receipt watermarking",
+        text: "Mark every invoice in a month&rsquo;s billing with &ldquo;PAID&rdquo; or &ldquo;DRAFT&rdquo;. Batch keeps the watermark settings consistent across the run; alternative is opening 50 PDFs one at a time.",
+      },
+      {
+        icon: "Shield",
+        title: "Privacy / compliance metadata strip",
+        text: "Most PDFs leak author / creator / producer / dates in metadata. Before sharing externally, run the batch with &ldquo;remove metadata&rdquo; to scrub every file at once. Pairs well with auditing the result via PDF Inspector.",
+      },
+      {
+        icon: "Edit",
+        title: "Form-fill finalization",
+        text: "After filling 20 expense forms (or any AcroForm batch), flatten all of them at once so values are baked in before sharing. Recipients can&rsquo;t edit; original templates stay editable elsewhere.",
+      },
+      {
+        icon: "Convert",
+        title: "Pagination for binders",
+        text: "Compiling a binder from many separate PDFs (case files, exhibits, training materials)? Add page numbers to every PDF in one pass before merging — keeps numbering consistent across the binder.",
+      },
+    ],
+    howWorksTitle: "How Batch Process works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop multiple PDFs",
+        text: "Up to 50 PDFs, 100 MB each. Drag-drop or click to browse. Files stay in your browser — nothing uploaded.",
+      },
+      {
+        step: "2",
+        title: "Pick one operation",
+        text: "8 operations available: rotate (90 / 180 / 270), page numbers, diagonal watermark with custom text, remove metadata, flatten forms, strip links. Each uses sensible defaults so the batch UX doesn&rsquo;t need per-file config.",
+      },
+      {
+        step: "3",
+        title: "Run &amp; download zip",
+        text: "Per-file progress shows which is processing. Per-file error isolation — one bad file doesn&rsquo;t fail the batch. Successful outputs bundle into a single zip; per-file download buttons available too.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Why only 8 operations?",
+        a: "Batch UX works best when every file in the batch shares the same config. Operations with multiple knobs (resize, crop, n-up, image watermark) need per-file decisions where the batch model breaks down — those have their own dedicated tools where you can tune each file individually. The 8 operations available here all work the same way regardless of input shape, so a single config knob covers the whole batch.",
+      },
+      {
+        q: "What if one PDF in the batch fails?",
+        a: "Per-file error isolation — the batch continues, that file lands as a failure with the error message in the per-file results table. Successful outputs still go into the zip; failed ones are excluded but visible in the result list so you know which to retry. The success card shows e.g. &ldquo;Processed 47 of 50 PDFs · 3 failed&rdquo;.",
+      },
+      {
+        q: "What's the page numbers / watermark default?",
+        a: "Page numbers: bottom-right, &ldquo;Page 1 of N&rdquo; format, 11pt. Watermark: diagonal across each page, 30% opacity, your custom text. If you need different defaults (different position, smaller font, different opacity), use the dedicated single-file tools — Page Numbers and Watermark — and run them per file.",
+      },
+      {
+        q: "How long does the batch take?",
+        a: "Roughly a few hundred milliseconds per file for fast operations (rotate, strip-links, remove-metadata) and a couple of seconds per file for slower ones (page-numbers, watermark — both add per-page drawText calls). 50-file batch of mostly small PDFs typically lands in 30–60 seconds.",
+      },
+      {
+        q: "What's the file size limit?",
+        a: "100 MB per file, 50 files per batch (so up to ~5 GB of input). Browser memory is the practical constraint — very large batches of large PDFs may slow the tab. Run smaller batches if you hit limits.",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. pdf-lib runs locally; the zip is built locally via JSZip. No PDFs touch our servers. Verifiable in DevTools → Network — the only request you should see is the JSZip module fetch (one time, ~100 KB).",
+      },
+    ],
+    cta: {
+      title: "Need to combine into one PDF?",
+      text: "Merge PDF combines multiple PDFs into a single output (instead of a zip of separate PDFs). Drag to reorder, lossless — pairs well with batch when you want a unified deliverable instead of a folder of files.",
+      linkHref: "/tool/merge",
+      linkLabel: "Try Merge PDF",
+    },
+  },
+
   "pdf-form-fill": {
     useCasesTitle: "Why people fill PDF forms online",
     useCasesIntro:

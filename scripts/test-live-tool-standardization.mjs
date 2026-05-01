@@ -242,6 +242,7 @@ const NON_PDF_OUTPUT_TOOLS = new Map([
   ["pdf-x-check", "read-only inspector"],
   ["pdf-forms", "read-only inspector"],
   ["extract-images", "output is image bundle"],
+  ["pdf-batch", "output is a zip of PDFs, not a single PDF — handoff suggestions don't apply"],
 ]);
 
 // ---------------------------------------------------------------------

@@ -520,4 +520,8 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a filled PDF form — text, checkboxes, radio buttons, dropdowns, multi-select all rendered as native input controls. Optional flatten to bake values into page content so recipients can't edit.",
     related: { id: "pdf-forms", label: "PDF Form Inspector (read-only fields view)" },
   },
+  "pdf-batch": {
+    text: "What you'll get: every input PDF processed through one chosen operation (rotate / page numbers / watermark / metadata strip / form flatten / link strip), bundled into a downloadable zip. Up to 50 PDFs per batch.",
+    related: { id: "merge", label: "Merge PDF (single combined output)" },
+  },
 };

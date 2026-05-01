@@ -183,6 +183,11 @@ const PdfFormFillTool = dyn(() =>
     default: m.PdfFormFillTool,
   })),
 );
+const PdfBatchProcessTool = dyn(() =>
+  import("@/components/tools/PdfBatchProcessTool").then((m) => ({
+    default: m.PdfBatchProcessTool,
+  })),
+);
 
 const SearchPdfTool = dyn(() =>
   import("@/components/tools/SearchPdfTool").then((m) => ({
@@ -658,6 +663,8 @@ export function ToolRunner({ id }: { id: string }) {
       return <PdfOverlayTool />;
     case "pdf-form-fill":
       return <PdfFormFillTool />;
+    case "pdf-batch":
+      return <PdfBatchProcessTool />;
     case "pdf-search":
       return <SearchPdfTool />;
     case "extract-images":
