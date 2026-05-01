@@ -5247,4 +5247,760 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       linkLabel: "Try AI Tone Analyze",
     },
   },
+
+  // =====================================================================
+  // 2026-05-01 — Phase 2 AI longform Tier 2 (9 tools)
+  //
+  // Content-focused tools: study materials (notes, syllabus), medical
+  // (discharge), publishing (blog, newsletter, video script), readability
+  // (readability score, improve-writing, proofread). Same editorial bar
+  // as Tier 1.
+  // =====================================================================
+
+  "ai-study-notes": {
+    useCasesTitle: "Why people use PDF to Study Notes",
+    useCasesIntro:
+      "Study notes are different from a summary &mdash; they&rsquo;re pre-revision artifacts: an overview to scan first, key concepts to memorize, detailed sections for the deep-read, and self-check questions to test understanding. PDF to Study Notes generates all four from any textbook, course material, or technical doc.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Exam revision the day before",
+        text: "Drop the textbook chapter, get notes structured for the &ldquo;I have 4 hours and need to know this&rdquo; revision pattern. Overview surfaces the framework, key concepts list the must-knows, self-check questions test recall.",
+      },
+      {
+        icon: "Pages",
+        title: "Course material for a new subject",
+        text: "When starting a new course / certification, study notes from the textbook give you the conceptual scaffolding to attach further reading to. Better than starting cold with chapter 1.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Technical certification prep",
+        text: "AWS / GCP / Azure certifications, CFA, PMP &mdash; standardized exams with known reading lists. Study notes per source compile a pre-exam binder; the self-check questions surface gaps.",
+      },
+      {
+        icon: "Edit",
+        title: "Teacher / TA lesson prep",
+        text: "Teachers prepping a class on assigned reading use the notes as the lecture skeleton: overview frames the lesson, concepts become talking points, self-check questions become discussion prompts.",
+      },
+      {
+        icon: "Shield",
+        title: "Compliance / policy training",
+        text: "Annual compliance training (data privacy, anti-corruption, safety) uses dense policy docs. Study notes turn each policy into testable concepts &mdash; useful for trainers building the post-training quiz.",
+      },
+    ],
+    howWorksTitle: "How PDF to Study Notes works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the source",
+        text: "PDF up to 100 MB. Works on textbooks, course handouts, lecture slides, technical specs, policy docs.",
+      },
+      {
+        step: "2",
+        title: "We extract + structure for revision",
+        text: "Server-side text extraction, then a structured pass that produces four sections: overview, key concepts, detailed notes, self-check questions. Each section optimized for a different revision activity. Routing layer picks the model based on cost-vs-quality fit.",
+      },
+      {
+        step: "3",
+        title: "Get markdown notes with citations",
+        text: "Output is markdown with section headings + page references. Print as study sheet, paste into Notion, or feed into Anki / Quizlet for spaced-repetition.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How is this different from AI Summarize?",
+        a: "Summary is a digest meant to replace reading the source for a quick read. Study notes are pre-revision &mdash; overview + concepts + details + self-check &mdash; meant to support multiple revision passes. Different tool for different reading goal.",
+      },
+      {
+        q: "How are the self-check questions generated?",
+        a: "Concept-by-concept: each key concept gets 1&ndash;2 self-check questions that test understanding (not just recall). Question style matches educational best practice for the doc&rsquo;s subject area &mdash; calculation problems for quantitative content, definition / example questions for conceptual content.",
+      },
+      {
+        q: "Will it work for non-textbook content?",
+        a: "Best on structured educational content (textbooks, course material, lecture notes). Less optimal on prose-heavy content (novels, narrative non-fiction) &mdash; for those, AI Summarize is a better fit.",
+      },
+      {
+        q: "Can I export to Anki for flashcards?",
+        a: "The self-check questions section copy-pastes into Anki / Quizlet directly. For dedicated flashcard generation with spaced-repetition tagging, AI Flashcards is the focused tool.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if a key concept is missed?",
+        a: "Re-run; the model is non-deterministic and re-runs typically vary recall. For exam-critical content where missed concepts matter, pair with AI Summarize for a second-pass coverage check &mdash; if a concept is in summary but not in notes, regenerate.",
+      },
+    ],
+    cta: {
+      title: "Need flashcards for spaced repetition?",
+      text: "AI Flashcards generates Q-card / A-card pairs sized for Anki and Quizlet, with spaced-repetition difficulty tagging. Pairs naturally with study notes for the full revision workflow.",
+      linkHref: "/tool/ai-flashcards",
+      linkLabel: "Try AI Flashcards",
+    },
+  },
+
+  "ai-syllabus": {
+    useCasesTitle: "Why people use Syllabus to Study Plan",
+    useCasesIntro:
+      "A syllabus tells you what to learn but not when. Syllabus to Study Plan turns the topic list into a 12-week schedule with weekly checkpoints, practice problems, and a revision strategy. Useful when you need structure imposed on a self-study course or exam-prep timeline.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Self-study certification prep",
+        text: "Drop the official AWS / GCP / Azure / CFA / PMP syllabus, get a 12-week plan with topic-week pairings + weekly practice + final-week revision schedule. Replaces the &ldquo;just read the books&rdquo; approach with measurable progress.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Indian competitive exam prep",
+        text: "UPSC / SSC / banking / GATE / NEET / JEE syllabuses translated into week-by-week study plans. The plan accounts for subject-mix balance (don&rsquo;t do all quantitative for 4 weeks, then all verbal) and includes mock-test checkpoints.",
+      },
+      {
+        icon: "Pages",
+        title: "Bootcamp / coding course",
+        text: "Self-paced bootcamp curricula become structured weekly plans. Useful for working professionals doing online courses (Coursera, Pluralsight, freeCodeCamp) where the optional &ldquo;suggested pace&rdquo; needs hardening into a real schedule.",
+      },
+      {
+        icon: "Edit",
+        title: "Teacher building a course schedule",
+        text: "Teachers translating a curriculum framework into a semester plan. The output is a starting-point schedule the teacher edits for term-specific holidays, exam windows, and student-pace observations.",
+      },
+      {
+        icon: "Shield",
+        title: "Corporate L&D programs",
+        text: "L&D managers building structured upskilling programs from vendor curricula (e.g. an internal Snowflake certification cohort). The plan format supports cohort scheduling and progress tracking.",
+      },
+    ],
+    howWorksTitle: "How Syllabus to Study Plan works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the syllabus",
+        text: "PDF up to 50 MB. Works on official certification syllabuses, university course outlines, exam framework docs.",
+      },
+      {
+        step: "2",
+        title: "We sequence + balance",
+        text: "Topics extracted, dependencies inferred (math before stats, basics before advanced), then sequenced into a 12-week plan with subject-mix balance and revision pad in the final week.",
+      },
+      {
+        step: "3",
+        title: "Get a structured study plan",
+        text: "Markdown output with: week 1&ndash;12 topic plan, weekly practice problem suggestions, mid-plan and final revision checkpoints. Page citations link each topic back to the syllabus section.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Why 12 weeks &mdash; can I get a different length?",
+        a: "12 weeks is the default because it matches a typical self-study sprint. Custom lengths (4 weeks for crash prep, 24 weeks for slow-burn) are on the roadmap. For now, scale the output mentally &mdash; if you have 6 weeks, double up weekly topic load; if 24 weeks, halve it.",
+      },
+      {
+        q: "Does it account for syllabus weights / exam patterns?",
+        a: "It tries &mdash; if the syllabus marks topics with weight indicators (10% for X, 20% for Y), the plan allocates time proportionally. If there&rsquo;s no weight info, it allocates roughly evenly with high-dependency topics earlier.",
+      },
+      {
+        q: "Can it generate practice problems too?",
+        a: "The plan suggests TYPES of practice (e.g. &ldquo;solve 5 mixed-difficulty problems on quadratic equations&rdquo;) but doesn&rsquo;t generate the problems themselves &mdash; you&rsquo;ll need a problem source. For exam-specific practice, official prep books are still the best source.",
+      },
+      {
+        q: "What if my syllabus is in Hindi / regional language?",
+        a: "Best results in English. Hindi / regional-language syllabuses parse but topic naming may be inconsistent. For Indian competitive exams, the official syllabuses are usually published in English regardless of the exam medium.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per syllabus. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the plan doesn&rsquo;t match my prior knowledge?",
+        a: "The plan assumes baseline competence in the syllabus&rsquo;s pre-requisites. If you&rsquo;re behind on pre-reqs, you&rsquo;ll need to add a pre-week or two. For above-baseline learners, you can compress the plan by 1&ndash;2 weeks. Treat it as a starting structure, not a fixed schedule.",
+      },
+    ],
+    cta: {
+      title: "Need study notes for each topic?",
+      text: "PDF to Study Notes generates revision-grade notes for any source &mdash; overview + concepts + details + self-check questions. Pairs with the study plan to fill in each weekly topic.",
+      linkHref: "/tool/ai-study-notes",
+      linkLabel: "Try PDF to Study Notes",
+    },
+  },
+
+  "ai-discharge": {
+    useCasesTitle: "Why people use Discharge Summary Simplifier",
+    useCasesIntro:
+      "Indian hospital discharge summaries are written for the next-treating doctor, not the patient. Diagnoses in medical Latin, drugs in clinical shorthand (1-0-1, BD, TDS), follow-up plans assuming clinical context. The simplifier rewrites all of it in plain English the patient and family can act on. This is a language-translation aid, NOT medical advice.",
+    useCases: [
+      {
+        icon: "File",
+        title: "Patient + family understanding",
+        text: "Hospital stays end with a discharge summary the patient is expected to act on &mdash; medications, follow-up appointments, warning signs. Plain-English rewrite means the patient (and the family member who&rsquo;ll administer the medications) actually understand what to do.",
+      },
+      {
+        icon: "Compare",
+        title: "Telemedicine consult prep",
+        text: "Follow-up consults with a primary doctor after hospital discharge often need a recap of what happened in hospital. Simplifier output is the recap &mdash; better than handing the doctor 8 pages of clinical jargon to skim.",
+      },
+      {
+        icon: "Shield",
+        title: "Insurance / TPA reimbursement",
+        text: "Insurance Third Party Administrators need a procedure-and-treatment summary for cashless / reimbursement processing. The simplifier output (with structured medication list and procedure description) accelerates the TPA review.",
+      },
+      {
+        icon: "Pages",
+        title: "Caregiver handoff",
+        text: "When the discharge happens during one family member&rsquo;s shift but recovery happens at home with another, the rewritten summary is the handoff document. Reduces &ldquo;what did the doctor say about the medicine?&rdquo; phone calls.",
+      },
+      {
+        icon: "Edit",
+        title: "Cross-system specialist consult",
+        text: "Indian patients often see specialists across hospital systems. The plain-language summary is shareable across systems without each specialist needing to decode the originating hospital&rsquo;s style.",
+      },
+    ],
+    howWorksTitle: "How Discharge Summary Simplifier works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the discharge PDF",
+        text: "From any Indian hospital &mdash; multi-speciality, smaller nursing home, government hospital. Up to 50 MB.",
+      },
+      {
+        step: "2",
+        title: "We rewrite section-by-section",
+        text: "Diagnoses translated from medical terminology to everyday words (with the original term in parentheses). Medications rewritten with timing in plain English (&ldquo;Tab Pan-D 40 mg 1-0-0&rdquo; becomes &ldquo;Pantoprazole 40 mg, one tablet in the morning before food&rdquo;). Follow-up plan + warning signs surfaced prominently.",
+      },
+      {
+        step: "3",
+        title: "Get patient-friendly markdown",
+        text: "Output sections: what happened in hospital / current diagnosis in plain English / medications with timing / follow-up plan / warning signs to watch for. Page citations link each section back to the original discharge.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this medical advice?",
+        a: "No. The simplifier translates the LANGUAGE of the discharge summary &mdash; we don&rsquo;t add clinical interpretation, change dosages, or recommend skipping medications. The clinical content stays exactly what the prescribing doctor wrote. Always discuss the discharge with the prescribing doctor if anything is unclear.",
+      },
+      {
+        q: "How does it handle Indian prescribing shorthand?",
+        a: "Pre-encoded: 1-0-1 (one tablet morning, none afternoon, one tablet night), BD (twice a day), TDS (three times a day), QID (four times), HS (at bedtime), SOS (when needed), AC (before food), PC (after food). All translated into plain English timing instructions.",
+      },
+      {
+        q: "What about warning signs to watch for?",
+        a: "Surfaced prominently &mdash; when to rush back to hospital, when to call the doctor, what&rsquo;s normal vs an emergency. Critical for post-surgery / post-cardiac / post-stroke discharges where deterioration signs need immediate action.",
+      },
+      {
+        q: "Will it explain insurance / billing items?",
+        a: "Discharge summaries are clinical, not financial. For the bill itself use Medical Bill Analyzer (separate tool) &mdash; it parses the itemised charges and surfaces IRDAI-reimbursable items.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per discharge. Cost is fixed regardless of length.",
+      },
+      {
+        q: "Privacy?",
+        a: "Discharge sent to inference provider for rewriting, not stored. For patient confidentiality (especially when sharing with extended family), redact patient name + UHID first via Redact PDF before running the simplifier.",
+      },
+    ],
+    cta: {
+      title: "Have lab reports too?",
+      text: "Blood Test Report Parser extracts structured lab values from any Indian lab format with high/low/normal flags. Pairs with the discharge summary for the full post-hospital handoff.",
+      linkHref: "/tool/ai-blood-test",
+      linkLabel: "Try Blood Test Report Parser",
+    },
+  },
+
+  "ai-blog": {
+    useCasesTitle: "Why people use PDF to Blog Post",
+    useCasesIntro:
+      "Internal docs that should be public-facing &mdash; product launches, research findings, case studies &mdash; rarely make the leap because converting them to blog format is tedious. PDF to Blog Post generates a publish-ready draft (hook, sections, conclusion) from any source PDF. The output is a starting draft, not a finished post.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Product launch announcement",
+        text: "Internal launch spec becomes the customer-facing blog post draft &mdash; same product, different audience, different register. Saves the &ldquo;rewrite the spec for the website&rdquo; afternoon every PM dreads.",
+      },
+      {
+        icon: "Pages",
+        title: "Research findings &rarr; thought leadership",
+        text: "Internal research reports become external-facing thought-leadership posts. Useful for VC-backed startups doing content marketing on the back of their data.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Case study repurposing",
+        text: "Customer success case studies (often delivered as 10-page PDFs) become 800-word blog posts highlighting the same story. The blog format unlocks SEO + social-share value the PDF format can&rsquo;t generate.",
+      },
+      {
+        icon: "Book",
+        title: "Conference talk &rarr; blog post",
+        text: "Speakers turning their own conference talk decks into companion blog posts. The blog post serves as the durable link to share post-talk &mdash; better than &ldquo;here are my slides&rdquo; tweets.",
+      },
+      {
+        icon: "Shield",
+        title: "Documentation summary post",
+        text: "Long documentation pages become digest blog posts that index back into the docs. Improves SEO surface (long-tail keyword discovery) for technical products with deep docs.",
+      },
+    ],
+    howWorksTitle: "How PDF to Blog Post works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the PDF",
+        text: "PDF up to 100 MB. Works on internal docs, research reports, case studies, talk decks, technical specs.",
+      },
+      {
+        step: "2",
+        title: "We restructure for blog format",
+        text: "Server-side extraction, then a generation pass that produces blog-shape: hook (first 2 paragraphs), themed sections with subheaders, transition prose between sections, conclusion + (optional) CTA. Tone shifts toward conversational while preserving facts.",
+      },
+      {
+        step: "3",
+        title: "Get markdown blog draft",
+        text: "Output is markdown with hook, H2 sections, conclusion. Length scales with input &mdash; typically 800&ndash;1500 words. Page citations link each section back to the source PDF for fact-checking.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How long is the output?",
+        a: "Typically 800&ndash;1500 words for a 10&ndash;30 page source. Longer sources get a longer post (capped around 2000 words to keep the post scannable). For explicit length control, run AI Condense on the output.",
+      },
+      {
+        q: "Will it write the hook in my brand voice?",
+        a: "Generic engaging-blog tone by default. Brand voice replication is partial &mdash; the model imitates surface signals (sentence length, vocabulary preferences) when given examples but the output is best treated as a draft for your editor to brand-tune.",
+      },
+      {
+        q: "Does it generate SEO-ready titles?",
+        a: "Includes a suggested title at the top of the output. The title is descriptive of the post content but isn&rsquo;t SEO-keyword optimized &mdash; for keyword research and SEO-tuned titles, use a dedicated SEO tool. The post body is search-friendly (clear hierarchy, scannable subheaders).",
+      },
+      {
+        q: "What about images and embeds?",
+        a: "Output is text-only. The post will reference where images would help (&ldquo;[chart showing Q3 revenue]&rdquo;) so you know what to add manually. Image generation is a separate workflow.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per draft. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Should I publish the output as-is?",
+        a: "No. The output is a draft &mdash; ~80% of the work, but the last 20% (editor pass for voice + fact-check + adding examples / images) materially improves quality. Treat it as the part that would have taken you 2 hours, freed up.",
+      },
+    ],
+    cta: {
+      title: "Need a newsletter version too?",
+      text: "PDF to Email Newsletter generates a newsletter-shaped output from the same source &mdash; subject + preheader + sections + sign-off. Pairs naturally with the blog post for the &ldquo;publish on blog AND email subscribers&rdquo; workflow.",
+      linkHref: "/tool/ai-newsletter",
+      linkLabel: "Try PDF to Email Newsletter",
+    },
+  },
+
+  "ai-readability": {
+    useCasesTitle: "Why people use Readability Score",
+    useCasesIntro:
+      "Most readers can handle text that scores around 8&ndash;10 on the Flesch-Kincaid grade level &mdash; that&rsquo;s 8th-grade reading level, the recommended target for general-audience content. Readability Score measures the doc&rsquo;s grade level, flags the complex sentences and jargon making it harder than it needs to be, and suggests fixes.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Marketing / customer-facing copy QA",
+        text: "Run customer-facing copy through readability before publishing. Saas pages aimed at general audience but written by engineers often score 14&ndash;16 (graduate-level); the report flags which sentences are dragging the average up.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Patient-facing medical content",
+        text: "Healthcare apps and medical content services have explicit readability targets (often 6&ndash;8 grade level for accessibility). The score plus jargon flags surface what to simplify before publication.",
+      },
+      {
+        icon: "Book",
+        title: "Educational content alignment",
+        text: "EdTech building age-appropriate content runs the score to verify alignment. A 5th-grade textbook scoring at 9th-grade level is too hard; the flagged sentences are where to revise.",
+      },
+      {
+        icon: "Edit",
+        title: "Technical doc clarity audit",
+        text: "Engineering-written docs aimed at non-technical buyers (sales decks, pricing pages, FAQ sections) often have register mismatch. The score quantifies the mismatch; the fixes section suggests how to bring it down.",
+      },
+      {
+        icon: "Shield",
+        title: "Legal / policy doc accessibility",
+        text: "GDPR, terms of service, privacy policies have legal requirement to be &ldquo;understandable.&rdquo; A grade-12+ score signals risk. The report surfaces specific sentences and substitution suggestions.",
+      },
+    ],
+    howWorksTitle: "How Readability Score works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the doc",
+        text: "PDF up to 100 MB. Works best on prose; heavily structured content (tables, code blocks, math notation) skews the score.",
+      },
+      {
+        step: "2",
+        title: "We score + flag",
+        text: "Server-side extraction, then Flesch-Kincaid grade calculation, complex-sentence detection (high syllable-per-word ratios, long sentences with multiple clauses), jargon flagging (domain-specific terms with lay alternatives available).",
+      },
+      {
+        step: "3",
+        title: "Get a structured report",
+        text: "Output: overall grade level / sentence-by-sentence flag list / jargon list with suggested replacements / overall recommendations (e.g. &ldquo;split sentences over 25 words&rdquo;). Page citations on every flag.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is Flesch-Kincaid the only metric?",
+        a: "Primary score is Flesch-Kincaid grade level (most widely used for English content). We also surface average sentence length and average syllable-per-word for context. Other metrics (Gunning Fog, SMOG, Coleman-Liau) are correlated and don&rsquo;t add much signal.",
+      },
+      {
+        q: "Will it work for non-English content?",
+        a: "Flesch-Kincaid is English-specific. For Indian-language content (Hindi, Tamil, Bengali), the syllable-counting heuristic doesn&rsquo;t translate accurately. Use the score on English source content only; for Indic readability, rely on human review.",
+      },
+      {
+        q: "What&rsquo;s a good target score?",
+        a: "Depends on audience. General-audience web content: 6&ndash;9. Patient-facing health content: 5&ndash;7. Technical docs for technical readers: 10&ndash;13. Legal docs aiming at consumer accessibility: 8&ndash;10. Above 13 is graduate-level and should generally be intentional.",
+      },
+      {
+        q: "Can it auto-rewrite the flagged sentences?",
+        a: "No &mdash; it surfaces the issues. For automatic rewriting at lower readability, AI Improve Writing rewrites for clarity + concision (~20-30% shorter); AI Rewrite with the &ldquo;simple&rdquo; register option rewrites at lower complexity. Score-then-rewrite is a 2-tool workflow today.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the score feels wrong?",
+        a: "Flesch-Kincaid is heuristic &mdash; it doesn&rsquo;t understand context, only word/sentence shape. A doc with simple language but specialized terms can score low (good readability) while still being inaccessible to laypeople. Use the score with the jargon-flag list, not in isolation.",
+      },
+    ],
+    cta: {
+      title: "Want to actually fix the writing?",
+      text: "AI Improve Writing rewrites for clarity + concision while preserving every claim and number &mdash; the natural next step after the readability audit identifies what to fix.",
+      linkHref: "/tool/ai-improve-writing",
+      linkLabel: "Try AI Improve Writing",
+    },
+  },
+
+  "ai-newsletter": {
+    useCasesTitle: "Why people use PDF to Email Newsletter",
+    useCasesIntro:
+      "Newsletters have specific format constraints &mdash; subject line under 60 chars, preheader text, scannable sections with descriptive headers, sign-off. PDF to Email Newsletter generates a publish-ready draft in this exact format from any source PDF. Output drops directly into your ESP (Mailchimp, Substack, Beehiiv, ConvertKit) without restructuring.",
+    useCases: [
+      {
+        icon: "Send",
+        title: "Internal weekly digest distribution",
+        text: "Weekly internal updates that should also be emailed. The PDF (drafted in Notion / Docs) becomes a mailable newsletter without copy-pasting and reformatting section by section.",
+      },
+      {
+        icon: "Pages",
+        title: "Research report &rarr; subscriber email",
+        text: "Long research reports become digestible subscriber emails. Saves the analyst&rsquo;s time on the &ldquo;rewrite for the email list&rdquo; step that often gets dropped.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Product update / changelog email",
+        text: "Internal release notes become customer-facing release announcement emails. Restructured for impact (&ldquo;here&rsquo;s what&rsquo;s new&rdquo;) rather than chronological.",
+      },
+      {
+        icon: "Book",
+        title: "Curriculum &rarr; cohort drip",
+        text: "Course material becomes a drip-email sequence (one section per week). Useful for cohort-based courses where async engagement happens in the inbox.",
+      },
+      {
+        icon: "Shield",
+        title: "Industry brief &rarr; client newsletter",
+        text: "Industry research / regulatory updates become client-facing newsletters. The conversion preserves the technical content while shifting register to client-friendly.",
+      },
+    ],
+    howWorksTitle: "How PDF to Email Newsletter works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the source PDF",
+        text: "PDF up to 100 MB. Works on internal docs, research reports, release notes, course material, briefs.",
+      },
+      {
+        step: "2",
+        title: "We restructure for email format",
+        text: "Subject line generated (60-char optimized), preheader (the 1&ndash;2 sentence preview text most ESPs render below the subject), 3&ndash;5 sections with descriptive headers, sign-off. Tone shifted toward email-conversational. Routing layer picks the model based on cost-vs-quality fit.",
+      },
+      {
+        step: "3",
+        title: "Get an ESP-ready draft",
+        text: "Markdown output with: Subject / Preheader / Sections / Sign-off. Copy-paste into Mailchimp / Substack / Beehiiv / ConvertKit and you have a publish-ready draft minus images and final tone polish.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Will the subject line drive opens?",
+        a: "It&rsquo;s generated for clarity, not for click-bait optimization. For aggressive open-rate optimization, run the suggested subject through your A/B-testing tool against alternatives. The generated one is a competent baseline.",
+      },
+      {
+        q: "How long is the newsletter draft?",
+        a: "300&ndash;800 words depending on source length. Newsletters longer than that have steep open-vs-read drop-off; we cap output to keep email engagement viable.",
+      },
+      {
+        q: "Does it include images and embeds?",
+        a: "Text-only. The draft references where images would help (&ldquo;[chart showing Q3 revenue]&rdquo;); add the actual images in your ESP. Image generation is a separate workflow.",
+      },
+      {
+        q: "Can I get a series of emails instead of one?",
+        a: "Drip-sequence generation is on the roadmap. For now, run the source PDF through this tool once for the digest, or run AI Action Items + AI Summarize separately for action-oriented vs context-oriented sequences.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per draft. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Will the tone match my brand voice?",
+        a: "Generic newsletter tone by default. Brand voice replication is partial &mdash; provide your existing newsletters as fine-tuning examples is on the roadmap. Today, treat the output as a structural draft for your editor to brand-tune.",
+      },
+    ],
+    cta: {
+      title: "Need a blog version too?",
+      text: "PDF to Blog Post generates a blog-shaped draft from the same source &mdash; longer, with hook + sections + conclusion. Pairs with the newsletter for the &ldquo;blog + email subscribers&rdquo; multi-channel workflow.",
+      linkHref: "/tool/ai-blog",
+      linkLabel: "Try PDF to Blog Post",
+    },
+  },
+
+  "ai-video-script": {
+    useCasesTitle: "Why people use PDF to Video Script",
+    useCasesIntro:
+      "Talking-head videos need a structured script &mdash; hook in the first 5 seconds, segmented content in 90-second chunks, visual stage cues, and a closing CTA. PDF to Video Script generates the script in this format from any source PDF, optimized for the YouTube / LinkedIn / Reels attention curve.",
+    useCases: [
+      {
+        icon: "Play",
+        title: "YouTube explainer from a research paper",
+        text: "Researchers turning their own paper into an explainer video. Script segments the content into 90s chunks for retention, with stage cues for what to draw on the whiteboard or show on screen.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Product demo video script",
+        text: "Internal product spec becomes a 5-minute product demo script. Hook frames the user pain, sections walk through key features, closing CTA drives signup.",
+      },
+      {
+        icon: "Pages",
+        title: "Webinar / talk prep",
+        text: "Transcript of a previous talk + slide deck becomes a refined script for a re-recording. Useful for evergreen webinar content where you want the polished take, not the original live one.",
+      },
+      {
+        icon: "Book",
+        title: "Educational explainer",
+        text: "Teachers and creators making subject-explanation videos use the script as the structured first draft. Replaces the &ldquo;outline by hand&rdquo; step that&rsquo;s the slowest part of video pre-production.",
+      },
+      {
+        icon: "Shield",
+        title: "Compliance training video",
+        text: "Internal policy doc becomes a 10-minute compliance training video script. Format works well for module-based training where each segment can be a separate completion checkpoint.",
+      },
+    ],
+    howWorksTitle: "How PDF to Video Script works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the source",
+        text: "PDF up to 100 MB. Works on research papers, product specs, talk transcripts, educational material, policy docs.",
+      },
+      {
+        step: "2",
+        title: "We structure for talking-head video",
+        text: "Hook generated (5&ndash;10 second attention-grab), content sequenced into 90-second segments (matches YouTube retention drop-off), stage cues inserted (what to draw / show / cut to), closing CTA. Tone shifted toward conversational-spoken.",
+      },
+      {
+        step: "3",
+        title: "Get a recordable script",
+        text: "Markdown output with: HOOK / SEGMENTS (timestamped) / STAGE CUES / CTA. The format is recordable as-is &mdash; print it, read it, ship it. Page citations link each segment back to the source.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How long is the output?",
+        a: "Default targets 5&ndash;8 minute videos (~750&ndash;1200 words spoken). For shorter (Reels / TikTok 30&ndash;60s) or longer (15&ndash;20 min), trim or expand manually &mdash; explicit length control is on the roadmap.",
+      },
+      {
+        q: "Will it match my speaking style?",
+        a: "Generic talking-head tone by default. The output is a draft to read once and edit for your speaking rhythm. Some creators prefer to outline the structure (which the script provides) and improvise the actual words, treating the script as scaffolding.",
+      },
+      {
+        q: "What about visual cues / B-roll suggestions?",
+        a: "Stage cues are included (&ldquo;[show the chart]&rdquo;, &ldquo;[cut to graphic]&rdquo;, &ldquo;[zoom on the equation]&rdquo;) for talking-head + B-roll style videos. For full storyboarding (frame-by-frame visuals), you&rsquo;ll need a dedicated tool &mdash; this generates the verbal script, not the visual treatment.",
+      },
+      {
+        q: "Can it write for shorts vs long-form?",
+        a: "Default is mid-length (5&ndash;8 min). The same hook + segment structure scales down to shorts but you&rsquo;ll need to manually pick the strongest segment and cut. For TikTok-native content, treat this output as input for further editing.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per script. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Does it suggest titles and thumbnails?",
+        a: "Suggested title is included. Thumbnail / channel art generation is out of scope &mdash; use a dedicated thumbnail tool. The script focuses on what gets recorded, not what wraps it.",
+      },
+    ],
+    cta: {
+      title: "Want a blog post version too?",
+      text: "PDF to Blog Post generates a written-form version of the same content &mdash; useful for the &ldquo;publish video on YouTube AND blog post on website&rdquo; SEO workflow.",
+      linkHref: "/tool/ai-blog",
+      linkLabel: "Try PDF to Blog Post",
+    },
+  },
+
+  "ai-improve-writing": {
+    useCasesTitle: "Why people use Improve Writing",
+    useCasesIntro:
+      "Improve Writing rewrites for clarity and concision &mdash; typically 20&ndash;30% shorter &mdash; without changing facts, register, or claims. The output is the same document, tighter. Useful when the goal is &ldquo;say this better&rdquo; rather than &ldquo;say this differently.&rdquo;",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Polish a draft before sharing",
+        text: "First-draft business writing tends toward verbose. Improve Writing tightens it &mdash; same content, ~25% fewer words &mdash; before sending to stakeholders. Faster than a manual editing pass and consistent across documents.",
+      },
+      {
+        icon: "Pages",
+        title: "Tighten product spec / PRD",
+        text: "Engineering specs often start as brain-dump and need editorial pass before sharing with cross-functional partners. The tightened version preserves every requirement while losing the &ldquo;basically&rdquo;s and &ldquo;in order to&rdquo;s.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Cut filler from website copy",
+        text: "Marketing copy with filler phrases (&ldquo;solutions to help you&hellip;&rdquo;, &ldquo;designed to enable&hellip;&rdquo;) gets tightened to direct claims. Improves both reader experience and SEO (more value per word).",
+      },
+      {
+        icon: "Book",
+        title: "Cover letter / personal statement",
+        text: "Job seekers and applicants tightening their cover letters to fit the &ldquo;1 page&rdquo; requirement. Loses the verbose phrasing without losing the substantive evidence.",
+      },
+      {
+        icon: "Shield",
+        title: "Email response polish",
+        text: "Long client emails get tightened before sending. The relationship-friendly version preserves warmth while losing the rambling.",
+      },
+    ],
+    howWorksTitle: "How Improve Writing works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the doc",
+        text: "PDF up to 100 MB. Works on prose &mdash; emails, business docs, blog posts, articles.",
+      },
+      {
+        step: "2",
+        title: "We tighten section-by-section",
+        text: "Server-side extraction, then a constrained rewrite that targets clarity and concision: removes filler phrases, tightens redundancy, simplifies passive voice, splits long sentences. Every claim and number preserved verbatim. Routing layer picks the model best at concision-without-loss.",
+      },
+      {
+        step: "3",
+        title: "Get the tighter version",
+        text: "Markdown output, typically 20&ndash;30% shorter than input. Page citations link each tightened passage back to the source for verification.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How is this different from AI Paraphrase or AI Condense?",
+        a: "Paraphrase varies word choice but preserves length. Condense is aggressive shortening (50%+ length reduction) at the cost of detail. Improve Writing is the middle ground: ~25% shorter while keeping every substantive point. Pick based on whether you need style change, aggressive cut, or polish.",
+      },
+      {
+        q: "Will it preserve my voice?",
+        a: "Yes &mdash; register and tone are explicitly preserved. The output should sound like the original author, just tighter. If the output feels off-voice, the input was probably already concise &mdash; not every doc benefits from tightening.",
+      },
+      {
+        q: "What if it cuts something important?",
+        a: "Page citations make spot-checking easy &mdash; click any tightened passage, see what was in the source. For high-stakes content (legal, regulatory, technical specs), read the output before publishing. The tool errs toward preservation but isn&rsquo;t infallible.",
+      },
+      {
+        q: "Does it preserve structure (headings, lists)?",
+        a: "Yes. Headings + list structure preserved verbatim. Tightening happens within sections / list items, not on the structural skeleton.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the original is already tight?",
+        a: "Output may be similar length to input &mdash; the model won&rsquo;t cut for the sake of cutting. If your input is well-edited, this tool is the wrong fit; you&rsquo;re past the point of diminishing returns. Run AI Proofread instead for grammar / typo check.",
+      },
+    ],
+    cta: {
+      title: "Want to know what to fix first?",
+      text: "Readability Score reports the doc&rsquo;s grade level + flags complex sentences and jargon. Useful as a pre-Improve Writing audit to know whether the issue is verbosity (Improve Writing fixes) or jargon (AI Rewrite with the &ldquo;simple&rdquo; register fixes).",
+      linkHref: "/tool/ai-readability",
+      linkLabel: "Try Readability Score",
+    },
+  },
+
+  "ai-proofread": {
+    useCasesTitle: "Why people use Proofread PDF",
+    useCasesIntro:
+      "Proofread PDF surfaces spelling, grammar, and agreement errors as a structured table &mdash; page reference, original quote, error type, suggested fix. Optimized for the &ldquo;final pass before publication&rdquo; workflow where you need machine-readable error detection across a long doc, not just inline squiggles.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Final pass before publication",
+        text: "Books, research papers, long reports going to press. Proofread surfaces typos and agreement errors that escaped multiple human reads. The error-table format is reviewable in 10 minutes regardless of doc length.",
+      },
+      {
+        icon: "Pages",
+        title: "Multi-author doc consistency check",
+        text: "When several authors contribute to one doc, voice and grammar drift. The error table surfaces inconsistencies (&ldquo;data is&rdquo; vs &ldquo;data are&rdquo;, US vs UK spelling) for editorial decision before publication.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Job-application materials",
+        text: "Cover letters, resumes, personal statements. A typo can sink an application; the structured error report is faster than re-reading every paragraph.",
+      },
+      {
+        icon: "Book",
+        title: "Translated content QA",
+        text: "Documents translated by humans or LLMs benefit from a final grammar pass. Especially useful when the translator is non-native &mdash; agreement errors and article use are common drift points.",
+      },
+      {
+        icon: "Shield",
+        title: "Legal / regulatory submissions",
+        text: "Filings, contracts, and regulatory submissions where typos are professionally embarrassing or legally consequential. The structured error report is auditable evidence of the proofreading pass.",
+      },
+    ],
+    howWorksTitle: "How Proofread PDF works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the doc",
+        text: "PDF up to 100 MB. Works on prose &mdash; books, papers, articles, application materials, contracts.",
+      },
+      {
+        step: "2",
+        title: "We scan for errors",
+        text: "Server-side text extraction, then a multi-pass error scan: spelling (incl. context-aware homophones like there/their/they&rsquo;re), grammar (subject-verb agreement, tense consistency), punctuation, article usage, collocation issues. Errors classified and scored for confidence.",
+      },
+      {
+        step: "3",
+        title: "Get a structured error table",
+        text: "Markdown table with columns: page / quote / error type / suggested fix. Sorted by page so you can work through the doc linearly. Page citations let you verify each suggestion in context.",
+      },
+    ],
+    faqs: [
+      {
+        q: "What kinds of errors does it catch?",
+        a: "Spelling (incl. context-aware homophones), grammar (subject-verb agreement, tense, comma splices, run-ons), punctuation, article use (a/an/the), collocation issues (idiom violations). NOT a stylistic editor &mdash; it doesn&rsquo;t flag verbosity or weak word choice; for that use Improve Writing.",
+      },
+      {
+        q: "What&rsquo;s the false-positive rate?",
+        a: "Variable. Technical / domain-specific terms sometimes flag as misspellings. Stylistic choices (intentional sentence fragments, regional spelling variants) sometimes flag as errors. Treat the table as a filtered list to review &mdash; rejected suggestions are normal, not failure.",
+      },
+      {
+        q: "Does it understand US vs UK English?",
+        a: "Default infers from the doc&rsquo;s majority dialect. If the doc is mixed (which is itself an inconsistency worth flagging), the report surfaces the conflict so you can pick a standard and apply consistently.",
+      },
+      {
+        q: "Will it work for non-English content?",
+        a: "Best results in English. Indian-language proofreading (Hindi, Tamil, Bengali, etc.) works at lower accuracy &mdash; agreement rules are correct but idiom detection is weaker. For specialized non-English proofreading, native-language tools may be better.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Should I accept every suggested fix?",
+        a: "No. Read each suggestion in context (the page citation makes this fast). Reject any that change meaning, voice, or domain-specific terminology. Treat the table as a list of things to consider, not a list of things to apply.",
+      },
+    ],
+    cta: {
+      title: "Want clarity polish too?",
+      text: "Improve Writing tightens prose for clarity and concision (~20-30% shorter) without changing facts. Use it AFTER proofread to get both error-free and concise.",
+      linkHref: "/tool/ai-improve-writing",
+      linkLabel: "Try Improve Writing",
+    },
+  },
 };
