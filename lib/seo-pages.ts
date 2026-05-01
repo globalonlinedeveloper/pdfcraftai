@@ -121,7 +121,26 @@ export type SeoPageSlug =
   | "strip-links"
   | "booklet-pdf"
   | "free-draw-pdf"
-  | "add-links";
+  | "add-links"
+  // 2026-05-01 — Phase 2 SEO acquisition gap closeout. 13 AI tools
+  // had a runner page at /tool/<id> but no public marketing surface.
+  // These slugs target natural-search variants for each capability.
+  // Closes the "no SEO discovery surface" gap surfaced in the
+  // standardization audit; pairs with the Phase 2 longforms shipped
+  // in commits 4fea1f8 / dd2c4d7 / aa2e5bc / 0567a19.
+  | "condense-pdf"
+  | "expand-pdf"
+  | "analyze-pdf-tone"
+  | "extract-pdf-citations"
+  | "pdf-sentiment-analysis"
+  | "inclusive-language-audit"
+  | "proofread-pdf"
+  | "pdf-to-newsletter"
+  | "pdf-to-video-script"
+  | "semantic-search-pdf"
+  | "extract-action-items"
+  | "generate-pdf-from-prompt"
+  | "ai-fill-pdf-form";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -2112,6 +2131,259 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   // Sprint A REVERTED in Task #99 — 5 govt ID parser SEO entries
   // (aadhaar-parser, pan-card-parser, driving-license-parser,
   // voter-id-parser, passport-parser) removed.
+
+  // ====================================================================
+  // 2026-05-01 — Phase 2 SEO acquisition gap closeout (13 AI tools)
+  // Each slug targets natural-search vocabulary for the underlying tool.
+  // ====================================================================
+
+  "condense-pdf": {
+    tool: "ai-condense",
+    h1: "Condense PDF — cut 40-60% of length, keep every fact",
+    sub: "Rewrite a document tighter without losing facts, numbers, or conclusions. Different from summarize (changes shape) and improve-writing (lighter polish). 3 credits.",
+    canonical: "/condense-pdf",
+    howTo: [
+      { t: "Drop the PDF", d: "Up to 100 MB. Works best on prose-heavy content; tables and code blocks pass through unchanged." },
+      { t: "We rewrite shorter", d: "Constrained rewrite that preserves every numeric value, name, and claim while cutting 40-60% of the length. Repetition collapsed, transitions tightened." },
+      { t: "Get the tighter version", d: "Markdown output with page citations linking each section back to the source — verify the cut preserved meaning before publishing." },
+    ],
+    faq: [
+      { q: "How is this different from summarize?", a: "Summarize restructures into a digest format. Condense preserves the doc's shape but cuts length aggressively. Pick condense when you want the same document, just shorter." },
+      { q: "Are numbers preserved?", a: "Yes — explicitly. Every numeric value, percentage, date, name, and proper noun preserved verbatim. Aggressive shortening creates risk of meaning drift; we prioritize preservation of factual anchors." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+      { q: "What if I need different length?", a: "Improve Writing tightens 20-30%. Summarize compresses to ~10%. Condense lands at 40-60%. Pick the tool that matches your target compression." },
+    ],
+    related: ["ai-condense", "ai-improve-writing", "ai-summarize", "ai-expand"],
+  },
+
+  "expand-pdf": {
+    tool: "ai-expand",
+    h1: "Expand PDF — bullets to full prose with source-grounded context",
+    sub: "Turn a terse outline or bullet-list draft into a full prose document. Each idea elaborated with context — no fabricated claims. 3 credits.",
+    canonical: "/expand-pdf",
+    howTo: [
+      { t: "Drop the source", d: "PDF up to 100 MB. Works best on bullet-heavy outlines or terse drafts. Already-expanded prose grows less." },
+      { t: "We elaborate per item", d: "Each bullet or point elaborated into fuller prose, constrained to source-grounded content — no invented facts." },
+      { t: "Get the expanded draft", d: "Markdown output, typically 1.5-2.5x input length. Page citations link each section to the source for verification." },
+    ],
+    faq: [
+      { q: "Will it fabricate claims?", a: "Constrained against fabrication — the expansion elaborates what's in the source, not invents new claims. Verify the output anyway: page citations make spot-checking fast." },
+      { q: "How much longer is the output?", a: "Typically 1.5-2.5x input. One-line bullets can expand 3x; already-expanded prose grows only 1.2x." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+      { q: "What if it's too verbose?", a: "Run Condense PDF on the output. Expand-then-condense is a valid workflow when the goal is 'more thorough than the outline but tighter than the raw expansion'." },
+    ],
+    related: ["ai-expand", "ai-condense", "ai-improve-writing", "ai-rewrite"],
+  },
+
+  "analyze-pdf-tone": {
+    tool: "ai-tone-analyze",
+    h1: "Analyze PDF Tone & Style — voice, audience, register report",
+    sub: "Get the tone (authoritative / collaborative / didactic etc.), inferred audience, and 6-10 style attributes for any document. Reports — doesn't rewrite. 3 credits.",
+    canonical: "/analyze-pdf-tone",
+    howTo: [
+      { t: "Drop the doc", d: "PDF up to 100 MB. Works on prose — reports, articles, marketing copy, internal docs." },
+      { t: "We measure + describe", d: "Voice classification, audience inference, sentence-length distribution, jargon density, formality score, emphasis style." },
+      { t: "Get a structured report", d: "Markdown output: overall voice / audience / 6-10 style attributes with values and observations. NOT a rewrite — pair with AI Rewrite for the actual shift." },
+    ],
+    faq: [
+      { q: "Why doesn't it rewrite?", a: "Separation of concerns: this analyzer measures, AI Rewrite changes. Combined tools tend to produce confused output. The 2-tool workflow (analyze, then rewrite) is more controllable." },
+      { q: "Will it identify my brand voice?", a: "Generic tone categorization, not brand-specific. To match against your brand voice, run multiple on-brand examples and observe the consistent attribute pattern." },
+      { q: "Can it tell tone shift mid-document?", a: "Yes — surfaces register-shift observations like 'Section 1-3 are formal-authoritative; Section 4 shifts casual'. Useful for catching unintentional voice drift." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-tone-analyze", "ai-rewrite", "ai-improve-writing", "ai-readability"],
+  },
+
+  "extract-pdf-citations": {
+    tool: "ai-citations",
+    h1: "Extract PDF Citations — BibTeX + readable reference list",
+    sub: "Pull every reference from a PDF as a BibTeX block (importable into LaTeX, Zotero, Mendeley) plus a readable reference list. 3 credits.",
+    canonical: "/extract-pdf-citations",
+    howTo: [
+      { t: "Drop the source PDF", d: "Up to 100 MB. Works on academic papers, theses, books, any doc with a structured reference list." },
+      { t: "We extract + format", d: "Reference-list section detection, then per-citation parsing. Author / year / title / journal / volume / pages / DOI populated from the reference text." },
+      { t: "Get BibTeX + readable list", d: "BibTeX block (paste into your .bib file directly) plus a human-readable list. Page citation indicates where each reference appeared." },
+    ],
+    faq: [
+      { q: "How accurate are the BibTeX entries?", a: "Strong on standard journal articles with embedded DOIs. Weaker on books, preprints, and older formats with non-standard structure. Verify before submission — author-order swaps and journal abbreviations are common error spots." },
+      { q: "Will it work for non-academic citations?", a: "Best on academic-style references (Author / Year / Title / Journal). Trade-press / blog / web citations parse but the BibTeX entry types map imperfectly (everything becomes @misc if structure is unclear)." },
+      { q: "Other styles than BibTeX?", a: "BibTeX (most universal for LaTeX) plus a readable list. APA / MLA / Chicago / RIS export on the roadmap. For now, import BibTeX into Zotero / Mendeley and export to your target format." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of reference count." },
+    ],
+    related: ["ai-citations", "ai-research-paper", "ai-summarize", "ai-key-points"],
+  },
+
+  "pdf-sentiment-analysis": {
+    tool: "ai-sentiment",
+    h1: "PDF Sentiment Analysis — overall + per-section verdict with evidence",
+    sub: "Analyze sentiment in reviews, customer feedback, internal comms, and narrative content. Per-section breakdown with evidence quotes and shift detection. 3 credits.",
+    canonical: "/pdf-sentiment-analysis",
+    howTo: [
+      { t: "Drop the doc", d: "PDF up to 100 MB. Works on prose — reviews, threads, feedback compilations, narrative content." },
+      { t: "We score + locate evidence", d: "Per-paragraph and per-section sentiment scoring with evidence quotes. Shifts (positive→negative inflections) surfaced with the trigger sentence." },
+      { t: "Get a structured report", d: "Markdown output: overall verdict / per-section verdicts / evidence quotes / sentiment shifts / trigger phrases. Page citations on every finding." },
+    ],
+    faq: [
+      { q: "How accurate is sentiment classification?", a: "Strong on clearly polarized content (reviews, opinions). Weaker on neutral / ambiguous content where sentiment isn't the doc's point. Sarcasm / irony are detection challenges — treat the score as directional." },
+      { q: "Will it work for non-English content?", a: "Best results in English. Indian-language sentiment (Hindi, Tamil, Bengali) works at lower accuracy. For multilingual feedback analysis, run AI Translate first." },
+      { q: "Does it understand mixed sentiment?", a: "Yes — 'the queue was long but the food was great' surfaces both negative (queue) and positive (food) with the right targets. Mixed sentiment reported, not flattened to neutral." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-sentiment", "ai-entities", "ai-summarize", "ai-tone-analyze"],
+  },
+
+  "inclusive-language-audit": {
+    tool: "ai-bias",
+    h1: "Inclusive Language Audit — flag gendered, outdated, biased phrasing",
+    sub: "Scan a PDF for gendered language, outdated terminology, and stereotyping with concrete suggested fixes. Heuristic only — catches obvious patterns, not all bias. 3 credits.",
+    canonical: "/inclusive-language-audit",
+    howTo: [
+      { t: "Drop the doc", d: "PDF up to 100 MB. Works on any prose — articles, JDs, course materials, internal docs, marketing copy." },
+      { t: "We scan + classify", d: "Gendered language (he-default, role-noun gendering), outdated technical terminology (master/slave, blacklist/whitelist), ability-based metaphors. Each flag classified by category and severity." },
+      { t: "Get a structured fix list", d: "Markdown table: page / quote / category / suggested fix. Each fix has rationale and severity." },
+    ],
+    faq: [
+      { q: "Is this comprehensive?", a: "No. The audit catches obvious lexical patterns. It does NOT catch subtle bias (rhetorical framing, what's included vs excluded). Treat as a baseline catch and supplement with human reviewer." },
+      { q: "Will it work for Indian-English context?", a: "Yes — Indian-English specific patterns recognized (caste-coded language, region-coded stereotyping). Note: Indian-language content (Hindi, Tamil, etc.) has its own bias-language patterns we don't audit yet — English content only for now." },
+      { q: "Should I accept every suggestion?", a: "No. Some flags are false positives (e.g. 'mankind' in a quote vs in your own writing). Treat the table as a list of things to consider, not apply." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-bias", "ai-improve-writing", "ai-rewrite", "ai-proofread"],
+  },
+
+  "proofread-pdf": {
+    tool: "ai-proofread",
+    h1: "Proofread PDF — spelling, grammar, agreement errors as a structured table",
+    sub: "Surface every error in a doc as a page / quote / type / suggested-fix table. Optimized for the final pass before publication where machine-readable error detection matters. 3 credits.",
+    canonical: "/proofread-pdf",
+    howTo: [
+      { t: "Drop the doc", d: "PDF up to 100 MB. Works on prose — books, papers, articles, application materials, contracts." },
+      { t: "We scan for errors", d: "Spelling (incl. context-aware homophones), grammar (subject-verb agreement, tense), punctuation, article use, collocation issues. Each error classified and scored for confidence." },
+      { t: "Get a structured error table", d: "Markdown table: page / quote / error type / suggested fix. Sorted by page for linear review." },
+    ],
+    faq: [
+      { q: "What does it catch?", a: "Spelling (incl. context-aware homophones), grammar (subject-verb agreement, tense, comma splices, run-ons), punctuation, article use (a/an/the), collocation. NOT a stylistic editor — for that use Improve Writing." },
+      { q: "What's the false-positive rate?", a: "Variable. Technical / domain-specific terms sometimes flag as misspellings. Stylistic choices (intentional fragments, regional spelling) sometimes flag as errors. Treat the table as a filtered list to review." },
+      { q: "US vs UK English?", a: "Default infers from the doc's majority dialect. Mixed dialects (which is itself an inconsistency) get surfaced so you can pick a standard and apply consistently." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-proofread", "ai-improve-writing", "ai-bias", "ai-rewrite"],
+  },
+
+  "pdf-to-newsletter": {
+    tool: "ai-newsletter",
+    h1: "PDF to Email Newsletter — subject, preheader, sections, sign-off",
+    sub: "Generate a publish-ready newsletter draft from any source PDF. Drops directly into Mailchimp, Substack, Beehiiv, ConvertKit. 3 credits.",
+    canonical: "/pdf-to-newsletter",
+    howTo: [
+      { t: "Drop the source PDF", d: "PDF up to 100 MB. Works on internal docs, research reports, release notes, course material, briefs." },
+      { t: "We restructure for email", d: "Subject line (60-char optimized), preheader (1-2 sentence preview), 3-5 sections with descriptive headers, sign-off. Tone shifted toward email-conversational." },
+      { t: "Get an ESP-ready draft", d: "Markdown output: Subject / Preheader / Sections / Sign-off. Copy-paste into your email service provider — publish-ready draft minus images and final tone polish." },
+    ],
+    faq: [
+      { q: "Will the subject line drive opens?", a: "Generated for clarity, not click-bait optimization. For aggressive open-rate optimization, A/B test against alternatives. The generated one is a competent baseline." },
+      { q: "How long is the draft?", a: "300-800 words depending on source length. Newsletters longer than that have steep open-vs-read drop-off; we cap output to keep email engagement viable." },
+      { q: "Images and embeds?", a: "Text-only. The draft references where images would help ('[chart showing Q3 revenue]'); add the actual images in your ESP." },
+      { q: "What's the credit cost?", a: "3 credits per draft. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-newsletter", "ai-blog", "ai-social-thread", "ai-summarize"],
+  },
+
+  "pdf-to-video-script": {
+    tool: "ai-video-script",
+    h1: "PDF to Video Script — talking-head script with hook, segments, CTA",
+    sub: "Turn any PDF into a recordable video script: 5-second hook, 90-second segments with stage cues, closing CTA. Optimized for YouTube and LinkedIn retention curves. 3 credits.",
+    canonical: "/pdf-to-video-script",
+    howTo: [
+      { t: "Drop the source", d: "PDF up to 100 MB. Works on research papers, product specs, talk transcripts, educational material, policy docs." },
+      { t: "We structure for talking-head", d: "Hook (5-10 second attention-grab), 90-second segments matching YouTube retention, stage cues for B-roll, closing CTA. Tone shifted toward conversational-spoken." },
+      { t: "Get a recordable script", d: "Markdown: HOOK / SEGMENTS (timestamped) / STAGE CUES / CTA. Print, read, ship. Page citations link each segment to the source." },
+    ],
+    faq: [
+      { q: "How long is the output?", a: "Default targets 5-8 minute videos (~750-1200 words spoken). For Reels / TikTok shorts (30-60s), trim manually. Explicit length control on the roadmap." },
+      { q: "Match my speaking style?", a: "Generic talking-head tone by default. Read the output once and edit for your speaking rhythm. Some creators prefer to outline the structure and improvise the words." },
+      { q: "Visual cues / B-roll?", a: "Stage cues included ('[show the chart]', '[cut to graphic]'). For full storyboarding (frame-by-frame visuals), use a dedicated tool — this generates the verbal script, not the visual treatment." },
+      { q: "What's the credit cost?", a: "3 credits per script. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-video-script", "ai-blog", "ai-newsletter", "ai-social-thread"],
+  },
+
+  "semantic-search-pdf": {
+    tool: "ai-semantic-search",
+    h1: "Semantic Search in PDF — natural-language queries, verbatim passages",
+    sub: "Ctrl-F finds exact matches but misses paraphrases. Semantic search retrieves passages by meaning, regardless of phrasing — verbatim with page references and relevance notes. 3 credits.",
+    canonical: "/semantic-search-pdf",
+    howTo: [
+      { t: "Drop the PDF + ask the question", d: "PDF up to 100 MB. Question in natural language — 'what does X mean', 'how do I do Y', 'when did Z happen'." },
+      { t: "We embed + retrieve", d: "Text extraction + chunking + vector embedding. Question embedded; retrieved passages ranked by semantic similarity (not keyword match). Top 3-5 returned." },
+      { t: "Get verbatim passages with cites", d: "Markdown output: question echoed back, 3-5 verbatim passages with page references and relevance scores. Verbatim means we DIDN'T rewrite — you see exactly what the source said." },
+    ],
+    faq: [
+      { q: "How is this different from chat-with-pdf?", a: "Chat generates an ANSWER (synthesized, model-paraphrased). Semantic Search returns PASSAGES (verbatim from the doc). Use chat for direct answers; use search to read source material with help finding the right pages." },
+      { q: "How is this different from Ctrl-F?", a: "Ctrl-F is exact lexical match — misses paraphrases. Semantic search matches meaning regardless of wording. Search 'dog' and Ctrl-F won't find 'canine'; semantic search will." },
+      { q: "Multi-PDF search?", a: "Single PDF per call. For multi-PDF semantic search across a corpus, AI Chat (multi-doc mode is on the roadmap) is closer. Today's workaround: run on each PDF separately, aggregate top results." },
+      { q: "What's the credit cost?", a: "3 credits per search. Cost is fixed regardless of doc size." },
+    ],
+    related: ["ai-semantic-search", "ai-chat", "ai-summarize", "ai-key-points"],
+  },
+
+  "extract-action-items": {
+    tool: "ai-action-items",
+    h1: "Extract Action Items from PDF — TODO table with owners, due dates, priorities",
+    sub: "Turn meeting notes, project briefs, audit reports into a structured action table. Owner, due date, priority, source-page columns import directly into your project tracker. 3 credits.",
+    canonical: "/extract-action-items",
+    howTo: [
+      { t: "Drop the doc", d: "PDF up to 100 MB. Works on meeting transcripts, project specs, audit reports, briefs, email exports — anything where actionable items are interleaved with narrative." },
+      { t: "We extract + classify", d: "Action verbs, owner mentions, date phrases, and priority signals identified. Each candidate scored for action-ness vs. discussion-only; only true actions ship to the table." },
+      { t: "Get a structured TODO table", d: "Markdown table: action / owner / due date / priority / source page. Copy-paste into Jira / Linear / Asana, or export to CSV." },
+    ],
+    faq: [
+      { q: "What if owners or dates aren't named?", a: "Owner shows 'unassigned'; due date shows 'TBD'. The action itself is still extracted — fill metadata downstream when triaging. Better than missing the action." },
+      { q: "How does it tell 'we should do X' from a real action?", a: "Heuristic + LLM classification. Explicit assignments score highest; implicit collective ('we should') get flagged with lower confidence; discussion-only ('X might be a problem') filtered out unless paired with a follow-up commitment." },
+      { q: "Will it preserve priority hierarchies?", a: "Yes — explicit priority phrases (P0/P1/P2, urgent / important, blocker / nice-to-have) preserved. Implicit priority inferred from language strength; review the priority column before pasting." },
+      { q: "What's the credit cost?", a: "3 credits per doc. Cost is fixed regardless of size." },
+    ],
+    related: ["ai-action-items", "ai-summarize", "ai-key-points", "ai-faq"],
+  },
+
+  "generate-pdf-from-prompt": {
+    tool: "ai-generate",
+    h1: "Generate PDF from Prompt — drafts of contracts, reports, briefs",
+    sub: "Describe what you need, get a structural PDF draft: contract / report / brief / proposal / policy / educational module. The output is a starting draft, not a final. 20 credits.",
+    canonical: "/generate-pdf-from-prompt",
+    howTo: [
+      { t: "Describe what you need", d: "Plain-English description: type (contract / report / brief), parties / context / key points, length target. More detail in the prompt → better fit." },
+      { t: "We draft + format", d: "LLM generates the document with appropriate structure (sections, headings, formal register for legal / academic; conversational for marketing). Output formatted as PDF with sensible defaults." },
+      { t: "Get a downloadable PDF draft", d: "PDF download. Edit-source markdown also provided for further iteration in Word / Docs / your preferred editor." },
+    ],
+    faq: [
+      { q: "How good is the output?", a: "Structural draft quality is high (section organization, header hierarchy, register matching). Substantive content quality depends on prompt specificity — vague prompt → generic output. Treat as ~70% of the work, with 30% remaining for fact-check / brand-tune / domain-expert review." },
+      { q: "Indian legal / contract documents?", a: "Generates Indian-formatted contracts (Indian Contract Act format, stamp paper conventions noted, governing law clauses) when prompted. Quality of legal substance is lower than a lawyer's draft — for skeleton / review-prep use, not final filing." },
+      { q: "Custom layouts (logos, fonts)?", a: "Output uses sensible defaults. For branded layouts (company letterhead, custom fonts, design system), do post-generation editing in Word / InDesign / Canva. The generation focuses on content, not visual identity." },
+      { q: "What's the credit cost?", a: "20 credits per doc. Higher than other AI tools because generation is more compute-intensive than analysis." },
+    ],
+    related: ["ai-generate", "ai-rewrite", "ai-improve-writing", "ai-sign"],
+  },
+
+  "ai-fill-pdf-form": {
+    tool: "ai-sign",
+    h1: "AI Fill PDF Form — auto-fill fields, sign, send",
+    sub: "Most PDF forms (loan applications, insurance claims, government forms) need filling field-by-field. AI fills recognized fields from your context docs; you verify, sign, send. 10 credits.",
+    canonical: "/ai-fill-pdf-form",
+    howTo: [
+      { t: "Upload form + context", d: "PDF form (up to 50 MB) plus optional context docs (resume / KYC / discharge summary — whatever has the data). Up to 3 context docs supported." },
+      { t: "AI fills recognized fields", d: "Form fields detected, types classified (text / date / checkbox / signature). AI matches fields against context docs and fills with confidence scores." },
+      { t: "You verify + sign + download", d: "Side-by-side view: form with AI-filled fields highlighted, your signature drawn or uploaded into signature fields. Verify, correct any mistakes, download for submission." },
+    ],
+    faq: [
+      { q: "Does AI generate signatures?", a: "No — you provide the signature, drawn on screen or uploaded as an image. The signature you provide is what gets placed in signature fields." },
+      { q: "What if the AI fills wrong?", a: "Side-by-side review surfaces every filled field with confidence score. Click any field to edit. Low-confidence fields highlighted explicitly. Never submit without verification." },
+      { q: "Indian government forms?", a: "Common forms (PAN, Aadhaar update, passport, voter ID) recognized. State / DM-level forms may have less reliable field detection. For high-stakes government submissions, verify every field before signing." },
+      { q: "Is the signature legally binding?", a: "Indian Information Technology Act 2000 recognizes electronic signatures for most uses. Some specific contexts (real estate registration, certain corporate actions) require physical signatures or DSC. Consult the receiving party about their requirements." },
+      { q: "What's the credit cost?", a: "10 credits per doc. Higher than analysis tools because the workflow combines form-detection + field-fill + signature-overlay." },
+    ],
+    related: ["ai-sign", "ai-generate", "sign", "fill-form"],
+  },
 
 
 
