@@ -849,6 +849,21 @@ const SUITES = [
   // (file existed but wasn't in SUITES) — caught + wired up by the
   // aggregator-coverage guard below.
   { name: "reverse-sweep", file: "test-reverse-sweep.mjs" },
+  // 2026-05-01 tool-runner-longform-ai-parity: ToolRunnerLongform is
+  // the shared longform component every tool runner page renders below
+  // its drop-zone. It used to bake a single hardcoded set of "what
+  // makes us different" bullets ("100% local processing... never
+  // touches our infrastructure", "no signup, no daily limit") that
+  // were true for free tools and FALSE for AI tools — every AI tool
+  // runner page (50+ surfaces) was claiming we don't upload your file
+  // while a sibling block on the same page said "processed on our
+  // servers with credits." This guard locks in the fix: both
+  // FREE_DIFFERENTIATORS and AI_DIFFERENTIATORS exist with >=4 entries
+  // each, no shared titles, isAI prop is destructured + consumed in
+  // the JSX, the call site passes isAI={!tool.free}. Regression in
+  // any of those eight invariants fails the build before the same
+  // dishonest claim can resurface on production.
+  { name: "tool-runner-longform-ai-parity", file: "test-tool-runner-longform-ai-parity.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

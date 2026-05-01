@@ -575,8 +575,12 @@ export default function ToolRunnerPage({ params }: Params) {
               data file. Closes the structural-parity gap — every
               tool now has the same editorial depth as Inspector +
               Page Count. */}
+          {/* 2026-05-01 — pass isAI={!tool.free} so AI tools get the
+              AI-suite-appropriate "What makes pdfcraft ai different"
+              block + How-it-works subtitle. The shared default (free
+              tools) keeps its existing PDFium/local-processing copy. */}
           {TOOL_LONGFORMS[tool.id] && tool.id !== "pdf-inspector" && tool.id !== "page-count" && (
-            <ToolRunnerLongform data={TOOL_LONGFORMS[tool.id]} />
+            <ToolRunnerLongform data={TOOL_LONGFORMS[tool.id]} isAI={!tool.free} />
           )}
 
           {/* Related tools — same-group siblings. Improves on-page
