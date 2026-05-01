@@ -12,8 +12,8 @@ Node.js application on Hostinger Business hosting.
 **Phase 1 — Marketing pages — DONE.**
 **Phase 2 — Auth + DB + dashboard shell — DONE.**
 **Phase 3 — Core free PDF tools — DONE.**
-**Phase 4 — Credit packs + payments (Razorpay + Paddle) — DONE.**
-*Note: Phase 4 originally shipped with PayPal on the international rail; PayPal was retired 2026-04-21 (D4 cleanup) in favor of Paddle's MoR model, which bakes VAT/GST/sales-tax collection and remittance into the payout. See `docs/MASTER_PLAN.md` §D4 and `docs/STATUS.md` paper trail.*
+**Phase 4 — Credit packs + payments (Razorpay) — DONE.**
+*Note: payment-rail history — PayPal retired 2026-04-21 (D4 cleanup) in favor of Paddle MoR; Paddle subsequently retired 2026-05-01 (commit 92f965a). Razorpay is the sole payment processor today; international rail will be added when the next gateway is approved.*
 **Phase 5 — Chat with PDF (Anthropic + OpenAI) — DONE.**
 **Phase 5.1 — Summarize PDF (first artifact-producing AI op) — DONE.**
 **Phase 5.2 — Translate PDF (map-reduce chunked) — DONE.**
@@ -142,8 +142,8 @@ What's new in Phase 5:
 
 What's new in Phase 4:
 
-- **Two payment providers live, swappable via env**: Razorpay (India / domestic INR) and Paddle (international / MoR). Neither code-wired as the default — the registry at `lib/payments/registry.ts` loads whichever has its env vars set, and the UI renders a button per configured provider.
-- **Portable architecture**: a single `PaymentProvider` interface (`lib/payments/provider.ts`), per-provider adapters (`lib/payments/adapters/{razorpay,paddle}.ts`), a shared webhook processor (`lib/payments/webhook-handler.ts`), and one idempotent ledger writer (`lib/payments/ledger.ts`). Adding a third provider (Stripe, Lemon Squeezy, whatever) is an adapter file + a registry row + two env vars.
+- **Razorpay live, registry ready for additional providers**: Razorpay (India / domestic INR) is the sole configured rail. The registry at `lib/payments/registry.ts` loads whichever provider has its env vars set; new gateways slot in via the same row pattern. International support rolls out when the next gateway is approved.
+- **Portable architecture**: a single `PaymentProvider` interface (`lib/payments/provider.ts`), per-provider adapter (`lib/payments/adapters/razorpay.ts`), a shared webhook processor (`lib/payments/webhook-handler.ts`), and one idempotent ledger writer (`lib/payments/ledger.ts`). Adding the next provider (Stripe, Lemon Squeezy, whatever) is an adapter file + a registry row + two env vars.
 - **Idempotent credit grants**: `grantCredits()` takes an idempotency key. Webhooks use `${paymentId}:base` / `${paymentId}:bonus`; refunds use `${paymentId}:refund:${providerRefundRef}`. Replay the same webhook ten times and the ledger moves exactly once.
 - **Refunds**: self-serve 14-day unused-credits refund button on `/app/billing`. Proration is done from the pack total, not remaining balance, so partial refunds are deterministic and idempotent. See `lib/payments/refund-actions.ts`.
 - **Nightly reconciliation cron**: catches webhooks we missed. Pages each provider's history since the last checkpoint, normalizes, runs through the same `applyPaymentEvent` path as live webhooks.
@@ -255,14 +255,9 @@ RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
 RAZORPAY_WEBHOOK_SECRET=
 
-# Optional — Paddle (international / MoR). Omit to hide the Paddle button.
-# PADDLE_ENV accepts "sandbox" (default) or "live".
-# PADDLE_API_KEY is server-side; PADDLE_CLIENT_TOKEN is shipped to the
-# browser by Paddle.js. Do NOT swap them.
-PADDLE_API_KEY=
-PADDLE_CLIENT_TOKEN=
-PADDLE_WEBHOOK_SECRET=
-PADDLE_ENV=sandbox
+# International payment rail — add the next approved gateway's env vars
+# here when wiring a new adapter. Until then, non-IN traffic routes
+# through the Tier-2 "defer" surface (geo-waitlist signup).
 
 # Optional — AI providers. Set at least one to unlock /app/chat.
 # The registry loads whichever is configured; if both are set, each

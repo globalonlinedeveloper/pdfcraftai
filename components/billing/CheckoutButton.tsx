@@ -5,10 +5,11 @@
 //   2. On click, calls the `createCheckoutAction` server action for the
 //      given pack.
 //   3. If the returned CheckoutSession is "redirect", sends the browser
-//      to that URL (Paddle hosted checkout page, some subscription flows).
+//      to that URL (some subscription flows).
 //   4. If the session is "client", loads the provider's SDK script on
 //      demand and opens the provider's hosted modal (Razorpay Checkout
-//      modal, Paddle.js overlay checkout).
+//      modal). Future international gateways will follow the same
+//      "client" or "redirect" shape — no per-provider branching here.
 //
 // Why we load SDK scripts lazily (not in the layout <head>):
 //   - Only ~5% of page views actually click a checkout button. Loading
@@ -212,9 +213,6 @@ declare global {
       close(): void;
       on(event: string, handler: (...args: unknown[]) => void): void;
     };
-    // Paddle.js exposes window.Paddle — populated lazily when the first
-    // international checkout click loads https://cdn.paddle.com/paddle/v2/paddle.js.
-    Paddle?: unknown;
   }
 }
 
@@ -264,7 +262,7 @@ function loadScript(src: string, key: string): Promise<void> {
 
 async function launchCheckout(session: CheckoutSession): Promise<void> {
   if (session.kind === "redirect") {
-    // Full-page redirect — Paddle hosted checkout, some subscription flows.
+    // Full-page redirect — used by some subscription flows.
     window.location.href = session.url;
     return;
   }

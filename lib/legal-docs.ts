@@ -11,15 +11,14 @@
 // Razorpay payment-gateway application. Stripe reference swapped to a
 // vendor-agnostic phrasing until the gateway is live.
 //
-// 2026-04-21 — Privacy + Terms + DPA updated for Paddle MoR signup:
+// 2026-04-21 → 2026-05-01 — Privacy + Terms + DPA evolution:
 //   * Sub-processors named explicitly (Hostinger, Cloudflare, Google GA4,
-//     Microsoft Clarity, Razorpay, Paddle) on /privacy and /dpa. This is
-//     time-sensitive: Paddle's verification team crawls /privacy and /terms
-//     during KYC and flags missing MoR + sub-processor disclosures.
+//     Microsoft Clarity, Razorpay) on /privacy and /dpa.
 //   * Cookies & analytics line corrected — "No third-party trackers" was
 //     out-of-date the moment GA4 + Clarity landed on 2026-04-20.
-//   * Terms gained a "Merchant of record (international customers)" clause
-//     so receipts from Paddle are expected rather than a surprise.
+//   * 2026-05-01: international MoR rail (previously Paddle, retired)
+//     replaced with a forward-looking "international support is rolling
+//     out" disclosure. Razorpay is the sole payment processor today.
 //
 // 2026-04-22 — Task #24: DPDP Act 2023 (India) + ePrivacy compliance.
 //   * Privacy expanded with a dedicated "Your rights under the DPDP
@@ -87,16 +86,16 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         p: `When advertising is active on this site we use Google AdSense, a third-party advertising network operated by Google LLC. Google may use the DoubleClick DART cookie to serve ads based on your visit to this site and other sites on the internet. You can opt out of personalized advertising at any time by visiting Google Ads Settings (https://www.google.com/settings/ads), Google's advertising principles (https://policies.google.com/technologies/ads), or aboutads.info (US) / youronlinechoices.eu (EU). Advertising cookies are CONSENT-GATED via the same banner as analytics — if you reject "Accept all", no advertising cookies are set. We do not share personally identifiable information with advertisers. Ad-supported content is clearly labelled "Sponsored" or "Ad" per Google's program policies.`,
       },
       {
-        h: "Payments and merchant of record",
-        p: "For customers in India, payments are processed by Razorpay Software Pvt. Ltd. on our behalf. For customers outside India, Paddle.com Market Ltd (and its US affiliate Paddle.com Inc.) acts as the merchant of record — meaning Paddle is the seller of record on your invoice and is responsible for collecting and remitting applicable sales taxes, VAT, and GST. Your receipt will show Paddle as the merchant. Card details are entered directly into the payment provider's hosted iframe; we never see, store, or transmit full card numbers.",
+        h: "Payments",
+        p: "Payments are processed by Razorpay Software Pvt. Ltd. on our behalf. International payment support is rolling out — customers outside India can join the waitlist on the pricing page and we will email when international checkout becomes available. Card details are entered directly into the payment provider's hosted iframe; we never see, store, or transmit full card numbers.",
       },
       {
         h: "Sub-processors",
-        p: "We engage a small number of vetted sub-processors: Hostinger International Ltd (web hosting, EU), Cloudflare Inc. (CDN and DDoS protection, global), Google LLC (Google Analytics 4 and Google Sign-In, US), Microsoft Corporation (Clarity usability analytics, US), Razorpay Software Pvt. Ltd. (India payments, IN), and Paddle.com Market Ltd (international payments, merchant of record, UK). We will give at least 30 days' notice of material changes.",
+        p: "We engage a small number of vetted sub-processors: Hostinger International Ltd (web hosting, EU), Cloudflare Inc. (CDN and DDoS protection, global), Google LLC (Google Analytics 4 and Google Sign-In, US), Microsoft Corporation (Clarity usability analytics, US), and Razorpay Software Pvt. Ltd. (payments, IN). We will give at least 30 days' notice of material changes, including any new payment processors added when international support launches.",
       },
       {
         h: "International transfers",
-        p: "Where personal data is transferred outside the EEA or UK, we rely on the applicable EU Standard Contractual Clauses and the UK International Data Transfer Addendum. Paddle operates its own standard contractual clauses with merchants — we sign those at onboarding and flow them through to you. For Indian residents under the DPDP Act 2023 s. 16, transfers outside India are limited to countries not restricted by the Central Government's notified list; none of our current sub-processors are in restricted jurisdictions.",
+        p: "Where personal data is transferred outside the EEA or UK, we rely on the applicable EU Standard Contractual Clauses and the UK International Data Transfer Addendum. For Indian residents under the DPDP Act 2023 s. 16, transfers outside India are limited to countries not restricted by the Central Government's notified list; none of our current sub-processors are in restricted jurisdictions.",
       },
       {
         h: "Your rights (GDPR / UK DPA)",
@@ -135,8 +134,8 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
         p: `Credits are consumed as you use AI tools. Paid credits never expire. Bonus credits expire per the offer terms. Refunds for unused credit packs are available within 14 days — see the Refund Policy or email ${SUPPORT_EMAIL}.`,
       },
       {
-        h: "Merchant of record (international customers)",
-        p: "For customers outside India, Paddle.com Market Ltd (United Kingdom) and its US affiliate Paddle.com Inc. act as the merchant of record for purchases made on pdfcraft ai. This means Paddle — not pdfcraft ai — is the seller of record on your invoice, is responsible for collecting and remitting applicable sales taxes, VAT, and GST in your jurisdiction, and handles billing support for tax-related questions. Paddle's Buyer Terms apply to the purchase transaction; these pdfcraft ai Terms apply to your use of the service. For customers in India, payments are processed directly by pdfcraft ai through Razorpay and these Terms govern the transaction in full.",
+        h: "Payments",
+        p: "Payments are processed directly by pdfcraft ai through Razorpay and these Terms govern the transaction in full. International payment support is in development — when launched, the merchant of record / payment processor for international customers will be disclosed at checkout and these Terms updated to reflect the additional party.",
       },
       {
         h: "Cancellation",
@@ -206,11 +205,11 @@ export const LEGAL_DOCS: Record<LegalSlug, LegalDoc> = {
       },
       {
         h: "Subprocessors",
-        p: "We engage the following sub-processors: Hostinger International Ltd (web hosting, EU), Cloudflare Inc. (CDN and DDoS protection, global), Google LLC (Google Analytics 4 and Google Sign-In, US), Microsoft Corporation (Clarity usability analytics, US), Razorpay Software Pvt. Ltd. (India payments, IN), and Paddle.com Market Ltd (international payments, merchant of record, UK). We will give at least 30 days' notice of material changes to this list.",
+        p: "We engage the following sub-processors: Hostinger International Ltd (web hosting, EU), Cloudflare Inc. (CDN and DDoS protection, global), Google LLC (Google Analytics 4 and Google Sign-In, US), Microsoft Corporation (Clarity usability analytics, US), and Razorpay Software Pvt. Ltd. (payments, IN). We will give at least 30 days' notice of material changes to this list, including new payment processors added when international payment support launches.",
       },
       {
         h: "International transfers",
-        p: "Where personal data is transferred outside the EEA or UK, we rely on the applicable EU Standard Contractual Clauses and UK IDTA. Paddle operates its own SCCs with merchants; we have signed Paddle's DPA at merchant onboarding. Under DPDP Act s. 16, Indian personal data may be transferred to any country not restricted by the Central Government's notified list — no current sub-processor is in a restricted jurisdiction. Data residency options (EU-only, IN-only) will be made available on Studio plans as our infrastructure build-out completes.",
+        p: "Where personal data is transferred outside the EEA or UK, we rely on the applicable EU Standard Contractual Clauses and UK IDTA. Under DPDP Act s. 16, Indian personal data may be transferred to any country not restricted by the Central Government's notified list — no current sub-processor is in a restricted jurisdiction. Data residency options (EU-only, IN-only) will be made available on Studio plans as our infrastructure build-out completes.",
       },
       {
         h: "DPDP Consent Manager (forward-looking)",
