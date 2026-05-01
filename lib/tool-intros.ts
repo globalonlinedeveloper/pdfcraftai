@@ -516,4 +516,8 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: your base PDF with the first page of an overlay PDF stamped onto every page — front or behind layer, configurable opacity. Common use: applying letterhead, watermarks, or template overlays.",
     related: { id: "image-watermark", label: "Image Watermark (PNG/JPG instead)" },
   },
+  "pdf-form-fill": {
+    text: "What you'll get: a filled PDF form — text, checkboxes, radio buttons, dropdowns, multi-select all rendered as native input controls. Optional flatten to bake values into page content so recipients can't edit.",
+    related: { id: "pdf-forms", label: "PDF Form Inspector (read-only fields view)" },
+  },
 };

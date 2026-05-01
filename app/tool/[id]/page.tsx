@@ -122,6 +122,7 @@ const LIVE_TOOL_IDS = new Set<string>([
   "odd-even-pages",
   "csv-to-pdf",
   "pdf-overlay",
+  "pdf-form-fill",
   // AI tools.
   "ai-summarize",
   "ai-tldr",

@@ -920,6 +920,88 @@ await test("pdf-overlay: applyToPages restricts overlay to specific pages", asyn
   assertEq(result.appliedCount, 3, "overlay applied to 3 specific pages");
 });
 
+// Helper: build a PDF with one text field for fill-form tests.
+async function makeFormPdf(): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([612, 792]);
+  page.drawText("test form", { x: 50, y: 700, size: 12 });
+  const form = doc.getForm();
+  const tf = form.createTextField("test.field.name");
+  tf.addToPage(page, { x: 50, y: 600, width: 200, height: 24 });
+  return await doc.save();
+}
+
+await test("fill-form: writes value into text field", async () => {
+  const { fillForm, getFormFieldSchema } = await import(
+    "../lib/pdf/ops/fill-form"
+  );
+  const src = await makeFormPdf();
+  const schema = await getFormFieldSchema(src);
+  assertEq(schema.fields.length, 1, "one field");
+  assertEq(schema.fields[0].name, "test.field.name", "field name preserved");
+  assertEq(schema.fields[0].kind, "text", "text kind");
+  const result = await fillForm(src, {
+    values: { "test.field.name": "Hello World" },
+  });
+  assertEq(result.filledCount, 1, "one field filled");
+  assertEq(result.skipped.length, 0, "no skipped");
+  assertPdfMagic(result.bytes, "fill-form output bytes");
+});
+
+await test("fill-form: round-trips value via re-load schema", async () => {
+  const { fillForm, getFormFieldSchema } = await import(
+    "../lib/pdf/ops/fill-form"
+  );
+  const src = await makeFormPdf();
+  const filled = await fillForm(src, {
+    values: { "test.field.name": "Round trip" },
+  });
+  const schemaAfter = await getFormFieldSchema(filled.bytes);
+  assertEq(
+    schemaAfter.fields[0].value,
+    "Round trip",
+    "value persists after re-load",
+  );
+});
+
+await test("fill-form: PDF without AcroForm throws clear error", async () => {
+  const { fillForm } = await import("../lib/pdf/ops/fill-form");
+  let threw = false;
+  let msg = "";
+  try {
+    await fillForm(SINGLE, { values: { foo: "bar" } });
+  } catch (err) {
+    threw = true;
+    msg = err instanceof Error ? err.message : String(err);
+  }
+  if (!threw) {
+    throw new Error("expected throw on PDF without form fields");
+  }
+  if (!/form fields|AcroForm|fillable/i.test(msg)) {
+    throw new Error(`expected error message about form fields, got: "${msg}"`);
+  }
+});
+
+await test("fill-form: flatten option produces valid output", async () => {
+  const { fillForm } = await import("../lib/pdf/ops/fill-form");
+  const src = await makeFormPdf();
+  const result = await fillForm(src, {
+    values: { "test.field.name": "Flattened" },
+    flatten: true,
+  });
+  assertEq(result.filledCount, 1, "one field filled before flatten");
+  assertPdfMagic(result.bytes, "flattened output bytes");
+});
+
+await test("fill-form: missing field name in values is silently skipped", async () => {
+  const { fillForm } = await import("../lib/pdf/ops/fill-form");
+  const src = await makeFormPdf();
+  // Empty values map — no fields filled, but op succeeds.
+  const result = await fillForm(src, { values: {} });
+  assertEq(result.filledCount, 0, "no fields filled when values empty");
+  assertPdfMagic(result.bytes, "no-fill output bytes");
+});
+
 await test("pdf-overlay: opacity option threads through to drawPage", async () => {
   // Behavioral check: opacity=0.5 still produces valid output bytes
   // (drawPage accepts the opacity parameter without throwing on

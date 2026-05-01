@@ -77,6 +77,7 @@ export const TOOLS: readonly Tool[] = [
   { id: "odd-even-pages", name: "Odd / Even Pages", desc: "Extract just the odd-numbered or just the even-numbered pages of a PDF — useful for re-scanning duplex documents where only one side captured.", icon: "Pages", free: true, cost: "free", group: "Organize" },
   { id: "csv-to-pdf", name: "CSV to PDF", desc: "Render CSV / TSV data as a paginated PDF table — RFC 4180 quoted fields supported, header repeats on every page, output is text-selectable + searchable.", icon: "Convert", free: true, cost: "free", group: "Convert" },
   { id: "pdf-overlay", name: "PDF Overlay", desc: "Stamp the first page of one PDF (letterhead / template / watermark) onto every page of another PDF. Front-or-behind layer, configurable opacity, fit-or-stretch, optional page subset.", icon: "Edit", free: true, cost: "free", group: "Edit" },
+  { id: "pdf-form-fill", name: "Fill PDF Form", desc: "Visually fill PDF AcroForm fields — text, checkboxes, radio buttons, dropdowns, multi-select. Optional flatten to bake values so recipients can&apos;t edit.", icon: "Edit", free: true, cost: "free", group: "Edit" },
 
   // Build 2 Wave 3 (2026-04-27): Search + Extract Images. Both
   // PDFium-backed read-only ops.

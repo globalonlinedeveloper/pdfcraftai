@@ -178,6 +178,11 @@ const PdfOverlayTool = dyn(() =>
     default: m.PdfOverlayTool,
   })),
 );
+const PdfFormFillTool = dyn(() =>
+  import("@/components/tools/PdfFormFillTool").then((m) => ({
+    default: m.PdfFormFillTool,
+  })),
+);
 
 const SearchPdfTool = dyn(() =>
   import("@/components/tools/SearchPdfTool").then((m) => ({
@@ -651,6 +656,8 @@ export function ToolRunner({ id }: { id: string }) {
       return <CsvToPdfTool />;
     case "pdf-overlay":
       return <PdfOverlayTool />;
+    case "pdf-form-fill":
+      return <PdfFormFillTool />;
     case "pdf-search":
       return <SearchPdfTool />;
     case "extract-images":

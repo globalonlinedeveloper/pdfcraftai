@@ -3054,6 +3054,89 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  "pdf-form-fill": {
+    useCasesTitle: "Why people fill PDF forms online",
+    useCasesIntro:
+      "Government forms, HR onboarding packets, insurance enrollments, vendor agreements, school registrations — the world runs on fillable PDFs, and most of them won&rsquo;t open cleanly in the apps you already have. Fill PDF Form gives you a clean, browser-based way to fill any AcroForm document, with the option to lock the values when you share it.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Government &amp; tax forms",
+        text: "IRS forms, visa applications, court filings, business registrations. The form is fillable but Adobe Reader won&rsquo;t cooperate, Preview drops some fields, and online portals charge to fill. Drop the PDF here and fill in your browser — no signup, no upload.",
+      },
+      {
+        icon: "Edit",
+        title: "HR onboarding packets",
+        text: "New-hire paperwork, benefits enrollment, direct-deposit forms. Fill once on your laptop, optionally flatten so the values can&rsquo;t be tampered with downstream, send to HR.",
+      },
+      {
+        icon: "Shield",
+        title: "Insurance &amp; medical intake",
+        text: "Patient intake, insurance claims, authorization forms. Sensitive fields (SSN, account numbers) stay in your browser — never uploaded to a server. The flatten option makes the filled copy a static record for the file.",
+      },
+      {
+        icon: "Receipt",
+        title: "Vendor &amp; procurement docs",
+        text: "Supplier registration, W-9, NDA acknowledgements. Most vendors want a flattened, signed copy. Fill, optionally flatten, then sign with our Sign PDF tool — everything in browser.",
+      },
+      {
+        icon: "Book",
+        title: "School &amp; child registration",
+        text: "Enrollment, after-school programs, field-trip permission, medical history. Fill multiple forms with the same recurring info (parent contact, emergency contact) without retyping.",
+      },
+    ],
+    howWorksTitle: "How Fill PDF Form works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your fillable PDF",
+        text: "We read the AcroForm structure with pdf-lib — text fields, checkboxes, radio groups, dropdowns, multi-select option lists. Read-only fields surface as locked.",
+      },
+      {
+        step: "2",
+        title: "Fill the inputs",
+        text: "Native browser controls render per field type. Multi-line text fields get a textarea; single-line gets an input. Radios are mutually-exclusive; checkboxes are independent. Multi-select supports cmd/ctrl-click.",
+      },
+      {
+        step: "3",
+        title: "Build &amp; download",
+        text: "Optional flatten bakes values into the page content stream — recipients see them but can&rsquo;t edit. Otherwise output stays editable. pdf-lib regenerates appearance streams so values display in any modern PDF viewer.",
+      },
+    ],
+    faqs: [
+      {
+        q: "What's the difference between &ldquo;flatten&rdquo; and the default?",
+        a: "Default: form fields stay editable. The recipient can open the PDF and change any value. Flatten: values are baked into the page content as static text — looks identical, but the recipient can&rsquo;t edit. Use flatten when you&rsquo;re finalizing a form for filing or signature; keep editable when you want to leave room for downstream edits (e.g. iterating on a draft).",
+      },
+      {
+        q: "Why are some fields read-only or skipped?",
+        a: "Read-only: the form&rsquo;s author marked the field as not user-fillable (a calculated field, an auto-incrementing ID, etc.). pdf-lib respects that flag — the input renders disabled. Skipped: the field is a signature field (use Sign PDF tool) or a generic button (no value to fill). Both surface in the success card&rsquo;s &ldquo;skipped&rdquo; list.",
+      },
+      {
+        q: "Will my PDF reader display the values correctly?",
+        a: "Yes for modern viewers (Preview, Chrome, Adobe Acrobat, Foxit). pdf-lib regenerates appearance streams during save, so the values render without needing the /NeedAppearances flag. Corner-case viewers that ignore appearance streams may show empty fields — for those, use the flatten option to bake values into the page content directly.",
+      },
+      {
+        q: "What happens if my PDF has no AcroForm?",
+        a: "&ldquo;This PDF doesn&rsquo;t have any fillable form fields&rdquo; appears as an error before the form view loads. AcroForm is the standard form layer in PDF — most fillable forms have it. PDFs that &ldquo;look&rdquo; fillable but aren&rsquo;t (e.g. raster scans of forms) need to be re-created with proper form fields first; we don&rsquo;t add new fields in this tool.",
+      },
+      {
+        q: "Can I fill the same form 100 times with different data?",
+        a: "Not in a single pass — this tool fills one form at a time. For mail-merge-style bulk filling from a CSV, that&rsquo;s a separate tool we&rsquo;re evaluating. The existing one-at-a-time flow is fast enough for typical use (open, fill, download, repeat).",
+      },
+      {
+        q: "Is anything uploaded?",
+        a: "No. PDF parsing, schema extraction, value writing, and PDF regeneration all run in your browser via pdf-lib. Sensitive fields (SSN, bank info, medical history) never leave your device. Verifiable in DevTools → Network.",
+      },
+    ],
+    cta: {
+      title: "Need to sign the filled form?",
+      text: "Sign PDF places a signature image (drawn or uploaded) on a click-and-drag rectangle. Pairs naturally with form filling — fill, flatten, sign, send.",
+      linkHref: "/tool/sign-pdf-free",
+      linkLabel: "Try Sign PDF",
+    },
+  },
+
   "pdf-overlay": {
     useCasesTitle: "Why people use PDF overlay",
     useCasesIntro:

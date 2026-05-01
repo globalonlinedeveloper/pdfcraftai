@@ -91,6 +91,9 @@ export const TOOL_SUGGESTIONS: Record<string, readonly string[]> = {
   // pdf-overlay → letterhead / watermark workflow; users typically
   // add page numbers AFTER overlay, or sign the result.
   "pdf-overlay": ["page-numbers", "sign-pdf-free", "merge"],
+  // pdf-form-fill → typical post-fill is sign + flatten + send.
+  // Most users want a signature next, then to compile into a binder.
+  "pdf-form-fill": ["sign-pdf-free", "flatten-pdf", "merge"],
 };
 
 /** Look up suggestions, defaulting to empty if no entry. */
