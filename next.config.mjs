@@ -371,13 +371,23 @@ const nextConfig = {
       // GSC + any inbound links transfer their authority to the new URLs.
       { source: "/tool/ai-plagiarism", destination: "/tool/ai-detector", permanent: true },
       { source: "/pdf-plagiarism-check", destination: "/ai-content-detector", permanent: true },
-      // 2026-05-01 — ai-chat lives at /app/chat (multi-turn surface, not a
-      // single-page /tool/[id] runner). The /tool/ai-chat URL was rendering
-      // the generic "COMING SOON · TOOL RUNNER LANDS IN PHASE 5" placeholder
-      // instead of routing to the actual chat experience. Permanent redirect
-      // so anyone who arrives via the in-app navigation, an SEO snippet, or
-      // a stale bookmark lands on the working surface.
-      { source: "/tool/ai-chat", destination: "/app/chat", permanent: true },
+      // 2026-05-01 — ai-chat is NOT a /tool/[id] runner (chat is multi-turn;
+      // every other catalog entry is single-shot, drop-PDF-and-go). The legacy
+      // URL /tool/ai-chat was rendering the generic
+      // "COMING SOON · TOOL RUNNER LANDS IN PHASE 5" placeholder. Option B
+      // (commit e5a9aa8) promoted Chat to a first-class top-nav slot
+      // (components/nav/TopNav.tsx → /chat-with-pdf) and removed it from the
+      // /tools catalog (components/marketing/ToolFilter.tsx).
+      //
+      // Redirect target is the PUBLIC marketing page /chat-with-pdf, NOT the
+      // logged-in /app/chat dashboard. Reasoning: the dominant source for
+      // /tool/ai-chat URLs in the wild is anonymous SEO traffic — old social
+      // shares, AI-assistant snippets that quote our deprecated catalog
+      // structure, stale bookmarks. Those visitors need an indexable landing
+      // with FAQs + JSON-LD + a "Start chatting" CTA, NOT a NextAuth sign-in
+      // wall. Logged-in users still convert: /chat-with-pdf's CTA routes them
+      // straight to /app/chat for the actual multi-turn experience.
+      { source: "/tool/ai-chat", destination: "/chat-with-pdf", permanent: true },
       // 2026-04-26 — /categories/* deleted. Originally redirected to
       // /tools (preserve link equity), then removed because the pages
       // were live for ~1 hour total: zero external links, zero Google
