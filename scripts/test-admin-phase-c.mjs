@@ -488,10 +488,9 @@ assert(
 //   (d) types.ts: LedgerFinancials.provider accepts "chargeback_reversal"
 
 const TYPES_PATH = resolve(ROOT, "lib", "payments", "types.ts");
-const PADDLE_PATH = resolve(ROOT, "lib", "payments", "adapters", "paddle.ts");
 const LEDGER_PATH = resolve(ROOT, "lib", "payments", "ledger.ts");
 
-for (const p of [TYPES_PATH, PADDLE_PATH, LEDGER_PATH]) {
+for (const p of [TYPES_PATH, LEDGER_PATH]) {
   if (!existsSync(p)) {
     console.error(`FATAL: required source file missing: ${p}`);
     process.exit(1);
@@ -499,7 +498,6 @@ for (const p of [TYPES_PATH, PADDLE_PATH, LEDGER_PATH]) {
 }
 
 const TYPES_SRC = readFileSync(TYPES_PATH, "utf8");
-const PADDLE_SRC = readFileSync(PADDLE_PATH, "utf8");
 const LEDGER_SRC = readFileSync(LEDGER_PATH, "utf8");
 
 // (a) types.ts — kind="chargeback" variant on NormalizedPaymentEvent
@@ -528,44 +526,14 @@ assert(
   "Without this the handleChargeback tag assignment fails tsc"
 );
 
-// (b) paddle.ts — three-branch dispatch + chargeback helper
-assert(
-  "J2 paddle.ts dispatches chargeback actions to kind='chargeback'",
-  /(adj\.action\s*===\s*"chargeback"[\s\S]{0,2000}kind:\s*"chargeback")|(\[\s*"chargeback"[\s\S]{0,200}chargeback_warning[\s\S]{0,200}chargeback_reverse)/.test(
-    PADDLE_SRC
-  ),
-  "Adapter must route chargeback / chargeback_warning / chargeback_reverse actions into a kind='chargeback' event"
-);
-
-assert(
-  "J2 paddle.ts emits providerChargebackRef from adj.id",
-  /providerChargebackRef:\s*adj\.id/.test(PADDLE_SRC),
-  "Chargeback event must carry the adjustment id as its chargeback-specific ref"
-);
-
-assert(
-  "J2 paddle.ts defines buildPaddleChargebackFinancials helper",
-  /function\s+buildPaddleChargebackFinancials\s*\(/.test(PADDLE_SRC),
-  "Chargeback financials helper must exist alongside buildPaddleRefundFinancials for symmetry"
-);
-
-assert(
-  "J2 buildPaddleChargebackFinancials marks dataSource='webhook' and taxTreatment='mor'",
-  /function\s+buildPaddleChargebackFinancials[\s\S]{0,2500}dataSource:\s*"webhook"/.test(
-    PADDLE_SRC
-  ) &&
-    /function\s+buildPaddleChargebackFinancials[\s\S]{0,2500}taxTreatment:\s*"mor"/.test(
-      PADDLE_SRC
-    ),
-  "Paddle is the MoR; chargeback reversal is webhook-authoritative with MoR tax posture"
-);
-
-assert(
-  'J2 PaddleAdjustmentEntity.action union includes chargeback_warning + chargeback_reverse',
-  /"chargeback_warning"/.test(PADDLE_SRC) &&
-    /"chargeback_reverse"/.test(PADDLE_SRC),
-  "Adapter's wire-level type must admit the full dispute lifecycle actions"
-);
+// (b) 2026-05-01: paddle.ts adapter REMOVED. Chargeback dispatch
+// assertions previously here pinned Paddle-specific webhook handling
+// (PaddleAdjustmentEntity.action union with chargeback_warning /
+// chargeback_reverse, buildPaddleChargebackFinancials helper). With
+// Paddle retired, the chargeback abstraction lives entirely in
+// types.ts (above) + ledger.ts (below). The next international
+// gateway's adapter will need its own equivalent dispatch — that test
+// surface is added per-adapter when the adapter ships.
 
 // (c) ledger.ts — handleChargeback + applyPaymentEvent dispatch + provider tag
 assert(

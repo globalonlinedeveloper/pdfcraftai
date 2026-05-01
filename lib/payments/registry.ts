@@ -13,10 +13,12 @@
 // boot. If RAZORPAY_KEY_ID isn't set, the Razorpay module is simply not
 // loaded — its dependencies don't get pulled, its init never runs.
 //
-// History: this registry used to carry a PayPal row (between Phase 4
-// and 2026-04-21). D4 replaced the PayPal international rail with
-// Paddle MoR; the PayPal adapter, webhook route, and env-var block
-// were retired in the same commit that added this note.
+// Adding a new provider: add a row to the ADAPTERS array below, ship
+// the adapter file under ./adapters/<name>.ts implementing the
+// PaymentProvider interface, set the env vars on the host. No other
+// code in the app needs to change. The retirement path is symmetric:
+// remove the row + delete the adapter; downstream code keeps working
+// because the registry returns null for "no configured provider."
 
 import type { PaymentProvider } from "./provider";
 import type { Currency, ProviderId } from "./types";
@@ -53,43 +55,11 @@ const ADAPTERS: ReadonlyArray<{
       });
     },
   },
-  {
-    // Paddle (Merchant of Record) — the international rail post-D4.
-    // Razorpay stays on the INR rail; Paddle replaces PayPal for
-    // non-IN traffic. Seller ID 320957 (signed up 2026-04-21).
-    // See docs/payments/MOR_EVALUATION.md for the gateway pick.
-    //
-    // Five env vars gate whether the adapter is live:
-    //   PADDLE_API_KEY         server-side Bearer token (secret)
-    //   PADDLE_CLIENT_TOKEN    browser-safe token paired with Paddle.js
-    //   PADDLE_WEBHOOK_SECRET  HMAC key for paddle-signature verification
-    //   PADDLE_SELLER_ID       informational — "320957" for pdfcraftai
-    //   PADDLE_ENV             "sandbox" | "live" (defaults to sandbox)
-    //
-    // While Paddle KYC verification is pending, only the sandbox
-    // quad lands on Hostinger, so registry.isConfigured() → false
-    // in production until the live keys are in.
-    id: "paddle",
-    isConfigured: () =>
-      Boolean(
-        process.env.PADDLE_API_KEY &&
-          process.env.PADDLE_CLIENT_TOKEN &&
-          process.env.PADDLE_WEBHOOK_SECRET &&
-          process.env.PADDLE_SELLER_ID
-      ),
-    load: async () => {
-      const { PaddleProvider } = await import("./adapters/paddle");
-      return new PaddleProvider({
-        apiKey: process.env.PADDLE_API_KEY!,
-        clientToken: process.env.PADDLE_CLIENT_TOKEN!,
-        webhookSecret: process.env.PADDLE_WEBHOOK_SECRET!,
-        sellerId: process.env.PADDLE_SELLER_ID!,
-        environment:
-          (process.env.PADDLE_ENV as "sandbox" | "live" | undefined) ??
-          "sandbox",
-      });
-    },
-  },
+  // International rail: not currently configured. The router at
+  // lib/payments/router.ts returns null for non-IN currencies, which
+  // surfaces a clear "international payments not yet available" error
+  // at the checkout layer. Add the next approved gateway as a new row
+  // here when it's ready.
 ];
 
 // Cache loaded adapters. We want one instance per process so webhook

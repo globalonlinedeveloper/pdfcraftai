@@ -152,13 +152,16 @@ function referenceRoute(raw) {
       country: cleaned,
     };
   }
-  // Tier 1 or catchall — both go to Paddle USD today
+  // 2026-05-01: Tier 1 + catchall used to route to Paddle USD. Paddle
+  // was retired; the international rail is empty until next gateway is
+  // approved. All non-IN countries fall through to the same "defer"
+  // surface that Tier-2 (EU) uses.
   return {
-    action: "route",
-    tier: 1,
-    rail: "paddle",
-    currency: "USD",
+    action: "defer",
+    tier: 2,
+    status: 403,
     country: cleaned,
+    reason: "tier2_deferred",
   };
 }
 
@@ -166,10 +169,12 @@ function referenceRoute(raw) {
 const CASES = [
   // Tier 1 happy paths
   { input: "IN", expect: { action: "route", tier: 1, rail: "razorpay", currency: "INR", country: "IN" } },
-  { input: "US", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "US" } },
-  { input: "GB", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "GB" } },
-  { input: "JP", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "JP" } },
-  { input: "BR", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "BR" } },
+  // 2026-05-01: Tier 1 non-IN countries deferred (Paddle retired,
+  // no international rail configured yet).
+  { input: "US", expect: { action: "defer", tier: 2, status: 403, country: "US", reason: "tier2_deferred" } },
+  { input: "GB", expect: { action: "defer", tier: 2, status: 403, country: "GB", reason: "tier2_deferred" } },
+  { input: "JP", expect: { action: "defer", tier: 2, status: 403, country: "JP", reason: "tier2_deferred" } },
+  { input: "BR", expect: { action: "defer", tier: 2, status: 403, country: "BR", reason: "tier2_deferred" } },
 
   // Tier 2 deferred — EU
   { input: "DE", expect: { action: "defer", tier: 2, status: 403, country: "DE", reason: "tier2_deferred" } },
@@ -188,13 +193,13 @@ const CASES = [
   { input: "SY", expect: { action: "block", tier: 3, status: 451, country: "SY", reason: "tier3_sanctioned" } },
   { input: "CU", expect: { action: "block", tier: 3, status: 451, country: "CU", reason: "tier3_sanctioned" } },
 
-  // Catchall (Paddle handles)
-  { input: "MG", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "MG" } }, // Madagascar
-  { input: "UZ", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "UZ" } }, // Uzbekistan
+  // Catchall (was Paddle; deferred since 2026-05-01)
+  { input: "MG", expect: { action: "defer", tier: 2, status: 403, country: "MG", reason: "tier2_deferred" } }, // Madagascar
+  { input: "UZ", expect: { action: "defer", tier: 2, status: 403, country: "UZ", reason: "tier2_deferred" } }, // Uzbekistan
 
   // Case + whitespace normalization
   { input: "in", expect: { action: "route", tier: 1, rail: "razorpay", currency: "INR", country: "IN" } },
-  { input: "  us  ", expect: { action: "route", tier: 1, rail: "paddle", currency: "USD", country: "US" } },
+  { input: "  us  ", expect: { action: "defer", tier: 2, status: 403, country: "US", reason: "tier2_deferred" } },
 
   // Unknown/missing
   { input: "", expect: { action: "unknown", status: 403, received: "", reason: "geo_unknown" } },
@@ -227,7 +232,7 @@ const MUST_CONTAIN = [
   'action: "block"',
   'action: "unknown"',
   'rail: "razorpay"',
-  'rail: "paddle"',
+  // 'rail: "paddle"' marker REMOVED 2026-05-01 — Paddle retired.
   '"tier3_sanctioned"',
   '"tier2_deferred"',
   '"geo_unknown"',

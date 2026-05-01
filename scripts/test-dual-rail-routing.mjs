@@ -259,8 +259,12 @@ console.log("\nD. packAmountMinor + USD_TO_INR_RATE");
 }
 
 // ==================================================================
-// SECTION E — Registry still has both rails, env-gated
+// SECTION E — Registry contract: razorpay-only after Paddle retirement
 // ==================================================================
+// 2026-05-01: Paddle was retired as a payment rail. This section
+// previously asserted "both rails present" — now it asserts "razorpay
+// configured + no orphan adapter files exist + the registry can still
+// accept future international rails via the same row pattern."
 console.log("\nE. Registry + adapters intact");
 {
   const registrySrc = mustRead("lib/payments/registry.ts");
@@ -269,8 +273,8 @@ console.log("\nE. Registry + adapters intact");
     /id:\s*["']razorpay["']/.test(registrySrc)
   );
   assert(
-    'registry has a row with id: "paddle"',
-    /id:\s*["']paddle["']/.test(registrySrc)
+    'registry has NO row with id: "paddle" (retired 2026-05-01)',
+    !/id:\s*["']paddle["']/.test(registrySrc)
   );
   // Env-gating — a regression that drops isConfigured() would silently
   // break the registry's lazy-load contract.
@@ -280,13 +284,6 @@ console.log("\nE. Registry + adapters intact");
       /RAZORPAY_KEY_SECRET/.test(registrySrc) &&
       /RAZORPAY_WEBHOOK_SECRET/.test(registrySrc)
   );
-  assert(
-    "paddle row checks PADDLE_API_KEY / PADDLE_CLIENT_TOKEN / PADDLE_WEBHOOK_SECRET / PADDLE_SELLER_ID",
-    /PADDLE_API_KEY/.test(registrySrc) &&
-      /PADDLE_CLIENT_TOKEN/.test(registrySrc) &&
-      /PADDLE_WEBHOOK_SECRET/.test(registrySrc) &&
-      /PADDLE_SELLER_ID/.test(registrySrc)
-  );
 
   // Adapter files exist with their expected capability surface.
   const razorpay = mustRead("lib/payments/adapters/razorpay.ts");
@@ -294,14 +291,11 @@ console.log("\nE. Registry + adapters intact");
     "razorpay adapter supports INR",
     /supportedCurrencies[^\n]*\bINR\b/.test(razorpay)
   );
-  const paddle = mustRead("lib/payments/adapters/paddle.ts");
+  // Paddle adapter file MUST NOT exist (retirement invariant).
+  // existsSync is already imported at the top of this file.
   assert(
-    "paddle adapter supports USD",
-    /supportedCurrencies[^\n]*\bUSD\b/.test(paddle)
-  );
-  assert(
-    "paddle adapter does NOT claim INR support (prevents accidental IN→paddle in registry filter)",
-    !/supportedCurrencies[^\n]*\bINR\b/.test(paddle)
+    "lib/payments/adapters/paddle.ts has been deleted (retired)",
+    !existsSync(resolve(ROOT, "lib/payments/adapters/paddle.ts")),
   );
 }
 

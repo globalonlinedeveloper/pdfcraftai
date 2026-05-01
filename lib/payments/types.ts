@@ -19,7 +19,7 @@ import type { CreditPackId } from "@/lib/pricing";
 // --- Identifiers ----------------------------------------------------------
 
 /**
- * Open provider identifier. Examples we ship with: "razorpay", "paddle".
+ * Open provider identifier. Currently shipped: "razorpay".
  * Intentionally `string` — adding an adapter is a runtime concern, not a
  * type-system concern. Call sites that need to branch should use the
  * registry, not a switch on this value.
@@ -111,7 +111,7 @@ export type CheckoutSession =
       kind: "client";
       /** Opaque token/order-id the provider's JS SDK consumes. */
       clientToken: string;
-      /** Which SDK to load ("razorpay", "paddle", ...). */
+      /** Which SDK to load ("razorpay", ...). */
       sdk: ProviderId;
       /** Extra config the SDK needs (public key, merchant ID, etc.). */
       publicConfig: Record<string, string>;
@@ -157,7 +157,6 @@ export type LedgerFinancials = {
   grossChargeMicros?: number;
   billingCurrency?: string;
   provider?:
-    | "paddle"
     | "razorpay"
     | "manual"
     | "refund_reversal"

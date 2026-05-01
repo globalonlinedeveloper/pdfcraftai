@@ -4,7 +4,9 @@
 //   - Given an ISO-3166-1 alpha-2 country code (normally from Cloudflare's
 //     `CF-IPCountry` request header), return a single `RouteDecision` that
 //     tells the checkout UI what to do:
-//       - `action: "route"`  → proceed to the named rail (razorpay / paddle)
+//       - `action: "route"`  → proceed to the named rail (razorpay only
+//                              right now; international rail is empty
+//                              until next gateway is approved)
 //       - `action: "defer"`  → show the "we're not in your country yet +
 //                              notify-me" form (Tier 2, e.g. EU)
 //       - `action: "block"`  → refuse with HTTP 451 (Tier 3 sanctioned;
@@ -220,28 +222,34 @@ export function routeCheckoutByCountry(
     };
   }
 
+  // 2026-05-01: international rail temporarily empty. Tier-1 non-IN
+  // countries fall through to "defer" (the same UX as Tier-2) until
+  // the next international gateway is approved + wired up. The "defer"
+  // surface already exists end-to-end (geo-waitlist signup, email
+  // capture, "we'll let you know when we ship" copy), so we re-use it
+  // rather than introducing a new error state.
+  //
+  // To re-enable international: add a row to lib/payments/registry.ts
+  // for the new gateway, then add a `route` branch here mapping
+  // TIER_1_COUNTRIES + the catchall to that rail's ProviderId.
   if (TIER_1_COUNTRIES.has(cleaned)) {
     return {
-      action: "route",
-      tier: 1,
-      rail: "paddle",
-      currency: "USD",
+      action: "defer",
+      tier: 2,
+      status: 403,
       country: cleaned,
+      reason: "tier2_deferred",
     };
   }
 
-  // Catchall: any country not explicitly tiered. Policy §3.2 says Paddle is
-  // the safe catchall because Paddle's own KYC/geo logic will refuse any
-  // country it can't legally process. This is the intended behavior — it
-  // lets us serve niche markets without having to enumerate every country
-  // upfront. If Paddle rejects, the adapter surfaces the error through the
-  // normal checkout error path.
+  // Catchall: any country not explicitly tiered. Same defer-until-
+  // approved policy as Tier-1 above.
   return {
-    action: "route",
-    tier: 1,
-    rail: "paddle",
-    currency: "USD",
+    action: "defer",
+    tier: 2,
+    status: 403,
     country: cleaned,
+    reason: "tier2_deferred",
   };
 }
 
