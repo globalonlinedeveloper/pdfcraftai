@@ -6003,4 +6003,683 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       linkLabel: "Try Improve Writing",
     },
   },
+
+  // =====================================================================
+  // 2026-05-01 — Phase 2 AI longform Tier 3 (8 tools)
+  //
+  // Legal/specialist tools — NDAs, employment contracts, partnership
+  // deeds, insurance policies, loan bundles, research papers, salary
+  // slips, ATS resumes. Editorial discipline emphasizes:
+  //   • Explicit "not legal/financial/medical advice" disclaimers
+  //   • Indian-context examples (IRDAI, RERA, Indian Contract Act,
+  //     Indian Stamp Act, Companies Act 2013, Partnership Act 1932,
+  //     Indian banks/lenders, Indian payslip components)
+  //   • Risk-flagging language with confidence levels
+  //   • CTAs to genuinely-related tools (e.g. NDA → Employment →
+  //     Partnership for the spectrum of business contracts)
+  // =====================================================================
+
+  "ai-nda": {
+    useCasesTitle: "Why people use NDA Analyzer",
+    useCasesIntro:
+      "NDAs are short documents with high-stakes clauses buried in dense prose. NDA Analyzer surfaces risk flags, missing standard clauses (mutual vs unilateral, term length, return-or-destroy), and embedded surprises like non-compete or IP-assignment language that don&rsquo;t belong in an NDA. This is a triage aid &mdash; not legal advice.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Vendor / partner NDA before signing",
+        text: "Drop the NDA your vendor sent over, see flagged risk clauses (overly broad confidentiality scope, perpetual term, one-way info flow). Useful for the &ldquo;is this safe to sign?&rdquo; first-pass before forwarding to legal.",
+      },
+      {
+        icon: "Edit",
+        title: "Employment / contractor NDA review",
+        text: "NDAs in employment contexts often smuggle in non-compete and IP-assignment clauses. The analyzer specifically flags these embedded surprises so you know what to push back on during negotiation.",
+      },
+      {
+        icon: "Pages",
+        title: "M&A / due diligence NDA",
+        text: "Pre-deal mutual NDAs require careful term-length and exclusion-list review. The analyzer surfaces what&rsquo;s standard vs aggressive in the doc you received.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Investor / fundraising NDA",
+        text: "NDAs from prospective investors. Common red flags: overly broad info definitions, restrictive obligations on the founder, missing residual-knowledge carve-outs. The analyzer surfaces them.",
+      },
+      {
+        icon: "Compare",
+        title: "Comparing your standard NDA against a counter-party&rsquo;s",
+        text: "Run both through the analyzer to see clause-by-clause differences. Useful for the negotiation prep where you need to know what&rsquo;s being asked beyond your template.",
+      },
+    ],
+    howWorksTitle: "How NDA Analyzer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the NDA PDF",
+        text: "PDF up to 25 MB. Works on Indian and international NDA templates &mdash; mutual / unilateral, employment / vendor / M&A.",
+      },
+      {
+        step: "2",
+        title: "We flag + structure",
+        text: "Server-side text extraction, then a pass that identifies standard NDA clause categories (definition of confidential info, term, return-or-destroy, exclusions, jurisdiction) plus non-standard insertions (non-compete, IP assignment, non-solicit). Risk flags scored low / medium / high.",
+      },
+      {
+        step: "3",
+        title: "Get a structured review",
+        text: "Markdown output with: standard clauses present / standard clauses missing / non-standard insertions flagged / suggested negotiation points. Page citations link each flag back to the source.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this legal advice?",
+        a: "No. The analyzer is a triage aid that surfaces clauses worth a closer look &mdash; it does NOT substitute for review by a qualified lawyer. For high-stakes NDAs (M&A, IP-heavy, large dollar value), use the analyzer to inform your conversation with counsel, not to skip it.",
+      },
+      {
+        q: "How does it tell standard vs non-standard?",
+        a: "Pre-trained on a corpus of common NDA structures. Standard clauses (term, scope, return) are recognized regardless of phrasing variation. Non-standard insertions (non-compete, IP assignment, non-solicit) are flagged by category match. Edge cases (rare but legitimate clauses) may flag as &ldquo;non-standard&rdquo; without being problematic &mdash; review with that in mind.",
+      },
+      {
+        q: "Will it work for Indian NDA formats?",
+        a: "Yes &mdash; Indian NDA templates (Indian Contract Act 1872 jurisdiction, Indian Stamp Act compliance) are recognized. Indian-specific clauses (Indian arbitration jurisdiction, Indian governing law) flagged appropriately. Non-Indian NDAs (US, UK, EU) also supported with their respective standard structures.",
+      },
+      {
+        q: "Can it suggest specific redlines?",
+        a: "Suggested negotiation points (&ldquo;consider tightening the term to 2 years from 5&rdquo;, &ldquo;ask for residual-knowledge exclusion&rdquo;) are surfaced &mdash; but specific redline language should come from your lawyer. The analyzer informs negotiation prep; it doesn&rsquo;t draft binding language.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per NDA. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if a flagged clause is actually fine?",
+        a: "Common &mdash; the analyzer errs on the side of flagging. Review each flag in context. The point of the tool is to surface what to consider, not to label clauses as automatically problematic.",
+      },
+    ],
+    cta: {
+      title: "Reviewing an employment contract instead?",
+      text: "Employment Contract Review surfaces comp + termination + risk flags (non-compete, IP, training bond) and negotiation points specific to Indian employment agreements.",
+      linkHref: "/tool/ai-employment",
+      linkLabel: "Try Employment Contract Review",
+    },
+  },
+
+  "ai-employment": {
+    useCasesTitle: "Why people use Employment Contract Review",
+    useCasesIntro:
+      "Indian employment contracts smuggle in non-compete clauses, IP assignment, training bonds, and notice-period quirks alongside the offered comp. Employment Contract Review surfaces all of it as a structured report so you know what you&rsquo;re signing. Triage aid, not legal advice.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Pre-acceptance offer review",
+        text: "Drop the offer letter / contract before signing. Surfaces comp components (CTC breakdown vs in-hand), notice period, training-bond amount, non-compete duration, IP-assignment scope, exit clauses. Useful for the &ldquo;is this comp + restrictions package fair?&rdquo; conversation with yourself or a mentor.",
+      },
+      {
+        icon: "Edit",
+        title: "Negotiation prep",
+        text: "When the contract has aggressive clauses (24-month non-compete, 2-year training bond), the analyzer surfaces them with India-context risk levels. Use the output as the prep doc for the comp / restrictions negotiation conversation with HR.",
+      },
+      {
+        icon: "Pages",
+        title: "Comparing two offers",
+        text: "Run both contracts through the analyzer, compare the structured outputs side-by-side. Surfaces differences in CTC structure, notice period, restrictive covenants &mdash; useful when comp is similar but restrictions differ.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Mid-tenure contract change review",
+        text: "Promotion or role-change brings a new contract. The analyzer surfaces what changed vs your existing terms (often new non-competes appear, or training bonds get added). Useful before signing the addendum.",
+      },
+      {
+        icon: "Compare",
+        title: "Resignation / exit review",
+        text: "On resignation, re-read the contract through the analyzer to surface what obligations carry past exit (non-compete duration, IP assignment scope, confidentiality term). Helps plan the next role timing.",
+      },
+    ],
+    howWorksTitle: "How Employment Contract Review works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the contract PDF",
+        text: "PDF up to 25 MB. Works on Indian employment contracts (Companies Act 2013 / Industrial Disputes Act / Indian Contract Act). Non-Indian contracts also analyzed but India-specific flags will not apply.",
+      },
+      {
+        step: "2",
+        title: "We extract + flag",
+        text: "Server-side text extraction, then a structured pass that surfaces: CTC breakdown, in-hand calculation, notice period, training bond, non-compete (duration / geographic scope), IP assignment, exit triggers, governing law. Each clause flagged for risk level (low / medium / high).",
+      },
+      {
+        step: "3",
+        title: "Get a structured review",
+        text: "Markdown output with sections: comp / termination / restrictive covenants (non-compete, non-solicit, IP) / risk flags / suggested negotiation points. Page citations on every clause.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this legal advice?",
+        a: "No. The analyzer is a triage aid &mdash; it surfaces what&rsquo;s in the contract for your informed review. For high-stakes negotiations (executive role, IP-heavy company, equity components), use the output to inform your conversation with an employment lawyer. Indian Bar Council members specializing in employment law are the right next step.",
+      },
+      {
+        q: "Are Indian-specific risk flags pre-encoded?",
+        a: "Yes. Training bonds (legal in India under Indian Contract Act with reasonable enforcement test), broad non-competes (generally unenforceable in India post-employment under Section 27 ICA), IP assignment scope (employer-owned for work-product is standard, but personal-time inventions are a battleground). Flags reflect Indian case-law trends.",
+      },
+      {
+        q: "Will it explain CTC vs in-hand?",
+        a: "Yes &mdash; CTC includes employer PF contribution, gratuity, variable pay, retention bonuses. In-hand is the monthly transfer post-tax. The analyzer surfaces both calculations so the &ldquo;CTC of X&rdquo; offer is contextualized against actual monthly income.",
+      },
+      {
+        q: "How does it handle equity / ESOP terms?",
+        a: "Equity terms (vesting schedule, cliff, acceleration on termination, exercise price) flagged when present. Indian-specific equity quirks (perquisite tax, FBT history, sweat equity rules) noted. For complex equity packages, the analyzer flags what to clarify with the employer; specific tax modeling needs a CA.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per contract. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Contract sent to inference provider for analysis, not stored. For maximum confidentiality (especially for senior roles where the offer details are sensitive), redact your name / company / specific dollar values via Redact PDF first &mdash; the structural analysis still works on the redacted version.",
+      },
+    ],
+    cta: {
+      title: "Want to compare against the JD?",
+      text: "Resume &harr; JD Matcher scores how well your resume aligns with the JD &mdash; useful before / during the comp negotiation when leverage matters. Stronger fit = stronger negotiating position.",
+      linkHref: "/tool/ai-jd-match",
+      linkLabel: "Try Resume ↔ JD Matcher",
+    },
+  },
+
+  "ai-partnership-deed": {
+    useCasesTitle: "Why people use Partnership Deed Analyzer",
+    useCasesIntro:
+      "Indian partnership deeds (under Partnership Act 1932) and LLP agreements (under LLP Act 2008) carry huge implications for capital, profit-sharing, decision rights, and admission/retirement of partners. Partnership Deed Analyzer surfaces all of it as a structured table so partners know exactly what they&rsquo;ve agreed to. This is a triage aid, not legal advice.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Forming a new partnership / LLP",
+        text: "Before signing the deed, run it through the analyzer to verify capital contributions, profit-loss ratios, drawing rights, decision-making thresholds. Surfaces missing standard clauses (death-of-partner, retirement, expulsion mechanisms) the drafter may have skipped.",
+      },
+      {
+        icon: "Edit",
+        title: "Joining an existing partnership",
+        text: "When invited to join an existing firm as a new partner, the analyzer surfaces what your role + capital contribution + profit share + decision rights actually are. Useful for the &ldquo;is this offer fair?&rdquo; review.",
+      },
+      {
+        icon: "Pages",
+        title: "Annual deed review / amendment",
+        text: "Many Indian partnerships annually review and amend the deed (capital changes, ratio updates). The analyzer compares the new vs old to surface what&rsquo;s actually changing &mdash; useful when the changes are buried in long amendment language.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Dispute / dissolution prep",
+        text: "When partners disagree, the deed is the first reference for resolution. The analyzer surfaces what the deed says about the disputed area (decision-making, profit allocation, expulsion grounds) so both sides have the same baseline.",
+      },
+      {
+        icon: "Compare",
+        title: "Conversion to LLP planning",
+        text: "Indian partnerships converting to LLP need to map existing deed terms to LLP agreement terms. The analyzer&rsquo;s structured output simplifies the mapping &mdash; useful for the CA / lawyer drafting the LLP agreement.",
+      },
+    ],
+    howWorksTitle: "How Partnership Deed Analyzer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the deed PDF",
+        text: "PDF up to 25 MB. Works on Indian partnership deeds (Partnership Act 1932) and LLP agreements (LLP Act 2008). Stamp paper variants and scanned-and-signed deeds both supported.",
+      },
+      {
+        step: "2",
+        title: "We extract + structure",
+        text: "Server-side text extraction (OCR if scanned), then a structured pass that surfaces: partners and capital contributions / profit-loss share / drawing rights / decision-making thresholds / admission and retirement clauses / expulsion grounds / dispute resolution. Risk flags on aggressive or missing clauses.",
+      },
+      {
+        step: "3",
+        title: "Get a structured review",
+        text: "Markdown output with sections: Partners & Capital / Profit-Loss / Decision-Making / Admission & Retirement / Risk Flags / Suggested Clarifications. Page citations on every section.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this legal advice?",
+        a: "No. The analyzer is a triage aid &mdash; it surfaces what the deed says for your informed review. For partnership formations or disputes, use the output to inform your conversation with a lawyer or CA. Indian partnership law has nuances (partner&rsquo;s authority, third-party rights, registration vs unregistered firms) where professional guidance matters.",
+      },
+      {
+        q: "Does it understand Indian partnership-vs-LLP differences?",
+        a: "Yes. Partnership Act 1932 (registered / unregistered partnerships, joint and several liability, partner-as-agent) and LLP Act 2008 (designated partners, limited liability, separate legal entity) have distinct features. The analyzer flags clauses appropriate to each form.",
+      },
+      {
+        q: "What about stamp duty / registration concerns?",
+        a: "Surfaced in the risk-flags section if the deed appears under-stamped or unregistered (Indian Stamp Act compliance). Note that stamp-duty rates are state-specific and the analyzer doesn&rsquo;t calculate exact dues &mdash; check the state-specific schedule.",
+      },
+      {
+        q: "Can it identify missing standard clauses?",
+        a: "Yes &mdash; common omissions (death-of-partner, retirement on ill-health, expulsion grounds, dispute resolution mechanism) are flagged. Indian partnerships frequently leave these to default (Partnership Act provisions), which can produce surprises during real disputes.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per deed. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Deed sent to inference provider, not stored. For maximum confidentiality on partnership matters (especially financial details), redact partner names + capital amounts via Redact PDF first.",
+      },
+    ],
+    cta: {
+      title: "Reviewing an NDA between partners?",
+      text: "NDA Analyzer surfaces risk flags, missing clauses, and embedded surprises. Useful for the inter-partner NDAs that often accompany the deed itself.",
+      linkHref: "/tool/ai-nda",
+      linkLabel: "Try NDA Analyzer",
+    },
+  },
+
+  "ai-loan-bundle": {
+    useCasesTitle: "Why people use Loan Application Bundler Audit",
+    useCasesIntro:
+      "Indian loan applications (home loan, personal loan, business loan, education loan) require a stack of documents: KYC, income proof, bank statements, ITR, property docs (for secured loans). The audit detects what loan type the bundle is for, audits against the lender&rsquo;s typical checklist, surfaces missing items, and flags eligibility issues before submission.",
+    useCases: [
+      {
+        icon: "Receipt",
+        title: "Home loan application pre-check",
+        text: "Before submitting to HDFC / ICICI / SBI / Bajaj Housing Finance, run the bundle through the audit. Surfaces missing items (latest 3-month payslips often forgotten, or bank statements not stamped) that would otherwise cause rejection or 3-week delays.",
+      },
+      {
+        icon: "Shield",
+        title: "Business / MSME loan readiness",
+        text: "MSME loan documentation is dense (CMA data, projected financials, audited statements). The audit verifies the bundle has the items the lender will ask for &mdash; faster than discovering gaps mid-application.",
+      },
+      {
+        icon: "Pages",
+        title: "Personal loan eligibility check",
+        text: "Personal loans rejected for FOIR / EMI-to-income mismatches are common. The audit calculates EMI capacity from bank statements and flags eligibility before you apply (and take a credit-bureau hit).",
+      },
+      {
+        icon: "Edit",
+        title: "Education loan abroad",
+        text: "Foreign education loans (Avanse, HDFC Credila, banks) have detailed admission + co-borrower documentation. The audit verifies all required items present (admission letter, fee schedule, parent ITR / bank statements, university accreditation).",
+      },
+      {
+        icon: "Sparkle",
+        title: "Loan against property / mortgage",
+        text: "LAP and mortgage applications need property documentation (title deeds, encumbrance certificate, property tax receipts). The audit surfaces missing property-side docs that lenders often ask for late in the process.",
+      },
+    ],
+    howWorksTitle: "How Loan Application Bundler Audit works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Concatenate + drop your document bundle",
+        text: "Combine your loan documents into one PDF (use our Merge PDF tool first), then drop. Works on home loan / personal loan / business loan / education loan / loan-against-property bundles up to 100 MB.",
+      },
+      {
+        step: "2",
+        title: "We detect + audit",
+        text: "First pass detects loan type from the bundle contents (KYC + property docs &rarr; home loan / LAP; KYC + payslips + bank statements &rarr; personal loan; CMA data &rarr; MSME). Then audits against the lender&rsquo;s typical checklist for that loan type.",
+      },
+      {
+        step: "3",
+        title: "Get an audit report",
+        text: "Markdown output with: detected loan type / present items / missing items / eligibility flags (FOIR / DTI / property valuation gaps). Page citations link each finding back to the bundle for your review.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is the audit lender-specific?",
+        a: "Generic-checklist by default &mdash; matches what most Indian lenders ask. Specific lender variants (HDFC vs SBI vs Bajaj vs PSU banks) have minor checklist differences. The output is a strong baseline; cross-check against the specific lender&rsquo;s documents-required PDF for the final submission.",
+      },
+      {
+        q: "Does it calculate eligibility?",
+        a: "Surfaces eligibility flags from the documents present (FOIR estimated from payslips + bank statements, DTI estimated, property LTV from valuation if present). These are heuristic estimates &mdash; the lender&rsquo;s underwriting is more sophisticated. Use the audit estimates to know if you&rsquo;re in the ballpark before applying.",
+      },
+      {
+        q: "What about scanned bundles?",
+        a: "OCR runs on scanned pages first. Most lender-submitted bundles include both clean PDFs (from KYC tools) and scanned items (property documents, older bank statements) &mdash; both work. Quality on faded / handwritten property documents is lower; flag for human review when accuracy matters.",
+      },
+      {
+        q: "Will it catch document age requirements?",
+        a: "Surfaces freshness flags (e.g. &ldquo;bank statements are 4 months old; lender typically requires latest 3 months&rdquo;). Useful for catching staleness before submission &mdash; common cause of rejections or processing delays.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per audit. Cost is fixed regardless of bundle size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Bundle sent to inference provider for audit, not stored. For maximum confidentiality on financial documents (PAN, Aadhaar, bank account numbers), redact PII via Redact PDF before running the audit &mdash; the structural audit works on the redacted bundle.",
+      },
+    ],
+    cta: {
+      title: "Need to merge documents first?",
+      text: "Merge PDF combines multiple PDFs into one bundle &mdash; the prerequisite for the loan audit. Works in your browser, no signup needed for the merge step.",
+      linkHref: "/tool/merge",
+      linkLabel: "Try Merge PDF",
+    },
+  },
+
+  "ai-insurance": {
+    useCasesTitle: "Why people use Insurance Policy Analyzer",
+    useCasesIntro:
+      "Indian insurance policies (health, life, motor, home, travel, term) bury the important parts in fine print: coverage scope, exclusions, waiting periods, sub-limits, claim process, renewal terms. Insurance Policy Analyzer surfaces all of it as a structured report. Triage aid, not insurance advice &mdash; for product-specific guidance consult an IRDAI-licensed advisor.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Pre-purchase policy comparison",
+        text: "Before buying a health policy from Star / HDFC ERGO / ICICI Lombard / Manipal Cigna, run the brochure through the analyzer. Surfaces coverage / exclusions / waiting-period structure side-by-side &mdash; faster than reading 40-page policy wordings.",
+      },
+      {
+        icon: "Pages",
+        title: "Claim time policy review",
+        text: "Before filing a claim, run YOUR policy through the analyzer. Surfaces what&rsquo;s covered / excluded / sub-limited for the specific procedure or event. Useful for the &ldquo;is this claimable?&rdquo; first-pass before talking to TPA.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Annual renewal check",
+        text: "Insurance policies change terms at renewal. The analyzer surfaces what changed vs the previous year&rsquo;s policy (often coverage shrinks or premium increases tied to NCB loss / age band change).",
+      },
+      {
+        icon: "Edit",
+        title: "Term life / ULIP review",
+        text: "Term life is straightforward; ULIPs are complex (charges, fund options, surrender values). The analyzer surfaces the charge structure (premium allocation, mortality, fund management, policy admin charges) and the surrender penalty curve. Useful for the &ldquo;is this still worth holding?&rdquo; decision.",
+      },
+      {
+        icon: "Compare",
+        title: "Group vs personal cover comparison",
+        text: "Employer group health cover often has gaps employees plug with personal cover. The analyzer compares the two policies&rsquo; combined coverage to surface what&rsquo;s actually covered vs duplicate vs gap.",
+      },
+    ],
+    howWorksTitle: "How Insurance Policy Analyzer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the policy PDF",
+        text: "PDF up to 50 MB. Works on Indian policy types (health, life, motor, home, travel, term). Most major insurers&rsquo; policy formats are pre-recognized.",
+      },
+      {
+        step: "2",
+        title: "We structure the policy",
+        text: "Server-side extraction, then a structured pass that surfaces: coverage scope / exclusions / waiting periods / sub-limits / claim process / renewal & portability terms. Risk flags on aggressive exclusions or missing standard coverage.",
+      },
+      {
+        step: "3",
+        title: "Get a structured review",
+        text: "Markdown output with sections: Coverage / Exclusions / Waiting Periods / Sub-Limits / Claim Process / Renewal / Risk Flags. Page citations link each finding to the source.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this insurance advice?",
+        a: "No. The analyzer surfaces what the policy SAYS &mdash; it doesn&rsquo;t recommend whether to buy, switch, or claim. For product selection or claim disputes, consult an IRDAI-licensed advisor or insurance ombudsman. For tax / financial planning around insurance, a CA or financial planner is appropriate.",
+      },
+      {
+        q: "Does it understand Indian policy types?",
+        a: "Yes. Health (mediclaim, family floater, super top-up), life (term, ULIP, endowment, money-back), motor (own-damage + third-party + zero-dep + RTI), home, travel, term riders. Indian-specific concepts (NCB, sub-limits, room-rent capping, AYUSH coverage, OPD coverage) recognized.",
+      },
+      {
+        q: "Will it catch hidden exclusions?",
+        a: "Surfaces all exclusion clauses (pre-existing, specific procedures, waiting periods, room-rent capping, sub-limits per condition). The structured output makes the exclusions scannable in 2 minutes vs reading 40 pages of policy wording. Note: novel exclusions specific to a new policy may not be perfectly classified &mdash; treat the report as comprehensive, not exhaustive.",
+      },
+      {
+        q: "Can it explain claim process?",
+        a: "Surfaces the policy&rsquo;s stated claim process (cashless TPA / reimbursement / direct claim) and document requirements. For specific claim disputes (claim rejection, partial settlement), use the output to inform your discussion with the insurer / TPA / ombudsman &mdash; the analyzer doesn&rsquo;t adjudicate disputes.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per policy. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Policy sent to inference provider for analysis, not stored. For maximum confidentiality (especially health policies with disclosed conditions), redact policyholder name + medical-history declarations via Redact PDF first.",
+      },
+    ],
+    cta: {
+      title: "Have a hospital discharge to review too?",
+      text: "Discharge Summary Simplifier rewrites Indian hospital discharge summaries in plain English &mdash; useful pre-claim to align the discharge content with the policy&rsquo;s coverage language.",
+      linkHref: "/tool/ai-discharge",
+      linkLabel: "Try Discharge Summary Simplifier",
+    },
+  },
+
+  "ai-research-paper": {
+    useCasesTitle: "Why people use Research Paper Summarizer",
+    useCasesIntro:
+      "Research papers are dense, structured artifacts &mdash; abstract / methods / results / discussion / limitations / refs. Generic summarization loses the structure. Research Paper Summarizer preserves it and adds: BibTeX citation, magnitude-preserving results section, related-reading suggestions, and how-to-cite examples in major styles. Useful for literature review and reading-list triage.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Literature review for thesis / dissertation",
+        text: "Drop each paper in your reading list, get a structured summary preserving methodology + results + limitations. Faster than the &ldquo;read abstract, decide whether to read body&rdquo; loop, and the limitations section surfaces caveats abstracts hide.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Pre-meeting paper triage",
+        text: "Lab meetings and journal clubs often have 5+ assigned papers. Pre-read summaries surface the methodology and results so you arrive prepared without reading every paper cover-to-cover.",
+      },
+      {
+        icon: "Pages",
+        title: "Grant proposal background",
+        text: "Grant applications require &ldquo;background literature&rdquo; sections that synthesize ~20 papers. The summarizer&rsquo;s structured output (with BibTeX) accelerates the synthesis. Pair with AI Citations for the formatted reference list.",
+      },
+      {
+        icon: "Edit",
+        title: "Cross-disciplinary research reading",
+        text: "Reading outside your field is hard &mdash; methodologies and conventions differ. The summarizer preserves the doc&rsquo;s technical claims while making the structure scannable, helping you decide whether the paper&rsquo;s actually relevant to your work.",
+      },
+      {
+        icon: "Compare",
+        title: "Comparing related papers",
+        text: "Run two papers on related topics through the summarizer, compare the structured outputs side-by-side. Methodologies, sample sizes, effect magnitudes are easier to compare in structured form than in prose.",
+      },
+    ],
+    howWorksTitle: "How Research Paper Summarizer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the paper PDF",
+        text: "PDF up to 100 MB. Works on standard journal-paper formats (one-column / two-column), conference papers, preprints (arXiv, bioRxiv, SSRN). Theses / books work but with less optimal structuring.",
+      },
+      {
+        step: "2",
+        title: "We structure + cite",
+        text: "Server-side extraction (preserving section structure), then a structured summary pass. Numeric values (effect sizes, p-values, sample sizes) preserved verbatim. BibTeX citation generated from metadata. How-to-cite examples in APA / MLA / Chicago / IEEE.",
+      },
+      {
+        step: "3",
+        title: "Get a research-ready summary",
+        text: "Markdown output with: BibTeX entry / Abstract / Methods / Results (magnitudes preserved) / Limitations / How-to-cite examples / Related-reading suggestions (from the paper&rsquo;s own references). Page citations link each section back to the source.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Are numbers preserved exactly?",
+        a: "Yes &mdash; explicitly. Effect sizes, p-values, confidence intervals, sample sizes, odds ratios, hazard ratios all preserved verbatim. Misreporting numbers is the #1 risk in summarization of quantitative content; we benchmark and route to the model that does this best.",
+      },
+      {
+        q: "Will it generate accurate BibTeX?",
+        a: "Strong on standard journal articles (DOI present, structured metadata in PDF properties). Weaker on preprints with non-standard metadata or poorly-tagged PDFs. Verify the BibTeX before pasting into your bibliography &mdash; fields like author order, journal name, volume / issue / pages are common error spots.",
+      },
+      {
+        q: "What about figures and tables?",
+        a: "Summary references key figures and tables by their numbering (&ldquo;Table 2 reports&hellip;&rdquo;, &ldquo;Figure 3 shows&hellip;&rdquo;) but doesn&rsquo;t reproduce them. For papers where the figures carry the main result (e.g. epidemiology with risk-stratified curves), supplement with manual figure review.",
+      },
+      {
+        q: "Will it suggest related reading?",
+        a: "Yes &mdash; pulls 3&ndash;5 references from the paper&rsquo;s own bibliography that appear most central (cited multiple times, in methods and discussion). NOT a literature search beyond the paper itself; for that, use a tool like Connected Papers or Semantic Scholar.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per paper. Cost is fixed regardless of paper length.",
+      },
+      {
+        q: "Will it catch the limitations section accurately?",
+        a: "Yes &mdash; explicitly preserved. Most papers downplay limitations in the abstract; the summarizer surfaces them prominently. For papers that don&rsquo;t have a clear limitations section, the summarizer infers methodological caveats and flags them as &ldquo;inferred&rdquo;.",
+      },
+    ],
+    cta: {
+      title: "Building a citation list?",
+      text: "AI Citations extracts citations and BibTeX from any PDF that references other works &mdash; useful for compiling a literature-review reference list across multiple source papers.",
+      linkHref: "/tool/ai-citations",
+      linkLabel: "Try AI Citations",
+    },
+  },
+
+  "ai-salary-slip": {
+    useCasesTitle: "Why people use Salary Slip Analyzer",
+    useCasesIntro:
+      "Indian salary slips have a fixed-but-varied structure: earnings (basic, HRA, special allowance, LTA, bonus) plus deductions (PF, professional tax, TDS, loan EMIs). Salary Slip Analyzer extracts all components into structured JSON with original component names preserved, so you can compare slips year-over-year or across employers without losing the original labeling.",
+    useCases: [
+      {
+        icon: "Receipt",
+        title: "Year-over-year comp tracking",
+        text: "Run each month&rsquo;s slip through the analyzer, structured output goes into a spreadsheet. Real comp growth becomes visible (separating actual growth from inflation / role-change / variable-pay timing).",
+      },
+      {
+        icon: "Compare",
+        title: "Job-change comp comparison",
+        text: "When comparing offers from multiple employers, run their slip samples through the analyzer to standardize the comparison. CTC pivots are misleading; component-level comparison reveals what actually hits in-hand monthly.",
+      },
+      {
+        icon: "Edit",
+        title: "Tax planning prep (year-end)",
+        text: "Year-end tax planning needs accurate income breakdown. The analyzer extracts taxable / non-taxable components (HRA exemption, LTA, food coupons, professional development) so the CA has structured input rather than re-keying from PDF slips.",
+      },
+      {
+        icon: "Pages",
+        title: "Loan application income proof",
+        text: "Lenders need 3 months of structured payslip data. The analyzer&rsquo;s output is loan-application ready &mdash; pairs with the Loan Application Bundler Audit for the full pre-submission check.",
+      },
+      {
+        icon: "Sparkle",
+        title: "ITR (Form 16 vs slips reconciliation)",
+        text: "Filing ITR requires slip components reconciled with Form 16. The structured output makes the reconciliation a one-pass verification &mdash; faster than month-by-month manual cross-check.",
+      },
+    ],
+    howWorksTitle: "How Salary Slip Analyzer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the slip PDF",
+        text: "PDF up to 25 MB. Works on Indian payslip formats (most ESS portal exports, payroll-vendor formats, paper slips that have been scanned and OCR&rsquo;d).",
+      },
+      {
+        step: "2",
+        title: "We extract + structure",
+        text: "Server-side extraction (OCR if needed), then structured parsing. Earnings components (basic, HRA, allowances, bonus, retention pay, variable pay) and deductions (PF, ESI, P-tax, TDS, voluntary deductions) extracted with original component names preserved &mdash; critical for YoY comparison where employers occasionally rename components.",
+      },
+      {
+        step: "3",
+        title: "Get JSON output",
+        text: "Structured JSON: earnings breakdown / deductions breakdown / net pay / YTD totals. Original component names preserved (no canonicalization that would lose information). Importable into spreadsheets for tracking.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Why preserve original component names instead of canonicalizing?",
+        a: "Indian employers vary wildly in naming (&ldquo;Special Allowance&rdquo; / &ldquo;Performance Allowance&rdquo; / &ldquo;Variable Pay&rdquo; / &ldquo;Adhoc Allowance&rdquo; can all be the same component or different). Canonicalizing into &ldquo;allowance&rdquo; loses the distinction. Preserving names lets you compare YoY meaningfully &mdash; if your &ldquo;Special Allowance&rdquo; renamed to &ldquo;Variable Pay&rdquo; mid-year, that&rsquo;s a real signal worth keeping.",
+      },
+      {
+        q: "Does it calculate tax?",
+        a: "Surfaces the TDS deducted but doesn&rsquo;t calculate optimal tax structure or recommend regime selection. For tax planning (old vs new regime, exemption planning, investment-driven deductions), use a CA or a tax-planning tool that takes the full picture (other income, deductions claimed, etc.).",
+      },
+      {
+        q: "Will it work for non-Indian payslips?",
+        a: "Indian slips primarily. US W-2 / paystubs, UK payslips, EU payslips work approximately but the component-classification heuristic is India-trained &mdash; results are less calibrated for other jurisdictions.",
+      },
+      {
+        q: "What about Form 16 / ITR documents?",
+        a: "Form 16 is structurally different (annual aggregate, not monthly slip). Drop a Form 16 and you&rsquo;ll get a partial parse but not the full slip-level granularity. For ITR document analysis, dedicated tax tools are a better fit; this analyzer focuses on monthly slips.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per slip. Cost is fixed regardless of slip size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Slip sent to inference provider for parsing, not stored. For maximum confidentiality (especially when sharing the structured output for loan applications or tax planning), redact PAN / Aadhaar / bank account numbers via Redact PDF first &mdash; the structural parse still works on the redacted slip.",
+      },
+    ],
+    cta: {
+      title: "Preparing a loan application?",
+      text: "Loan Application Bundler Audit verifies your loan documentation against the lender&rsquo;s typical checklist &mdash; useful after the salary slip analysis for the &ldquo;ready to submit?&rdquo; check.",
+      linkHref: "/tool/ai-loan-bundle",
+      linkLabel: "Try Loan Bundler Audit",
+    },
+  },
+
+  "ai-ats-resume": {
+    useCasesTitle: "Why people use ATS Resume Optimizer",
+    useCasesIntro:
+      "Most large companies route resumes through an ATS (Workday, Greenhouse, Lever, iCIMS, Naukri, Monster) before a human ever sees them. The optimizer audits ATS-friendliness: format compatibility (parseable layout), keyword density (matches the JD&rsquo;s vocabulary), section ordering (recognized headers), and concrete fixes. Pairs with the JD Matcher for end-to-end job-application tuning.",
+    useCases: [
+      {
+        icon: "User",
+        title: "Pre-application resume tune",
+        text: "Drop your current resume + (optionally) the JD, get format / keyword / structure audit with concrete fixes. Resolves the &ldquo;why am I not getting interviews despite qualifications?&rdquo; question by surfacing ATS-side failures invisible to humans.",
+      },
+      {
+        icon: "Compare",
+        title: "Format conversion check",
+        text: "Convert your design-heavy Canva / InDesign resume to ATS-friendly format. The optimizer surfaces what to extract from sidebars, what to rewrite as plain text, what to reformat &mdash; all without losing content.",
+      },
+      {
+        icon: "Edit",
+        title: "Career change rewriting",
+        text: "Switching industries means your existing resume keywords don&rsquo;t match new-industry JDs. The optimizer (with target JD provided) surfaces vocabulary translation needed.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Senior-level resume audit",
+        text: "Senior roles use search-heavy ATSs that prioritize specific keywords (&ldquo;P&L responsibility&rdquo;, &ldquo;org of N&rdquo;, &ldquo;stakeholder management&rdquo;). The optimizer surfaces gaps even on resumes that look great to humans.",
+      },
+      {
+        icon: "Shield",
+        title: "Recruiter pre-screen prep",
+        text: "Recruiters and career coaches use the optimizer to advise candidates on what to fix before the application. The structured fix list is more actionable than abstract feedback.",
+      },
+    ],
+    howWorksTitle: "How ATS Resume Optimizer works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the resume PDF",
+        text: "PDF up to 25 MB. JD paste optional but recommended &mdash; with JD, audit becomes JD-targeted. Without, audit is generic-ATS readiness.",
+      },
+      {
+        step: "2",
+        title: "We audit format + content",
+        text: "Format check: parseable layout (single-column wins; sidebars / multi-column lose), recognized section headers (EXPERIENCE / EDUCATION / SKILLS), font and graphic checks. Content check: keyword density (vs JD if provided), achievement-vs-responsibility framing, quantified impact.",
+      },
+      {
+        step: "3",
+        title: "Get a structured fix list",
+        text: "Markdown output with: format issues / content issues / keyword gaps (if JD provided) / concrete fixes. Each fix has rationale (&ldquo;ATSs often skip sidebars; move skills to main flow&rdquo;) and severity (low / medium / high).",
+      },
+    ],
+    faqs: [
+      {
+        q: "Will the fixes work for all ATSs?",
+        a: "Generic ATS-friendliness covers ~90% of cases. Specific ATSs have minor quirks (Workday handles some formats Greenhouse doesn&rsquo;t). The optimizer&rsquo;s fixes are conservative &mdash; if your resume passes our audit, it almost certainly parses correctly across the major ATSs.",
+      },
+      {
+        q: "Should I keyword-stuff to match the JD?",
+        a: "No. Keyword stuffing is detectable (modern ATSs penalize density-without-context). Aim for natural keyword integration: if the JD says &ldquo;stakeholder management&rdquo;, describe a real instance of that. If you can&rsquo;t, the role isn&rsquo;t a fit.",
+      },
+      {
+        q: "What about Indian-specific ATS systems (Naukri, Monster, Foundit)?",
+        a: "Indian ATSs use slightly different vocabulary (CTC / notice period / primary skills / secondary skills). The optimizer recognizes these conventions and flags missing fields appropriately. Indian-specific resume formats (one-page vs detailed three-page tradition) noted in the format check.",
+      },
+      {
+        q: "Will it improve the quantified-achievement framing?",
+        a: "Surfaces sections where claims could be quantified (&ldquo;led team&rdquo; vs &ldquo;led team of 8&rdquo;, &ldquo;improved performance&rdquo; vs &ldquo;improved performance by 30%&rdquo;). Doesn&rsquo;t fabricate numbers &mdash; you provide them. The optimizer just surfaces the opportunities.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per audit. Cost is fixed regardless of resume length.",
+      },
+      {
+        q: "Privacy?",
+        a: "Resume sent to inference provider for audit, not stored. For confidential job searches (especially when employed currently and not wanting current employer to see leaked drafts), redact name + current employer via Redact PDF first.",
+      },
+    ],
+    cta: {
+      title: "Need to score against a specific JD?",
+      text: "Resume &harr; JD Matcher gives you a fit percentage + per-requirement alignment table. Use it after the ATS audit to verify the optimized resume actually matches the target role.",
+      linkHref: "/tool/ai-jd-match",
+      linkLabel: "Try Resume ↔ JD Matcher",
+    },
+  },
 };

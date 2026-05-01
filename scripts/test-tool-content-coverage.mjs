@@ -229,7 +229,11 @@ const KNOWN_AI_LONGFORM_PENDING = new Map([
   // 2026-05-01 — Phase 2 Tier 2 SHIPPED (9 entries removed):
   //   ai-study-notes, ai-syllabus, ai-discharge, ai-blog, ai-readability,
   //   ai-newsletter, ai-video-script, ai-improve-writing, ai-proofread
-  // Remaining list = 22 entries (cap 31 → 22, monotonic shrinkage).
+  // 2026-05-01 — Phase 2 Tier 3 SHIPPED (8 entries removed):
+  //   ai-nda, ai-employment, ai-partnership-deed, ai-loan-bundle,
+  //   ai-insurance, ai-research-paper, ai-salary-slip, ai-ats-resume
+  // Remaining list = 14 entries (cap 22 → 14, monotonic shrinkage).
+  // Tier 4 (last batch) covers the variants below.
   //
   // --- Remaining summarize variants ---
   ["ai-entities", "Phase 2 — named-entity extraction variant"],
@@ -240,16 +244,6 @@ const KNOWN_AI_LONGFORM_PENDING = new Map([
   ["ai-citations", "Phase 2 — citation-extraction variant"],
   ["ai-sentiment", "Phase 2 — sentiment analysis variant"],
   ["ai-bias", "Phase 2 — bias-detection variant (heuristic only)"],
-
-  // --- Document-type variants (legal/specialist — Tier 3) ---
-  ["ai-nda", "Phase 2 — NDA review variant"],
-  ["ai-employment", "Phase 2 — employment-contract review"],
-  ["ai-salary-slip", "Phase 2 — payslip parsing"],
-  ["ai-research-paper", "Phase 2 — research-paper deep dive"],
-  ["ai-insurance", "Phase 2 — insurance-policy review"],
-  ["ai-loan-bundle", "Phase 2 — loan-bundle document set parsing"],
-  ["ai-partnership-deed", "Phase 2 — partnership-deed review"],
-  ["ai-ats-resume", "Phase 2 — ATS-friendliness scoring"],
 
   // --- Writing/transformation variants ---
   ["ai-chart-to-table", "Phase 2 — chart→table extraction"],
@@ -397,9 +391,9 @@ assert(
         `.\n  Remove them from KNOWN_AI_LONGFORM_PENDING — the longform exists so the grandfather is stale.`,
 );
 assert(
-  "KNOWN_AI_LONGFORM_PENDING stays bounded (≤ 22 entries)",
-  KNOWN_AI_LONGFORM_PENDING.size <= 22,
-  `KNOWN_AI_LONGFORM_PENDING has ${KNOWN_AI_LONGFORM_PENDING.size} entries; cap is 22. ` +
+  "KNOWN_AI_LONGFORM_PENDING stays bounded (≤ 14 entries)",
+  KNOWN_AI_LONGFORM_PENDING.size <= 14,
+  `KNOWN_AI_LONGFORM_PENDING has ${KNOWN_AI_LONGFORM_PENDING.size} entries; cap is 14. ` +
     `Either ship a longform for one of the listed tools (preferred), or if a NEW AI tool genuinely needs ` +
     `to be grandfathered, ship a longform for an existing pending tool first to keep the cap monotonic.`,
 );
