@@ -4563,4 +4563,688 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
       linkLabel: "Try AI ATS Resume",
     },
   },
+
+  // =====================================================================
+  // 2026-05-01 — Phase 2 AI longform Tier 1 (8 tools)
+  //
+  // Highest-traffic AI tools that were grandfathered in
+  // KNOWN_AI_LONGFORM_PENDING. Backfilling these here means they now
+  // render the full 5-section longform block (use-cases, how-it-works,
+  // differentiators via ToolRunnerLongform's AI variant, FAQs, CTA)
+  // matching the editorial depth of the 12 Tier-1 entries above.
+  //
+  // Style discipline maintained:
+  //   - 5 use-case cards each (concrete document types, not vague claims)
+  //   - 3 how-it-works steps with the routing layer mentioned in step 2
+  //   - 5–6 FAQs including credit cost + "what if it's wrong"
+  //   - HTML entities (&rsquo; &ldquo; &mdash;) for typography
+  //   - Page-citation USP referenced where applicable
+  //   - India-specific examples where the tool is India-relevant
+  //     (ai-blood-test surfaces Indian lab references, ai-jd-match
+  //     mentions Indian ATS systems)
+  // =====================================================================
+
+  "ai-faq": {
+    useCasesTitle: "Why people use AI Generate FAQ",
+    useCasesIntro:
+      "An FAQ is the difference between a doc people read and a doc people skim. AI Generate FAQ produces 6&ndash;10 question-and-answer pairs grounded in the source &mdash; not invented &mdash; so the answers are verifiable rather than fabricated. Useful when you need a doc&rsquo;s key questions surfaced without writing them yourself.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Internal handbook / playbook FAQ",
+        text: "Drop a 30-page operations manual or sales playbook, get a 10-question FAQ at the top so new hires can find the answers without reading the whole thing. Pairs with Mind Map for structural overview.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Product launch / spec doc",
+        text: "Auto-generate the customer-facing FAQ from your internal spec. Saves the back-and-forth of &ldquo;what would users ask?&rdquo; brainstorming and surfaces edges the spec author may not have anticipated.",
+      },
+      {
+        icon: "Pages",
+        title: "Research paper accessibility",
+        text: "Turn a 30-page paper into a 6-question reader&rsquo;s digest. Useful for student / non-specialist audiences, or for the layperson summary section of a grant application.",
+      },
+      {
+        icon: "Shield",
+        title: "Long contracts / policy docs",
+        text: "Surfaces the questions readers actually want answered &mdash; payment terms, termination, IP ownership, data handling &mdash; rather than the questions the drafter wanted asked. Pairs well with AI Summarize.",
+      },
+      {
+        icon: "Edit",
+        title: "Onboarding / how-to doc transformation",
+        text: "Turn a wall-of-text onboarding handbook into a 10-Q FAQ. Question-shaped headings reduce cognitive load and improve internal-search match-rate dramatically.",
+      },
+    ],
+    howWorksTitle: "How AI Generate FAQ works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Any topic &mdash; we don&rsquo;t require domain-specific tuning. Works on contracts, papers, manuals, marketing docs.",
+      },
+      {
+        step: "2",
+        title: "We extract + cluster + question-mine",
+        text: "Server-side text extraction, then a pass to identify the doc&rsquo;s key claims and decisions, then a generation step that frames the most-likely-asked questions and answers them with supporting passages. Routing layer picks the model based on cost-vs-quality fit.",
+      },
+      {
+        step: "3",
+        title: "Get markdown FAQ with citations",
+        text: "Output is markdown with question headings + grounded answers + page references. Drop it into your README, knowledge base, or doc&rsquo;s top section as-is.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How many questions does it generate?",
+        a: "6&ndash;10 by default, scaling with doc length. A 5-page brief gets 6; a 50-page handbook gets 10. The model caps the count to keep each Q meaningfully distinct rather than padding.",
+      },
+      {
+        q: "Are the answers grounded in the doc?",
+        a: "Yes. Every answer cites the page it came from and is constrained to information present in the source. The model won&rsquo;t fabricate an answer to a question the doc doesn&rsquo;t address &mdash; it will say so explicitly.",
+      },
+      {
+        q: "What if the questions miss what readers actually ask?",
+        a: "Re-run; the model is non-deterministic so re-runs typically vary the question selection. For directed FAQ generation (e.g. &ldquo;focus on payment terms and dispute resolution&rdquo;), explicit topic constraints in the UI are on the roadmap.",
+      },
+      {
+        q: "Does it work on scanned PDFs?",
+        a: "Yes &mdash; we OCR scanned pages first (Devanagari, Tamil, Latin scripts all supported), then question-mine the extracted text. Quality on hand-written or low-resolution scans degrades, but printed scans work fine.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per FAQ. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if a question is wrong or irrelevant?",
+        a: "Re-run for a different question selection, or treat the output as a draft &mdash; for high-stakes FAQs (legal, medical, regulatory), have a human review before publishing.",
+      },
+    ],
+    cta: {
+      title: "Want a structural overview instead?",
+      text: "AI Mind Map renders a 4&ndash;8 branch hierarchical outline of any PDF &mdash; same source-grounding, different shape. Useful for study guides and policy-doc reviews where the structure matters more than the questions.",
+      linkHref: "/tool/ai-mindmap",
+      linkLabel: "Try AI Mind Map",
+    },
+  },
+
+  "ai-action-items": {
+    useCasesTitle: "Why people use AI Action Items",
+    useCasesIntro:
+      "Meetings end and the action items live in someone&rsquo;s notes app, three Slack threads, and an inbox draft. AI Action Items extracts a structured TODO table from any document &mdash; meeting notes, project briefs, audit reports &mdash; with owner, due date, and priority columns. The format is the same one your project tracker imports.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Meeting transcript / minutes",
+        text: "Drop the auto-generated transcript from your call recording, get a TODO table with the decisions translated into actions and the unresolved questions flagged separately. Pairs with AI Summarize for the recap layer above the actions.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Project brief &rarr; milestone breakdown",
+        text: "A multi-page project brief becomes a sequenced action list with phase dependencies. Useful for the project lead translating the brief into a Jira / Linear / Asana load-up.",
+      },
+      {
+        icon: "Shield",
+        title: "Regulatory / audit report",
+        text: "Audit findings and compliance reports include explicit and implicit remediation actions. The tool surfaces both, with the implicit ones flagged so the compliance lead can review before assigning.",
+      },
+      {
+        icon: "Book",
+        title: "1:1 / performance-review notes",
+        text: "Turn the &ldquo;commit to do X&rdquo; sentences in a 1:1 doc into trackable follow-ups. Especially useful for managers running 8+ direct-report 1:1s where each conversation surfaces 2&ndash;3 commitments.",
+      },
+      {
+        icon: "Edit",
+        title: "Email-thread distillation",
+        text: "A 30-message email thread becomes a 5-row action table. Surfaces the &ldquo;you said you&rsquo;d do X by Y&rdquo; commitments that get buried in chronological replies.",
+      },
+    ],
+    howWorksTitle: "How AI Action Items works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the doc",
+        text: "PDF up to 100 MB. Works on meeting transcripts, project specs, audit reports, briefs, email exports &mdash; anything where actionable items are interleaved with narrative.",
+      },
+      {
+        step: "2",
+        title: "We extract + classify",
+        text: "Server-side text pass identifies action verbs, owner mentions, date phrases, and priority signals. Each candidate is scored for action-ness vs. discussion-only; only true actions ship to the table.",
+      },
+      {
+        step: "3",
+        title: "Get a structured TODO table",
+        text: "Markdown table with columns: action / owner / due date / priority / source page. Copy-paste into your project tracker or export to CSV. Page citations let you trace any item back to where it was decided.",
+      },
+    ],
+    faqs: [
+      {
+        q: "What if the doc doesn&rsquo;t name owners or due dates?",
+        a: "Owner column shows &ldquo;unassigned&rdquo;; due date shows &ldquo;TBD.&rdquo; The action itself is still extracted &mdash; you can fill in the metadata downstream when triaging. Better than missing the action entirely.",
+      },
+      {
+        q: "How does it tell &ldquo;we should do X&rdquo; from a real action?",
+        a: "Heuristic + LLM classification: explicit assignments (&ldquo;Aman, can you handle X by Friday&rdquo;) score highest; implicit collective (&ldquo;we should look into X&rdquo;) get flagged with lower confidence; discussion-only (&ldquo;X might be a problem&rdquo;) is filtered out unless it pairs with a follow-up commitment.",
+      },
+      {
+        q: "Can it handle multilingual notes?",
+        a: "Best results in English. Indian-language notes (Hindi, Tamil, Bengali, etc.) work but action-verb detection accuracy drops. For mixed-language notes (English meeting, Hindi side comments), the English actions extract cleanly.",
+      },
+      {
+        q: "Does it preserve priority hierarchies if the doc had them?",
+        a: "Yes &mdash; explicit priority phrases (P0/P1/P2, urgent/important, blocker/nice-to-have) are preserved. Implicit priority is inferred from language strength (&ldquo;must&rdquo; vs &ldquo;should&rdquo; vs &ldquo;could&rdquo;); the heuristic isn&rsquo;t perfect, so review the priority column before pasting into your tracker.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if it misses an action?",
+        a: "Run AI Summarize alongside &mdash; the summary will mention items the action extractor classified as discussion-only. If you spot a missed action, re-run; the model is non-deterministic and re-runs vary recall slightly. For meeting-critical action capture, treat the table as a starting draft for human review, not a final tracker.",
+      },
+    ],
+    cta: {
+      title: "Need the discussion summary too?",
+      text: "AI Summarize generates a structured digest of the same doc &mdash; decisions, findings, unresolved questions &mdash; with page citations. Pairs naturally with the action table for the &ldquo;send a recap to the team&rdquo; workflow.",
+      linkHref: "/tool/ai-summarize",
+      linkLabel: "Try AI Summarize",
+    },
+  },
+
+  "ai-mindmap": {
+    useCasesTitle: "Why people use AI Mind Map",
+    useCasesIntro:
+      "Some docs are too sequential to read non-sequentially &mdash; you need the structure first. AI Mind Map renders a hierarchical outline of any PDF (4&ndash;8 root branches, 3 levels deep) so you can see the doc&rsquo;s shape before reading. Output is text + JSON, importable into mind-mapping tools.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Textbook / course material study guide",
+        text: "Turn a 200-page textbook chapter into a 3-level mindmap and use it as the navigation index for studying. The hierarchy mirrors the book&rsquo;s structure with chapter / section / sub-section depth.",
+      },
+      {
+        icon: "Pages",
+        title: "Research literature review",
+        text: "When a paper covers multiple sub-topics (a methodology paper, a survey paper, or a long thesis chapter), the mindmap surfaces the conceptual hierarchy. Faster than re-reading to find a section.",
+      },
+      {
+        icon: "Shield",
+        title: "Policy / procedure doc structure",
+        text: "Long policy docs (HR handbook, compliance manual, vendor security questionnaire) have nested structure that PDFs flatten. Mind Map restores the tree so you can find which section answers a given question.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Strategy doc visual outline",
+        text: "Quarterly strategy memos and 6-page strategy docs have implicit structure (theme &rarr; pillar &rarr; initiative). Mind Map exposes it so leadership reviewers can sanity-check coverage before approval.",
+      },
+      {
+        icon: "Edit",
+        title: "Onboarding mental model",
+        text: "When joining a new project mid-stream, drop the project&rsquo;s decision-record archive into Mind Map and use the output as the starting mental model. Faster ramp-up than reading docs in archive order.",
+      },
+    ],
+    howWorksTitle: "How AI Mind Map works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "PDF up to 100 MB. Works best on docs with explicit structure (headings, sections); flat narrative docs (novels, long memos without headings) yield shallower trees.",
+      },
+      {
+        step: "2",
+        title: "We extract + tree-build",
+        text: "Server-side text extraction, headings detection, then a structure-inference pass that groups content under hierarchical themes when the source lacks explicit headings. Routing layer picks the model based on cost-vs-quality fit.",
+      },
+      {
+        step: "3",
+        title: "Get text + JSON output",
+        text: "Output is an indented text outline (paste into Notion, Workflowy, or Markdown directly) PLUS a JSON tree (importable into XMind, MindMeister, or any structured-data mind-map tool).",
+      },
+    ],
+    faqs: [
+      {
+        q: "How deep does the tree go?",
+        a: "3 levels by default (root branch &rarr; sub-branch &rarr; leaf). Deeper docs get pruned to keep the output legible; shallow docs may only fill 2 levels. Custom depth is on the roadmap.",
+      },
+      {
+        q: "What if the doc has no headings?",
+        a: "The tool falls back to topic clustering &mdash; it identifies coherent concept groups in the prose and creates branches for each. Less accurate than heading-based extraction (it&rsquo;s inferring structure that wasn&rsquo;t explicit), but usable for most narrative docs.",
+      },
+      {
+        q: "Can I import the JSON into Miro or XMind?",
+        a: "JSON output uses a generic nested-tree shape ({title, children: []}). XMind and Miro both accept variants of this format. For tools with proprietary formats, you may need a small transform script.",
+      },
+      {
+        q: "Does it preserve page citations?",
+        a: "Each leaf node includes the source page reference. So you can navigate from a specific concept in the mindmap back to the page in the source PDF.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per mindmap. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the structure is wrong?",
+        a: "Re-run; the inference is non-deterministic. For docs where structure matters a lot (policy manuals, certification course materials), pair with AI Summarize to verify the mindmap covers the doc&rsquo;s major themes.",
+      },
+    ],
+    cta: {
+      title: "Want a Q&A index instead?",
+      text: "AI Generate FAQ produces a 6&ndash;10 question-and-answer set grounded in the same doc. Useful when readers don&rsquo;t need the structure &mdash; they need the answers.",
+      linkHref: "/tool/ai-faq",
+      linkLabel: "Try AI Generate FAQ",
+    },
+  },
+
+  "ai-blood-test": {
+    useCasesTitle: "Why people use Blood Test Report Parser",
+    useCasesIntro:
+      "Indian lab reports vary wildly in format &mdash; SRL, Thyrocare, Apollo Diagnostics, Metropolis, government hospital labs &mdash; but they all express the same data: lab values with reference ranges and flags. The parser extracts that data into a structured table so you can compare reports across labs and over time. Extraction only &mdash; this is not medical advice.",
+    useCases: [
+      {
+        icon: "File",
+        title: "Self-tracking health metrics over time",
+        text: "Annual checkups, lipid profiles, fasting glucose, thyroid panels &mdash; every report goes through the parser, the structured output goes into a spreadsheet. Trends across years become visible in a way that paper reports and PDF archives obscure.",
+      },
+      {
+        icon: "Compare",
+        title: "Comparing reports across labs",
+        text: "Different labs use different reference ranges and units (SI vs imperial, mg/dL vs mmol/L). Parser preserves the lab&rsquo;s own reference range alongside the value, so you can spot whether a &ldquo;high&rdquo; flag is a real change or a different range.",
+      },
+      {
+        icon: "Pages",
+        title: "Telemedicine consult prep",
+        text: "Most Indian telemedicine consults expect you to type in your latest values. Parser converts the PDF into a copy-pasteable structured block, saving 10 minutes of typing per consult.",
+      },
+      {
+        icon: "Book",
+        title: "Annual checkup result digest",
+        text: "Comprehensive annual checkup reports run 8&ndash;15 pages with hundreds of values. Parser extracts only the flagged (high/low) values into a one-page digest, so the discussion with your doctor focuses on actual concerns.",
+      },
+      {
+        icon: "Shield",
+        title: "Family health record digitization",
+        text: "Aging parents&rsquo; lab reports accumulating in a folder become a structured family health record. Useful when caregivers are remote and need to share recent values with a specialist for second opinions.",
+      },
+    ],
+    howWorksTitle: "How Blood Test Report Parser works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the lab report PDF",
+        text: "Any Indian lab format. Scanned reports work too &mdash; we OCR before parsing. Up to 50 MB per report.",
+      },
+      {
+        step: "2",
+        title: "We extract + flag",
+        text: "Lab values, units, reference ranges, and high/low/normal flags pulled from the report into a structured table. Lab name, report date, and patient ID surfaced in the metadata header.",
+      },
+      {
+        step: "3",
+        title: "Get a structured table",
+        text: "Markdown table with columns: parameter / value / unit / reference range / flag / page. Copy into a spreadsheet for trend tracking, or share with a doctor for clinical interpretation.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Is this medical advice?",
+        a: "No. The parser extracts data &mdash; it does NOT interpret values, recommend treatments, or diagnose conditions. A &ldquo;high&rdquo; flag in the output reflects what the lab&rsquo;s reference range said; whether that high value matters clinically is a question for your doctor.",
+      },
+      {
+        q: "Which Indian lab formats are supported?",
+        a: "SRL, Thyrocare, Apollo Diagnostics, Metropolis, Lal Path Labs, Dr Lal PathLabs, government hospital labs (AIIMS, JIPMER, regional medical colleges), and most private nursing-home in-house labs. New formats added based on user reports of failures.",
+      },
+      {
+        q: "What about handwritten lab reports?",
+        a: "OCR handles printed text reliably. Handwritten values (older reports, smaller clinics, some government labs) are recognized but accuracy degrades &mdash; verify the extracted values against the original before relying on them.",
+      },
+      {
+        q: "Are the reference ranges age/sex adjusted?",
+        a: "We preserve the lab&rsquo;s OWN reference range, which usually IS age/sex adjusted (most modern labs print the appropriate range based on the patient demographics on the cover page). We don&rsquo;t add or modify ranges &mdash; what the lab said is what you see.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per report. Cost is fixed regardless of report size.",
+      },
+      {
+        q: "Privacy / sharing?",
+        a: "Report PDF sent to inference provider for parsing, not stored. For maximum privacy when sharing the structured output (e.g. WhatsApp to a family doctor), redact your name and patient ID first via Redact PDF on the original report. The structured table you share will still have all clinically relevant values.",
+      },
+    ],
+    cta: {
+      title: "Have a discharge summary too?",
+      text: "Discharge Summary Explainer rewrites Indian hospital discharge summaries in plain English &mdash; diagnoses, medications, follow-up plan, warning signs &mdash; for patients and family. Pairs with the lab report parser for full post-hospital handoff.",
+      linkHref: "/tool/ai-discharge",
+      linkLabel: "Try Discharge Summary Explainer",
+    },
+  },
+
+  "ai-jd-match": {
+    useCasesTitle: "Why people use Resume &harr; JD Matcher",
+    useCasesIntro:
+      "Most Indian and US ATS systems (Workday, Greenhouse, Lever, iCIMS) score resumes against the JD before a human ever reads them. The matcher previews that score for you &mdash; per-requirement alignment, missing-keyword audit, and a weighted fit percentage &mdash; so you can tune the resume before applying.",
+    useCases: [
+      {
+        icon: "Compare",
+        title: "Pre-application self-assessment",
+        text: "Drop your resume + paste the JD, see whether you&rsquo;re a strong fit before spending an hour on a custom application. Saves time on roles where you&rsquo;re structurally mismatched (e.g. JD requires 5 years X, you have 2).",
+      },
+      {
+        icon: "Edit",
+        title: "Resume tuning iteration",
+        text: "Run the match, see which JD keywords are missing from your resume, edit the resume, re-run. The keyword gap typically closes from ~40% to ~80% in 2&ndash;3 iterations without lying &mdash; you&rsquo;re surfacing experience you already have but didn&rsquo;t describe in the JD&rsquo;s vocabulary.",
+      },
+      {
+        icon: "Shield",
+        title: "Recruiter pre-screen at scale",
+        text: "Recruiters with 100+ inbound resumes per role run each one through the matcher to triage. Top-quartile matches go to the hiring manager; bottom-quartile get a polite decline. Faster than skimming each resume manually.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Career coach client advisory",
+        text: "Career coaches use the per-requirement alignment table to walk clients through &ldquo;here&rsquo;s why you&rsquo;re not getting interviews&rdquo; with concrete evidence. More productive than abstract resume feedback.",
+      },
+      {
+        icon: "Book",
+        title: "Internal mobility assessment",
+        text: "Considering applying for a role at your own company? The matcher gives you an honest read on whether your trajectory positions you for the role &mdash; useful before the awkward conversation with your current manager.",
+      },
+    ],
+    howWorksTitle: "How Resume &harr; JD Matcher works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the resume + paste the JD",
+        text: "Resume as PDF (up to 25 MB). JD pasted as plain text. The JD doesn&rsquo;t need to be in any specific format &mdash; we parse the requirements out of free-form prose.",
+      },
+      {
+        step: "2",
+        title: "We extract + align",
+        text: "Resume parsed for skills, experience, education, certifications. JD parsed for must-haves, nice-to-haves, and keywords. Alignment scored per requirement, with the missing items surfaced.",
+      },
+      {
+        step: "3",
+        title: "Get a fit score + alignment table",
+        text: "Output: weighted fit percentage (0&ndash;100), per-requirement alignment table (matched / partial / missing), keyword-gap audit. Page references trace each match back to the resume passage.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How is the fit score calculated?",
+        a: "Weighted by JD signal &mdash; must-have requirements count more than nice-to-haves, and exact keyword matches score higher than synonyms. Score is heuristic; real ATS scoring varies by system. Treat the score as a directional signal, not a guarantee.",
+      },
+      {
+        q: "Will it work for Indian ATS systems specifically?",
+        a: "Most Indian companies use Workday, Greenhouse, Lever, or iCIMS &mdash; same systems as global. Indian-specific keyword conventions (CTC, notice period, primary skills, secondary skills) are recognized. For Naukri / Monster ATS, results are slightly less calibrated but still useful.",
+      },
+      {
+        q: "Should I stuff missing keywords into my resume?",
+        a: "No &mdash; lying gets caught at interview. Use the missing-keyword list as a prompt: do you actually have that experience but described it differently? Re-word truthfully. If you genuinely don&rsquo;t have the experience, the role isn&rsquo;t a fit and the score is correct.",
+      },
+      {
+        q: "What if my resume is in a non-standard format?",
+        a: "Highly designed Canva/InDesign resumes degrade parsing accuracy &mdash; the matcher may miss skills described in sidebars or non-text-extractable graphics. For ATS-readable single-column resumes, accuracy is high. Our AI ATS Resume tool flags this format issue specifically.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per match. Cost is fixed regardless of resume length or JD length.",
+      },
+      {
+        q: "Privacy?",
+        a: "Resume + JD sent to inference provider, not stored. For confidential job searches (especially internal-mobility within a company), the model never sees your name &mdash; we redact PII before inference. Match results are returned to your account only.",
+      },
+    ],
+    cta: {
+      title: "Want the full ATS audit?",
+      text: "AI ATS Resume scores ATS-friendliness directly &mdash; format compatibility, keyword density, section ordering. Use it after the matcher to tune a specific resume for a specific JD.",
+      linkHref: "/tool/ai-ats-resume",
+      linkLabel: "Try AI ATS Resume",
+    },
+  },
+
+  "ai-paraphrase": {
+    useCasesTitle: "Why people use AI Paraphrase",
+    useCasesIntro:
+      "Paraphrase rewrites a document while preserving every claim, number, and conclusion verbatim. Same length as the input, same factual content, different sentence structure and word choice. Useful when the goal is style change, not summarization.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Avoid plagiarism-checker false positives",
+        text: "When sourcing language from public-domain content (legal precedent, government forms, technical specifications), paraphrase before publishing to avoid Turnitin / similar checker flags &mdash; while preserving factual accuracy.",
+      },
+      {
+        icon: "Edit",
+        title: "Translate corporate jargon to plain English",
+        text: "Quarterly reports, audit findings, and policy docs are written in dense register that&rsquo;s hard for non-specialists. Paraphrase reduces register without losing detail &mdash; useful for the executive summary aimed at a board including non-experts.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Repurpose case studies for new audiences",
+        text: "A case study written for B2B engineers can be paraphrased for marketing&rsquo;s use without rewriting from scratch. Same evidence, different reader voice.",
+      },
+      {
+        icon: "Book",
+        title: "Internationalization prep",
+        text: "Before translating to other languages, paraphrase to plain English first. Translation quality (machine or human) is significantly higher when the source is plain rather than idiomatic / colloquial.",
+      },
+      {
+        icon: "Pages",
+        title: "Multi-author style harmonization",
+        text: "When multiple authors contribute to one doc, the voice drifts. Paraphrase the whole doc to one consistent voice without rewriting the content. Pairs with AI Tone Analyze for the inconsistency detection.",
+      },
+    ],
+    howWorksTitle: "How AI Paraphrase works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the PDF",
+        text: "PDF up to 100 MB. Works best on prose; technical docs with heavy code blocks or math notation may need post-processing to preserve formatting.",
+      },
+      {
+        step: "2",
+        title: "We rewrite section-by-section",
+        text: "Server-side text extraction, then a constrained rewrite pass that preserves every numeric value, named entity, and factual claim while varying sentence structure and word choice. Routing layer selects the model that scores best on the preservation benchmark.",
+      },
+      {
+        step: "3",
+        title: "Get markdown output",
+        text: "Paraphrased version in markdown, similar length to original. Page citations link each section back to the source so you can verify the rewrite preserved meaning.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Are numbers and dates preserved exactly?",
+        a: "Yes &mdash; explicitly. The model is constrained to preserve every numeric value, percentage, date, currency amount, name, and proper noun verbatim. Misreporting numbers in paraphrasing is a known failure mode of generic LLMs; we benchmark and route to the model that does this best.",
+      },
+      {
+        q: "Will the output pass plagiarism checkers?",
+        a: "Usually yes &mdash; the output is structurally and lexically distinct from the input while preserving meaning. Note: some checkers flag &ldquo;paraphrase&rdquo; specifically. If you&rsquo;re submitting academic work where paraphrase needs citation, cite the original source.",
+      },
+      {
+        q: "Is the output the same length as the input?",
+        a: "Approximately &mdash; typically within 10% of the original length. Longer or shorter is possible per section depending on whether the original was tightly written or repetitive. For explicit length control, AI Condense / AI Expand are dedicated tools.",
+      },
+      {
+        q: "Does it preserve formatting (lists, headings, emphasis)?",
+        a: "Headings and lists are preserved structurally. Bold/italic emphasis is preserved on the same words where possible. Tables and figures are referenced but not paraphrased &mdash; the rewrite is content-only.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the paraphrase changes meaning?",
+        a: "It can happen, especially in technical sections with domain-specific vocabulary. Read the output before submitting &mdash; the page citations make spot-checking easy. For high-stakes content (legal, medical, regulatory) treat the output as a draft for human review.",
+      },
+    ],
+    cta: {
+      title: "Need length change too?",
+      text: "AI Condense reduces length while preserving meaning; AI Expand goes the other way for material that needs more depth. Use these when paraphrase alone isn&rsquo;t enough.",
+      linkHref: "/tool/ai-condense",
+      linkLabel: "Try AI Condense",
+    },
+  },
+
+  "ai-detector": {
+    useCasesTitle: "Why people use AI Content Detector",
+    useCasesIntro:
+      "Detection of AI-generated text (ChatGPT / Claude / Gemini / Llama) is heuristic, not exact. The detector surfaces formulaic structure, AI-typical phrasing, register shifts &mdash; signals that suggest LLM authorship &mdash; with confidence scores. This is a flag-for-review tool, not courtroom-grade evidence.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Education &mdash; assignments, theses",
+        text: "Teachers and TAs running submitted assignments through the detector to flag suspicious essays for human review. Detection accuracy on student writing varies by grade level &mdash; high-school work flags more reliably than graduate work.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Hiring &mdash; cover letters, written assessments",
+        text: "Take-home assessments and cover letters increasingly come from LLMs. The detector flags candidates whose writing samples match LLM signatures, prompting a follow-up conversation rather than an automatic disqualification.",
+      },
+      {
+        icon: "Pages",
+        title: "Editorial &mdash; submitted articles, freelance work",
+        text: "Editors handling pitches and submissions screen for LLM-generated content. Useful for outlets where human authorship is part of the value proposition (memoir, opinion, voice-driven journalism).",
+      },
+      {
+        icon: "Shield",
+        title: "Marketing &mdash; vendor-supplied copy authenticity",
+        text: "When agencies or freelance writers deliver content, the detector previews whether the work was likely human-written or AI-generated. Useful for shops paying premium rates for human authorship.",
+      },
+      {
+        icon: "Edit",
+        title: "Quality control on translated content",
+        text: "Some translation services secretly use LLM translation. The detector surfaces the LLM-typical signature in the output even when the prose is grammatically clean &mdash; helpful for buyers verifying they got what they paid for.",
+      },
+    ],
+    howWorksTitle: "How AI Content Detector works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the PDF",
+        text: "PDF up to 50 MB. Works on essays, articles, reports, cover letters, theses. Plain prose works best; heavy code or technical notation isn&rsquo;t the target use case.",
+      },
+      {
+        step: "2",
+        title: "We score each passage",
+        text: "Server-side text extraction, then per-passage scoring against signatures of AI-typical phrasing, sentence-length distribution, register-shift patterns, and uniformity metrics. Different LLM families have different fingerprints; the detector tries to match the strongest.",
+      },
+      {
+        step: "3",
+        title: "Get a flagged report",
+        text: "Output: overall confidence (0&ndash;100% AI-likely), per-passage breakdown with the flagged sentences highlighted, suspected source family (GPT-4-class / Claude-class / Gemini-class). Treat this as a flag-for-review, not a verdict.",
+      },
+    ],
+    faqs: [
+      {
+        q: "What&rsquo;s the false-positive rate?",
+        a: "Significant &mdash; we don&rsquo;t publish a fixed FP rate because it varies by genre and writing skill. Highly polished human writers (professional editors, technical writers) are sometimes flagged because polish itself looks LLM-uniform. Treat the score as a probabilistic signal, not a verdict.",
+      },
+      {
+        q: "Can it tell ChatGPT from Claude from Gemini?",
+        a: "Sometimes &mdash; each LLM family has subtly different signatures (vocabulary preferences, sentence-length distributions). Confidence on the family-attribution is lower than confidence on the human-vs-AI binary. For the family attribution, treat as best-guess only.",
+      },
+      {
+        q: "What about content that&rsquo;s been edited after AI generation?",
+        a: "Heavy human editing (rewriting paragraphs, restructuring sections) blurs the signature significantly. Light editing (typo fixes, minor word swaps) typically isn&rsquo;t enough to evade detection. We err on the side of false negatives here.",
+      },
+      {
+        q: "Can this be used for academic-misconduct accusations?",
+        a: "Not on its own. The output is &ldquo;AI-likely with X% confidence&rdquo; &mdash; that&rsquo;s flag-for-conversation, not proof. Academic misconduct cases require corroborating evidence (prompt logs, draft history, oral examination). The detector accelerates triage, not adjudication.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "Privacy?",
+        a: "Document sent to inference provider, not stored. For sensitive content (anonymous student submissions, confidential editorial pitches), redact identifying metadata first via Redact PDF before running the detection.",
+      },
+    ],
+    cta: {
+      title: "Need to rewrite content to avoid detection?",
+      text: "AI Paraphrase rewrites while preserving meaning &mdash; useful for content that flagged AI but is fundamentally human work the writer wants to harmonize. NOT useful for AI-generated work the writer is trying to disguise (and we don&rsquo;t recommend that workflow).",
+      linkHref: "/tool/ai-paraphrase",
+      linkLabel: "Try AI Paraphrase",
+    },
+  },
+
+  "ai-rewrite": {
+    useCasesTitle: "Why people use AI Rewrite & Rephrase",
+    useCasesIntro:
+      "Rewrite is paraphrase with explicit style controls &mdash; tone shift (formal &harr; casual), register adjustment (technical &harr; layperson), or length change (condense / expand). The factual content stays; the voice changes. Useful when the goal is audience adaptation, not summarization.",
+    useCases: [
+      {
+        icon: "Edit",
+        title: "Tone shift &mdash; formal &harr; casual",
+        text: "A formal RFP response can be rewritten in a conversational tone for a follow-up email. A casual blog post can be tightened to a formal one-pager. The content stays; the register shifts.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Audience adaptation &mdash; technical &harr; layperson",
+        text: "Engineering docs rewritten for sales materials. Sales materials rewritten for technical audiences. The product info stays; the abstraction level changes.",
+      },
+      {
+        icon: "Pages",
+        title: "Length adjustment &mdash; condense or expand",
+        text: "A 10-page report condensed to a 2-page exec brief, or a 1-paragraph idea expanded to a 3-page concept doc. Pairs with AI Condense / AI Expand for the dedicated length controls.",
+      },
+      {
+        icon: "Book",
+        title: "Multi-author style harmonization",
+        text: "When several authors contribute to one document, voice inconsistency is jarring. Rewrite the whole doc to one consistent voice without rewriting from scratch.",
+      },
+      {
+        icon: "Shield",
+        title: "Translation prep",
+        text: "Before translating to other languages, rewrite the source to plain, idiom-free English. Both machine and human translators produce significantly higher-quality output from plain source than from idiomatic / culturally-loaded source.",
+      },
+    ],
+    howWorksTitle: "How AI Rewrite works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop the PDF + pick style",
+        text: "PDF up to 100 MB. Style options: tone (formal / neutral / casual), register (technical / general / simple), length (preserve / condense / expand). Defaults to neutral preserve-length.",
+      },
+      {
+        step: "2",
+        title: "We rewrite section-by-section",
+        text: "Server-side text extraction, then a constrained rewrite pass that preserves every numeric value, name, and factual claim while applying the requested style change. Routing layer selects the model best suited to the style transform.",
+      },
+      {
+        step: "3",
+        title: "Get markdown output",
+        text: "Rewritten doc in markdown. Page citations link each rewritten section back to the source, so you can verify the rewrite preserved meaning before publishing.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How is this different from AI Paraphrase?",
+        a: "Paraphrase changes word choice and sentence structure but holds the style/register constant. Rewrite is paraphrase plus an explicit style change. If you want to keep the same voice but rephrase, use Paraphrase. If you want a different voice, use Rewrite.",
+      },
+      {
+        q: "Are numbers and dates preserved exactly?",
+        a: "Yes &mdash; explicitly. The model is constrained to preserve every numeric value, percentage, date, currency amount, name, and proper noun verbatim. Style change should never change facts.",
+      },
+      {
+        q: "Can I rewrite into a specific tone like &lsquo;Apple-style&rsquo; or &lsquo;Hemingway&rsquo;?",
+        a: "Roughly. Generic styles (formal / casual / technical / simple) are well-supported. Brand-specific styles (Apple voice, Stripe voice, etc.) work but are approximate &mdash; the model imitates surface-level signals (sentence length, vocabulary). For brand-aligned content, treat the output as a draft for the brand-voice editor.",
+      },
+      {
+        q: "What if I want length change without other style changes?",
+        a: "Use AI Condense (shorter) or AI Expand (longer) instead &mdash; those are length-only with style preserved. Rewrite is the right tool when you want both length AND style change.",
+      },
+      {
+        q: "What&rsquo;s the credit cost?",
+        a: "3 credits per doc. Cost is fixed regardless of doc size.",
+      },
+      {
+        q: "What if the rewrite changes meaning?",
+        a: "It can happen, especially with aggressive style changes (highly technical &rarr; layperson, formal legal &rarr; casual). Read the output before publishing &mdash; the page citations make spot-checking easy. For high-stakes content, treat as a draft for human review.",
+      },
+    ],
+    cta: {
+      title: "Want a tone audit first?",
+      text: "AI Tone Analyze surfaces the current tone and register of a document &mdash; useful for deciding what rewrite direction to choose, or for verifying the rewrite achieved the intended shift.",
+      linkHref: "/tool/ai-tone-analyze",
+      linkLabel: "Try AI Tone Analyze",
+    },
+  },
 };

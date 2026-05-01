@@ -223,8 +223,12 @@ const GRANDFATHERED_NO_CONTENT = new Map([
 // rank for each variant; entries are grouped by family for review
 // purposes only.
 const KNOWN_AI_LONGFORM_PENDING = new Map([
-  // --- Summarize variants (38+ tools share the /api/ai/summarize backend) ---
-  ["ai-faq", "Phase 2 — Q&A-format summarize variant"],
+  // 2026-05-01 — Phase 2 Tier 1 SHIPPED (8 entries removed):
+  //   ai-faq, ai-action-items, ai-mindmap, ai-blood-test, ai-jd-match,
+  //   ai-paraphrase, ai-detector, ai-rewrite
+  // Remaining list = 31 entries (cap 39 → 31, monotonic shrinkage).
+  //
+  // --- Summarize variants ---
   ["ai-blog", "Phase 2 — content-marketing distillation variant"],
   ["ai-readability", "Phase 2 — reading-level analysis variant"],
   ["ai-entities", "Phase 2 — named-entity extraction variant"],
@@ -238,14 +242,11 @@ const KNOWN_AI_LONGFORM_PENDING = new Map([
   ["ai-proofread", "Phase 2 — proofreading variant"],
   ["ai-newsletter", "Phase 2 — newsletter-format variant"],
   ["ai-video-script", "Phase 2 — video-script variant"],
-  ["ai-action-items", "Phase 2 — meeting-notes action-item extraction"],
   ["ai-study-notes", "Phase 2 — exam-prep notes variant"],
 
   // --- Document-type variants (industry-specific) ---
-  ["ai-blood-test", "Phase 2 — medical blood-test interpretation"],
   ["ai-syllabus", "Phase 2 — academic syllabus parsing"],
   ["ai-discharge", "Phase 2 — medical discharge-summary parsing"],
-  ["ai-jd-match", "Phase 2 — job description matching"],
   ["ai-nda", "Phase 2 — NDA review variant"],
   ["ai-employment", "Phase 2 — employment-contract review"],
   ["ai-salary-slip", "Phase 2 — payslip parsing"],
@@ -257,13 +258,9 @@ const KNOWN_AI_LONGFORM_PENDING = new Map([
 
   // --- Writing/transformation variants ---
   ["ai-improve-writing", "Phase 2 — writing improvement variant"],
-  ["ai-paraphrase", "Phase 2 — paraphrasing variant"],
-  ["ai-detector", "Phase 2 — AI-content detection (heuristic only)"],
-  ["ai-rewrite", "Phase 2 — generic rewrite variant"],
   ["ai-chart-to-table", "Phase 2 — chart→table extraction"],
 
   // --- Structured-output variants ---
-  ["ai-mindmap", "Phase 2 — mindmap generation"],
   ["ai-semantic-search", "Phase 2 — semantic search variant"],
   ["ai-table", "Phase 2 — table extraction variant"],
 
@@ -406,9 +403,9 @@ assert(
         `.\n  Remove them from KNOWN_AI_LONGFORM_PENDING — the longform exists so the grandfather is stale.`,
 );
 assert(
-  "KNOWN_AI_LONGFORM_PENDING stays bounded (≤ 39 entries)",
-  KNOWN_AI_LONGFORM_PENDING.size <= 39,
-  `KNOWN_AI_LONGFORM_PENDING has ${KNOWN_AI_LONGFORM_PENDING.size} entries; cap is 39. ` +
+  "KNOWN_AI_LONGFORM_PENDING stays bounded (≤ 31 entries)",
+  KNOWN_AI_LONGFORM_PENDING.size <= 31,
+  `KNOWN_AI_LONGFORM_PENDING has ${KNOWN_AI_LONGFORM_PENDING.size} entries; cap is 31. ` +
     `Either ship a longform for one of the listed tools (preferred), or if a NEW AI tool genuinely needs ` +
     `to be grandfathered, ship a longform for an existing pending tool first to keep the cap monotonic.`,
 );
