@@ -30,6 +30,7 @@ import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadCsvString } from "@/lib/client/csv";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
 type ExtractedTable = {
@@ -448,18 +449,17 @@ function TableCsvRow({
   };
 
   const download = () => {
-    const blob = new Blob([table.csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    // 2026-05-02: migrated to the canonical downloadCsvString helper
+    // in lib/client/csv.ts. The CSV body comes pre-formatted from the
+    // /api/ai/table route (LLM-generated, already-escaped) so we don't
+    // wrap through buildCsv — that would double-escape. downloadCsv-
+    // String preserves the opaque input and just adds the Excel-on-
+    // Windows BOM + MIME + Blob+download dance, which the inspector
+    // tools' download path already shares.
     const base = sourceFilename
       ? sourceFilename.replace(/\s*—\s*Tables\.md$/i, "").trim()
       : "tables";
-    a.href = url;
-    a.download = `${base} — Table ${idx + 1}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4_000);
+    downloadCsvString(`${base} — Table ${idx + 1}.csv`, table.csv);
   };
 
   return (

@@ -99,8 +99,35 @@ export function downloadCsv(
   rows: readonly (readonly unknown[])[],
 ): void {
   const body = buildCsv(header, rows);
-  // BOM = U+FEFF; required for Excel-on-Windows to detect UTF-8.
-  const blob = new Blob(["﻿" + body], {
+  downloadCsvString(filename, body);
+}
+
+/**
+ * Trigger a CSV download for an ALREADY-FORMATTED CSV body.
+ *
+ * Use this when the CSV comes from an upstream source that owns its
+ * own escaping (e.g. TableExtractTool's LLM-generated tables). The
+ * file's header comment documents why we don't re-escape such input
+ * through buildCsv() — re-escaping already-quoted fields would
+ * double-escape.
+ *
+ * Still applies the same Excel-compatibility floor that `downloadCsv`
+ * does: prepends a UTF-8 BOM (so Excel-on-Windows detects encoding)
+ * and uses `text/csv;charset=utf-8` MIME. Skips the BOM if the input
+ * already has one (defensive — cheap to check, prevents double-BOM
+ * if someone hands in a pre-BOM'd string).
+ *
+ * 2026-05-02: extracted as a shared helper so TableExtractTool's
+ * download path consolidates with the inspector tools' download path.
+ * Before this, TableExtractTool emitted CSVs without the BOM, which
+ * meant non-ASCII column headers / cell values rendered as mojibake
+ * in Excel-on-Windows (e.g. "â‚¹" instead of "₹" in INR amount cells).
+ */
+export function downloadCsvString(filename: string, csvBody: string): void {
+  // BOM = U+FEFF; only prepend if not already present.
+  const BOM = "﻿";
+  const body = csvBody.startsWith(BOM) ? csvBody : BOM + csvBody;
+  const blob = new Blob([body], {
     type: "text/csv;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);
