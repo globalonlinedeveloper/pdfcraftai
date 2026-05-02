@@ -218,11 +218,19 @@ export function generateMetadata({ params }: Params): Metadata {
       description: tool.desc,
       url: `/tool/${tool.id}`,
       type: "website",
+      // 2026-05-02: explicit og:image — without this, every /tool/<id>
+      // page (60+ pages) emits NO og:image meta tag, killing social-
+      // share previews on Slack / Twitter / LinkedIn / iMessage. Root
+      // layout's openGraph.images is overridden whenever an inner route
+      // declares its own openGraph block, so we have to repeat the
+      // reference here. /og.png is the canonical brand share card.
+      images: ["/og.png"],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: tool.desc,
+      images: ["/og.png"],
     },
   };
 }

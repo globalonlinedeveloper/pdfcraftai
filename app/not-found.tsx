@@ -1,4 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+// 2026-05-02: explicit metadata so 404 pages don't reuse the homepage
+// title ("pdfcraft ai — Every PDF tool you need"). Search engines that
+// crawl a 404 URL during a re-crawl get a clear "page not found"
+// signal; users see "Page not found" in the browser tab and the back-
+// nav history; both better than the old behavior where every 404
+// looked indistinguishable from the homepage in the URL/tab UX.
+//
+// noindex: 404s should NEVER be indexed. Robots middleware sets this
+// header at the response layer, but explicit metadata is belt-and-
+// braces — it lands in the page HTML so browser-side
+// interpretations (e.g. archive.org) treat the page correctly too.
+export const metadata: Metadata = {
+  title: "Page not found · pdfcraft ai",
+  description:
+    "The page you're looking for doesn't exist. Head back to the tool catalog or homepage.",
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (
@@ -6,9 +25,9 @@ export default function NotFound() {
       <div className="eyebrow" style={{ marginBottom: 8 }}>
         ERROR · 404
       </div>
-      <h1 style={{ fontSize: 56 }}>This page hasn&apos;t been ported yet.</h1>
+      <h1 style={{ fontSize: 56 }}>Page not found</h1>
       <p className="muted" style={{ fontSize: 18, maxWidth: 540, margin: "16px auto 32px" }}>
-        We&apos;re migrating the prototype into Next.js phase-by-phase. Head home or browse tools.
+        The page you&apos;re looking for doesn&apos;t exist or may have moved. Head home or browse the tool catalog.
       </p>
       <div className="row" style={{ justifyContent: "center", gap: 12 }}>
         <Link href="/" className="btn btn-lg btn-primary">
