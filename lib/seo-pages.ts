@@ -156,7 +156,16 @@ export type SeoPageSlug =
   | "compare-pdfs-visual"
   | "batch-process-pdf"
   | "pdf-letterhead-overlay"
-  | "split-odd-even-pages";
+  | "split-odd-even-pages"
+  // 2026-05-02 Tier 4 — 6 audit-tool landings completing 100% catalog
+  // SEO coverage. Niche compliance audience but each has a clear
+  // professional user persona.
+  | "pdf-a-validator"
+  | "pdf-x-validator"
+  | "pdf-accessibility-checker"
+  | "pdf-annotations-viewer"
+  | "pdf-javascript-detector"
+  | "pdf-links-inspector";
 
 export type SeoPageData = {
   tool: string; // tool id from lib/tools.ts
@@ -2666,6 +2675,137 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Privacy?", a: "100% client-side. Your scan stays in your browser." },
     ],
     related: ["sort-pages", "merge", "extract-pages", "rotate"],
+  },
+
+  // 2026-05-02 Tier 4 — 6 audit-tool landings completing 100% catalog
+  // SEO coverage. Niche compliance audience (PDF/A archive validators,
+  // accessibility auditors, regulatory pre-flight workflows). Lower
+  // search volume than Tier 1-3 but each has a clear professional
+  // user persona who searches for the exact term.
+
+  "pdf-a-validator": {
+    tool: "pdf-a-check",
+    h1: "PDF/A validator — check archive-format compliance",
+    sub: "Validate any PDF against PDF/A archive standards. Surfaces every non-compliance: embedded fonts, color spaces, transparency, encryption, JavaScript, external references. Free, in-browser checklist with pass/fail per requirement.",
+    canonical: "/pdf-a-validator",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Stays in your browser." },
+      { t: "Auto-validate against PDF/A-1b / 2b / 3b", d: "Each level's requirements checked: fonts embedded, color spaces declared, no encryption, no JavaScript, no external references, no transparency (1b only), and metadata present per ISO 19005." },
+      { t: "Browse pass/fail checklist", d: "Each requirement gets a green-check or red-x with specific failure detail (e.g. \"3 unembedded fonts: Helvetica-Bold on page 4, Times-Italic on page 7\"). Click any failure for the actual non-compliant page or object." },
+      { t: "Optional: fix-up workflow", d: "Most failures are fixable via our Flatten / Embed Fonts / Strip Links / Remove Metadata tools. The validator surfaces the specific tool to run for each failure type." },
+    ],
+    faq: [
+      { q: "What's PDF/A?", a: "ISO 19005 archive format. Designed for long-term preservation: every font embedded, no external dependencies, predictable rendering decades from now. Required by most national archives, compliance regulators, and corporate document-retention systems." },
+      { q: "Which PDF/A level should I target?", a: "PDF/A-1b is the strictest (no transparency, no layered images, narrowest feature set). PDF/A-2b adds JPEG2000 + transparency. PDF/A-3b adds embedded files. Use the strictest level your downstream system accepts; default to PDF/A-2b if you're unsure." },
+      { q: "Can this CONVERT my PDF to PDF/A?", a: "No — this validator only CHECKS compliance. Conversion (embedding fonts, replacing color spaces, removing JavaScript) requires our roadmap-paid PDF/A Converter or Adobe Acrobat Pro / pdftk-server. The validator's value is showing exactly what fails so the conversion is targeted." },
+      { q: "Why does my Acrobat-saved PDF/A still fail?", a: "Common: Acrobat's PDF/A export sometimes leaves /Producer metadata that violates strict mode, or embeds fonts using a slightly non-conformant subset method. Validator catches these so you know the file isn't truly compliant despite Acrobat's claim." },
+      { q: "Privacy?", a: "100% client-side. PDFs validated in your browser; nothing uploaded." },
+    ],
+    related: ["pdf-x-check", "pdf-accessibility", "flatten-pdf", "remove-metadata"],
+  },
+
+  "pdf-x-validator": {
+    tool: "pdf-x-check",
+    h1: "PDF/X validator — check print-production compliance",
+    sub: "Validate PDFs against PDF/X print standards. Surfaces every non-compliance: missing trim/bleed boxes, unembedded fonts, RGB color spaces, unspecified output intents. Free, in-browser checklist for pre-print pre-flight.",
+    canonical: "/pdf-x-validator",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Print-bound PDFs typically 50-200 MB depending on image resolution." },
+      { t: "Auto-validate against PDF/X-1a / 3 / 4", d: "Each level's requirements checked: TrimBox + BleedBox declared, fonts embedded, output intent set (e.g. SWOP / FOGRA / GRACoL), color spaces resolved, no transparency (1a only), no JavaScript / encryption / external references." },
+      { t: "Browse pass/fail checklist", d: "Each requirement gets pass / fail with detail. Common failure: \"missing TrimBox on page 3\" or \"RGB image on page 7 (PDF/X-1a requires CMYK)\"." },
+      { t: "Hand off to print shop", d: "Most print shops accept the validator report as proof of pre-flight pass. Failed checks need either upstream fixes (in InDesign / Illustrator) or specific repair workflows that aren't in this validator's scope." },
+    ],
+    faq: [
+      { q: "What's PDF/X?", a: "ISO 15930 print-production format. Strict requirements ensure print shops can render the PDF identically across different RIPs (raster image processors). Standard requirement from commercial print shops, magazine publishers, and packaging manufacturers." },
+      { q: "Which PDF/X level should I target?", a: "PDF/X-1a is most restrictive (CMYK only, no transparency, single output intent). PDF/X-3 allows ICC-tagged RGB. PDF/X-4 allows transparency. Most print shops accept PDF/X-4 today; legacy shops may require X-1a." },
+      { q: "What's an output intent?", a: "An ICC color profile that defines how the PDF should look on the target output device. Common intents: SWOP (US web-offset), FOGRA (European offset), GRACoL (commercial sheet-fed). Print shops require this to know which inks + paper to use." },
+      { q: "Can this CONVERT to PDF/X?", a: "No — validator only. PDF/X conversion (color-space conversion, font embedding, output-intent assignment) needs InDesign's PDF/X export, Acrobat Pro's pre-flight fixups, or our roadmap-paid PDF/X Converter." },
+      { q: "Privacy?", a: "100% client-side. Print-bound PDFs validated in your browser; nothing uploaded — important for confidential publication content under embargo." },
+    ],
+    related: ["pdf-a-check", "pdf-accessibility", "pdf-fonts", "pdf-inspector"],
+  },
+
+  "pdf-accessibility-checker": {
+    tool: "pdf-accessibility",
+    h1: "PDF accessibility checker — WCAG 2.1 / PDF/UA pre-flight",
+    sub: "Audit PDFs against WCAG 2.1 + PDF/UA accessibility requirements. Surfaces every barrier: missing tags, untagged images, no logical reading order, missing language declarations, no document title. Free, in-browser checklist.",
+    canonical: "/pdf-accessibility-checker",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. Stays in your browser." },
+      { t: "Auto-audit against WCAG 2.1 + PDF/UA", d: "Checks: every page has a tag tree, every image has alt text, every form field has a tooltip, document title is set, language is declared, reading order is logical, color contrast is sufficient, links have accessible names." },
+      { t: "Review the checklist", d: "Each WCAG / PDF/UA requirement gets pass / fail with specific failure detail (e.g. \"3 images missing alt text on pages 2, 5, 8\"). Click any failure to navigate to the offending element." },
+      { t: "Optional: fix-up workflow", d: "Most fixes need upstream authoring-tool changes (InDesign, Word) or our roadmap-paid AI Tag Generator. The audit's value is making the gap concrete so you know what to fix and where." },
+    ],
+    faq: [
+      { q: "Why does PDF accessibility matter?", a: "Section 508 (US federal procurement), Equality Act (UK), Rights of Persons with Disabilities Act (India), EU Web Accessibility Directive, and most corporate procurement contracts require accessible PDFs. Inaccessible PDFs disenfranchise screen-reader users who depend on the document tag tree to navigate content." },
+      { q: "What's a tag tree?", a: "A parallel structure inside the PDF that describes semantic hierarchy: which text is a heading, which is a paragraph, which is a table cell, which is alt text for an image. Screen readers (JAWS, NVDA, VoiceOver) navigate this tree to read the document logically. Untagged PDFs are essentially unreadable to blind users." },
+      { q: "Can I auto-tag a PDF?", a: "Acrobat Pro has \"Auto Tag\" which uses ML to guess tags but requires manual cleanup. Our roadmap-paid AI Tag Generator does the same with better section detection. Both are starting points; high-stakes documents (legal, government, public) need human review of the auto-tagged output." },
+      { q: "What about scanned PDFs?", a: "Scanned PDFs (image-only, no text layer) fail accessibility by definition — there's no text to tag. Run AI · OCR first to add a text layer, then this validator surfaces the remaining tag-tree gaps." },
+      { q: "Privacy?", a: "100% client-side. PDFs audited in your browser; nothing uploaded." },
+    ],
+    related: ["pdf-a-check", "pdf-x-check", "ai-ocr", "pdf-inspector"],
+  },
+
+  "pdf-annotations-viewer": {
+    tool: "pdf-annotations",
+    h1: "PDF annotations viewer — list every comment, highlight, sticky note",
+    sub: "Surface every annotation in a PDF: comments, highlights, sticky notes, drawn shapes, signatures, stamps. Per-author + per-page breakdown. Export to CSV / JSON. Free, in-browser, no signup.",
+    canonical: "/pdf-annotations-viewer",
+    howTo: [
+      { t: "Drop your PDF", d: "Up to 100 MB. We parse the page-level /Annots arrays and surface every annotation type with its content, author, and creation date." },
+      { t: "Browse the table", d: "Each annotation: type (highlight / comment / stamp / etc.), page, author, creation date, content (for text annotations), color (for highlights), location coordinates." },
+      { t: "Filter + sort", d: "Filter by author (review by reviewer), by type (just highlights, or just comments), by date range. Click any annotation to navigate to it on the page." },
+      { t: "Export", d: "CSV or JSON of every annotation. Useful for audit trails, review-completion checks, and converting an annotation list into action-item issues in a tracker." },
+    ],
+    faq: [
+      { q: "Will this find annotations from older versions of Acrobat?", a: "Yes — every PDF annotation type from Acrobat 4 onward (so 25+ years of legacy formats) is surfaced. Some old types (e.g. /Movie annotations) are extinct but still flagged with their type for completeness." },
+      { q: "Does it show drawn-on annotations?", a: "Yes — pen / highlighter strokes drawn via Free Draw or Acrobat's pen tool surface as /Ink annotations. Polygon stamps, arrow stamps, and shape stamps surface as /Polygon / /Line / shape annotations." },
+      { q: "Why are some highlights showing up in this list but not in PDF Inspector?", a: "Should never differ — both tools enumerate the same /Annots arrays. If you see a difference, the PDF likely has annotations stored in non-standard form (e.g. as background-overlay images instead of true annotations). Run pdftk dump_data to confirm." },
+      { q: "Can I delete annotations from this view?", a: "No — read-only. To remove annotations, use our Flatten PDF tool which bakes them into the page content (or removes them entirely depending on type)." },
+      { q: "Privacy?", a: "100% client-side. PDFs parsed in your browser; nothing uploaded." },
+    ],
+    related: ["flatten-pdf", "redact-free", "pdf-inspector", "highlight-pdf"],
+  },
+
+  "pdf-javascript-detector": {
+    tool: "pdf-javascript",
+    h1: "PDF JavaScript detector — find embedded scripts before sharing",
+    sub: "Surface every embedded JavaScript in a PDF: page-load scripts, form-submit handlers, link-click triggers, and document-level actions. Critical for security pre-flight before sharing PDFs from untrusted sources.",
+    canonical: "/pdf-javascript-detector",
+    howTo: [
+      { t: "Drop the PDF", d: "Up to 100 MB. We walk the document /Names tree, /OpenAction entry, every annotation's /A and /AA dictionaries, and every form field's /A dictionary to find every JavaScript binding." },
+      { t: "Browse the script table", d: "Each script: trigger (page-load / form-submit / link-click / before-print / etc.), source code (collapsible), and the host element (page number, form field name, link annotation)." },
+      { t: "Inspect or strip", d: "Read the script source to assess intent. To remove: use our Strip JavaScript tool (paid) or open in Acrobat Pro and run \"Sanitize Document\"." },
+    ],
+    faq: [
+      { q: "Why does this matter?", a: "PDF JavaScript can phone home (ping a tracker URL on every open), execute on form-submit (exfiltrate data), or trigger fake-prompt dialogs for credential-phishing. Most legitimate PDFs don't have JavaScript; the ones that do (interactive forms, document-protection schemes) should be auditable." },
+      { q: "How do you know what's malicious?", a: "We surface every script + its trigger; intent assessment requires reading the script. Common malicious patterns: any HTTP / HTTPS string in a page-load script (likely a tracker), any Eval / unescape with non-trivial input (likely obfuscation), any submitForm with a non-self URL (likely exfiltration)." },
+      { q: "Will Acrobat block these scripts on open?", a: "Modern Acrobat (since v11) prompts before executing PDF JavaScript by default. But many users click through the prompt without reading. And some scripts trigger on actions OTHER than open (form-submit / link-click) which Acrobat doesn't prompt for." },
+      { q: "What about non-Acrobat viewers?", a: "Foxit, Nitro, and Sumatra each have their own JavaScript engines with different security postures. Chrome / Edge built-in PDF viewers don't execute JavaScript at all (safest). For untrusted PDFs, prefer browser viewing over Acrobat." },
+      { q: "Privacy?", a: "100% client-side. PDFs parsed in your browser; nothing uploaded — important for forensic / threat-hunting workflows where the file IS the suspicious artifact." },
+    ],
+    related: ["strip-links", "remove-metadata", "flatten-pdf", "pdf-inspector"],
+  },
+
+  "pdf-links-inspector": {
+    tool: "pdf-links",
+    h1: "PDF links inspector — list every hyperlink and goto destination",
+    sub: "Surface every link in a PDF: external URLs, internal page-jumps, mailto: / tel: targets, file:// references. Per-page breakdown with type + target. Export CSV / JSON. Free, in-browser.",
+    canonical: "/pdf-links-inspector",
+    howTo: [
+      { t: "Drop the PDF", d: "Up to 100 MB. We walk every page's /Annots array filtering for /Link annotations and resolve their /A action dictionaries." },
+      { t: "Browse the link table", d: "Each link: type (URL / Goto / Launch / Named / GotoR — remote PDF), target (URL string or destination page), source page, link rectangle coordinates." },
+      { t: "Filter by type", d: "Common pre-share check: filter to External URL only, audit each one. Common pre-archive check: filter to GotoR / Launch (cross-file references) which break in standalone archive use." },
+      { t: "Export", d: "CSV or JSON of every link. Useful for migration audits (e.g. when the destination URL pattern is changing) and for security review of external-target landing domains." },
+    ],
+    faq: [
+      { q: "Why audit links before sharing?", a: "External URLs in a PDF can leak intent (which sites you reference) and create phishing-vector risk if the URL changes hands later. Some compliance contexts (e.g. submitting evidence in litigation) require all hyperlinks to be inert. Run our Strip Links tool after auditing if you need to remove them." },
+      { q: "Does this include goto-page jumps?", a: "Yes — internal navigation links (table-of-contents jumps, footnote references, cross-references) all surface with their destination page number. Useful for verifying a TOC is wired correctly before publishing." },
+      { q: "What about clickable text that LOOKS like a link but isn't?", a: "If the text is colored blue and underlined but has NO /Link annotation overlay, it's just styled text — not actually clickable. Common bug in PDFs converted from Word where the hyperlink wasn't preserved during export. This tool surfaces only true /Link annotations; if your PDF \"looks linky\" but this tool reports zero, the styling is decorative-only." },
+      { q: "Can I export a sitemap of internal goto-jumps?", a: "Yes — filter to Goto type only, export JSON, you'll have a structured map of every internal navigation path. Useful for restructuring document architecture or spotting orphan pages with no incoming links." },
+      { q: "Privacy?", a: "100% client-side. PDFs parsed in your browser; nothing uploaded." },
+    ],
+    related: ["strip-links", "add-links", "pdf-annotations", "pdf-inspector"],
   },
 
 };
