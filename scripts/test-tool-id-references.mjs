@@ -121,13 +121,14 @@ const KNOWN_BROKEN_RELATED_IDS = new Set([
   // Aligned with KNOWN_DEAD_REFS — planned tools that haven't shipped.
   // Each will resolve to a real /tool/<id> page once the corresponding
   // tool is built.
-  "extract-attachments",
+  // 2026-05-01 — "extract-attachments" SHIPPED, removed from allowlist.
   "compress",
   "edit-pdf",
   // 2026-05-01 — "ai-court-order" SHIPPED, removed from allowlist.
   // SEO slugs whose planned tool target is itself a KNOWN_DEAD_REF.
   "pdf-to-excel",
-  "extract-pdf-attachments",
+  // 2026-05-01 — "extract-pdf-attachments" no longer broken: refs in
+  // related[] now point at the real extract-attachments tool. Removed.
   // Catch-all category names mapped to planned tools in KNOWN_DEAD_REFS.
   "to-pdf",
   "pdf-to-office",
@@ -242,16 +243,17 @@ assert(
 // (instead of fixing the underlying reference) bumps the size; this
 // assertion forces a deliberate cap bump in the same PR for visibility.
 assert(
-  KNOWN_BROKEN_RELATED_IDS.size <= 7,
+  KNOWN_BROKEN_RELATED_IDS.size <= 5,
   `KNOWN_BROKEN_RELATED_IDS has ${KNOWN_BROKEN_RELATED_IDS.size} entries; ` +
-    `cap is 7 (22 → 11 → 10 → 9 → 8 → 7 over 2026-05-01: Phase 3 cleanup ` +
-    `repaired 11; extract-contacts + extract-dates + ai-court-order SHIPPED; ` +
-    `extract-form-data SEO landing repointed). Either fix one of the listed ` +
-    `ids to repair its references (preferred — repair the real tool ` +
-    `reference in seo-pages.ts), or if a new id genuinely needs ` +
-    `grandfathering, fix one existing entry first to keep the cap ` +
-    `monotonic. The remaining 7 are aligned with KNOWN_DEAD_REFS in ` +
-    `test-seo-pages-tool-mapping.mjs — they will resolve naturally when ` +
+    `cap is 5 (22 → 11 → 10 → 9 → 8 → 7 → 5 over 2026-05-01: Phase 3 ` +
+    `cleanup repaired 11; extract-contacts + extract-dates + ai-court-order ` +
+    `+ extract-attachments SHIPPED; extract-form-data SEO landing ` +
+    `repointed; extract-pdf-attachments SEO slug also resolves now). ` +
+    `Either fix one of the listed ids to repair its references (preferred — ` +
+    `repair the real tool reference in seo-pages.ts), or if a new id ` +
+    `genuinely needs grandfathering, fix one existing entry first to keep ` +
+    `the cap monotonic. The remaining 5 are aligned with KNOWN_DEAD_REFS ` +
+    `in test-seo-pages-tool-mapping.mjs — they will resolve naturally when ` +
     `the planned tools ship.`,
 );
 

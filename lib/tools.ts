@@ -106,6 +106,12 @@ export const TOOLS: readonly Tool[] = [
   // numeric formats (Indian/EU convention); month-first interpretation
   // surfaced as an alt column for ambiguous matches.
   { id: "extract-dates", name: "Extract Dates → ICS", desc: "Find every date in a PDF and download an .ics file importable into Google Calendar / Apple Calendar / Outlook. Day-first default with ambiguity flagging. Free, in-browser.", icon: "Convert", free: true, cost: "free", group: "Organize" },
+  // 2026-05-01 — Extract Attachments: pulls actual file bytes from
+  // embedded files (vs the existing pdf-attachments tool which just
+  // LISTS them). Per-file download + ZIP bundle for multi-attachment
+  // PDFs. Closes the long-standing FAQ in pdf-attachments and the
+  // /extract-pdf-attachments SEO landing.
+  { id: "extract-attachments", name: "Extract PDF Attachments", desc: "Download embedded files from a PDF — research datasets, regulatory supporting docs, PDF/A archive sources. Per-file download or ZIP bundle. FlateDecode + ASCIIHex + ASCII85 supported. Free, in-browser.", icon: "Convert", free: true, cost: "free", group: "Organize" },
   // Build 2 Wave 4 (final): font inventory — completes the 11-tool list.
   { id: "pdf-fonts", name: "PDF Font Inspector", desc: "List every font in a PDF, flag embedded vs not, see which pages use each. Critical for print prep. Free, in-browser.", icon: "Edit", free: true, cost: "free", group: "Organize" },
 

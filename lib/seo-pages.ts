@@ -738,7 +738,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "What if no attachments exist?", a: "We tell you clearly. Most PDFs don't have any. Common cases that DO: technical reports with embedded datasets, regulatory filings with supporting docs, archive PDFs with original source files." },
       { q: "Is anything uploaded?", a: "No. Pure byte-stream parsing in your browser." },
     ],
-    related: ["pdf-attachments", "pdf-inspector", "extract-pdf-attachments", "pdf-forms"],
+    related: ["pdf-attachments", "pdf-inspector", "extract-attachments", "pdf-forms"],
   },
 
   "pdf-fonts-inspector": {
@@ -914,7 +914,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
       { q: "Does it include images on the pages?", a: "No — this is for files embedded via /EmbeddedFiles, not images drawn on the page. For image extraction, use Extract Images." },
       { q: "Privacy?", a: "Everything is parsed and saved in your browser — nothing is uploaded." },
     ],
-    related: ["extract-attachments", "extract-images", "remove-metadata", "page-count"],
+    related: ["pdf-attachments", "extract-images", "remove-metadata", "page-count"],
   },
 
 

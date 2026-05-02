@@ -231,6 +231,11 @@ const ExtractDatesTool = dyn(() =>
     default: m.ExtractDatesTool,
   })),
 );
+const ExtractAttachmentsTool = dyn(() =>
+  import("@/components/tools/ExtractAttachmentsTool").then((m) => ({
+    default: m.ExtractAttachmentsTool,
+  })),
+);
 const PdfFontsTool = dyn(() =>
   import("@/components/tools/PdfFontsTool").then((m) => ({
     default: m.PdfFontsTool,
@@ -703,6 +708,8 @@ export function ToolRunner({ id }: { id: string }) {
       return <ExtractContactsTool />;
     case "extract-dates":
       return <ExtractDatesTool />;
+    case "extract-attachments":
+      return <ExtractAttachmentsTool />;
     case "pdf-fonts":
       return <PdfFontsTool />;
     case "pdf-links":

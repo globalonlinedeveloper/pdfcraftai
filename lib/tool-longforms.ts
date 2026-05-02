@@ -979,6 +979,90 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  // 2026-05-01 — Extract Attachments: pull bytes from embedded files
+  "extract-attachments": {
+    useCasesTitle: "Why people extract embedded files from PDFs",
+    useCasesIntro:
+      "Many PDFs ship with embedded files attached: research datasets, regulatory supporting documents, PDF/A archive sources, design source files, contract exhibits, working notes. The existing PDF Attachments Lister tells you what&rsquo;s there; Extract Attachments downloads the actual file bytes ready for use. Runs entirely in your browser &mdash; no server, no signup.",
+    useCases: [
+      {
+        icon: "Pages",
+        title: "Research data PDFs",
+        text: "Modern academic publications increasingly embed source datasets (CSV, R scripts, supplementary tables) as PDF attachments. The extractor pulls them out as their original files so you can run the analysis yourself or feed them into your own tooling.",
+      },
+      {
+        icon: "Shield",
+        title: "Regulatory filing supporting docs",
+        text: "Indian SEBI / RBI / IRDAI filings, plus international SEC filings, attach supporting Excel sheets, exhibit PDFs, and source spreadsheets to the cover document. Extract them for compliance review without re-requesting from the filer.",
+      },
+      {
+        icon: "Sparkle",
+        title: "PDF/A archive sources",
+        text: "PDF/A (the long-term archival format) often embeds the original source file (Word doc, design file, original PDF before flattening) for future re-editability. Extract recovers those sources from a 5- or 10-year-old archive.",
+      },
+      {
+        icon: "Edit",
+        title: "Contract exhibits + addendums",
+        text: "Long contracts (MSAs, employment agreements, service contracts) often attach exhibits, addendums, and reference docs as PDF embeds. Extract pulls each one out as a separate file for individual review or counterparty negotiation.",
+      },
+      {
+        icon: "Convert",
+        title: "Design / engineering deliverables",
+        text: "Design hand-off PDFs sometimes embed the source files (Figma exports, Sketch files, AutoCAD .dwg). Extract recovers them so the engineer / contractor can edit instead of just view.",
+      },
+    ],
+    howWorksTitle: "How Extract Attachments works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. The byte parser walks the PDF&rsquo;s /Names tree to find the /EmbeddedFiles dictionary and enumerates each Filespec entry.",
+      },
+      {
+        step: "2",
+        title: "We locate + decompress streams",
+        text: "For each attachment, the parser walks the Filespec&rsquo;s /EF reference to the EmbeddedFile stream object, slices the raw stream bytes, then decompresses per /Filter (FlateDecode in ~95% of PDFs; ASCIIHexDecode and ASCII85Decode supported; image filters like DCT/JPX pass through as native files). Browser&rsquo;s built-in DecompressionStream API does the heavy lifting &mdash; no JS library dependency.",
+      },
+      {
+        step: "3",
+        title: "Download per file or as .zip bundle",
+        text: "Single attachments get a direct download. Multi-attachment PDFs offer a one-click .zip bundle (via JSZip) with original filenames preserved. Each file lands at its native MIME type so it opens in the right app.",
+      },
+    ],
+    faqs: [
+      {
+        q: "How is this different from PDF Attachments Lister?",
+        a: "Lister surfaces the metadata (filename, MIME, size, description) without extracting actual bytes. Extract Attachments goes further and pulls the file content. If you just need to know WHAT&rsquo;s in a PDF, the lister is faster (no decompression). If you need the files themselves, use this tool.",
+      },
+      {
+        q: "Which compression filters are supported?",
+        a: "FlateDecode (zlib) handles ~95% of real-world PDFs; ASCIIHexDecode and ASCII85Decode (rare but still used in some demos / tutorials) are supported. Image-content filters (DCT/JPX/JBIG2/CCITT) pass through as their native compressed form &mdash; the encoded bytes ARE a valid file (e.g. JPEG bytes from a /DCTDecode-filtered stream open as a .jpg). LZWDecode (legacy, very rare in modern PDFs) is not supported &mdash; the tool surfaces this clearly per-file.",
+      },
+      {
+        q: "What about encrypted PDFs?",
+        a: "The byte parser doesn&rsquo;t handle encryption today. For password-protected PDFs, run them through Unlock PDF first (provided you have the password), then re-run extraction.",
+      },
+      {
+        q: "Are filenames safe to download?",
+        a: "We sanitize filenames to strip path separators (some malicious PDFs embed paths like &lsquo;../../etc/passwd&rsquo;) and control characters. Original Unicode filenames (Indic scripts, CJK) preserved when present. For ZIP bundles, duplicate filenames get suffixed (1), (2), etc.",
+      },
+      {
+        q: "Privacy?",
+        a: "Everything runs in your browser. The PDF never leaves your machine; the extracted attachment files are downloaded directly. For sensitive PDFs (legal exhibits, confidential research data), this is genuinely the safest extraction path &mdash; no server, no logs, no inference-provider transit.",
+      },
+      {
+        q: "What if my PDF has no embedded files?",
+        a: "We tell you clearly. Most PDFs don&rsquo;t have any embedded files &mdash; the feature is mostly used by archives, regulatory submissions, and research publications. If you expected attachments and don&rsquo;t see them, double-check the source.",
+      },
+    ],
+    cta: {
+      title: "Want to inspect attachments without extracting?",
+      text: "PDF Attachments Lister surfaces metadata only (filename, MIME, size, description). Faster than extraction and useful when you just need to audit what&rsquo;s embedded vs pull the files out.",
+      linkHref: "/tool/pdf-attachments",
+      linkLabel: "Try PDF Attachments Lister",
+    },
+  },
+
   // -------- Wave 8 (2026-04-27) — byte-parser tools --------------
 
   "pdf-links": {

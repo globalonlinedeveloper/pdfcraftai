@@ -225,6 +225,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: every date in the PDF as a sortable table + a downloadable .ics calendar file (Google Calendar / Apple / Outlook compatible). Day-first default; ambiguous DD/MM vs MM/DD flagged for review.",
     related: { id: "extract-contacts", label: "Extract Emails & Phones" },
   },
+  "extract-attachments": {
+    text: "What you'll get: every embedded file in the PDF as a downloadable artifact. Per-file download or ZIP bundle. Supports FlateDecode (~95% of real PDFs), ASCIIHex, ASCII85; image-content filters (JPEG, JBIG2) pass through as native files.",
+    related: { id: "pdf-attachments", label: "PDF Attachments Lister" },
+  },
   "pdf-fonts": {
     text: "What you'll get: every font in the PDF, flagged embedded vs not, with the pages each appears on.",
     related: { id: "pdf-inspector", label: "PDF Inspector" },
