@@ -45,7 +45,7 @@ export const AD_SLOTS: Record<
       headline: "Chat with any PDF",
       body: "Ask questions, get answers cited to specific pages. 5 questions free per document.",
       cta: "Open Chat with PDF",
-      href: "/tool/ai-chat",
+      href: "/chat-with-pdf",
     },
     byContext: {
       "redact-pdf-properly": {
@@ -149,7 +149,7 @@ export const AD_SLOTS: Record<
       headline: "Chat with any PDF — 5 questions free",
       body: "Upload a PDF, ask questions in plain English. Every answer cites the page it came from.",
       cta: "Try Chat with PDF",
-      href: "/tool/ai-chat",
+      href: "/chat-with-pdf",
     },
   },
 
@@ -178,7 +178,7 @@ export const AD_SLOTS: Record<
       headline: "Chat with any PDF — 5 questions free",
       body: "Upload a PDF, ask questions in plain English. Every answer cites the page it came from.",
       cta: "Try Chat with PDF",
-      href: "/tool/ai-chat",
+      href: "/chat-with-pdf",
     },
     byContext: {
       merge: {
@@ -214,7 +214,7 @@ export const AD_SLOTS: Record<
         headline: "Ask follow-up questions instead",
         body: "Chat with PDF gives you the same retrieval pipeline — keep digging until you have what you need.",
         cta: "Open Chat with PDF",
-        href: "/tool/ai-chat",
+        href: "/chat-with-pdf",
       },
     },
   },

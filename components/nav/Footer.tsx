@@ -17,7 +17,10 @@ const COLS: Col[] = [
   {
     title: "AI",
     links: [
-      ["Chat with PDF", "/tool/ai-chat"],
+      // 2026-05-02: link directly to /chat-with-pdf (canonical
+      // marketing landing) instead of /tool/ai-chat which
+      // 308-redirects here. Saves one hop on every footer click.
+      ["Chat with PDF", "/chat-with-pdf"],
       ["Summarize", "/tool/ai-summarize"],
       ["Translate", "/tool/ai-translate"],
       ["OCR", "/tool/ai-ocr"],
