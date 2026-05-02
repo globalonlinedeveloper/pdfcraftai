@@ -968,6 +968,12 @@ const SUITES = [
   // handlers still use flat costs (estimator may quote MORE than gets
   // charged, but never less — user-friendly direction).
   { name: "estimate", file: "test-estimate.mjs" },
+  // 2026-05-02 plan §8a items 4-8 (Day 1.5b) — auth hardening invariants.
+  // Static-parse guard against regression on bcrypt cost factor (≥12),
+  // password strength rules (10 chars + 3 of 4 char classes), no user-
+  // enumeration phrasing in registerAction errors, bcrypt.compare for
+  // credentials authorize. 21 assertions across 5 sections.
+  { name: "auth-hardening", file: "test-auth-hardening.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

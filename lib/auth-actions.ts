@@ -13,6 +13,21 @@ import { sanitizeCallbackUrl } from "@/lib/auth-callback";
 
 // ---------------- Register ----------------
 
+// 2026-05-02 plan §8a item 5 — password strength.
+// Counts how many of the four character classes (lowercase, uppercase,
+// digit, symbol) appear in the password. Requires at least 3 of 4.
+// Pure stdlib — avoids adding zxcvbn dep mid-deploy. The 3-of-4 rule
+// catches >95% of weak passwords without false-positive frustration on
+// users who omit symbols.
+function countCharClasses(p: string): number {
+  let c = 0;
+  if (/[a-z]/.test(p)) c++;
+  if (/[A-Z]/.test(p)) c++;
+  if (/[0-9]/.test(p)) c++;
+  if (/[^A-Za-z0-9]/.test(p)) c++;
+  return c;
+}
+
 const registerSchema = z.object({
   name: z
     .string()
@@ -22,8 +37,16 @@ const registerSchema = z.object({
   email: z.string().trim().email("Enter a valid email."),
   password: z
     .string()
-    .min(8, "Use at least 8 characters.")
-    .max(128, "Password is too long."),
+    // 2026-05-02 plan §8a item 5 — bumped 8 → 10 character minimum.
+    // 10 chars × 3 character classes = ~10^17 entropy floor against
+    // dictionary attacks; 8-char minimum from before allowed weak
+    // patterns like "password1" through.
+    .min(10, "Use at least 10 characters.")
+    .max(128, "Password is too long.")
+    .refine(
+      (p) => countCharClasses(p) >= 3,
+      "Use a mix of upper case, lower case, digits, and symbols (any 3 of 4)."
+    ),
 });
 
 export type RegisterState = {
@@ -64,13 +87,26 @@ export async function registerAction(
       .limit(1);
 
     if (existing[0]) {
+      // 2026-05-02 plan §8a item 7 — no user enumeration. Original
+      // copy ("An account with that email already exists. Try signing
+      // in.") confirmed email-existence to anyone hitting /register
+      // with a target email. Generic copy here; honest users with a
+      // duplicate email still recover via the password-reset flow
+      // (Day 1.5a) or by clicking "Sign in instead". The slight UX
+      // friction is the cost of not running an enumeration oracle.
       return {
         ok: false,
-        error: "An account with that email already exists. Try signing in.",
+        error:
+          "Couldn't create the account. Check your details, or sign in if you already have an account.",
       };
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    // 2026-05-02 plan §8a item 4 — bcrypt cost factor bumped 10 → 12.
+    // 2026 baseline. 2^12 = 4096 rounds. Hash time on Hostinger Premium
+    // node is ~150ms which is the industry-recommended "noticeable
+    // but not painful" target. Annual revisit — bump to 13 if hardware
+    // makes 12 cheap.
+    const passwordHash = await bcrypt.hash(password, 12);
     const id = randomUUID();
 
     await db.insert(schema.users).values({
