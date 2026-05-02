@@ -100,6 +100,12 @@ export const TOOLS: readonly Tool[] = [
   // supported variants alongside US/Canadian and generic international
   // (+CC) patterns. Runs entirely client-side.
   { id: "extract-contacts", name: "Extract Emails & Phones", desc: "Pull every email address and phone number out of a PDF as a deduped table. Indian + international phone formats, page references, CSV export. Free, in-browser.", icon: "Search", free: true, cost: "free", group: "Organize" },
+  // 2026-05-01 — Extract Dates: regex-based date extraction with .ics
+  // calendar export. Closes the /pdf-to-ics-calendar SEO landing
+  // (was a placeholder pre-today). Day-first default for ambiguous
+  // numeric formats (Indian/EU convention); month-first interpretation
+  // surfaced as an alt column for ambiguous matches.
+  { id: "extract-dates", name: "Extract Dates → ICS", desc: "Find every date in a PDF and download an .ics file importable into Google Calendar / Apple Calendar / Outlook. Day-first default with ambiguity flagging. Free, in-browser.", icon: "Convert", free: true, cost: "free", group: "Organize" },
   // Build 2 Wave 4 (final): font inventory — completes the 11-tool list.
   { id: "pdf-fonts", name: "PDF Font Inspector", desc: "List every font in a PDF, flag embedded vs not, see which pages use each. Critical for print prep. Free, in-browser.", icon: "Edit", free: true, cost: "free", group: "Organize" },
 

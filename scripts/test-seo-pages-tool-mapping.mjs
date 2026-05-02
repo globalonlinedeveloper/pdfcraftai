@@ -146,11 +146,10 @@ const KNOWN_DEAD_REFS = new Map([
   // their own action.
   ["extract-pdf-attachments", "extract-attachments"],
   ["extract-pdf-form-data", "extract-form-data"],
-  // 2026-05-01 — extract-contacts SHIPPED. The /extract-emails-from-pdf
-  // SEO landing now resolves to a real tool; this entry no longer
-  // needs to be allowlisted. Removed (was: ["extract-emails-from-pdf",
-  // "extract-contacts"]).
-  ["pdf-to-ics-calendar", "extract-dates"],
+  // 2026-05-01 — extract-contacts SHIPPED (commit c56705e). Removed.
+  // 2026-05-01 — extract-dates SHIPPED (commit pending). The
+  // /pdf-to-ics-calendar SEO landing now resolves to a real tool with
+  // .ics export. Removed (was: ["pdf-to-ics-calendar", "extract-dates"]).
   // "Edit PDF" generic surface — would aggregate add-text + highlight
   // + redact + draw into one canvas; not built.
   ["edit-pdf", "edit-pdf"],

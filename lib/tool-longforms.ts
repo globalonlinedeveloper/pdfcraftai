@@ -895,6 +895,90 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  // 2026-05-01 — Extract Dates: regex date extraction → ICS calendar
+  "extract-dates": {
+    useCasesTitle: "Why people extract dates from PDFs into calendars",
+    useCasesIntro:
+      "Course syllabi, project schedules, contract milestones, conference agendas, exam timetables — every date-heavy PDF becomes a calendar-event source if you can pull the dates out cleanly. Extract Dates finds every date in a PDF and lets you download an .ics file you import into Google Calendar / Apple Calendar / Outlook with one click. Runs entirely in your browser; no signup.",
+    useCases: [
+      {
+        icon: "Book",
+        title: "Course syllabus → semester calendar",
+        text: "Indian university and online-course syllabi list lecture dates, exam dates, and assignment deadlines as flat text. Extract dates → .ics → import to Google Calendar means every checkpoint sits in your calendar with the surrounding context as the event description.",
+      },
+      {
+        icon: "Pages",
+        title: "Project schedule / Gantt PDF",
+        text: "Project plans exported as PDF (from MS Project, Smartsheet, Notion) lose their date semantics. Extract pulls the milestone dates back into something a calendar can use.",
+      },
+      {
+        icon: "Shield",
+        title: "Contract milestones",
+        text: "MSAs and SOWs have payment-due dates, delivery-deadline dates, renewal-window dates buried in clauses. Extract them so you don&rsquo;t miss a deadline that triggers an auto-renewal or a late-payment penalty.",
+      },
+      {
+        icon: "Sparkle",
+        title: "Conference agenda / event PDF",
+        text: "Multi-day event PDFs with session dates / break dates / speaker dates become a personal-calendar import. Useful for attendees mapping out which sessions to hit when.",
+      },
+      {
+        icon: "Edit",
+        title: "Exam timetable",
+        text: "Indian competitive exams (UPSC, SSC, GATE, NEET, JEE, banking) publish timetables as PDFs. Extract dates → personal calendar so prep schedule, mock-test dates, and result dates all sit alongside the rest of your day.",
+      },
+    ],
+    howWorksTitle: "How Extract Dates works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 100 MB. Text extracted in your browser via the byte-parser pipeline. Nothing uploaded.",
+      },
+      {
+        step: "2",
+        title: "We regex + dedupe",
+        text: "Six date formats supported: ISO (2026-04-24), slash (24/04/2026), dot (24.04.2026), dash (24-04-2026), named-month day-first (24 April 2026), named-month month-first (April 24, 2026). Same date in different formats deduplicates to one row.",
+      },
+      {
+        step: "3",
+        title: "Download .ics or CSV",
+        text: "Each date → all-day VEVENT in the .ics with surrounding context as the SUMMARY field. CSV has all dates with format / ambiguity / page columns for your own analysis. JSON also available.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Day-first vs month-first?",
+        a: "&ldquo;04/05/2026&rdquo; is genuinely ambiguous &mdash; Indian / European convention reads it as 4 May; US convention reads it as April 5. Default is day-first (matches our primary audience). Ambiguous cases are flagged in the table with the alternative interpretation surfaced; the .ics uses day-first. The CSV export has both interpretations so you can pick downstream.",
+      },
+      {
+        q: "What about &ldquo;next Tuesday&rdquo; or &ldquo;the first Monday of March&rdquo;?",
+        a: "Contextual / relative dates need an LLM, not a regex. AI Action Items and AI Extract Entities both handle natural-language date references; this tool covers literal date strings only. For schedule-heavy docs with both kinds of dates, run both tools.",
+      },
+      {
+        q: "Which calendars accept the .ics?",
+        a: "Any standards-compliant app: Google Calendar (Settings &rarr; Import & export), Apple Calendar (drag the .ics onto the app), Outlook (File &rarr; Open & Export &rarr; Import/Export), Fastmail, Proton Calendar, Thunderbird. The file follows RFC 5545 (iCalendar) with proper line-folding and TEXT escaping.",
+      },
+      {
+        q: "Why all-day events instead of times?",
+        a: "Most dates in PDFs don&rsquo;t have times attached (deadlines and milestones are usually date-only). All-day events are the universal-compatibility default. If your source has time components (&ldquo;3:30 PM on 5 May 2026&rdquo;), v1 ignores the time &mdash; manually edit the imported events to add times. Time extraction is on the roadmap.",
+      },
+      {
+        q: "What about scanned PDFs?",
+        a: "Won&rsquo;t work &mdash; we extract from PDF text, and scanned PDFs have no text layer. The tool detects this case and tells you to run AI PDF OCR first. The OCR adds a text layer; re-run Extract Dates and the regex catches everything.",
+      },
+      {
+        q: "Privacy?",
+        a: "Everything runs in your browser. The PDF never leaves your machine. The extracted .ics file is for your own calendar &mdash; for sharing dates with third parties, redact PII via Redact PDF first if needed.",
+      },
+    ],
+    cta: {
+      title: "Need to extract emails and phones too?",
+      text: "Extract Emails & Phones uses the same byte-parser pipeline to pull contact info as a deduped table. Pairs with Extract Dates for the &ldquo;digitize this contact-list PDF into something usable&rdquo; workflow.",
+      linkHref: "/tool/extract-contacts",
+      linkLabel: "Try Extract Emails & Phones",
+    },
+  },
+
   // -------- Wave 8 (2026-04-27) — byte-parser tools --------------
 
   "pdf-links": {

@@ -221,6 +221,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: every email address and phone number in the PDF as a deduped table — Indian + international phone formats, page references, CSV export.",
     related: { id: "pdf-to-text", label: "PDF to Text" },
   },
+  "extract-dates": {
+    text: "What you'll get: every date in the PDF as a sortable table + a downloadable .ics calendar file (Google Calendar / Apple / Outlook compatible). Day-first default; ambiguous DD/MM vs MM/DD flagged for review.",
+    related: { id: "extract-contacts", label: "Extract Emails & Phones" },
+  },
   "pdf-fonts": {
     text: "What you'll get: every font in the PDF, flagged embedded vs not, with the pages each appears on.",
     related: { id: "pdf-inspector", label: "PDF Inspector" },
