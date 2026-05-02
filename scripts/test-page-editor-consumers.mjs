@@ -125,7 +125,8 @@ console.log("PageEditorTool — page navigator gated on pageCount > 1:");
 }
 
 // ──────────────────────────────────────────────────────────────────
-// M13 (#193, 2026-04-29): orientation-change resilience.
+// M13 (#193, 2026-04-29; extended 2026-05-02): orientation-change
+// resilience.
 //
 // The architectural invariant that makes M13 a non-issue: every
 // visual editor stores rects/strokes in PDFium-pixel coordinates
@@ -138,8 +139,16 @@ console.log("PageEditorTool — page navigator gated on pageCount > 1:");
 // So orientation change "just works" — the only mid-rotation glitch
 // would be a single in-flight drag, which the user can abandon.
 //
-// This block codifies the invariant: editor surfaces must store
-// rects in pageRender pixels and render via `% of pxWidth/pxHeight`.
+// 2026-05-02 extension: the original 3-tool guard left 6 of 9 visual
+// editors uncovered. The full audit confirmed all 9 use the same
+// pattern, but only the 3 with rect-style overlays had explicit
+// pointer-conversion checks. The other 6 use SVG viewBox auto-scale
+// (FreeDraw) or marker-style centered positioning (Sign / Stamp /
+// ImageWatermark / Crop / AddTextBox). The unifying invariant for
+// ALL 9: aspectRatio-locked container matching pageRender pxWidth/
+// pxHeight. Without that, the overlay container's aspect ratio
+// drifts from the underlying image's aspect ratio on resize, and
+// EVERYTHING — rect rects, SVG paths, centered markers — misaligns.
 // ──────────────────────────────────────────────────────────────────
 console.log("");
 console.log("M13 — visual editors use orientation-independent % positioning:");
@@ -166,6 +175,63 @@ for (const name of VISUAL_EDITORS_WITH_RECTS) {
   assert(
     /\(\s*\w+(?:\.\w+)*\.x\s*\/\s*pageRender\.pxWidth\s*\)\s*\*\s*100/.test(src),
     `${name} renders rect x-coord as % of pxWidth (auto-rescales on rotation)`,
+  );
+}
+
+// 2026-05-02 — extension: the unifying aspect-ratio invariant for
+// ALL 9 visual editors. The overlay container MUST lock its aspect
+// ratio to pageRender.pxWidth / pageRender.pxHeight. Without this,
+// the container can re-flow at a different aspect ratio than the
+// underlying image, and every overlay element (rects, SVG paths,
+// markers) misaligns regardless of how positions are stored. This
+// invariant alone fixes orientation change for editors that use
+// SVG viewBox or centered-marker positioning — the "store in PDFium
+// pixels" pointer-conversion check above only applies to the 3
+// rect-style consumers.
+console.log("");
+console.log("M13 — all visual editors aspect-ratio-lock to page dimensions:");
+const ALL_VISUAL_EDITORS = [
+  "PdfHighlightTool.tsx",
+  "PdfRedactTool.tsx",
+  "PdfAddLinksTool.tsx",
+  "PdfAddTextBoxTool.tsx",
+  "PdfFreeDrawTool.tsx",
+  "PdfSignTool.tsx",
+  "PdfStampTool.tsx",
+  "PdfImageWatermarkTool.tsx",
+  "PdfCropTool.tsx",
+];
+for (const name of ALL_VISUAL_EDITORS) {
+  const src = fs.readFileSync(path.join(TOOLS_DIR, name), "utf8");
+  // The container's aspectRatio CSS property pins it to a ratio
+  // derived from pageRender.pxWidth / pageRender.pxHeight. Two
+  // patterns observed: template-literal "${pxWidth} / ${pxHeight}"
+  // (most editors) or fixed "8.5 / 11" (Stamp's hero preview before
+  // a file is loaded). The fixed-ratio variant is acceptable because
+  // it locks an aspect ratio — just one specific to Letter paper.
+  // Once a PDF loads, Stamp also uses the dynamic shape on its
+  // editing overlay.
+  const hasDynamicLock = /aspectRatio:\s*`?\$\{[^}]*pxWidth[^}]*\}\s*\/\s*\$\{[^}]*pxHeight[^}]*\}/.test(src);
+  const hasFixedLock = /aspectRatio:\s*"\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?"/.test(src);
+  assert(
+    hasDynamicLock || hasFixedLock,
+    `${name} aspect-ratio-locks its overlay container (orientation-independent layout)`,
+  );
+}
+
+// SVG viewBox lock — for editors that draw via SVG (FreeDraw is the
+// canonical case), the viewBox attribute auto-scales contents to fit
+// the container while preserving aspect ratio. Pin it explicitly so
+// a refactor that switches FreeDraw back to canvas can't silently
+// regress orientation behavior.
+console.log("");
+console.log("M13 — SVG-overlay editors use pxWidth/pxHeight viewBox:");
+const SVG_OVERLAY_EDITORS = ["PdfFreeDrawTool.tsx"];
+for (const name of SVG_OVERLAY_EDITORS) {
+  const src = fs.readFileSync(path.join(TOOLS_DIR, name), "utf8");
+  assert(
+    /viewBox=\{?`?0\s+0\s+\$\{[^}]*pxWidth[^}]*\}\s+\$\{[^}]*pxHeight[^}]*\}/.test(src),
+    `${name} uses SVG viewBox locked to PDFium pxWidth/pxHeight`,
   );
 }
 
