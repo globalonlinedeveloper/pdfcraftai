@@ -3,9 +3,9 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-02 EOD (Phase 3 cleanup + 4 new tool builds + SEO de-staling arc, 14 commits since `3d32d6e`).
-**Live commit:** `469f8cf` (verified via `/api/health`, fresh restart confirmed).
-**Aggregator:** 4035 passed across 60 suites in 6.4s (+22 from yesterday's 4013/59 — 1 new CI guard `ai-tool-preview` + 22 added assertions on existing guards).
+**Last updated:** 2026-05-02 EOD (Phase 3 cleanup + 4 new tool builds + SEO de-staling arc, 19 commits since `3d32d6e`).
+**Live commit:** `94df7ec` (verified via `/api/health`, two stale-worker recoveries via SSH pkick during the arc).
+**Aggregator:** 4059 passed across 61 suites in 5.8s (+46 from yesterday's 4013/59 — 2 new CI guards `ai-tool-preview` + `redirect-direction` and ~25 extension assertions on `page-editor-consumers`).
 **Phase 4 baselines:** still ACTIVE.
 **Phase 6 synthetic monitor:** still active.
 
@@ -26,6 +26,12 @@ A 14-commit autonomous arc that closed Phase 3 (broken-related-id cleanup), ship
 | 9 | `874b393` | Close TOOL_SUGGESTIONS gap for ai-court-order (legal-toolkit cluster) |
 | 10 | `b40113b` | **M18 CI guard** — pin all 51 AI tools' page-1 preview against regression |
 | 11 | `469f8cf` | **De-stale 7 redirects** — 7 SEO landings now render canonical content (5 new app/<slug>/page.tsx wrappers + redirect removal + sitemap sync) |
+| 12 | `592c3f3` | docs: STATUS.md + CLAUDE.md mid-arc sync (commits 1-11) |
+| 13 | `b254805` | **Extend M13 guard** to all 9 visual editors (was 3) — pins aspect-ratio + SVG viewBox invariant for orientation resilience |
+| 14 | `f077c33` | **Fix wrong-direction redirect** — `/markdown-to-pdf` was 308 → `/tool/pdf-to-markdown` (the OPPOSITE direction). 5th SEO landing reclaimed today's batch |
+| 15 | `24e362d` | **New `redirect-direction` CI guard** — catches the wrong-direction class of bug (sister to seo-pages-tool-mapping + redirect-destinations, both pass for direction-flips) |
+| 16 | `dce4e0f` | **Skip `/tool/ai-chat` 308 hop** on 5 sitewide CTAs (4 ad slots + footer) — saves one redirect hop on every "Try Chat with PDF" click |
+| 17 | `94df7ec` | **Exclude ai-chat from homepage tool grid** — Option B parity fix; ToolFilter.tsx had it right, ToolsShowcase.tsx didn't |
 
 **Tool-build summary:**
 
@@ -36,7 +42,7 @@ A 14-commit autonomous arc that closed Phase 3 (broken-related-id cleanup), ship
 | `ai-court-order` | AI, structured JSON | ~470 | Indian court judgment summary (parties, acts cited, holding, reasoning, remedy) |
 | `extract-attachments` | Free, byte-parser | ~340 ops + ~280 UI | Per-file downloads + bulk ZIP (FlateDecode + ASCIIHex + ASCII85) |
 
-**SEO landings reclaimed (7 total — 5 net new + 2 with existing pages):**
+**SEO landings reclaimed (8 total — 6 net new + 2 with existing pages):**
 - `/extract-emails-from-pdf` (was 308 → /tool/pdf-search; now → real extract-contacts landing)
 - `/pdf-to-ics-calendar` (was 308 → /tool/pdf-search; now → real extract-dates landing)
 - `/extract-pdf-attachments` (was 308 → /tool/pdf-attachments; now → real extract-attachments landing)
@@ -44,6 +50,7 @@ A 14-commit autonomous arc that closed Phase 3 (broken-related-id cleanup), ship
 - `/grayscale-pdf` (was 308 → /tools; now → real grayscale-pdf landing)
 - `/booklet-pdf` (was 308 → /tools; now → real booklet-pdf landing)
 - `/edit-pdf` (was 308 → /tools; now → repointed at add-text-box with honest copy downgrade)
+- `/markdown-to-pdf` (was 308 → /tool/pdf-to-markdown — **the OPPOSITE direction**; now → real markdown-to-pdf landing)
 
 **KNOWN_DEAD_REFS progression** (server-side rails deferred per user directive "concentrate on Client side and AI tools"):
 - Started: 13 entries (compress + 6 Office bidirectionals + 6 client-side gaps)
@@ -57,6 +64,13 @@ A 14-commit autonomous arc that closed Phase 3 (broken-related-id cleanup), ship
 - 51 fully covered, 2 intentional carve-outs (ai-chat: streaming surface; ai-generate: no PDF input)
 - 1 gap closed: ai-court-order's missing TOOL_SUGGESTIONS entry → now routes to legal-toolkit cluster
 - Pinned with new `ai-tool-preview` CI guard (11 assertions; catches regressions if a future AI tool ships without UploadedFilePreview)
+
+**Sitewide CTA hop-elimination sweep** (end-of-arc, surfaced via SEO-landing QA):
+- 5 sitewide CTAs (4 ad-slot variants + 1 footer link) hardcoded `/tool/ai-chat` which 308-redirects → switched to `/chat-with-pdf` (canonical marketing landing) so every "Try Chat with PDF" click sitewide saves one hop
+- 1 homepage tool grid issue (Option B drift): ToolFilter.tsx for `/tools` had the ai-chat exclusion; ToolsShowcase.tsx for the homepage didn't — extended `toolsByGroup()` to accept an optional filter predicate
+- Net: zero `/tool/ai-chat` references across 14 sample pages on prod after the sweep (only legitimate legacy-SEO arrivals reach the redirect target now)
+
+**M13 finding documented** (orientation resilience): existing architecture (aspect-ratio-locked overlay + percentage / SVG viewBox positioning) already handles orientation changes correctly across all 9 visual editors. M13 closes as a no-op with the extended guard as durable evidence — no runtime change needed. New regex-based check fires on every editor missing the aspect-ratio invariant.
 
 **Carryover items deferred per user directive** ("concentrate on Client side tools and AI tools"):
 - Server-side compress (Ghostscript / pdf-lib reflow rail)
