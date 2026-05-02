@@ -462,7 +462,7 @@ export function KeyPointsPdfTool() {
       runLabel="Extract key points"
       busyLabel="Extracting…"
       successTitle="Key points ready"
-      pricingBlurb="Bulleted list only — 6–12 key points with page citations. 3 credits per PDF."
+      pricingBlurb="Bulleted list only — 6–12 key points with page citations."
       relatedHref={{ href: "/tool/ai-summarize", label: "AI · Summarize PDF (with prose sections)" }}
     />
   );
@@ -478,7 +478,7 @@ export function StudyNotesPdfTool() {
       runLabel="Generate study notes"
       busyLabel="Generating…"
       successTitle="Study notes ready"
-      pricingBlurb="Revision-grade notes — overview, key concepts, detailed sections with takeaways, self-check questions. 8 credits per PDF."
+      pricingBlurb="Revision-grade notes — overview, key concepts, detailed sections with takeaways, self-check questions."
       relatedHref={{ href: "/tool/ai-key-points", label: "Key Points (quick bullet list)" }}
     />
   );
@@ -494,7 +494,7 @@ export function Eli5PdfTool() {
       runLabel="Explain it simply"
       busyLabel="Simplifying…"
       successTitle="Plain-language explanation ready"
-      pricingBlurb="Plain-language explanation — big idea, simple bullets, why it matters. 3 credits per PDF."
+      pricingBlurb="Plain-language explanation — big idea, simple bullets, why it matters."
       relatedHref={{ href: "/tool/ai-summarize", label: "AI · Summarize (formal voice)" }}
     />
   );
@@ -510,7 +510,7 @@ export function FaqPdfTool() {
       runLabel="Generate FAQ"
       busyLabel="Generating…"
       successTitle="FAQ ready"
-      pricingBlurb="6–10 Q&A pairs inferred from the document. Each answer grounded in the source with page citations. Gaps flagged under 'Not covered'. 5 credits per PDF."
+      pricingBlurb="6–10 Q&A pairs inferred from the document. Each answer grounded in the source with page citations. Gaps flagged under 'Not covered'."
       relatedHref={{ href: "/tool/ai-chat", label: "Chat with PDF (ask your own questions)" }}
     />
   );
@@ -526,7 +526,7 @@ export function BlogPostPdfTool() {
       runLabel="Generate blog post"
       busyLabel="Writing…"
       successTitle="Blog post draft ready"
-      pricingBlurb="Full blog-post structure — title, lede, 3–5 H2 sections, conclusion. Factual fidelity preserved. 10 credits per PDF."
+      pricingBlurb="Full blog-post structure — title, lede, 3–5 H2 sections, conclusion. Factual fidelity preserved."
       relatedHref={{ href: "/tool/ai-rewrite", label: "AI · Rewrite (tone + voice shifts)" }}
     />
   );
@@ -542,7 +542,7 @@ export function ReadabilityPdfTool() {
       runLabel="Analyse readability"
       busyLabel="Analysing…"
       successTitle="Readability report ready"
-      pricingBlurb="Flesch-Kincaid grade level + complex-sentence callouts + jargon flags + 3–5 concrete edit suggestions. 3 credits per PDF."
+      pricingBlurb="Flesch-Kincaid grade level + complex-sentence callouts + jargon flags + 3–5 concrete edit suggestions."
       relatedHref={{ href: "/tool/ai-rewrite", label: "AI · Rewrite (to actually apply the fixes)" }}
     />
   );
@@ -558,7 +558,7 @@ export function EntitiesPdfTool() {
       runLabel="Extract entities"
       busyLabel="Extracting…"
       successTitle="Entities extracted"
-      pricingBlurb="Four tables — People / Organisations / Places / Dates — with page citations and one-line role notes. 3 credits per PDF."
+      pricingBlurb="Four tables — People / Organisations / Places / Dates — with page citations and one-line role notes."
       relatedHref={{ href: "/tool/extract-contacts", label: "Extract Contacts (free regex version)" }}
     />
   );
@@ -574,7 +574,7 @@ export function SocialThreadPdfTool() {
       runLabel="Generate thread"
       busyLabel="Drafting…"
       successTitle="Social thread ready"
-      pricingBlurb="Numbered 5–10 post thread — hook, idea-per-post, takeaway close. ~240 chars each. LinkedIn or X ready. 5 credits per PDF."
+      pricingBlurb="Numbered 5–10 post thread — hook, idea-per-post, takeaway close. ~240 chars each. LinkedIn or X ready."
       relatedHref={{ href: "/tool/ai-blog", label: "PDF to Blog Post (long-form)" }}
     />
   );
@@ -590,7 +590,7 @@ export function CondensePdfTool() {
       runLabel="Condense"
       busyLabel="Rewriting…"
       successTitle="Condensed version ready"
-      pricingBlurb="Tighter rewrite preserving every fact. ~40–60% of original length. Not a summary — the document itself, shorter. 3 credits per PDF."
+      pricingBlurb="Tighter rewrite preserving every fact. ~40–60% of original length. Not a summary — the document itself, shorter."
       relatedHref={{ href: "/tool/ai-tldr", label: "TL;DR (one-paragraph summary instead)" }}
     />
   );
@@ -606,7 +606,7 @@ export function ExpandPdfTool() {
       runLabel="Expand"
       busyLabel="Elaborating…"
       successTitle="Expanded version ready"
-      pricingBlurb="Each bullet becomes a full paragraph with context + examples from the source. No invented facts. ~140–180% of original length. 5 credits per PDF."
+      pricingBlurb="Each bullet becomes a full paragraph with context + examples from the source. No invented facts. ~140–180% of original length."
       relatedHref={{ href: "/tool/ai-rewrite", label: "AI · Rewrite (tone shifts + more)" }}
     />
   );
@@ -622,7 +622,7 @@ export function ToneAnalyzePdfTool() {
       runLabel="Analyse tone"
       busyLabel="Analysing…"
       successTitle="Tone + style report ready"
-      pricingBlurb="Voice + audience + 6–10 style attributes + observations on tells and shifts. Doesn't rewrite — analyses. 3 credits per PDF."
+      pricingBlurb="Voice + audience + 6–10 style attributes + observations on tells and shifts. Doesn't rewrite — analyses."
       relatedHref={{ href: "/tool/ai-readability", label: "Readability Score (grade-level focus)" }}
     />
   );
@@ -638,7 +638,7 @@ export function CitationsPdfTool() {
       runLabel="Extract citations"
       busyLabel="Extracting…"
       successTitle="Citations extracted"
-      pricingBlurb="BibTeX block + human-readable reference list. Auto-generated citation keys. 5 credits per PDF."
+      pricingBlurb="BibTeX block + human-readable reference list. Auto-generated citation keys."
       relatedHref={{ href: "/tool/ai-entities", label: "Extract Entities (people/orgs/places/dates)" }}
     />
   );
@@ -655,7 +655,7 @@ export function SentimentPdfTool() {
       runLabel="Analyse sentiment"
       busyLabel="Analysing…"
       successTitle="Sentiment analysis ready"
-      pricingBlurb="Overall verdict + per-section table with evidence + notable shifts between sections. 3 credits per PDF."
+      pricingBlurb="Overall verdict + per-section table with evidence + notable shifts between sections."
       relatedHref={{ href: "/tool/ai-tone-analyze", label: "Tone & Style Analyzer (voice + register)" }}
     />
   );
@@ -671,7 +671,7 @@ export function BiasPdfTool() {
       runLabel="Audit bias"
       busyLabel="Auditing…"
       successTitle="Bias audit ready"
-      pricingBlurb="Gendered language + outdated terminology + stereotyping + accessibility-framing + concrete edit suggestions. 5 credits per PDF."
+      pricingBlurb="Gendered language + outdated terminology + stereotyping + accessibility-framing + concrete edit suggestions."
       relatedHref={{ href: "/tool/ai-proofread", label: "AI · Proofread (grammar + spelling)" }}
     />
   );
@@ -687,7 +687,7 @@ export function ProofreadPdfTool() {
       runLabel="Proofread"
       busyLabel="Checking…"
       successTitle="Proofreading report ready"
-      pricingBlurb="Error table — Page / Error / Type / Suggested Fix. Genuine errors only (spelling, grammar, agreement, punctuation). 5 credits per PDF."
+      pricingBlurb="Error table — Page / Error / Type / Suggested Fix. Genuine errors only (spelling, grammar, agreement, punctuation)."
       relatedHref={{ href: "/tool/ai-rewrite", label: "AI · Rewrite (apply the fixes automatically)" }}
     />
   );
@@ -703,7 +703,7 @@ export function NewsletterPdfTool() {
       runLabel="Draft newsletter"
       busyLabel="Drafting…"
       successTitle="Newsletter draft ready"
-      pricingBlurb="Subject line + preheader + 3–5 sections + sign-off. Direct voice, no sales-speak. 8 credits per PDF."
+      pricingBlurb="Subject line + preheader + 3–5 sections + sign-off. Direct voice, no sales-speak."
       relatedHref={{ href: "/tool/ai-blog", label: "PDF to Blog Post (longer form)" }}
     />
   );
@@ -719,7 +719,7 @@ export function VideoScriptPdfTool() {
       runLabel="Draft script"
       busyLabel="Writing…"
       successTitle="Video script ready"
-      pricingBlurb="Opening hook + 3–5 × 90s segments + closing CTA. Bracketed stage cues. 10 credits per PDF."
+      pricingBlurb="Opening hook + 3–5 × 90s segments + closing CTA. Bracketed stage cues."
       relatedHref={{ href: "/tool/ai-social-thread", label: "PDF to Social Thread (shorter-form distillation)" }}
     />
   );
@@ -735,7 +735,7 @@ export function AtsResumeTool() {
       runLabel="Audit resume"
       busyLabel="Auditing…"
       successTitle="ATS audit ready"
-      pricingBlurb="ATS score + critical fixes + keyword gaps + format issues + suggested summary. 10 credits per resume. "
+      pricingBlurb="ATS score + critical fixes + keyword gaps + format issues + suggested summary. "
       relatedHref={{ href: "/tool/ai-resume-parse", label: "Resume Parser (export to CSV)" }}
     />
   );
@@ -751,7 +751,7 @@ export function ActionItemsPdfTool() {
       runLabel="Extract action items"
       busyLabel="Extracting…"
       successTitle="Action items extracted"
-      pricingBlurb="Markdown table of actionable TODOs — Task / Owner / Due / Priority / Page. Owners and deadlines blank when not in source. 3 credits per PDF."
+      pricingBlurb="Markdown table of actionable TODOs — Task / Owner / Due / Priority / Page. Owners and deadlines blank when not in source."
       relatedHref={{ href: "/tool/extract-dates", label: "Extract Dates → Calendar (for deadlines)" }}
     />
   );
@@ -769,7 +769,7 @@ export function SyllabusStudyPlanTool() {
       runLabel="Build study plan"
       busyLabel="Planning…"
       successTitle="Study plan ready"
-      pricingBlurb="Topic map + 12-week schedule with practice checkpoints + final-revision strategy. Tuned for TNPSC / UPSC / JEE / NEET / NCERT / university syllabi. 20 credits."
+      pricingBlurb="Topic map + 12-week schedule with practice checkpoints + final-revision strategy. Tuned for TNPSC / UPSC / JEE / NEET / NCERT / university syllabi."
       relatedHref={{ href: "/tool/ai-study-notes", label: "PDF to Study Notes (per-doc deep notes)" }}
     />
   );
@@ -786,7 +786,7 @@ export function DischargeSummaryTool() {
       runLabel="Simplify summary"
       busyLabel="Rewriting…"
       successTitle="Plain-language discharge summary ready"
-      pricingBlurb="Patient + family-friendly version with diagnoses / medications / follow-ups / warning signs in everyday language. 10 credits. Not medical advice."
+      pricingBlurb="Patient + family-friendly version with diagnoses / medications / follow-ups / warning signs in everyday language. Not medical advice."
       relatedHref={{ href: "/tool/ai-blood-test", label: "Blood Test Report Parser" }}
     />
   );
@@ -805,7 +805,7 @@ export function CoverLetterTool() {
       runLabel="Draft cover letter"
       busyLabel="Writing…"
       successTitle="Cover letter ready"
-      pricingBlurb="300–350 word tailored cover letter with 3-bullet customisation notes so you can swap in alternatives. 5 credits. Paste the JD for a tailored letter; leave blank for a generic-but-strong version."
+      pricingBlurb="300–350 word tailored cover letter with 3-bullet customisation notes so you can swap in alternatives. Paste the JD for a tailored letter; leave blank for a generic-but-strong version."
       queryField={{
         label: "Job description",
         placeholder:
@@ -830,7 +830,7 @@ export function JdMatchTool() {
       runLabel="Run fit analysis"
       busyLabel="Scoring…"
       successTitle="Fit analysis ready"
-      pricingBlurb="Fit score 0–100 + per-requirement alignment table + strengths + gaps + missing-keywords (ATS blockers) + concrete next steps. 5 credits per resume."
+      pricingBlurb="Fit score 0–100 + per-requirement alignment table + strengths + gaps + missing-keywords (ATS blockers) + concrete next steps. "
       queryField={{
         label: "Job description",
         placeholder:
@@ -862,7 +862,7 @@ export function NdaAnalyzerTool() {
       runLabel="Audit NDA"
       busyLabel="Analysing…"
       successTitle="NDA audit ready"
-      pricingBlurb="Parties + type + risk flags (severity-rated) + negotiation points + missing standard clauses. Common red flags surfaced — embedded non-competes, indefinite terms, IP assignment in NDAs. 15 credits. Not legal advice."
+      pricingBlurb="Parties + type + risk flags (severity-rated) + negotiation points + missing standard clauses. Common red flags surfaced — embedded non-competes, indefinite terms, IP assignment in NDAs. Not legal advice."
       relatedHref={{ href: "/tool/ai-employment", label: "Employment Contract Review" }}
     />
   );
@@ -879,7 +879,7 @@ export function EmploymentContractTool() {
       runLabel="Review contract"
       busyLabel="Analysing…"
       successTitle="Contract review ready"
-      pricingBlurb="Compensation + term + termination + risk flags (non-compete, IP assignment, training bond) + missing protections + negotiation points. 20 credits. Not legal advice."
+      pricingBlurb="Compensation + term + termination + risk flags (non-compete, IP assignment, training bond) + missing protections + negotiation points. Not legal advice."
       relatedHref={{ href: "/tool/ai-nda", label: "NDA Analyzer" }}
     />
   );
@@ -902,7 +902,7 @@ export function SalarySlipTool() {
       runLabel="Parse slip"
       busyLabel="Parsing…"
       successTitle="Salary slip parsed"
-      pricingBlurb="Structured JSON with employer / employee / period / earnings / deductions / totals / YTD. Preserves idiosyncratic component names (Special Allowance, LTA, etc.) for accurate YoY comparison. 10 credits."
+      pricingBlurb="Structured JSON with employer / employee / period / earnings / deductions / totals / YTD. Preserves idiosyncratic component names (Special Allowance, LTA, etc.) for accurate YoY comparison."
       relatedHref={{ href: "/tool/ai-salary-slip", label: "Salary Slip Analyzer" }}
     />
   );
@@ -921,7 +921,7 @@ export function ResearchPaperTool() {
       runLabel="Summarise paper"
       busyLabel="Summarising…"
       successTitle="Research paper summary ready"
-      pricingBlurb="APA citation + BibTeX + research question + methods + key results (with magnitudes preserved) + limitations (acknowledged + implied) + cite-this examples + related reading. 15 credits."
+      pricingBlurb="APA citation + BibTeX + research question + methods + key results (with magnitudes preserved) + limitations (acknowledged + implied) + cite-this examples + related reading."
       relatedHref={{ href: "/tool/ai-citations", label: "Extract Citations" }}
     />
   );
@@ -938,7 +938,7 @@ export function InsurancePolicyTool() {
       runLabel="Analyse policy"
       busyLabel="Analysing…"
       successTitle="Insurance policy analysis ready"
-      pricingBlurb="Coverage + premiums + exclusions + waiting periods + claim process + renewal/portability + risk flags (room-rent capping, sub-limits, missing day-care list, restoration absent). 20 credits. Not insurance advice."
+      pricingBlurb="Coverage + premiums + exclusions + waiting periods + claim process + renewal/portability + risk flags (room-rent capping, sub-limits, missing day-care list, restoration absent). Not insurance advice."
       relatedHref={{ href: "/tool/ai-blood-test", label: "Blood Test Analyzer" }}
     />
   );
@@ -954,7 +954,7 @@ export function LoanBundleAuditTool() {
       runLabel="Audit bundle"
       busyLabel="Auditing…"
       successTitle="Loan bundle audit ready"
-      pricingBlurb="Detects loan type + audits docs against typical lender checklist (PAN, Aadhaar, salary slips, bank statements, ITR/Form 16, property docs, etc.) + flags missing items + income snapshot + eligibility-affecting issues. 15 credits. Not pre-approval."
+      pricingBlurb="Detects loan type + audits docs against typical lender checklist (PAN, Aadhaar, salary slips, bank statements, ITR/Form 16, property docs, etc.) + flags missing items + income snapshot + eligibility-affecting issues. Not pre-approval."
       relatedHref={{ href: "/tool/ai-table", label: "AI Table Extract" }}
     />
   );
@@ -974,7 +974,7 @@ export function PartnershipDeedTool() {
       runLabel="Analyse deed"
       busyLabel="Analysing…"
       successTitle="Partnership deed analysis ready"
-      pricingBlurb="Partners table + capital + profit/loss share + decision-making + admission/retirement rules + risk flags + missing standard clauses (arbitration, IP/goodwill, succession). 20 credits."
+      pricingBlurb="Partners table + capital + profit/loss share + decision-making + admission/retirement rules + risk flags + missing standard clauses (arbitration, IP/goodwill, succession)."
       relatedHref={{ href: "/tool/ai-employment", label: "Employment Contract Review" }}
     />
   );
@@ -1001,7 +1001,7 @@ export function ImproveWritingTool() {
       runLabel="Improve writing"
       busyLabel="Editing…"
       successTitle="Improved writing ready"
-      pricingBlurb="Rewrites for clarity + concision (~20-30% shorter) without changing facts, register, or claims. Edit-summary surfaces the kinds of changes made (passive→active, redundant qualifiers cut, etc.). 5 credits."
+      pricingBlurb="Rewrites for clarity + concision (~20-30% shorter) without changing facts, register, or claims. Edit-summary surfaces the kinds of changes made (passive→active, redundant qualifiers cut, etc.)."
       relatedHref={{ href: "/tool/ai-paraphrase", label: "Paraphrase" }}
     />
   );
@@ -1017,7 +1017,7 @@ export function ParaphraseTool() {
       runLabel="Paraphrase"
       busyLabel="Rewording…"
       successTitle="Paraphrased version ready"
-      pricingBlurb="Re-words preserving every claim + number + conclusion. Same length as input. Technical terms preserved when no plainer synonym would be accurate. NOT a substitute for citation. 5 credits."
+      pricingBlurb="Re-words preserving every claim + number + conclusion. Same length as input. Technical terms preserved when no plainer synonym would be accurate. NOT a substitute for citation."
       relatedHref={{ href: "/tool/ai-improve-writing", label: "Improve Writing" }}
     />
   );
@@ -1033,7 +1033,7 @@ export function AiDetectorTool() {
       runLabel="Detect AI"
       busyLabel="Analysing…"
       successTitle="AI detection ready"
-      pricingBlurb="Heuristic AI-content detector — surfaces well-documented LLM stylistic fingerprints (formulaic openers, hedging overuse, em-dash patterns, register-too-polished, three-item rhetoric, transitional clichés). 10 credits. Honest caveat: heuristic only, not a courtroom-grade classifier. False positives + negatives possible."
+      pricingBlurb="Heuristic AI-content detector — surfaces well-documented LLM stylistic fingerprints (formulaic openers, hedging overuse, em-dash patterns, register-too-polished, three-item rhetoric, transitional clichés). Honest caveat: heuristic only, not a courtroom-grade classifier. False positives + negatives possible."
       relatedHref={{ href: "/tool/ai-improve-writing", label: "Improve Writing" }}
     />
   );
@@ -1049,7 +1049,7 @@ export function ChartToTableTool() {
       runLabel="Extract chart data"
       busyLabel="Reading charts…"
       successTitle="Chart data extracted"
-      pricingBlurb="Reads charts visually (bar / line / pie / scatter / stacked), extracts data points faithfully with axis labels and units. For values it can't read precisely, returns a range with confidence note. 5 credits."
+      pricingBlurb="Reads charts visually (bar / line / pie / scatter / stacked), extracts data points faithfully with axis labels and units. For values it can't read precisely, returns a range with confidence note."
       relatedHref={{ href: "/tool/ai-table", label: "AI Table Extract" }}
     />
   );

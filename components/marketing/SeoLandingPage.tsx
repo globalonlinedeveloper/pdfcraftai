@@ -87,7 +87,15 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
     url: pageUrl,
     offers: tool.free
       ? { "@type": "Offer", price: "0", priceCurrency: "USD" }
-      : { "@type": "Offer", priceCurrency: "USD", description: tool.cost },
+      : // 2026-05-02 — Offer no longer leaks the hardcoded credit
+        // cost as `description`. The pre-flight estimator surfaces
+        // the size-dependent number after upload. Generic description
+        // here keeps the JSON-LD valid without lying about specifics.
+        {
+          "@type": "Offer",
+          priceCurrency: "USD",
+          description: "Pay-as-you-go credits — exact cost shown before you run.",
+        },
     publisher: { "@type": "Organization", name: "pdfcraft ai", url: SITE },
   };
 
@@ -349,7 +357,11 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
                   marginTop: 16,
                 }}
               >
-                {tool.free ? "FREE · UNLIMITED · NO LIMITS" : tool.cost?.toUpperCase()}
+                {/* 2026-05-02 — paid AI tools no longer display the
+                    hardcoded credit-cost chip. The estimator inside the
+                    tool page is the single source of truth for the
+                    exact, size-dependent number. */}
+                {tool.free ? "FREE · UNLIMITED · NO LIMITS" : "AI · PAY-AS-YOU-GO"}
               </div>
             </div>
           </div>

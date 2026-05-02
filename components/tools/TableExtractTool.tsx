@@ -276,7 +276,7 @@ export function TableExtractTool() {
           >
             {/* Bundle G5: lib/tools.ts canonical "~3 credits per table" — table-billed,
                 so formatActionCost() preserves the unit since table count varies per upload. */}
-            {busy ? "Extracting…" : "Extract tables — ~3 credits / table"}
+            {busy ? "Extracting…" : "Extract tables"}
           </button>
         )}
       </div>
@@ -407,22 +407,7 @@ function ResultCard({ result }: { result: TableResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />
-
-      {/* Provenance footer */}
-      <div
-        className="subtle mono"
-        style={{
-          padding: "10px 18px",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-2)",
-        }}
-      >
-        {result.providerId.toUpperCase()} · {result.model}
-      </div>
-    </div>
+      />    </div>
   );
 }
 

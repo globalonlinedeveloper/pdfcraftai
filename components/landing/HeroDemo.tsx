@@ -113,8 +113,7 @@ export function HeroDemo() {
                 Ask anything about this document…
               </div>
               <span className="chip chip-ai" style={{ fontSize: 10 }}>
-                ~5 credits
-              </span>
+                </span>
               <button className="btn btn-sm btn-accent" aria-label="Send">
                 <I.Send size={12} />
               </button>

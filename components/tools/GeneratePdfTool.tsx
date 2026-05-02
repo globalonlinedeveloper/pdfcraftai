@@ -405,7 +405,7 @@ export function GeneratePdfTool() {
           >
             {/* Bundle G5: lib/tools.ts canonical "~20 credits per doc" — preserve the
                 ~ marker so users know this is an estimate, not exact. */}
-            {busy ? "Generating…" : "Generate PDF — ~20 credits"}
+            {busy ? "Generating…" : "Generate PDF"}
           </button>
         )}
       </div>
@@ -556,22 +556,7 @@ function ResultCard({ result }: { result: GenerateResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />
-
-      {/* Provenance footer */}
-      <div
-        className="subtle mono"
-        style={{
-          padding: "10px 18px",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-2)",
-        }}
-      >
-        {result.providerId.toUpperCase()} · {result.model}
-      </div>
-    </div>
+      />    </div>
   );
 }
 

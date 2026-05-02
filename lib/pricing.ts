@@ -413,6 +413,45 @@ export const AI_OPERATION_COSTS: Record<AIOperationId, number> = {
   sign: 10,
 };
 
+// --- Multiplier pricing feature flag (2026-05-02, plan §3 + §14) ----------
+//
+// PLAN §3 schedules translate/redact/sign to switch from flat per-doc
+// pricing to a size-based multiplier (chunkCount for translate,
+// pageCount for redact + sign). The actual route refactor (move text
+// extraction + chunking BEFORE spendCredits so we can compute the
+// multiplier upfront) is deferred to a follow-up commit (Day 1.7) —
+// it's a 3-route refactor that touches text extraction order and
+// spend/refund correctness; landing it under the same commit as the
+// supply-chain scrub + badge removal would mix risk profiles.
+//
+// What ships TODAY:
+//   - This env-var helper, exported and ready to consume.
+//   - Default value `true` so the flag is on the moment Day 1.7 wires
+//     the multiplier-aware spend calls (no second deploy needed to
+//     activate once the route work lands).
+//   - Day 1.7 callers will gate the multiplier with this helper:
+//
+//       const mult = isMultiplierPricingEnabled() ? pageCount : 1;
+//       await spendCredits({ ..., multiplier: mult });
+//
+//     If complaints spike post-deploy, flip MULTIPLIER_PRICING_ENABLED
+//     to "false" via Hostinger panel — no redeploy, ~30s effect window
+//     (Next.js process picks up the new env var on the next request
+//     evaluation; older worker pools may need a restart but the panel
+//     toggle handles that automatically).
+//   - Removing the helper after 14 days of clean margin data is the
+//     completion criterion for this part of the plan.
+//
+// IMPORTANT: this helper does NOT read `process.env` at module-load
+// time. It reads on every call so a Hostinger-panel toggle takes
+// effect on the next request — no rebuild required.
+export function isMultiplierPricingEnabled(): boolean {
+  // Treat anything but explicit "false" as enabled. This makes the
+  // default behaviour (env var unset) match production's intended
+  // post-Day-1.7 state. To roll back, set MULTIPLIER_PRICING_ENABLED=false.
+  return process.env.MULTIPLIER_PRICING_ENABLED !== "false";
+}
+
 export const PRICING_FAQ: ReadonlyArray<{ q: string; a: string }> = [
   {
     q: "Do credits expire?",

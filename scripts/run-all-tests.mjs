@@ -943,6 +943,21 @@ const SUITES = [
   // allowlist) fails the build immediately; pre-existing entries
   // stay accepted until Phase 3 cleanup repairs them.
   { name: "tool-id-references", file: "test-tool-id-references.mjs" },
+  // 2026-05-02 plan §4.4 — two guards landing alongside the
+  // supply-chain scrub + credit-badge removal commit:
+  //   - no-supply-chain-leaks: catches Anthropic/OpenAI/Gemini/
+  //     Haiku/Sonnet/GPT-4/Flash + latencyMs/inputTokens/outputTokens
+  //     mentions in user-facing components. Documented exemption
+  //     list for legitimate uses (BYOK copy, AI Detector tool, chat
+  //     pages until a follow-up cleanup pass).
+  //   - no-credit-number-hardcodes: catches the `\b\d+\s*credits?\b`
+  //     regex in tool/marketing copy outside billing/pricing/admin/api.
+  //     Single source of truth for "how many credits" is the pre-flight
+  //     estimator (§5, Day 2).
+  // Both are pure static-parse, sub-50ms, fail closed. Sequenced
+  // before aggregator-coverage so a missed wire-in shows here.
+  { name: "no-supply-chain-leaks", file: "test-no-supply-chain-leaks.mjs" },
+  { name: "no-credit-number-hardcodes", file: "test-no-credit-number-hardcodes.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

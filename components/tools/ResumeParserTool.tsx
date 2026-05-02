@@ -342,8 +342,7 @@ export function ResumeParserTool() {
       >
         Extracts name / email / phone / location / summary / experience (with
         bullets verbatim) / education / skills / links into structured JSON.
-        CSV export flattens for ATS / spreadsheet import. 5 credits per resume.
-      </div>
+        CSV export flattens for ATS / spreadsheet import. </div>
 
       {error && <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{error}</p>}
 

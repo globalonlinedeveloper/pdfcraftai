@@ -375,7 +375,7 @@ export function SearchablePdfTool() {
 
   const ctaLabel = (() => {
     if (busy) return busyLabel;
-    if (!file) return "OCR + overlay — 2 credits / page";
+    if (!file) return "OCR + overlay";
     if (peekError) return "Can't read this PDF";
     if (typeof pageCount !== "number") return "Reading…";
     if (overLimit) return `${pageCount} pages — over the ${CLIENT_MAX_OCR_PAGES} cap`;
@@ -432,7 +432,7 @@ export function SearchablePdfTool() {
         <strong>Tier 2 §2.3 — Searchable PDF.</strong> Runs Vision OCR on every page,
         then overlays the recognised text invisibly on the original scan. The visual
         appearance is unchanged but Ctrl-F, copy/paste, and search engines now see the
-        text. 2 credits per page. Max 50 pages — split larger files first.{" "}
+        text. Max 50 pages — split larger files first.{" "}
         <Link href="/tool/ai-ocr" style={{ color: "var(--accent)" }}>
           Need just the transcript instead?
         </Link>

@@ -276,7 +276,7 @@ export function BloodTestTool() {
       )}
 
       <div className="card" style={{ padding: 14, fontSize: 13, lineHeight: 1.5, background: "var(--red-soft, #fff1f2)", borderLeft: "3px solid var(--red)" }}>
-        <strong>Tier 3 §3.4 — NOT medical advice.</strong> This tool extracts data only — it does not interpret results or recommend action. Always consult a qualified clinician for interpretation. 15 credits per report.
+        <strong>Tier 3 §3.4 — NOT medical advice.</strong> This tool extracts data only — it does not interpret results or recommend action. Always consult a qualified clinician for interpretation.
       </div>
 
       {error && <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{error}</p>}

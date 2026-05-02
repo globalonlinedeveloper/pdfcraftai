@@ -344,7 +344,10 @@ export default function ToolRunnerPage({ params }: Params) {
       {
         "@type": "HowToStep",
         position: 3,
-        name: tool.free ? "Run the tool — free, no signup" : `Click run — ${tool.cost}`,
+        // 2026-05-02 — JSON-LD HowTo step no longer leaks the
+        // hardcoded credit cost. The user-facing page surfaces the
+        // exact cost via the pre-flight estimator after upload.
+        name: tool.free ? "Run the tool — free, no signup" : "Click run",
         text: tool.free
           ? "Click the action button. Files stay in your browser."
           : "Click the action button. Credits debit on success.",
@@ -475,7 +478,13 @@ export default function ToolRunnerPage({ params }: Params) {
                 {tool.free ? (
                   <span className="chip chip-free">Free</span>
                 ) : (
-                  <span className="chip chip-ai">AI · {tool.cost}</span>
+                  // 2026-05-02 — chip no longer leaks `tool.cost` (was
+                  // "AI · 3 CREDITS PER DOC" etc). The pre-flight
+                  // estimator surfaces the real, size-dependent number
+                  // after upload — single source of truth. Static badge
+                  // would lie the moment a multiplier ships. See
+                  // docs/PRICING_AND_TELEMETRY_PLAN.md §4.2.
+                  <span className="chip chip-ai">AI</span>
                 )}
               </div>
               <div className="muted" style={{ fontSize: 15 }}>
@@ -555,7 +564,11 @@ export default function ToolRunnerPage({ params }: Params) {
               <ReassuranceCard
                 icon="Coin"
                 title="Pay only for what you use"
-                body="Credits never expire. Cancel anytime."
+                // 2026-05-02 — "Credits never expire" → "Purchased
+                // credits never expire". Day 6 ships a 7-day-expiry
+                // signup grant, so the blanket promise stops being
+                // true. Honest framing now avoids a forced edit later.
+                body="Purchased credits never expire. Cancel anytime."
               />
             )}
           </div>

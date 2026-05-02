@@ -485,7 +485,7 @@ export function FlashcardsPdfTool() {
       runLabel="Generate flashcards"
       busyLabel="Building deck…"
       successTitle="Flashcards ready"
-      pricingBlurb="10–30 Q&A cards grounded in the source, with page refs. Anki-compatible CSV export (front,back). 10 credits per PDF."
+      pricingBlurb="10–30 Q&A cards grounded in the source, with page refs. Anki-compatible CSV export (front,back)."
     />
   );
 }
@@ -501,7 +501,7 @@ export function QuizPdfTool() {
       runLabel="Generate quiz"
       busyLabel="Writing questions…"
       successTitle="Quiz ready"
-      pricingBlurb="6–12 MCQs with 4 plausible options, correct answer, and one-line explanation with page ref. JSON export. 10 credits per PDF."
+      pricingBlurb="6–12 MCQs with 4 plausible options, correct answer, and one-line explanation with page ref. JSON export."
     />
   );
 }

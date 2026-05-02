@@ -342,9 +342,7 @@ export function MindmapPdfTool() {
         style={{ padding: 14, fontSize: 13, lineHeight: 1.5, background: "var(--bg-2)" }}
       >
         4–8 top-level branches, up to 3 levels deep. Short labels (2–8 words).
-        Renders as a collapsible outline — export as text outline or JSON tree.
-        10 credits per PDF.
-      </div>
+        Renders as a collapsible outline — export as text outline or JSON tree. </div>
 
       {error && (
         <p role="alert" style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{error}</p>

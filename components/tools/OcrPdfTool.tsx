@@ -280,7 +280,7 @@ export function OcrPdfTool() {
   // we render "Reading…"; after peek we show the precise credit cost.
   const ctaLabel = (() => {
     if (busy) return "Transcribing…";
-    if (!file) return "OCR — 2 credits / page";
+    if (!file) return "OCR";
     if (peekError) return "OCR";
     if (typeof pageCount !== "number") return "Reading…";
     if (overLimit) return `${pageCount} pages — over the ${CLIENT_MAX_OCR_PAGES} cap`;
@@ -293,7 +293,7 @@ export function OcrPdfTool() {
         <ToolDropzone
           onFiles={addFiles}
           prompt="Drop a scanned PDF to OCR"
-          hint="Up to 25 MB, 50 pages · 2 credits per page · processed on our servers."
+          hint="Up to 25 MB, 50 pages · processed on our servers."
         />
       ) : (
         <div
@@ -592,22 +592,7 @@ function ResultCard({ result }: { result: OcrResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />
-
-      {/* Provenance footer */}
-      <div
-        className="subtle mono"
-        style={{
-          padding: "10px 18px",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-2)",
-        }}
-      >
-        {result.providerId.toUpperCase()} · {result.model}
-      </div>
-    </div>
+      />    </div>
   );
 }
 

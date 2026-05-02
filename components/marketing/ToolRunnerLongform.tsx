@@ -95,8 +95,21 @@ const FREE_DIFFERENTIATORS: Array<[string, string]> = [
 
 const AI_DIFFERENTIATORS: Array<[string, string]> = [
   ["Citations on every claim", "Every AI summary, answer, and translation links back to the page it came from. You can verify the source before relying on the output. Hallucination is bounded, not blind."],
-  ["Pay only for what you use", "No subscription. Credits never expire. Cancel anytime. Each call costs 3-15 credits depending on the tool — typically a few cents — with the cost shown before you run."],
-  ["Multi-provider routing, no vendor lock-in", "We route between Anthropic and OpenAI per call to balance cost and quality. If one provider has an outage, the next call automatically tries the other. You're not bound to a single vendor's pricing or downtime."],
+  // 2026-05-02 — sweep three half-truths in one edit:
+  //   1. "Credits never expire" → "Purchased credits never expire"
+  //      (we will ship a 7-day-expiry signup grant in §8, so the
+  //      blanket promise stops being true the moment that lands).
+  //   2. Drop "3-15 credits" hardcode — the multiplier work in §3 +
+  //      pre-flight estimator in §5 makes the exact number dynamic.
+  //   3. Drop "typically a few cents" — leaks rupee/cost framing
+  //      we said we'd hide (principle 1: credits-only display).
+  // The "shown before you run" half is preserved because it's the
+  // estimator promise we're about to honour.
+  ["Pay only for what you use", "No subscription. Purchased credits never expire. Cancel anytime. Cost shown before you run — exact credit amount appears after upload."],
+  // 2026-05-02 — drop the "We route between Anthropic and OpenAI"
+  // line entirely. Naming providers leaks supply chain (principle 2).
+  // Replace with a vendor-neutral framing of the same value prop.
+  ["Multi-provider routing, no vendor lock-in", "We balance multiple AI providers per call to optimise cost and quality. If one has an outage, the next call automatically tries another. You're not bound to a single vendor's pricing or downtime."],
   ["Files deleted in 60 minutes", "Your PDF lives on our servers only as long as the API call needs it, then it's gone. We don't fine-tune models on your data. Verifiable in your dashboard's audit log."],
   ["Honest about model limits", "When a doc exceeds the model's context window we surface that the output was truncated (we render result.wasTruncated in every AI tool's UI). When a number can't be verified from the source we flag it. No silent failures."],
 ];

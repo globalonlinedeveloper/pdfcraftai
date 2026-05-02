@@ -339,7 +339,7 @@ export function RedactPdfTool() {
             {/* Bundle G5 (2026-04-26): was "5 credits" — wrong number AND wrong unit.
                 lib/tools.ts canonical: "~2 credits per page". formatActionCost() output
                 for per-page billing keeps the unit (page count varies per upload). */}
-            {busy ? "Redacting…" : "Redact PDF — ~2 credits / page"}
+            {busy ? "Redacting…" : "Redact PDF"}
           </button>
         )}
       </div>
@@ -507,22 +507,7 @@ function ResultCard({ result }: { result: RedactResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />
-
-      {/* Provenance footer */}
-      <div
-        className="subtle mono"
-        style={{
-          padding: "10px 18px",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-2)",
-        }}
-      >
-        {result.providerId.toUpperCase()} · {result.model}
-      </div>
-    </div>
+      />    </div>
   );
 }
 

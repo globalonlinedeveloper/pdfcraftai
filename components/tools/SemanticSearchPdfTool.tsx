@@ -242,7 +242,7 @@ export function SemanticSearchPdfTool() {
           }}
         />
         <div className="subtle" style={{ fontSize: 11 }}>
-          Natural language — not keywords. 2 credits per search. Results are
+          Natural language — not keywords. Results are
           verbatim passages with page refs + one-line relevance notes.
         </div>
       </div>

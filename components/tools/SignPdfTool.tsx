@@ -578,7 +578,7 @@ export function SignPdfTool() {
             onClick={run}
           >
             {/* Bundle G5: lib/tools.ts canonical "~10 credits per doc" — preserve ~. */}
-            {busy ? "Filling…" : "Fill & sign — ~10 credits"}
+            {busy ? "Filling…" : "Fill & sign"}
           </button>
         )}
       </div>
@@ -793,22 +793,7 @@ function ResultCard({ result }: { result: SignResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />
-
-      {/* Provenance footer */}
-      <div
-        className="subtle mono"
-        style={{
-          padding: "10px 18px",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-2)",
-        }}
-      >
-        {result.providerId.toUpperCase()} · {result.model}
-      </div>
-    </div>
+      />    </div>
   );
 }
 
