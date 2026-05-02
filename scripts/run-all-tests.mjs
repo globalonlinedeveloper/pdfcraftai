@@ -783,6 +783,14 @@ const SUITES = [
   // (tool migrated back to hand-rolled or download functionality
   // removed entirely).
   { name: "download-helper-adoption", file: "test-download-helper-adoption.mjs" },
+  // 2026-05-02 Tier B2: pin British/Indian spelling for verbs that
+  // have both forms (Analysing not Analyzing, Recognising not
+  // Recognizing). Site is India-based — locale-correct copy. Allows
+  // third-party UI label quotes (e.g. Acrobat's "Recognize Text"
+  // menu item) since accuracy beats consistency when describing
+  // someone else's product. Caught CourtOrderTool's "Analyzing…"
+  // drift today; this guard prevents future ones.
+  { name: "spelling-uk-in", file: "test-spelling-uk-in.mjs" },
   // 2026-04-30 a11y guard: prevents `color: var(--accent),
   // textDecoration: "none"` from being reintroduced in body-text JSX
   // contexts. Pattern was the source of 18 serious axe

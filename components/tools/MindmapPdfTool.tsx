@@ -21,10 +21,10 @@ import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import {
   deriveOutputName,
-  downloadBytes,
   humanSize,
   sha256HexOfBytes,
 } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { logToolResultAction } from "@/lib/tool-result-actions";
 import { useToolTracking } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";

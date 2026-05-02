@@ -171,6 +171,28 @@ mention the page:
 | `Rendering preview…` | `Loading…` |
 | `Saving drawing…` | `Working…` |
 
+**Spelling: prefer British/Indian (-ising / -ysing)** for verbs that
+have both forms. The site is India-based — INR pricing, India-
+specific landing copy throughout. Use `Analysing…` not `Analyzing…`,
+`Recognising…` not `Recognizing…`. Verbs that take only -ize in both
+dialects (`Summarize`, `Memorize`, `Customize` per Oxford spelling)
+keep the z. The audit table:
+
+| British/Indian (use this) | American (avoid) |
+|---|---|
+| `Analysing…` | `Analyzing…` |
+| `Recognising…` | `Recognizing…` |
+| `Categorising…` | `Categorizing…` |
+| (these stay -ize) | `Summarizing…` ✓, `Optimizing…` ✓ |
+
+**Generic `Working…` / `Loading…` are fallbacks.** If you find
+yourself writing one, ask whether you can name the actual operation.
+Acceptable as a TRANSITIONAL initial state when the real label
+arrives within a few hundred ms (e.g. SearchablePdfTool starts at
+`Working…` then setBusyLabel transitions to "OCR pass —
+transcribing pages…" once the AI route hands back its phase
+estimate). NOT acceptable as a steady-state busy label.
+
 ---
 
 ## Success messages

@@ -2230,7 +2230,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
 
   "analyze-pdf-tone": {
     tool: "ai-tone-analyze",
-    h1: "Analyze PDF Tone & Style — voice, audience, register report",
+    h1: "Analyse PDF Tone & Style — voice, audience, register report",
     sub: "Get the tone (authoritative / collaborative / didactic etc.), inferred audience, and 6-10 style attributes for any document. Reports — doesn't rewrite. 3 credits.",
     canonical: "/analyze-pdf-tone",
     howTo: [
@@ -2269,7 +2269,7 @@ export const SEO_PAGES: Record<SeoPageSlug, SeoPageData> = {
   "pdf-sentiment-analysis": {
     tool: "ai-sentiment",
     h1: "PDF Sentiment Analysis — overall + per-section verdict with evidence",
-    sub: "Analyze sentiment in reviews, customer feedback, internal comms, and narrative content. Per-section breakdown with evidence quotes and shift detection. 3 credits.",
+    sub: "Analyse sentiment in reviews, customer feedback, internal comms, and narrative content. Per-section breakdown with evidence quotes and shift detection. 3 credits.",
     canonical: "/pdf-sentiment-analysis",
     howTo: [
       { t: "Drop the doc", d: "PDF up to 100 MB. Works on prose — reviews, threads, feedback compilations, narrative content." },

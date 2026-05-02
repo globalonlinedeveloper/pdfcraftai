@@ -37,11 +37,8 @@ import { useSession, getSession } from "next-auth/react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
-import {
-  downloadBytes,
-  humanSize,
-  deriveOutputName,
-} from "@/lib/client/pdf-utils";
+import { humanSize, deriveOutputName } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";

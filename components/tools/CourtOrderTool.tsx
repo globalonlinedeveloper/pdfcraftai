@@ -308,7 +308,7 @@ export function CourtOrderTool() {
           </Link>
         ) : (
           <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}>
-            {busy ? "Analyzing…" : "Summarize judgment"}
+            {busy ? "Analysing…" : "Summarize judgment"}
           </button>
         )}
       </div>
