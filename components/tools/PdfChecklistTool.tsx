@@ -15,6 +15,7 @@ import { useState, useCallback } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import type { ToolGroup } from "@/lib/tools";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -171,21 +172,12 @@ export function PdfChecklistTool({
       generated_at: new Date().toISOString(),
       schema_version: 1,
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      const base = result.fileName.replace(/\.pdf$/i, "");
-      a.download = `${base}.${toolId}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    const base = result.fileName.replace(/\.pdf$/i, "");
+    downloadBytes(
+      JSON.stringify(payload, null, 2),
+      `${base}.${toolId}.json`,
+      "application/json",
+    );
   };
 
   const truncate = (s: string, max = 48) =>

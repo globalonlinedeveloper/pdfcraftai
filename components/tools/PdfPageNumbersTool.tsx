@@ -13,7 +13,7 @@ import { useEffect, useState, useCallback } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
-import { suffixedFilename } from "@/lib/client/download";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import { useFirstPagePreview } from "./useFirstPagePreview";
 import type { Position, NumberFormat } from "@/lib/pdf/ops/page-numbers";
@@ -112,18 +112,7 @@ export function PdfPageNumbersTool() {
 
   const download = () => {
     if (!result) return;
-    const blob = new Blob([result.outputBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = suffixedFilename(result.outputFileName);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
+    downloadBytes(result.outputBytes, result.outputFileName);
   };
 
   const truncate = (s: string, max = 38) =>

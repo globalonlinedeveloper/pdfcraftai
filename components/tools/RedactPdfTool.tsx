@@ -36,6 +36,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
 type PiiCategory =
@@ -541,15 +542,7 @@ function DownloadRedactedButton({
       for (let i = 0; i < bin.length; i++) {
         bytes[i] = bin.charCodeAt(i);
       }
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4_000);
+      downloadBytes(bytes, filename);
     } catch (err) {
       console.error("[RedactPdfTool] download failed", err);
       alert(

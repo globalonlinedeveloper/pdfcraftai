@@ -32,6 +32,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
 // Keep in sync with VALID_MODES in /api/ai/rewrite/route.ts.
@@ -393,17 +394,7 @@ function ResultCard({ result }: { result: RewriteResult }) {
   };
 
   const download = () => {
-    const blob = new Blob([result.markdown], {
-      type: "text/markdown;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = result.filename || `rewrite-${result.mode}.md`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4_000);
+    downloadBytes(result.markdown, result.filename || `rewrite-${result.mode}.md`, "text/markdown;charset=utf-8");
   };
 
   return (

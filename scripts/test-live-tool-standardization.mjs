@@ -151,7 +151,12 @@ const SHARED_BASES = new Set([
 const HOOK_REQUIREMENTS = [
   { name: "useTrackToolView", import: "useTrackToolView" },
   { name: "mapPdfOpError", import: "mapPdfOpError" },
-  { name: "suffixedFilename", import: "suffixedFilename" },
+  // 2026-05-02 — accept either `suffixedFilename` (legacy direct-call
+  // pattern) OR `downloadBytes` (canonical helper that calls
+  // suffixedFilename internally). The Tier A1 sweep migrated 27 tools
+  // from the former to the latter; both satisfy the same contract
+  // (filename-collision suffix on repeat downloads).
+  { name: "suffixedFilename", import: "suffixedFilename|downloadBytes" },
   { name: "useScrollErrorIntoView", import: "useScrollErrorIntoView" },
   { name: "HandoffSuggestions", import: "HandoffSuggestions" },
 ];

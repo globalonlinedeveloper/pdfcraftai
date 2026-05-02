@@ -44,6 +44,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useToolTracking } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
 // Keep in sync with server-side `MAX_OCR_PAGES` in lib/ai/ocr.ts.
@@ -469,17 +470,7 @@ function ResultCard({ result }: { result: OcrResult }) {
   };
 
   const download = () => {
-    const blob = new Blob([result.markdown], {
-      type: "text/markdown;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = result.filename || "ocr.md";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4_000);
+    downloadBytes(result.markdown, result.filename || "ocr.md", "text/markdown;charset=utf-8");
   };
 
   const pages = result.processedPageCount ?? result.pageCount;

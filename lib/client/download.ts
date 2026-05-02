@@ -44,16 +44,30 @@ export function suffixedFilename(base: string): string {
 }
 
 /**
- * Trigger a browser download for the given bytes + filename. Wraps
+ * Trigger a browser download for the given content + filename. Wraps
  * the createObjectURL → click → revokeObjectURL dance and applies
  * the session-local collision suffix automatically.
+ *
+ * Content can be Uint8Array / ArrayBuffer (for binary outputs like
+ * PDFs and images) OR a string (for markdown / JSON / text outputs).
+ * The Blob constructor handles all three input shapes natively, so
+ * one helper covers every download surface in the catalog. Accepts
+ * BlobPart[0] = anything Blob accepts.
+ *
+ * 2026-05-02: extended to accept `string` so AI tool consumers
+ * (markdown/JSON outputs) can drop their hand-rolled download dance
+ * without first encoding to bytes. Keeps the shared download path
+ * canonical across PDF, image, and text outputs.
  */
 export function downloadBytes(
-  bytes: Uint8Array | ArrayBuffer,
+  content: string | Uint8Array | ArrayBuffer | Blob,
   filename: string,
   mimeType = "application/pdf",
 ): void {
-  const blob = new Blob([bytes], { type: mimeType });
+  // If caller already has a Blob (e.g. from JSZip's generateAsync({type: "blob"}))
+  // use it directly — no need to re-wrap and lose the original mime type.
+  // Otherwise wrap the content in a new Blob with the specified mime.
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   try {
     const a = document.createElement("a");

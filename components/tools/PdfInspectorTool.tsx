@@ -22,6 +22,7 @@ import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import {
   describePageSize,
@@ -171,23 +172,9 @@ export function PdfInspectorTool() {
       schema_version: 1,
     };
     const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      // Strip .pdf and append .inspection.json. Defensive against
-      // weird casing.
-      const base = result.fileName.replace(/\.pdf$/i, "");
-      a.download = `${base}.inspection.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      // Revoke immediately — the click triggers the download
-      // synchronously, so we don't need to keep the blob alive.
-      URL.revokeObjectURL(url);
-    }
+    // Strip .pdf and append .inspection.json. Defensive against weird casing.
+    const base = result.fileName.replace(/\.pdf$/i, "");
+    downloadBytes(json, `${base}.inspection.json`, "application/json");
   };
 
   const copySummary = async () => {

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import {
   formatAsText,
@@ -195,19 +196,8 @@ export function PdfTextExportTool({ toolId, format }: PdfTextExportToolProps) {
 
   const downloadOutput = () => {
     if (!result) return;
-    const blob = new Blob([result.output], { type: cfg.mimeType });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      const base = result.fileName.replace(/\.pdf$/i, "");
-      a.download = `${base}.${cfg.extension}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    const base = result.fileName.replace(/\.pdf$/i, "");
+    downloadBytes(result.output, `${base}.${cfg.extension}`, cfg.mimeType);
   };
 
   const truncateFilename = (name: string, max = 48) => {

@@ -26,6 +26,7 @@ import { useState, useCallback, useRef } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import { usePdfThumbnails, type PdfThumbnail } from "./usePdfThumbnails";
 import { useVirtualGrid } from "./useVirtualGrid";
@@ -248,18 +249,7 @@ export function PdfSplitTool() {
   };
 
   const downloadOne = (out: SplitOutput) => {
-    const blob = new Blob([out.bytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = prefixed(out.name);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
+    downloadBytes(out.bytes, prefixed(out.name));
   };
 
   const downloadAllZip = async () => {
@@ -269,18 +259,8 @@ export function PdfSplitTool() {
       const zip = new JSZipMod();
       for (const out of result.outputs) zip.file(prefixed(out.name), out.bytes);
       const blob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(blob);
-      try {
-        const a = document.createElement("a");
-        a.href = url;
-        const baseName = result.sourceFileName.replace(/\.pdf$/i, "");
-        a.download = `${baseName || "split"}-split.zip`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } finally {
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
+      const baseName = result.sourceFileName.replace(/\.pdf$/i, "");
+      downloadBytes(blob, `${baseName || "split"}-split.zip`, "application/zip");
     } catch (err) {
       console.error("zip failed", err);
       setError("Could not zip the outputs.");

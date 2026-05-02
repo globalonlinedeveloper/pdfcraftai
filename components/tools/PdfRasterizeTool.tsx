@@ -21,6 +21,7 @@ import { useState, useCallback, useEffect } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
 import type { RasterFormat, RasterPage } from "@/lib/pdf/ops/rasterize";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -175,23 +176,16 @@ export function PdfRasterizeTool({ toolId, format }: PdfRasterizeToolProps) {
    */
   const downloadPage = (page: RasterPage) => {
     if (!result) return;
-    const blob = new Blob([page.bytes as BlobPart], { type: cfg.mimeType });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      const base = result.fileName.replace(/\.pdf$/i, "");
-      const padded = String(page.pageNumber).padStart(
-        String(result.pages.length).length,
-        "0",
-      );
-      a.download = `${base}-page-${padded}.${cfg.extension}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    const base = result.fileName.replace(/\.pdf$/i, "");
+    const padded = String(page.pageNumber).padStart(
+      String(result.pages.length).length,
+      "0",
+    );
+    downloadBytes(
+      page.bytes,
+      `${base}-page-${padded}.${cfg.extension}`,
+      cfg.mimeType,
+    );
   };
 
   /**
@@ -209,17 +203,7 @@ export function PdfRasterizeTool({ toolId, format }: PdfRasterizeToolProps) {
       zip.file(`${base}-page-${padded}.${cfg.extension}`, p.bytes);
     }
     const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${base}-${cfg.extension}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    downloadBytes(blob, `${base}-${cfg.extension}.zip`, "application/zip");
   };
 
   const truncateFilename = (name: string, max = 48) => {

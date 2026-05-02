@@ -27,6 +27,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
 type CompareResult = {
@@ -367,17 +368,7 @@ function ResultCard({ result }: { result: CompareResult }) {
   };
 
   const download = () => {
-    const blob = new Blob([result.markdown], {
-      type: "text/markdown;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = result.filename || `comparison.md`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4_000);
+    downloadBytes(result.markdown, result.filename || `comparison.md`, "text/markdown;charset=utf-8");
   };
 
   const pageSummary = (() => {

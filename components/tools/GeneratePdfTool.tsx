@@ -28,6 +28,7 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { downloadBytes } from "@/lib/client/download";
 
 // Keep in sync with VALID_DOC_TYPES / VALID_LENGTHS / VALID_TONES in the
 // route handler.
@@ -585,15 +586,7 @@ function DownloadPdfButton({ result }: { result: GenerateResult }) {
       for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
       }
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = result.pdfFilename || `${result.title}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4_000);
+      downloadBytes(bytes, result.pdfFilename || `${result.title}.pdf`);
     } catch (err) {
       console.error("Download failed", err);
     }
