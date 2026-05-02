@@ -748,6 +748,18 @@ const SUITES = [
   // but the pure-logic portions M25 added — the FNV-1a-style sample
   // hash and the LRU eviction order — are testable in pure node.
   { name: "first-page-preview-cache", file: "test-first-page-preview-cache.mjs" },
+  // M18 (2026-05-02): every AI tool that accepts a PDF input must
+  // render UploadedFilePreview on its upload card. Caught the gap
+  // earlier today's audit surfaced (ai-court-order shipping without
+  // suggestion-map entry was the trigger to look at the broader
+  // standardization landscape). Resolves to source files via the
+  // ToolRunner.tsx dynamic-import map → checks each AI tool's
+  // resolved file imports UploadedFilePreview. Sister to the
+  // first-page-preview-cache guard (which pins the underlying hook's
+  // unit-level invariants); this one pins the per-tool consumption.
+  // NO_FILE_INPUT allowlist whitelists ai-generate (no PDF input)
+  // and ai-chat (separate streaming surface).
+  { name: "ai-tool-preview", file: "test-ai-tool-preview.mjs" },
   // 2026-04-30 a11y guard: prevents `color: var(--accent),
   // textDecoration: "none"` from being reintroduced in body-text JSX
   // contexts. Pattern was the source of 18 serious axe
