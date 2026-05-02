@@ -958,6 +958,16 @@ const SUITES = [
   // before aggregator-coverage so a missed wire-in shows here.
   { name: "no-supply-chain-leaks", file: "test-no-supply-chain-leaks.mjs" },
   { name: "no-credit-number-hardcodes", file: "test-no-credit-number-hardcodes.mjs" },
+  // 2026-05-02 plan §5 (Day 2) — pre-flight credit estimator. Pure
+  // function lib/ai/estimate.ts:estimateCredits() is the single source
+  // of truth for "how many credits will this op cost?". Verified via
+  // 5-section static-parse harness covering source contract, pricing
+  // constants sanity, feature-flag wiring, route contract, cross-file
+  // invariants. Day 1.7 wires the multiplier-aware spend at runtime;
+  // until then the estimator quotes the future state and route
+  // handlers still use flat costs (estimator may quote MORE than gets
+  // charged, but never less — user-friendly direction).
+  { name: "estimate", file: "test-estimate.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
