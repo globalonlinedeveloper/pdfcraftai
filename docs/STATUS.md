@@ -3,11 +3,67 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-01 EOD (Phase 2 AI standardization + auth-callback fix arc, 12 commits since `f8333a5`).
-**Live commit:** `3d32d6e` (Hostinger auto-deploy, queued through GitHub App; verify on `/api/health` after ~3 min cycle).
-**Aggregator:** 4013 passed across 59 suites in 6.4s (up from 3404/54 yesterday — 5 new CI guards added today).
-**Phase 4 baselines:** 6 committed in `c5cc51a` — visual regression still ACTIVE.
+**Last updated:** 2026-05-02 EOD (Phase 3 cleanup + 4 new tool builds + SEO de-staling arc, 14 commits since `3d32d6e`).
+**Live commit:** `469f8cf` (verified via `/api/health`, fresh restart confirmed).
+**Aggregator:** 4035 passed across 60 suites in 6.4s (+22 from yesterday's 4013/59 — 1 new CI guard `ai-tool-preview` + 22 added assertions on existing guards).
+**Phase 4 baselines:** still ACTIVE.
 **Phase 6 synthetic monitor:** still active.
+
+### 2026-05-02 EOD addendum — Phase 3 cleanup + 4 new tools + SEO de-staling
+
+A 14-commit autonomous arc that closed Phase 3 (broken-related-id cleanup), shipped 4 new tools (3 client-side regex extractors + 1 AI legal tool), repointed 2 SEO landings to existing tools when "Adobe-level" reimplementation was the wrong fit, and de-staled 7 redirects that were silently bypassing canonical SEO landings. Ship breakdown:
+
+| # | Commit | What |
+|---|---|---|
+| 1 | `4cdbeb6` | Remove Paddle origins from CSP + Permissions-Policy (auto-mode arc cleanup) |
+| 2 | `f1cce5c` | **Phase 3 cleanup** — repair 11 broken related[] refs (cap 22 → 11) |
+| 3 | `c56705e` | **Build extract-contacts** — emails + Indian/intl phones via regex (CSV + vCard) |
+| 4 | `c586d63` | **Build extract-dates** → ICS calendar (Day-first vs month-first toggle, supports ISO/slashes/named months) |
+| 5 | `a1341e2` | Repoint /extract-pdf-form-data SEO landing at existing pdf-forms tool |
+| 6 | `84cb9a9` | **Build ai-court-order** — Indian court judgment summarizer (citation, ratio decidendi, implications) |
+| 7 | `4bb60f7` | **Build extract-attachments** — pull bytes from embedded files (FlateDecode, ASCIIHexDecode, ASCII85Decode + per-file download + ZIP bundle) |
+| 8 | `205697c` | Repoint /edit-pdf SEO landing at add-text-box + honest copy downgrade |
+| 9 | `874b393` | Close TOOL_SUGGESTIONS gap for ai-court-order (legal-toolkit cluster) |
+| 10 | `b40113b` | **M18 CI guard** — pin all 51 AI tools' page-1 preview against regression |
+| 11 | `469f8cf` | **De-stale 7 redirects** — 7 SEO landings now render canonical content (5 new app/<slug>/page.tsx wrappers + redirect removal + sitemap sync) |
+
+**Tool-build summary:**
+
+| Tool | Type | LOC | Output |
+|---|---|---|---|
+| `extract-contacts` | Free, regex-based | ~280 | CSV + vCard (emails + phones + URLs) |
+| `extract-dates` | Free, regex-based | ~310 | ICS + CSV (with day-first/month-first toggle) |
+| `ai-court-order` | AI, structured JSON | ~470 | Indian court judgment summary (parties, acts cited, holding, reasoning, remedy) |
+| `extract-attachments` | Free, byte-parser | ~340 ops + ~280 UI | Per-file downloads + bulk ZIP (FlateDecode + ASCIIHex + ASCII85) |
+
+**SEO landings reclaimed (7 total — 5 net new + 2 with existing pages):**
+- `/extract-emails-from-pdf` (was 308 → /tool/pdf-search; now → real extract-contacts landing)
+- `/pdf-to-ics-calendar` (was 308 → /tool/pdf-search; now → real extract-dates landing)
+- `/extract-pdf-attachments` (was 308 → /tool/pdf-attachments; now → real extract-attachments landing)
+- `/court-judgment-summarizer` (was 308 → /tool/ai-summarize; now → real ai-court-order landing)
+- `/grayscale-pdf` (was 308 → /tools; now → real grayscale-pdf landing)
+- `/booklet-pdf` (was 308 → /tools; now → real booklet-pdf landing)
+- `/edit-pdf` (was 308 → /tools; now → repointed at add-text-box with honest copy downgrade)
+
+**KNOWN_DEAD_REFS progression** (server-side rails deferred per user directive "concentrate on Client side and AI tools"):
+- Started: 13 entries (compress + 6 Office bidirectionals + 6 client-side gaps)
+- Ended: 7 entries (compress + 6 Office bidirectionals — all server-side)
+- Net: 6 client-side gaps closed, 7 server-side gaps deferred until Paddle KYC unblocks paid tier
+
+**KNOWN_BROKEN_RELATED_IDS cap progression**: 22 → 14 → 11 → 7 → 5 → 4 across the day.
+
+**AI tool standardization audit** (concluded mid-day, surfaced 1 real gap):
+- 53 AI tools audited across 6 layers (SummarizeDepth union, output-caps, VALID_DEPTHS, custom Tool component, ToolRunner switch, TOOL_SUGGESTIONS)
+- 51 fully covered, 2 intentional carve-outs (ai-chat: streaming surface; ai-generate: no PDF input)
+- 1 gap closed: ai-court-order's missing TOOL_SUGGESTIONS entry → now routes to legal-toolkit cluster
+- Pinned with new `ai-tool-preview` CI guard (11 assertions; catches regressions if a future AI tool ships without UploadedFilePreview)
+
+**Carryover items deferred per user directive** ("concentrate on Client side tools and AI tools"):
+- Server-side compress (Ghostscript / pdf-lib reflow rail)
+- Server-side Office bidirectionals (LibreOffice headless: pdf-to-word/excel/powerpoint, word/excel/powerpoint-to-pdf)
+- All gated behind Paddle KYC (sandbox live, production verification in progress)
+
+
 
 ### 2026-05-01 EOD addendum — Phase 2 AI standardization + sitewide auth-callback fix
 
