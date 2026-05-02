@@ -77,6 +77,52 @@ the bottom of the result card):
 | `An error occurred.` | `Something went wrong — try again.` |
 | `Invalid input.` | `[Specific field] needs [specific format].` |
 
+### AI-specific error shapes
+
+AI tools have three failure modes worth distinguishing because each
+demands a different recovery hint. Documented 2026-05-02 after audit
+across 14 AI tools confirmed all already follow these shapes — this
+section pins them as canonical for future tools.
+
+**1. Document-shape mismatch** (user uploaded the wrong KIND of PDF —
+e.g. a marketing flyer to the Blood Test Analyzer). Diagnostic tip
+should mention what the tool expects:
+
+| Good | Bad |
+|---|---|
+| `Couldn't parse this as a lab report. Ensure the PDF has named tests with values.` | `Couldn't parse.` |
+| `This doesn't look like a court judgment — try a different file.` | `Parse failed.` |
+| `No resume content found. Try a PDF with a contact section + work history.` | `Could not extract resume.` |
+
+**2. Transient AI response failure** (model returned malformed JSON
+or no useful content — usually clears on retry):
+
+| Good | Bad |
+|---|---|
+| `Couldn't parse the AI's response. Usually resolves on retry.` | `Server error.` |
+| `Something went wrong — try again.` | `Internal error.` |
+
+**3. Empty / no-result response** (AI didn't find what the user asked
+for — diagnose with a workaround rather than making the user guess):
+
+| Good | Bad |
+|---|---|
+| `No valid flashcards returned. Try a text-heavier PDF.` | `No flashcards.` |
+| `No tables found in this PDF.` | `Empty result.` |
+| `No matching dates in the PDF text.` | `0 results.` |
+
+**Rule of thumb for shape (1)**: lead with the problem in domain
+language, end with a specific action ("Ensure the PDF has X").
+
+**Rule of thumb for shape (2)**: route generic AI failures through
+`mapPdfOpError(...)` from `lib/pdf/error-messages` — that helper
+maps technical exception messages to user-facing copy following
+this guide. 14 of 14 AI tools audited route through it.
+
+**Rule of thumb for shape (3)**: name what wasn't found and the
+likely workaround. Don't make the user guess whether the PDF was
+unreadable or simply lacks the requested content.
+
 ---
 
 ## Dropzone prompts
