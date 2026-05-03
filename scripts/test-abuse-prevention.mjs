@@ -204,15 +204,79 @@ assert(
 );
 
 // ============================================================================
-// Section F — Dynamic behaviour (eval normalizeEmail with test cases)
+// Section F — Layer 4 throttle (decideIpThrottle + helpers)
 // ============================================================================
-//
-// We can't import the .ts module directly without tsx, so we approximate
-// by extracting the function body and building a runtime eval. Skipping
-// for now; the static checks above cover the contract.
-//
-// (If we add tsx as a dev dep this section can be restored — see
-// scripts/test-credit-ledger-financials.mjs for the pattern.)
+
+assert(
+  /export\s+function\s+decideIpThrottle/m.test(helperSrc),
+  "F1: decideIpThrottle exported"
+);
+assert(
+  /export\s+function\s+maxSignupsPerBucket/m.test(helperSrc),
+  "F2: maxSignupsPerBucket helper exported"
+);
+assert(
+  /export\s+function\s+bucketWindowDays/m.test(helperSrc),
+  "F3: bucketWindowDays helper exported"
+);
+assert(
+  /DEFAULT_MAX_SIGNUPS_PER_BUCKET\s*=\s*3/m.test(helperSrc),
+  "F4: default cap is 3 (per plan §8 layer 4)"
+);
+assert(
+  /DEFAULT_BUCKET_WINDOW_DAYS\s*=\s*7/m.test(helperSrc),
+  "F5: default window is 7 days"
+);
+assert(
+  /MAX_SIGNUPS_PER_BUCKET/.test(helperSrc),
+  "F6: cap is configurable via env var"
+);
+assert(
+  /BUCKET_WINDOW_DAYS/.test(helperSrc),
+  "F7: window is configurable via env var"
+);
+assert(
+  /action:\s*"allow"/.test(helperSrc),
+  "F8: throttle decision can return 'allow'"
+);
+assert(
+  /action:\s*"queue_review"/.test(helperSrc) ||
+    /recentCount\s*>=\s*cap\s*\?\s*"queue_review"/.test(helperSrc),
+  "F9: throttle decision can return 'queue_review'"
+);
+assert(
+  /if\s*\(\s*!bucket\s*\)/m.test(helperSrc),
+  "F10: empty bucket → fail-open allow (no malformed IP blocks)"
+);
+
+// ============================================================================
+// Section G — registerAction wires the throttle decision
+// ============================================================================
+
+assert(
+  actionsSrc.includes("decideIpThrottle"),
+  "G1: registerAction imports decideIpThrottle"
+);
+assert(
+  actionsSrc.includes("ipBucket"),
+  "G2: registerAction imports ipBucket"
+);
+assert(
+  /like\(schema\.users\.signupIp,\s*`\$\{bucket\}\.%`\)/.test(actionsSrc),
+  "G3: registerAction queries users by /24 LIKE prefix"
+);
+assert(
+  /event:\s*"ip_throttle_triggered"/.test(actionsSrc),
+  "G4: structured stdout log when throttle triggers"
+);
+assert(
+  /throttleDecision\?\.action\s*===\s*"queue_review"/.test(actionsSrc),
+  "G5: grant is skipped when throttle says queue_review"
+);
+assert(
+  /event:\s*"signup_bonus_skipped"/.test(actionsSrc),
+  "G6: structured log when grant is skipped due to throttle"
+);
 
 if (failed > 0) {
   console.error("\nFAILURES:");

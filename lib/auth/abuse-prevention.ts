@@ -546,3 +546,96 @@ export function readClientIp(headers: Headers): string {
   if (real) return real.trim();
   return "";
 }
+
+// --- Layer 4 (full) — IP-bucket throttle decision ------------------------
+
+/**
+ * Maximum signups allowed per /24 IPv4 bucket (or /48 IPv6) within
+ * the rolling window. Configurable via env var so we can tighten
+ * post-launch without redeploying.
+ *
+ * Default 3: matches plan §8 layer 4 spec ("max 3 free-credit grants
+ * per /24 in 7 days"). Same /24 + window combo means a single
+ * residential ISP NAT pool can't churn out 100 accounts.
+ */
+const DEFAULT_MAX_SIGNUPS_PER_BUCKET = 3;
+const DEFAULT_BUCKET_WINDOW_DAYS = 7;
+
+function readIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+export function maxSignupsPerBucket(): number {
+  return readIntEnv("MAX_SIGNUPS_PER_BUCKET", DEFAULT_MAX_SIGNUPS_PER_BUCKET);
+}
+
+export function bucketWindowDays(): number {
+  return readIntEnv("BUCKET_WINDOW_DAYS", DEFAULT_BUCKET_WINDOW_DAYS);
+}
+
+/**
+ * Decision returned by the throttle check. The caller uses `.action`
+ * to decide whether to allow the signup, queue it for admin review,
+ * or block outright. Today we only emit "allow" / "queue_review";
+ * "block" is reserved for future stricter modes.
+ *
+ *   - allow: under the cap; proceed normally.
+ *   - queue_review: at or over the cap; create the account but
+ *     don't auto-grant credits. /admin/abuse-signals surfaces
+ *     pending grants for manual approval.
+ */
+export type ThrottleAction = "allow" | "queue_review";
+
+export interface ThrottleDecision {
+  action: ThrottleAction;
+  bucket: string;
+  recentCount: number;
+  cap: number;
+  windowDays: number;
+}
+
+/**
+ * Pure decision function: given the request IP and a count of recent
+ * signups from the same bucket, returns the action.
+ *
+ * Separating the decision from the DB query keeps this pure and
+ * testable. Caller is responsible for the COUNT(*) query that
+ * provides recentCount — typically:
+ *
+ *   const recentCount = await db
+ *     .select({ c: count() })
+ *     .from(users)
+ *     .where(
+ *       and(
+ *         eq(users.signupIp, ipBucket(ip)),  // or LIKE prefix match
+ *         gt(users.createdAt, sevenDaysAgo),
+ *       )
+ *     )
+ *     .then((r) => r[0]?.c ?? 0);
+ *
+ * If the bucket key is empty (couldn't parse the IP), returns "allow"
+ * — fail-open on header-parsing edge cases. Real users shouldn't be
+ * blocked because Cloudflare sent a malformed header.
+ */
+export function decideIpThrottle(
+  ip: string,
+  recentCount: number,
+): ThrottleDecision {
+  const bucket = ipBucket(ip);
+  const cap = maxSignupsPerBucket();
+  const windowDays = bucketWindowDays();
+  if (!bucket) {
+    return { action: "allow", bucket: "", recentCount, cap, windowDays };
+  }
+  return {
+    action: recentCount >= cap ? "queue_review" : "allow",
+    bucket,
+    recentCount,
+    cap,
+    windowDays,
+  };
+}

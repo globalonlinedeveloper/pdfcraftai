@@ -4,7 +4,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq, gt, like } from "drizzle-orm";
 import { AuthError } from "next-auth";
 
 import { headers } from "next/headers";
@@ -16,6 +16,9 @@ import {
   isDisposableEmail,
   normalizeEmail,
   readClientIp,
+  ipBucket,
+  decideIpThrottle,
+  bucketWindowDays,
 } from "@/lib/auth/abuse-prevention";
 // 2026-05-02 plan §2 path D wire-in (Day 6 prep) — fire signup
 // bonus on credentials registration. Helper is idempotent and
@@ -113,13 +116,54 @@ export async function registerAction(
   // too; we check here first to give a friendlier error.
   const normalizedEmail = normalizeEmail(lowercased);
 
-  // 2026-05-02 plan §8 layer 4 (partial) — capture signup IP for the
-  // abuse-signal admin page. The full /24-bucket throttle decision
-  // requires a counting query that's safe to defer to layer 4 wiring
-  // in a follow-up commit; the column is populated now so future-
-  // ships have data to clamp on.
+  // 2026-05-02 plan §8 layer 4 — capture signup IP + run /24 bucket
+  // throttle. The captured IP populates users.signup_ip so the
+  // abuse-signal admin page can cluster signups; the throttle
+  // decision below decides whether to auto-grant credits or queue
+  // the account for manual review (currently logged only — Day 6
+  // will wire grantSignupBonus to skip when throttled).
   const reqHeaders = await headers();
   const signupIp = readClientIp(reqHeaders);
+
+  // 2026-05-03 plan §8 layer 4 (full) — count recent signups from
+  // the same /24 (or /48 IPv6) bucket within the rolling window.
+  // Empty bucket (couldn't parse IP) → skip throttle (fail-open).
+  const bucket = ipBucket(signupIp);
+  let throttleDecision: ReturnType<typeof decideIpThrottle> | null = null;
+  if (bucket) {
+    const windowDays = bucketWindowDays();
+    const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+    // LIKE-prefix match because users.signup_ip stores the full IP,
+    // not just the bucket prefix. `192.168.1.42` matches `192.168.1.%`.
+    const recentRows = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(
+        and(
+          like(schema.users.signupIp, `${bucket}.%`),
+          gt(schema.users.createdAt, windowStart),
+        ),
+      );
+    throttleDecision = decideIpThrottle(signupIp, recentRows.length);
+    if (throttleDecision.action === "queue_review") {
+      // Structured stdout log for the abuse-signal page + ops review.
+      console.log(
+        JSON.stringify({
+          event: "ip_throttle_triggered",
+          bucket: throttleDecision.bucket,
+          recentCount: throttleDecision.recentCount,
+          cap: throttleDecision.cap,
+          windowDays: throttleDecision.windowDays,
+          ts: new Date().toISOString(),
+        }),
+      );
+      // We still let the registration proceed (don't block legit
+      // college / co-working / VPN users behind a hard wall). The
+      // grant logic in Day 6 will skip the credit grant for accounts
+      // tagged queue_review, and admin can manually approve via
+      // /admin/abuse-signals (Day 4 surface).
+    }
+  }
 
   try {
     // Check both raw + normalized forms so we catch
@@ -187,10 +231,28 @@ export async function registerAction(
     // on the OAuth events.signIn callback in auth.ts. No-ops until
     // SIGNUP_GRANT_ENABLED=true (Day 6 atomic flip). Wrapped in
     // try/catch — a grant failure must not abort signup.
-    try {
-      await grantSignupBonus(id);
-    } catch (err) {
-      console.error("grantSignupBonus failed for", id, err);
+    //
+    // 2026-05-03 plan §8 layer 4 — skip the grant when the IP-bucket
+    // throttle decided "queue_review". Account is still created (so
+    // the user can still sign in + buy credits manually), but the
+    // free 5 credits don't auto-fire. Admin /admin/abuse-signals
+    // (Day 4 surface) shows the queued grant for manual approval.
+    if (throttleDecision?.action === "queue_review") {
+      console.log(
+        JSON.stringify({
+          event: "signup_bonus_skipped",
+          userId: id,
+          reason: "ip_throttle_queue_review",
+          bucket: throttleDecision.bucket,
+          ts: new Date().toISOString(),
+        }),
+      );
+    } else {
+      try {
+        await grantSignupBonus(id);
+      } catch (err) {
+        console.error("grantSignupBonus failed for", id, err);
+      }
     }
   } catch (err) {
     console.error("register action failed:", err);
