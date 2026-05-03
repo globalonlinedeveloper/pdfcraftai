@@ -998,6 +998,14 @@ const SUITES = [
   // 20 assertions / 5 sections. Helper is callable today but no-ops
   // until SIGNUP_GRANT_ENABLED=true (Day 6 atomic flip).
   { name: "signup-bonus", file: "test-signup-bonus.mjs" },
+  // 2026-05-03 plan §9 (Day 6.5) — out-of-credits alert. Reusable
+  // component shown when an AI op returns 402 insufficient_credits.
+  // Replaces plain-text error with conversion-focused card linking
+  // to /buy. Credits-only display (principle 1) — no per-call rupee
+  // values. 21 assertions / 3 sections (component surface, copy
+  // compliance, parser-regex correctness against real mapErrorBody
+  // 402 messages including multiplier-aware ops).
+  { name: "out-of-credits-alert", file: "test-out-of-credits-alert.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
