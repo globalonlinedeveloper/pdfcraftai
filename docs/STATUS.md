@@ -3,8 +3,8 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-03 evening (Pricing/Telemetry plan + post-plan gap closure batch — **all 5 code gaps closed**; Gap #2 shipped feature-flagged default-OFF).
-**Live commit:** `acb7695` was the last live commit; this batch includes Gap #2 Option A wired into spendCredits + 26 new CI assertions, packaged as ONE commit to minimize cascade exposure (two consecutive code-bearing deploys both triggered cascades earlier in this session). All 77 suites green, **4462 tests passing**. **Eight zombie-next-server cascades** + 2 auto-pull jams survived across the full plan arc.
+**Last updated:** 2026-05-03 late evening (post-plan + ops-doc polish — all 5 code gaps closed + ops runbook + cron registry shipped).
+**Live commit:** `bdfc8be` (`docs/OPS_RUNBOOK.md` + `docs/CRON_JOBS.md` — closes the two doc gaps flagged in NEXT_SESSION.md §3). Last code-bearing live commit `4f3a4c7` (Gap #2 Option A). All 77 suites green, **4462 tests passing**. **Eight zombie-next-server cascades** + 3 auto-pull jams survived across the full plan arc; the documented "wait 5–10 min" + "ONE pkick max" + "empty-commit nudge" playbook held under all stress conditions.
 **Aggregator:** 4462 passed across 77 suites (+26 from prior 4436/76 — `per-op-bonus-cap` CI guard with 26 assertions across 3 sections: helper surface, spendCredits wire-in, forward-compat invariants).
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
