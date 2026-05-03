@@ -25,7 +25,8 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { PDFDocument } from "pdf-lib";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, getSession } from "next-auth/react";
@@ -37,6 +38,8 @@ import {
   parseRequiredFromError,
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
+// 2026-05-03 plan §5 + Day 2.5 — pre-flight estimator badge.
+import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -115,18 +118,46 @@ export function RedactPdfTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RedactResult | null>(null);
+  // 2026-05-03 plan §8 layer 4 / Day 2.5 — client-side pageCount peek
+  // for the estimate badge. Cheap (pdf-lib parses page tree only,
+  // no full-text extraction). Same pattern as OcrPdfTool.
+  const [pageCount, setPageCount] = useState<number | null>(null);
 
   const addFiles = useCallback((files: File[]) => {
     setError(null);
     setResult(null);
+    setPageCount(null);
     setFile(files[0] ?? null);
   }, []);
 
   const reset = () => {
     setFile(null);
+    setPageCount(null);
     setError(null);
     setResult(null);
   };
+
+  // Peek page count whenever a fresh file is attached. Aborted
+  // gracefully if the user replaces the file mid-load.
+  useEffect(() => {
+    if (!file) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bytes = await file.arrayBuffer();
+        const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        if (cancelled) return;
+        const n = doc.getPageCount();
+        if (n > 0) setPageCount(n);
+      } catch {
+        // Silent — server-side will produce a helpful error if the
+        // PDF is malformed. No need to double-surface here.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
 
   const run = async () => {
     if (!file) {
@@ -296,6 +327,17 @@ export function RedactPdfTool() {
             <I.X size={14} />
           </button>
         </div>
+      )}
+
+      {/* 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
+          Only shown after the client-side pageCount peek completes
+          so the estimator can compute the multiplier-aware cost. */}
+      {typeof pageCount === "number" && pageCount > 0 && (
+        <CreditEstimateBadge
+          op="redact"
+          pageCount={pageCount}
+          opLabel="this redaction"
+        />
       )}
 
       {error && (

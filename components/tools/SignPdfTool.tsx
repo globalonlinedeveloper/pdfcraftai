@@ -28,10 +28,11 @@
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, getSession } from "next-auth/react";
+import { PDFDocument } from "pdf-lib";
 import { I } from "@/components/icons/Icons";
 // 2026-05-03 plan §9 — Day 6.5 wire-in.
 import {
@@ -40,6 +41,8 @@ import {
   parseRequiredFromError,
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
+// 2026-05-03 plan §5 + Day 2.5 — pre-flight estimator badge.
+import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -126,18 +129,43 @@ export function SignPdfTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SignResult | null>(null);
+  // 2026-05-03 plan §5 + Day 2.5 — client-side pageCount peek for
+  // the multiplier-aware estimate badge.
+  const [pageCount, setPageCount] = useState<number | null>(null);
 
   const addFiles = useCallback((files: File[]) => {
     setError(null);
     setResult(null);
+    setPageCount(null);
     setFile(files[0] ?? null);
   }, []);
 
   const reset = () => {
     setFile(null);
+    setPageCount(null);
     setError(null);
     setResult(null);
   };
+
+  useEffect(() => {
+    if (!file) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bytes = await file.arrayBuffer();
+        const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        if (cancelled) return;
+        const n = doc.getPageCount();
+        if (n > 0) setPageCount(n);
+      } catch {
+        // Silent — server will surface a descriptive error if the PDF
+        // is malformed. No need to double-surface client-side.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
 
   // Derived: name is the only hard requirement. Everything else is
   // optional. We hide the "Run" button if no file OR no name.
@@ -538,6 +566,18 @@ export function SignPdfTool() {
           )}
         </div>
       </div>
+
+      {/* 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
+          Sign uses pageCount as multiplier (one fill+sign call per
+          page). Badge shows the real cost the moment the file's
+          page tree is parsed client-side. */}
+      {typeof pageCount === "number" && pageCount > 0 && (
+        <CreditEstimateBadge
+          op="sign"
+          pageCount={pageCount}
+          opLabel="filling this PDF"
+        />
+      )}
 
       {error && (
         // 2026-05-03 plan §9 — branch on insufficient-credits.
