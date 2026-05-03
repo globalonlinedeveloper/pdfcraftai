@@ -31,6 +31,15 @@ import { useRouter } from "next/navigation";
 import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
+// 2026-05-03 plan §9 (Day 6.5) — conversion-focused alert when 402
+// insufficient_credits hits. Reference wire-in for SummarizePdfTool;
+// other AI tools can adopt the same 5-line pattern.
+import {
+  OutOfCreditsAlert,
+  isInsufficientCreditsError,
+  parseRequiredFromError,
+  parseBalanceFromError,
+} from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -464,20 +473,31 @@ export function SummarizePdfTool() {
       </fieldset>
 
       {error && (
-        <div
-          role="alert"
-          className="card"
-          style={{
-            padding: 14,
-            borderColor: "var(--red)",
-            background: "var(--red-soft, rgba(220,38,38,0.08))",
-            color: "var(--red)",
-            fontSize: 13,
-            lineHeight: 1.5,
-          }}
-        >
-          {error}
-        </div>
+        // 2026-05-03 plan §9 — branch on insufficient-credits to surface
+        // the conversion-focused alert; everything else uses the
+        // existing inline error card. Reference wire-in for other tools.
+        isInsufficientCreditsError(error) ? (
+          <OutOfCreditsAlert
+            required={parseRequiredFromError(error)}
+            balance={parseBalanceFromError(error)}
+            opLabel="this summary"
+          />
+        ) : (
+          <div
+            role="alert"
+            className="card"
+            style={{
+              padding: 14,
+              borderColor: "var(--red)",
+              background: "var(--red-soft, rgba(220,38,38,0.08))",
+              color: "var(--red)",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            {error}
+          </div>
+        )
       )}
 
       {result && <ResultCard result={result} />}
