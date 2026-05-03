@@ -160,6 +160,27 @@ assert(
   /export\s+const\s+runtime\s*=\s*["']nodejs["']/.test(usageRouteSrc),
   "A9: nodejs runtime (db driver requires it)"
 );
+// Per-user rate limit guard — added 2026-05-03 post-Gap-#4 hardening.
+// Same pattern as /api/ai/estimate; bounds DoS via tight-loop fetch
+// from an authenticated user.
+assert(
+  /MAX_PER_WINDOW\s*=\s*60\b/.test(usageRouteSrc),
+  "A10: per-user rate cap is 60/min (recap fetch is cheaper than estimate; doubled the 30/min estimate cap)"
+);
+assert(
+  /WINDOW_MS\s*=\s*60_000/.test(usageRouteSrc),
+  "A11: rate-limit window is 60s"
+);
+assert(
+  /function\s+consume\(userId:\s*string\)/.test(usageRouteSrc),
+  "A12: token-bucket consume() helper present"
+);
+assert(
+  /!consume\(userId\)/.test(usageRouteSrc) &&
+    /status:\s*429/.test(usageRouteSrc) &&
+    /rate_limited/.test(usageRouteSrc),
+  "A13: returns 429 with error:'rate_limited' when bucket exhausted"
+);
 
 // ============================================================================
 // Section B — OutOfCreditsAlert recap fetch

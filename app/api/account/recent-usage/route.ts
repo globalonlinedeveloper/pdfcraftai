@@ -49,6 +49,33 @@ const WINDOW_DAYS = 7;
 // job is to drive conversion, not narrate.
 const TOP_N = 3;
 
+// 2026-05-03 post-Gap-#4 hardening — per-user token bucket. The
+// endpoint runs a single grouped query against ai_usage; one read is
+// cheap, but a malicious authenticated user could hit it in a tight
+// loop and stress the DB indirectly via connection-pool pressure. 60
+// requests/user/min is generous (the alert only fetches once per
+// mount; legit users will never approach this) but bounds the worst
+// case. Same pattern as /api/ai/estimate (30/min) but doubled because
+// a recap fetch is even cheaper than an estimate (no chunker math).
+//
+// Process-local — resets on deploy. Good enough at our single-process
+// scale; revisit if we move to a multi-instance deploy.
+const buckets = new Map<string, { count: number; windowStart: number }>();
+const WINDOW_MS = 60_000;
+const MAX_PER_WINDOW = 60;
+
+function consume(userId: string): boolean {
+  const now = Date.now();
+  const b = buckets.get(userId);
+  if (!b || now - b.windowStart > WINDOW_MS) {
+    buckets.set(userId, { count: 1, windowStart: now });
+    return true;
+  }
+  if (b.count >= MAX_PER_WINDOW) return false;
+  b.count += 1;
+  return true;
+}
+
 export async function GET() {
   const session = await auth();
   const userId = session?.user
@@ -56,6 +83,17 @@ export async function GET() {
     : undefined;
   if (!userId) {
     return NextResponse.json({ error: "auth_required" }, { status: 401 });
+  }
+
+  // Per-user rate gate (60/min). Same shape as /api/ai/estimate.
+  if (!consume(userId)) {
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        detail: "Too many recent-usage requests. Wait a moment and retry.",
+      },
+      { status: 429 },
+    );
   }
 
   const rollup = await getUsageRollup(userId, WINDOW_DAYS);
