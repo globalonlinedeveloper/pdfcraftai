@@ -28,6 +28,8 @@ import {
   Th,
   tableStyle,
 } from "@/components/admin/ui";
+// 2026-05-03 plan §7 + §8 / Gap #5 — admin grant + debit actions.
+import { AdminUserActions } from "@/components/admin/AdminUserActions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -106,6 +108,20 @@ export default async function AdminUserDetailPage({
           }
         />
       </section>
+
+      {/* 2026-05-03 plan §7 + §8 / Gap #5 — admin actions panel.
+          Grant / debit credits with audit trail in note field.
+          Renders BEFORE the abuse-signal panel so admins reviewing a
+          flagged account can claw back without scrolling. */}
+      {data.user ? (
+        <section style={{ marginBottom: 24 }}>
+          <SectionTitle>Admin actions</SectionTitle>
+          <AdminUserActions
+            targetUserId={params.id}
+            currentBalance={data.user.balance ?? 0}
+          />
+        </section>
+      ) : null}
 
       {/* 2026-05-03 plan §7 + §8 — abuse-signal panel. Surfaces the
           abuse-prevention columns from migration 0018 (signup_ip,

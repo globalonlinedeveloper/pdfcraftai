@@ -37,8 +37,36 @@
 // credits — this summary costs 3, you have 0. Top up on /app/billing.").
 // Tools don't need to know the parse rules — just call the helpers.
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
+
+// 2026-05-03 plan §9 / Gap #4 — humanize an op id for the recap line.
+// Mirrors the `cost: "3 credits per doc"` desc copy in lib/tools.ts but
+// kept inline so the alert stays a leaf component (no cross-server
+// import dance).
+const OP_DISPLAY_NAMES: Record<string, string> = {
+  summarize: "Summarize",
+  rewrite: "Rewrite",
+  table: "Table extract",
+  compare: "Compare",
+  generate: "Generate",
+  translate: "Translate",
+  ocr: "OCR",
+  redact: "Redact",
+  sign: "Sign",
+  chat_turn: "Chat",
+};
+
+function displayOp(op: string): string {
+  return OP_DISPLAY_NAMES[op] ?? op;
+}
+
+interface RecentUsageResponse {
+  totalCredits: number;
+  days: number;
+  top: Array<{ op: string; credits: number; calls: number }>;
+}
 
 export interface OutOfCreditsAlertProps {
   /** Credits the failed op required. From the 402 response body. */
@@ -79,6 +107,36 @@ export function OutOfCreditsAlert({
   opLabel = "this operation",
 }: OutOfCreditsAlertProps) {
   const shortfall = Math.max(0, required - balance);
+
+  // 2026-05-03 plan §9 / Gap #4 — fetch last-7-day usage recap on mount.
+  // Soft-load: if the fetch fails or returns empty, we just hide the
+  // recap section. The alert itself is still useful (CTA + balance copy)
+  // without it.
+  const [recap, setRecap] = useState<RecentUsageResponse | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const ac = new AbortController();
+    fetch("/api/account/recent-usage", { signal: ac.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: RecentUsageResponse | null) => {
+        if (cancelled || !data) return;
+        // Only show the recap if the user actually used something —
+        // surfacing "you used 0 credits this week" to a brand-new
+        // signup who just hit the cap is condescending, not helpful.
+        if (data.totalCredits > 0 && data.top.length > 0) {
+          setRecap(data);
+        }
+      })
+      .catch(() => {
+        // Network / abort — render nothing rather than scaring the
+        // user with an "analytics failed" banner that doesn't help
+        // them buy credits.
+      });
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, []);
 
   return (
     <div
@@ -125,6 +183,31 @@ export function OutOfCreditsAlert({
           </div>
         </div>
       </div>
+
+      {recap && (
+        // 2026-05-03 plan §9 / Gap #4 — personalized usage recap.
+        // "Last 7 days you used N credits across X / Y / Z" reminds
+        // users what their balance went toward and softens the
+        // upsell ask into a "you've been getting value" frame.
+        <div
+          className="muted"
+          style={{
+            fontSize: 12,
+            paddingLeft: 42,
+            lineHeight: 1.5,
+          }}
+        >
+          <span>Last {recap.days} days you used </span>
+          <strong style={{ color: "var(--fg)" }}>
+            {recap.totalCredits} credit{recap.totalCredits === 1 ? "" : "s"}
+          </strong>
+          <span> across </span>
+          <strong style={{ color: "var(--fg)" }}>
+            {recap.top.map((t) => displayOp(t.op)).join(" · ")}
+          </strong>
+          <span>.</span>
+        </div>
+      )}
 
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         {/* Primary CTA → /app/credits (signed-in cash register).
