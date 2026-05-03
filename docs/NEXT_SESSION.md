@@ -1,253 +1,114 @@
 # Next session — pick up here
 
-**Updated 2026-04-29 EOD (latest live commit `1d03c26`).** The
-M-series sweep is complete (25/25 + 3 verified-canonical + M21 closed
-at full applicable scope + M22 part 2 closed as vacuous). Same-day
-follow-ups: M24 architecture + CI guard, #20 root-cause hypothesis +
-10-grid prefetch fix, /admin/deploy "Recent commits" widget. No
-genuine pending engineering items remain from the M-series.
+**Updated 2026-05-03 evening (latest live commit `4f3a4c7`).** The Pricing/Telemetry plan auto-mode arc is complete + all 5 post-plan code gaps are closed. Code-side punch list is empty. Only user-action items remain.
 
-**Status as of 2026-04-29 EOD:**
-- Latest live commit: `1d03c26` (#20 round 2 — homepage + 5 more grids)
-- M-series 25/25 shipped; M-series + #20 + M24 follow-up all closed
-- All shipped changes are tsc-clean and 3250/0 test-passing across 39 suites
-- Only blockers remaining: #20 confirmation (watch uptimeSec on next bursty
-  deploy) + #22 (Razorpay dashboard domain allowlist — user-side action)
+**Status snapshot:**
+- Latest live commit: `4f3a4c7` (Gap #2 Option A — per-op signup-bonus cap, feature-flagged default OFF)
+- All 13 plan days shipped at gross level; all 5 post-plan code gaps closed (#1, #3, #4, #5, #2 all live)
+- Aggregator: **4462/4462 tests passing across 77 suites** (`tsc --noEmit` exit 0)
+- Resilience: 8 zombie-next-server cascades + 3 auto-pull jams survived this arc; documented playbook is reliable
 
-**Older notes below kept for archive of the visual-editor + G-series work.**
+**Three classes of remaining work:**
 
----
+## 1. User-action items (founder must do, no Claude work needed)
 
-## What to look at next session
+These are the only blockers between "everything is wired" and "everything is live + active in prod."
 
-The big-picture engineering punch list is empty. Productive directions if a
-new arc kicks off:
+### 1a. Hostinger panel env vars (REQUIRED)
+Add the following in hPanel → Environment Variables → Save and redeploy:
+- `CRON_SECRET=<generate any 32+ char random string>` — gates `/api/cron/expire-grants` (the daily sweep that debits expired signup_bonus credits past the 7-day TTL).
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAADH0w8NFtw_mwWPx` — public site key (already in `.claude/secrets.env`, just needs to be on the live env). Required for the registration form's captcha widget to render.
+- `TURNSTILE_SECRET_KEY=0x4AAAAAADH0wxWtlmi0hAi8-8HB-zOCYK8` — server-side secret. Required for `verifyTurnstileToken` to hit Cloudflare's siteverify endpoint. Without this, the captcha layer fails open.
 
-1. **Validate the #20 fix** — the 10-grid `prefetch={false}` sweep is a
-   speculative root-cause hypothesis. Confirmation comes from observation:
-   if `/api/health`'s `uptimeSec` stays high through the next bursty deploy
-   without a 503 cascade, the prefetch flood was the trigger. If it
-   cascades again, dig deeper (Hostinger LSAPI thread budget, analytics
-   script load timing, RSC payload sizes).
+### 1b. cron-job.org schedule (REQUIRED for credit expiry to actually fire)
+1. Sign in to cron-job.org → New cronjob.
+2. URL: `https://pdfcraftai.com/api/cron/expire-grants?secret=<the CRON_SECRET you set above>`
+3. Schedule: daily at 03:00 UTC (low-traffic window for the production DB).
+4. HTTP Method: GET.
+5. Save + enable.
 
-2. **pako → fflate shim** (~1 day, fragile) — biggest remaining bundle
-   win. The 425KB pako chunk is loaded for every writable-tool user.
-   Replacing via `webpack.resolve.alias` saves ~395KB raw / ~70KB gzipped.
-   pdf-lib doesn't expose a swap point so the shim has to mock pako's
-   exact API surface; brittle but well-trodden.
+Without this, the "free credits valid 7 days" promise isn't enforced — credits silently sit on user accounts past expiry. The expire-grants endpoint is idempotent (each row gets debited at most once) so manual re-runs are safe.
 
-3. **#22 Razorpay domain allowlist** — user-side blocker. Add
-   `pdfcraftai.com` to the merchant allowlist in the Razorpay dashboard
-   to unblock the card payment rail.
+### 1c. Optional: activate Gap #2 per-op cap
+The cap is wired but disabled by default. To activate:
+- Add `BONUS_PER_OP_CAP_ENABLED=true` in hPanel.
+- (Optional) `BONUS_PER_OP_CAP=2` to override the default cap value.
+- Save + redeploy.
 
----
+When activated, free-trial users (no purchases yet) can spend at most 2 of their 5 credits on any single AI op. After hitting the cap on a given op, they see "Top up to keep using it" — same UX as running out of pool credits, just earlier per-op. Topping up bypasses the cap entirely.
 
-## Older notes — archive of 2026-04-28's work
+### 1d. Search Console / Bing Webmaster
+Sitemap was last submitted to GSC + Bing on 2026-04-20 / 2026-04-21. The plan arc shipped 13 SEO landings + several redirect changes; the sitemap reflects them. Re-submit if you want fresh crawls — `https://pdfcraftai.com/sitemap.xml`.
 
-Today's session shipped 30+ commits across two arcs (the visual editor parity push #186-#192, then the G-series audit response #193). Three audit items are genuinely deferred and best tackled in a fresh session with full attention rather than chat-batch mode. This doc tells future-Claude (or future-Raj) exactly how to land them.
+## 2. Open investigation threads (worth a future session)
 
-**Original 2026-04-28 status:**
-- Latest live commit at the time: `981d8d8` (G8 foundation hook shipped)
-- 14 of 17 G-series audit items addressed
-- 2843/0 test-passing
+### Cascade-pattern investigation
+**Hypothesis:** zombie-next-server cascades correlate with **rapid code-bearing deploys**, not with deploy frequency alone. Doc-only and test-only commits deploy clean (commits `78240d4`, `ff54a98`, `d75f726`, `fef1304`); code-bearing commits repeatedly trigger cascades (`8afefa5` → #7, `acb7695` → #8). Counter-data: `4f3a4c7` was code-bearing but deployed clean — though only after an empty-commit nudge resolved auto-pull jam #3, suggesting the nudge sidestepped some queue-overlap state.
 
----
+**Suggested experiment** (~30 min):
+1. Push a small code-bearing commit at low-traffic time. Watch `/api/health` `uptimeSec` and `ps -fu u692382124 | grep -c next-server` via SSH.
+2. Wait 10 min. Push another code-bearing commit. Observe whether the second deploy cascades (overlap with first deploy's cleanup).
+3. Try the same with two doc-only commits 10 min apart. Compare cascade rate.
 
-## Outstanding work — three items, ~7h total
+**Working theory:** Hostinger's Passenger HelperAgent has a thread budget; rapid LSAPI socket re-binds during code-bearing rebuilds saturate it. Doc-only commits skip the rebuild entirely so don't compete for thread slots.
 
-### 1. G8 part 2 — migrate three rect-editor consumers to `useRectEditor` (~2h)
+**Mitigation if confirmed:** batch code commits with 5+ min spacing, OR ask Hostinger Support to bump the per-user thread cap (currently shared at the cgroup level — `ulimit -u` in user shell is misleadingly high).
 
-The hook lives at `components/tools/useRectEditor.ts`. Currently no consumers — three tools still carry ~250 LOC of duplicated move/resize logic each:
+### `capExceeded` flag → friendlier copy (deferred)
+Gap #2 Option A wires the cap and returns `{reason:"insufficient", capExceeded:true}` when fired. Route handlers and tool components currently ignore the flag — users see the standard "Not enough credits" copy. Once the cap is activated and we observe friction, the friendlier "Free trial cap reached on this tool — top up" copy is a 30-min batch:
+- 9-10 AI route handlers: pass `capExceeded` through to the 402 response body.
+- 9-10 client tool components: detect the new field, switch the formatted error string.
+- Probably best wrapped as a single `lib/ai/error-mapping.ts` helper that all components import, to avoid duplicating the conditional logic.
 
-- `components/tools/PdfHighlightTool.tsx` (lines ~240-500)
-- `components/tools/PdfRedactTool.tsx` (lines ~245-500)
-- `components/tools/PdfAddLinksTool.tsx` (lines ~260-460 approximately)
+### Per-op cap admin observability
+Right now we have no admin signal that "user X hit the cap on op Y." Worth a small dashboard or log line: when `checkPerOpBonusCap` returns capped:true with remaining < cost, emit a structured stdout log (`event: "per_op_cap_blocked"`) so admin can grep for cap-hit clusters. Especially useful in the first 2 weeks after activation to see if the cap is firing on legit users.
 
-**Migration recipe per file:**
+## 3. Documentation that should exist (low-priority polish)
 
-1. Add the import:
-   ```ts
-   import { useRectEditor } from "./useRectEditor";
-   ```
+### Operations runbook
+We have lots of cascade history in STATUS.md but no single "what to do when X breaks" doc. A short `docs/OPS_RUNBOOK.md` covering:
+- Cascade recovery: SSH mass-kill or wait 5–10 min (with the fork-retry decision tree)
+- Auto-pull jam: empty-commit nudge
+- 503 vs 200 vs HTML-default-error decision flow
+- "How to find the latest live commit": `curl /api/health | jq .commit`
+- "How to roll back": `git revert HEAD && push` (followed by another empty-commit nudge if needed)
 
-2. Inside the editor overlay component, just below `pageRender`/`state` destructure:
-   ```ts
-   const editor = useRectEditor(state.rects, (rects) => setState((s) => ({ ...s, rects })), {
-     pxWidth: pageRender.pxWidth,
-     pxHeight: pageRender.pxHeight,
-   });
-   ```
+This could be 1 page of dense bullets and would save ~10 min in any future incident.
 
-3. **Delete** the existing blocks in that file:
-   - `movingRef` declaration + `setMovingIndex` state
-   - `resizingRef` declaration + `setResizingIndex` state
-   - `applyMove` helper function
-   - `applyResize` helper function
-   - `onSavedRectPointerDown` / `onSavedRectPointerMove` / `onSavedRectPointerUp`
-   - `onResizeHandlePointerDown` / `onResizeHandlePointerMove` / `onResizeHandlePointerUp`
-
-   (~250 LOC per file goes to zero)
-
-4. **Add** `data-rect-overlay="true"` to the outer overlay container (the one with the page image + SVG inside).
-
-5. **Replace** wiring on the saved-rect `<div>`:
-   ```tsx
-   onPointerDown={(e) => editor.onRectPointerDown(e, idx)}
-   onPointerMove={editor.onRectPointerMove}
-   onPointerUp={editor.onRectPointerUp}
-   onPointerCancel={editor.onRectPointerUp}
-   ```
-   Halo when moving: check `editor.movingIndex === idx`.
-
-6. **Replace** wiring on each of the 4 corner handles:
-   ```tsx
-   onPointerDown={(e) => editor.onResizeHandlePointerDown(e, idx, "nw")}
-   onPointerMove={editor.onResizeHandlePointerMove}
-   onPointerUp={editor.onResizeHandlePointerUp}
-   onPointerCancel={editor.onResizeHandlePointerUp}
-   ```
-
-**Verification per file:** behavior should be byte-identical. Test by:
-- Drawing 3 rects, then drag the middle one — origin point should match the click; release point should land where the cursor was.
-- Resize from each of the 4 corners — opposite corner should stay anchored.
-- Resize past 8px — should clamp without flipping.
-- Drag/resize past page edge — should clamp.
-
-Type-check after each file (`npx tsc --noEmit`); run `npm test` after all three.
-
-### 2. G5 — apply move/resize to Add Text Box + Sign + Crop (~3h)
-
-These three are PageEditorTool consumers but have NO move/resize today. Once G8 part 2 lands, the recipe is similar — they just need to:
-
-- Track their primary element (text-box position, signature placement, crop rect) via the same `{x, y, w, h}` shape OR adapt slightly:
-  - **PdfAddTextBoxTool**: text-box has `{x, y}` position only — needs to be extended to `{x, y, w, h}` where `w/h` track the rendered text size; resize handles let user scale the box.
-  - **PdfSignTool**: signature image has `{x, y}` + `scale` — convert to `{x, y, w, h}` where `w/h` are derived from `scale × naturalAspect`; resize handles modify scale via `w / naturalWidth`.
-  - **PdfCropTool**: already uses a single rect — easiest migration. Just wire the hook for the existing rect.
-
-For each tool, wrap the single primary element in an array of size 1 so the hook can work generically:
-```ts
-const rects = state.rect ? [state.rect] : [];
-const setRects = (next: typeof rects) => setState((s) => ({ ...s, rect: next[0] ?? null }));
-```
-
-### 3. G16 — uniform `inspect()` lib API (~2h, optional)
-
-The "uniform inspect API" was speculative in the audit. G2 already addressed the user-visible problem (preview-before-apply on PdfSimpleOpsTool consumers). What's left is just the abstraction work — and it's not clear it pays for itself. Each consumer already calls `extractLinks` / `extractFormFields` / `extractPdfMetadata` directly. Adding an `inspectPdf(bytes)` super-function that returns `{ links, forms, metadata, pageCount, ... }` would be cleaner DEV-ergonomics but doesn't change anything for users.
-
-**Recommendation:** skip G16 unless you find yourself writing the same `await extractX(bytes)` boilerplate three more times. The current spread is fine.
+### Cron-jobs index
+Currently we have one cron (expire-grants) and the design doc trail mentions future ones (margin rollup, anomaly detection, etc.). Worth a `docs/CRON_JOBS.md` listing every endpoint that should be hit on a schedule, the schedule, and the canonical cron-job.org configuration. Easy to forget to set up new crons during onboarding to a new hosting platform.
 
 ---
 
----
+## What this session shipped (handoff snapshot)
 
-## M-series (second-pass audit) — 25 items the G-series missed
+**Plan arc** (Pricing/Telemetry — multiple sub-sessions, ~50 commits total):
+- Day 1 supply-chain scrub + credit-badge removal + marketing copy
+- Day 1.5a/b email verification + password reset SMTP + login rate limit + bcrypt 12 + password strength + no-enumeration
+- Day 1.6 DPDP compliance (data export, account delete, breach runbook)
+- Day 1.7 multiplier-aware spend for translate/redact/sign
+- Day 2 + 2.5 pre-flight credit estimator + 9/9 AI tools wired
+- Day 3 user `/app/usage` page (credits-only)
+- Day 5 + 5.5 abuse stack layers 1-7 (disposable blocklist, Gmail-alias normalize, IP /24 throttle, device fingerprint, Cloudflare Turnstile)
+- Day 6 atomic 25→5 credit grant flip + grantSignupBonus
 
-A second-pass audit on 2026-04-28 surfaced 25 additional gaps the
-G-series didn't cover. **M14 (print stylesheet) is shipped today
-in `globals.css`.** The remaining 24 are documented here for future
-sessions. Effort estimates assume one-batch-per-item; many are
-small, a few (M21, M23, M24) are real refactors.
+**Post-plan gap closure** (this session, 9 commits):
+- Gap #1 — defer signup bonus to /verify-email after email-ownership proof
+- Gap #3 — estimator badge wired into 6 remaining AI tools (9/9 coverage now)
+- Gap #4 — personalized "last 7 days" recap on OutOfCreditsAlert (+ rate-limit on /api/account/recent-usage)
+- Gap #5 — admin grant/debit credit actions on /admin/users/[id]
+- Gap #2 Option A — per-op signup-bonus cap (feature-flagged default OFF, decision-doc trail in `docs/GAP2_DESIGN_OPTIONS.md`)
 
-### Tier 1 — high value, low risk (~6h total)
+**Test surface:** 4462/4462 across 77 suites; 2 new CI guards added (`gap4-gap5` 58 assertions, `per-op-bonus-cap` 26 assertions), plus extensions to `abuse-prevention`.
 
-| ID | Item | Effort | Notes |
-|---|---|---|---|
-| M3 | **SHIPPED** (`430aea0`, 2026-04-28) | — | `lib/client/download.ts` `suffixedFilename()` |
-| M5 | **SHIPPED** parts 1+2+3 (`36ece46` + `9498285` + `2c9c575`, 2026-04-29) | — | Part 1+2: AbortController plumbing through `rasterize.ts` → `usePdfThumbnails` → 3 consumer tools (PageGrid/Split/Sort) with Cancel buttons. Part 3: extended through merge + split apply phase (per-input/per-chunk signal check), with independent `applyAbortRef` in PdfMergeTool + PdfSplitTool |
-| M9 | **SHIPPED** (`be39236`, 2026-04-29) | — | `lib/client/handoff.ts` window-scoped Blob registry + `tool-suggestions.ts` curated map; PageEditorTool consumes `?handoff=` on mount and offers "Open in [Tool]" buttons on success card |
-| M14 | **SHIPPED** (`ecf0427`, 2026-04-28) | — | `@media print` block hides chrome, forces light theme |
-| M17 | **SHIPPED** (`1ab0221`, 2026-04-28) | — | `mapPdfOpError` extended to 25 AI/inspector catch sites |
-
-### Tier 2 — high value, moderate risk (~14h total)
-
-| ID | Item | Effort | Notes |
-|---|---|---|---|
-| M11 | **SHIPPED** (`c1b9e43`, 2026-04-29) | — | Switched 11 `touchAction:"none"` → `"pinch-zoom"` across 5 visual editors |
-| M12 | **SHIPPED** (`62d3754`, 2026-04-29) | — | onFocus handler on PdfAddLinksTool's URL input calls `scrollIntoView({block:"center"})` after a 280ms delay (matches iOS/Android keyboard animation). Covers both autoFocus-on-mount and user-tap re-focus |
-| M21 | **CLOSED at 4/4 applicable** (`4fc67fc` + `4d8ada8`, 2026-04-29) | — | `PdfReadOpsTool` slot-based base. PdfLinks/Annotations/Forms/Fonts migrated (1573 → 666 LOC + 362 base = -545 LOC, 907 LOC of duplication removed). Post-batch landscape audit found the "9-inspector" framing was wrong: PdfChecklistTool is already-DRY (own base for 4 audit tools); PdfOutlineTool + PdfAttachmentsTool have intentional UX divergence (Copy-as-text + JSON-download, not Copy-JSON + CSV); no separate Wave 8 byte-parser components exist. Future work to unify Outline/Attachments would require adding `copyText?` + `jsonDownload?` slots to the base (API extension, not mechanical migration) |
-| M24 | **SHIPPED** (`5327cb7`, 2026-04-29) | — | Extracted ToolRunner from page.tsx into `components/tools/ToolRunner.tsx` ("use client") and replaced 51 static imports with `next/dynamic({ ssr: false })`. Each tool now ships as its own webpack chunk. `/tool/[id]` page-specific JS dropped from bundling 60+ tool components to **3.7 kB**. 116 chunks generated. Build clean, 3246/0 tests, tsc clean |
-| M22 | **SHIPPED** (`3e86d9f`, 2026-04-29) + part 2 closed as vacuous (`2c9c575`) | — | `lib/client/csv.ts` canonical writer, 4 inspector consumers migrated, 20 unit-test assertions. Part 2 (BOM-on-load) vacuous: no consumer reads CSVs |
-
-### Tier 3 — polish (~7h total)
-
-| ID | Item | Effort | Notes |
-|---|---|---|---|
-| M1 | **SHIPPED** (`5c39d49`, 2026-04-29) | — | Codified single-page invariants as a 30-assertion CI guard in `scripts/test-page-editor-consumers.mjs` |
-| M2 | **SHIPPED** (`0cc6f9b`, 2026-04-28) | — | Unified disabled state across all `.btn` variants in `app/globals.css` |
-| M4 | **SHIPPED** (`98c6914`, 2026-04-28) | — | Soft notice in `ToolDropzone` when multi-file drop hits a single-file tool |
-| M15 | **ALREADY-CANONICAL** | — | Inspect card already had `role="status"` + `aria-live="polite"` (verified during M19 audit) |
-| M16 | **SHIPPED** (`b526b47`, 2026-04-29) — reframed as scroll-into-view, not focus-steal | — | New `useScrollErrorIntoView` hook on null→string transition; respects prefers-reduced-motion |
-| M18 | AI tools first-page preview | 3h | Apply useFirstPagePreview to Summarize, Chat, Resume Parser, etc. |
-| M19 | **SHIPPED** (`d6592c6`, 2026-04-29) | — | `lib/api-endpoints.ts` price strings unified to "N credit[s] per <unit>" |
-
-### Tier 4 — long tail (~16h total)
-
-| ID | Item | Effort | Notes |
-|---|---|---|---|
-| M6 | **SHIPPED** (`086b762`, 2026-04-29) | — | `scripts/test-objecturl-revocation.mjs` static-parse audit; baseline 39 sites all clean; wired into `npm test` |
-| M7 | **SHIPPED** (`da5bd6e`, 2026-04-28) | — | `setPdfBytes(null)` after apply success in PageEditor/PageGrid/Split |
-| M8 | Stale blob URLs on browser-back | 1h | Detect via navigation API |
-| M10 | Deep-link `?file=<url>` to auto-load | 2h | URL param + fetch + validation |
-| M13 | Mobile orientation change rect-rescaling | 2h | ResizeObserver + rect coord normalization |
-| M20 | AI tool retry on transient network failure | 2h | Backoff + idempotency |
-| M23 | **SHIPPED** (`fb4b48c`, 2026-04-29) | — | `public/pdfium-sw.js` single-purpose SW caches ONLY `/pdfium.wasm` (cache-first + network fallback, versioned `pdfium-wasm-v1`). `components/PdfiumServiceWorker.tsx` defers registration to `requestIdleCallback`. Single-purpose scope avoids classic SW staleness trap |
-| M25 | Memoize `useFirstPagePreview` by content hash | 2h | Hash + cache invalidation |
-
-### Tier 5 — speculative (skip unless real users complain)
-
-| ID | Item | Notes |
-|---|---|---|
-| M16 — covered by Tier 3 |  |
-| (no others) |  |
-
-### Recommended next-session priority order
-
-**M-series fully complete: 25 of 25 shipped + 3 verified-canonical (M8,
-M13, M15); M21 closed at full applicable scope (4 of 4 — see
-SESSION_2026-04-29 §M21 landscape audit: PdfChecklistTool already-DRY,
-Outline + Attachments have intentional UX divergence, no separate Wave 8
-byte-parser components exist).**
-
-There is no genuine pending work remaining from the M-series. Future
-sessions should look at the optional scope-extension below or pick up
-unrelated work from STATUS.md.
-
-**Optional scope extension** (not in original M-series, but logical
-follow-up): add `copyText?` + `jsonDownload?` slots to PdfReadOpsTool,
-then migrate PdfOutlineTool + PdfAttachmentsTool. ~3h including the
-base-API change and two consumer migrations. Worth it only if the
-codebase grows more "outline-shape" tools that would re-use the new
-slots.
-
----
-
-## Quick reference — what shipped today
-
-**Visual editor parity arc (#186–#192):**
-- Drag-to-reposition + corner-resize on Highlight/Redact
-- Image Watermark v2 visual click-to-place
-- Stamp + Page Numbers WYSIWYG preview
-- Free Draw stroke move with hit-testing
-- UI copy style guide + 35-file canonical-error sweep
-- DOM virtualization for 500+ page thumbnail grids
-
-**G-series audit response (#193):**
-- G1: encrypted-PDF canonical UX (`lib/pdf/error-messages.ts`)
-- G2: SimpleOps inspect-before-apply
-- G4: Split tool DOM virtualization
-- G8: `useRectEditor` foundation hook (consumers awaiting migration — see §1 above)
-- G11: color-blind selection icons (✓/✗ glyphs)
-- G12: keyboard arrow nav with virtualization-aware focus
-- G14: prefers-reduced-motion CSS
-- G17: +32 test assertions on PageEditorTool consumers
-
-**Already canonical (no work needed):** G3, G6, G9, G10, G13.
-
----
-
-## Operational notes for the next session
-
-- **Hostinger thread cap** (CLAUDE.md §5): one SSH-pkick per deploy cycle MAX. After that, hPanel "Stop running process" is the safer reset path.
-- **Auto-pull jams**: if `last-source` lags HEAD by > 10 min, push an empty commit to nudge. Don't do it more than twice per session.
-- **Test harness**: 2843 tests across 32 suites. Run `npm test` before and after every batch of edits.
-- **tsc**: run via `npx tsc --noEmit` from the repo root.
+**Files most likely to be relevant in the next session:**
+- `lib/payments/per-op-bonus-cap.ts` — Gap #2 helper (pure)
+- `lib/ai/credits.ts` — spendCredits wire-in
+- `app/verify-email/page.tsx` — grant-on-verify hook
+- `lib/admin/user-actions.ts` — admin grant/debit
+- `components/admin/AdminUserActions.tsx` — admin form UI
+- `app/api/account/recent-usage/route.ts` — recent-usage endpoint with rate limit
+- `components/upsell/OutOfCreditsAlert.tsx` — alert with personalized recap
+- `docs/GAP2_DESIGN_OPTIONS.md` — Option A activation instructions
+- `docs/STATUS.md` — full timeline of the arc (cascade history, decision rationale)
+- `CLAUDE.md` — bootstrap doc (deployment playbook, cascade recovery, env vars)
