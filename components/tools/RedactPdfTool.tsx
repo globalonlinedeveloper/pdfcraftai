@@ -30,6 +30,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
+// 2026-05-03 plan §9 — Day 6.5 wire-in.
+import {
+  OutOfCreditsAlert,
+  isInsufficientCreditsError,
+  parseRequiredFromError,
+  parseBalanceFromError,
+} from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -292,20 +299,29 @@ export function RedactPdfTool() {
       )}
 
       {error && (
-        <div
-          role="alert"
-          className="card"
-          style={{
-            padding: 14,
-            borderColor: "var(--red)",
-            background: "var(--red-soft, rgba(220,38,38,0.08))",
-            color: "var(--red)",
-            fontSize: 13,
-            lineHeight: 1.5,
-          }}
-        >
-          {error}
-        </div>
+        // 2026-05-03 plan §9 — branch on insufficient-credits.
+        isInsufficientCreditsError(error) ? (
+          <OutOfCreditsAlert
+            required={parseRequiredFromError(error)}
+            balance={parseBalanceFromError(error)}
+            opLabel="this redaction"
+          />
+        ) : (
+          <div
+            role="alert"
+            className="card"
+            style={{
+              padding: 14,
+              borderColor: "var(--red)",
+              background: "var(--red-soft, rgba(220,38,38,0.08))",
+              color: "var(--red)",
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            {error}
+          </div>
+        )
       )}
 
       {result && <ResultCard result={result} />}
