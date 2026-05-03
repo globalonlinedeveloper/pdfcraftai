@@ -31,7 +31,7 @@
 
 import "server-only";
 
-import { and, asc, desc, eq, gte, isNotNull, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNotNull, like, lt, ne, sql } from "drizzle-orm";
 
 import { db, schema } from "@/db/client";
 import {
@@ -672,6 +672,15 @@ export type UserDetail = {
     name: string | null;
     createdAt: Date;
     balance: number;
+    // 2026-05-03 plan §7 + §8 — abuse-signal columns from migration 0018.
+    signupIp: string | null;
+    deviceFingerprint: string | null;
+    emailNormalized: string | null;
+    // Cluster sizes computed inline so the admin page doesn't need a
+    // second round-trip. Each is the count of OTHER users that share
+    // this facet (excludes the current user).
+    ipBucketSiblings: number;
+    fingerprintSiblings: number;
   } | null;
   recentLedger: Array<{
     id: string;
@@ -709,6 +718,11 @@ export async function getUserDetail(opts: {
         email: schema.users.email,
         name: schema.users.name,
         createdAt: schema.users.createdAt,
+        // 2026-05-03 plan §7 + §8 — abuse-signal columns. NULL for
+        // pre-migration-0018 legacy rows.
+        signupIp: schema.users.signupIp,
+        deviceFingerprint: schema.users.deviceFingerprint,
+        emailNormalized: schema.users.emailNormalized,
       })
       .from(schema.users)
       .where(eq(schema.users.id, opts.userId))
@@ -775,6 +789,42 @@ export async function getUserDetail(opts: {
       .from(schema.aiUsage)
       .where(eq(schema.aiUsage.userId, opts.userId));
 
+    // 2026-05-03 plan §7 + §8 — abuse-signal cluster sizes for this
+    // user's facets. Both queries use the existing single-column
+    // indexes (users_signup_ip_idx + users_device_fingerprint_idx)
+    // so the cost is one indexed seek per query.
+    let ipBucketSiblings = 0;
+    if (user.signupIp) {
+      const v4Match = user.signupIp.match(/^(\d+\.\d+\.\d+)\.\d+$/);
+      const bucketPrefix = v4Match ? `${v4Match[1]}.` : null;
+      if (bucketPrefix) {
+        const [row] = await db
+          .select({ c: sql<number>`COUNT(*)` })
+          .from(schema.users)
+          .where(
+            and(
+              like(schema.users.signupIp, `${bucketPrefix}%`),
+              ne(schema.users.id, opts.userId),
+            ),
+          );
+        ipBucketSiblings = Number(row?.c ?? 0);
+      }
+    }
+
+    let fingerprintSiblings = 0;
+    if (user.deviceFingerprint) {
+      const [row] = await db
+        .select({ c: sql<number>`COUNT(*)` })
+        .from(schema.users)
+        .where(
+          and(
+            eq(schema.users.deviceFingerprint, user.deviceFingerprint),
+            ne(schema.users.id, opts.userId),
+          ),
+        );
+      fingerprintSiblings = Number(row?.c ?? 0);
+    }
+
     return ok({
       user: {
         id: user.id,
@@ -782,6 +832,11 @@ export async function getUserDetail(opts: {
         name: user.name,
         createdAt: user.createdAt,
         balance: bal?.b ?? 0,
+        signupIp: user.signupIp ?? null,
+        deviceFingerprint: user.deviceFingerprint ?? null,
+        emailNormalized: user.emailNormalized ?? null,
+        ipBucketSiblings,
+        fingerprintSiblings,
       },
       recentLedger: recentLedger.map((r) => ({
         id: r.id,

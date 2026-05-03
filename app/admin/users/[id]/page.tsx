@@ -107,6 +107,72 @@ export default async function AdminUserDetailPage({
         />
       </section>
 
+      {/* 2026-05-03 plan §7 + §8 — abuse-signal panel. Surfaces the
+          abuse-prevention columns from migration 0018 (signup_ip,
+          device_fingerprint, email_normalized) plus the cluster
+          sizes of OTHER users sharing this user's IP /24 or
+          fingerprint. Cluster size > 0 is the signal that this
+          account might be part of a coordinated attempt. */}
+      {data.user ? (
+        <section style={{ marginBottom: 24 }}>
+          <SectionTitle>Abuse signals</SectionTitle>
+          <div className="card" style={{ padding: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+              <div>
+                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Signup IP</div>
+                <div style={{ fontFamily: "monospace", fontSize: 14 }}>
+                  {data.user.signupIp ?? <span className="muted">— (legacy row)</span>}
+                </div>
+                {data.user.ipBucketSiblings > 0 ? (
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                    ⚠ {data.user.ipBucketSiblings} other user{data.user.ipBucketSiblings === 1 ? "" : "s"} from same /24
+                  </div>
+                ) : data.user.signupIp ? (
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                    ✓ unique /24 in user base
+                  </div>
+                ) : null}
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Device fingerprint</div>
+                <div style={{ fontFamily: "monospace", fontSize: 14 }}>
+                  {data.user.deviceFingerprint ? (
+                    `${data.user.deviceFingerprint.slice(0, 16)}…`
+                  ) : (
+                    <span className="muted">— (legacy row or fingerprint failed)</span>
+                  )}
+                </div>
+                {data.user.fingerprintSiblings > 0 ? (
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                    ⚠ {data.user.fingerprintSiblings} other user{data.user.fingerprintSiblings === 1 ? "" : "s"} share this fingerprint
+                  </div>
+                ) : data.user.deviceFingerprint ? (
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                    ✓ unique fingerprint in user base
+                  </div>
+                ) : null}
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Email (canonical)</div>
+                <div style={{ fontFamily: "monospace", fontSize: 14 }}>
+                  {data.user.emailNormalized ?? <span className="muted">— (legacy row)</span>}
+                </div>
+                {data.user.emailNormalized && data.user.emailNormalized !== data.user.email.toLowerCase() ? (
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                    Differs from raw email — Gmail+alias or dot-trick collapsed
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 16 }}>
+              See <a href="/admin/abuse-signals" style={{ color: "var(--accent)" }}>/admin/abuse-signals</a> for cross-user clustering.
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section style={{ marginBottom: 24 }}>
         <SectionTitle>Recent credit ledger</SectionTitle>
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
