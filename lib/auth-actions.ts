@@ -17,6 +17,12 @@ import {
   normalizeEmail,
   readClientIp,
 } from "@/lib/auth/abuse-prevention";
+// 2026-05-02 plan §2 path D wire-in (Day 6 prep) — fire signup
+// bonus on credentials registration. Helper is idempotent and
+// no-ops when SIGNUP_GRANT_ENABLED!=="true". Day 6 atomic flip
+// enables the env var; until then no credits move but the wiring
+// is type-checked + import-correct.
+import { grantSignupBonus } from "@/lib/payments/signup-bonus";
 
 // ---------------- Register ----------------
 
@@ -175,6 +181,17 @@ export async function registerAction(
       userId: id,
       balance: 0,
     });
+
+    // 2026-05-02 plan §2 path D wire-in. grantSignupBonus is
+    // idempotent on `signup_bonus:${userId}` — safe to call here AND
+    // on the OAuth events.signIn callback in auth.ts. No-ops until
+    // SIGNUP_GRANT_ENABLED=true (Day 6 atomic flip). Wrapped in
+    // try/catch — a grant failure must not abort signup.
+    try {
+      await grantSignupBonus(id);
+    } catch (err) {
+      console.error("grantSignupBonus failed for", id, err);
+    }
   } catch (err) {
     console.error("register action failed:", err);
     return { ok: false, error: "Something went wrong. Please try again." };
