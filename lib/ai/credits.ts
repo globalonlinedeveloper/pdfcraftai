@@ -28,6 +28,10 @@ import {
   type AIOperationId,
 } from "@/lib/pricing";
 import { grantCredits } from "@/lib/payments/ledger";
+// 2026-05-03 plan §8 layer 6 / Gap #2 Option A — per-op cap on
+// signup_bonus credits. Feature-flagged via BONUS_PER_OP_CAP_ENABLED;
+// helper returns { capped:false } when flag off OR user has paid.
+import { checkPerOpBonusCap } from "@/lib/payments/per-op-bonus-cap";
 
 // --- spendCredits ---------------------------------------------------------
 
@@ -61,7 +65,20 @@ export type SpendCreditsResult =
       creditsSpent: number;
       newBalance: number;
     }
-  | { ok: false; reason: "insufficient"; balance: number; required: number }
+  | {
+      ok: false;
+      reason: "insufficient";
+      balance: number;
+      required: number;
+      /**
+       * Set when the spend was blocked by the per-op signup-bonus cap
+       * rather than a true zero-balance situation. Routes that want
+       * different copy can check this flag; routes that don't will
+       * just emit the standard 402 message (still correct — topping
+       * up DOES fix the cap).
+       */
+      capExceeded?: true;
+    }
   | { ok: false; reason: "duplicate" };
 
 /**
@@ -92,6 +109,32 @@ export async function spendCredits(
     );
   }
   const cost = unitCost * multiplier;
+
+  // 2026-05-03 plan §8 layer 6 / Gap #2 Option A — per-op bonus cap.
+  // Skipped when BONUS_PER_OP_CAP_ENABLED!=="true" (the helper short-
+  // circuits to {capped:false}). Skipped also when the user has ever
+  // paid (the helper's paid-probe returns {capped:false}). Only fires
+  // for true free-trial users; bounds how much of their 5-credit pool
+  // can land on any one op type. See lib/payments/per-op-bonus-cap.ts
+  // and docs/GAP2_DESIGN_OPTIONS.md for design rationale.
+  const capCheck = await checkPerOpBonusCap(input.userId, input.operation);
+  if (capCheck.capped && capCheck.remaining < cost) {
+    // Surface as insufficient — same 402 path the route handlers
+    // already use. The capExceeded flag lets callers that care emit
+    // bespoke copy ("free-trial cap reached on this tool") while the
+    // default path stays "Top up to keep using it" — which IS the
+    // resolution either way (paid balance bypasses the cap).
+    return {
+      ok: false,
+      reason: "insufficient",
+      // Report what's actually available on this op via the bonus
+      // pool. Topping up bypasses the cap entirely so the "Top up"
+      // CTA still resolves the user's blocker correctly.
+      balance: capCheck.remaining,
+      required: cost,
+      capExceeded: true,
+    };
+  }
 
   // Pre-flight balance check. See file header for the race discussion.
   const [row] = await db

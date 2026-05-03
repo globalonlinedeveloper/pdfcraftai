@@ -3,9 +3,9 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-03 evening (Pricing/Telemetry plan + post-plan gap closure batch — 4 of 5 code gaps closed; #2 design doc ready for decision).
-**Live commit:** `acb7695` (rate-limit on `/api/account/recent-usage` at 60/user/min + Gap #2 design doc). All 76 suites green, **4436 tests passing**. **Eight zombie-next-server cascades** + 2 auto-pull jams survived across the full plan arc; deploys at `8afefa5` and `acb7695` both triggered cascades — recovered via the documented "wait 5–10 min for kernel to drain" path after thread-cap saturation prevented the SSH mass-kill from completing both times.
-**Aggregator:** 4436 passed across 76 suites in 7.0s (+58 from prior 4378/75 — `gap4-gap5` CI guard added with 58 assertions across 5 sections: recent-usage endpoint contract, alert recap soft-load, admin server actions, AdminUserActions client, page-mount placement invariant).
+**Last updated:** 2026-05-03 evening (Pricing/Telemetry plan + post-plan gap closure batch — **all 5 code gaps closed**; Gap #2 shipped feature-flagged default-OFF).
+**Live commit:** `acb7695` was the last live commit; this batch includes Gap #2 Option A wired into spendCredits + 26 new CI assertions, packaged as ONE commit to minimize cascade exposure (two consecutive code-bearing deploys both triggered cascades earlier in this session). All 77 suites green, **4462 tests passing**. **Eight zombie-next-server cascades** + 2 auto-pull jams survived across the full plan arc.
+**Aggregator:** 4462 passed across 77 suites (+26 from prior 4436/76 — `per-op-bonus-cap` CI guard with 26 assertions across 3 sections: helper surface, spendCredits wire-in, forward-compat invariants).
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
@@ -33,9 +33,9 @@ Fix: imported `CreditEstimateBadge` into Summarize, Rewrite, Table, Compare, Gen
 
 CI: full aggregator 4378/4378 passed across 75 suites; `tsc --noEmit` exit 0. No new test guards needed (existing `estimate` suite still validates the badge contract).
 
-**Remaining post-plan gaps (not closed in this batch — see audit response for full list):**
-- Gap #2: per-tool first-use cap (5 credits should be one-use-per-tool, currently pooled) — deferred for design review
-- User-side: Hostinger panel env vars (CRON_SECRET, NEXT_PUBLIC_TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY) → Save and redeploy
+**Remaining post-plan gaps:**
+- ALL 5 code gaps now closed. Gap #2 shipped as feature-flagged Option A (per-op N=2 cap on signup_bonus credits). To activate: set `BONUS_PER_OP_CAP_ENABLED=true` in Hostinger panel and redeploy. Default OFF until then.
+- User-side: Hostinger panel env vars (CRON_SECRET, NEXT_PUBLIC_TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, optionally BONUS_PER_OP_CAP_ENABLED) → Save and redeploy
 - User-side: cron-job.org daily 03:00 UTC GET schedule for `/api/cron/expire-grants`
 
 ### 2026-05-03 afternoon — Gap #4 + Gap #5 closure (commit `8afefa5`)
@@ -63,6 +63,25 @@ Ban affordance deliberately deferred — needs migration for `users.banned_at` +
 **Cascade #8 hit + recovered.** The deploy at `acb7695` triggered the same zombie next-server pattern (12 workers, source updated, BUILD_ID present, fork-retry on the SSH pkick attempt = thread-cap saturation). Per playbook, halted all probing for 9 minutes. Site self-recovered to 200 at `commit:"acb7695d698d"` `uptimeSec:4`. Total downtime ~10 min from push. Two consecutive deploys triggering the same cascade pattern — the underlying cause is something in how Hostinger's Passenger HelperAgent handles the rapid sequence of compile + workers-cycle + LSAPI socket re-bind during a content-bearing deploy. Pure-docs commits (e.g. `78240d4` STATUS-only) deploy without cascading; pure-test commits (`d75f726`) also deploy without cascading. Code-changing commits (`8afefa5` admin actions; `acb7695` route + doc) consistently trigger.
 
 **Pattern hypothesis (for next session's investigation):** the cascade fires on commits that touch route handlers OR client components in such a way that Next.js's webpack-cache invalidation forces a fuller rebuild. Test-only and STATUS-only commits skip the rebuild entirely. Worth a 30-min experiment: deploy a code-changing commit at low traffic, monitor `~/domains/pdfcraftai.com/nodejs/console.log` for the "Starting…" spam pattern + check thread count growth via `ps -fu | grep -c next-server`. If correlation is real, the mitigation is either batch code commits less frequently OR ask Hostinger Support to bump the per-user thread cap.
+
+### 2026-05-03 evening — Gap #2 Option A shipped (feature-flagged)
+
+After two consecutive cascades from code-bearing deploys (cascade #7 and #8 both recovered via the "wait 5–10 min" path), this batch packages Gap #2 Option A as a SINGLE commit covering the helper, the spendCredits wire-in, the CI guard, and STATUS.md — minimizing cascade exposure to one deploy event.
+
+**What ships:**
+- `lib/payments/per-op-bonus-cap.ts` — pure helper. `isPerOpBonusCapEnabled()` (default OFF), `bonusPerOpCap()` (default 2, env-overridable via `BONUS_PER_OP_CAP`), `checkPerOpBonusCap(userId, op) → { capped: boolean, ... }`. Two-query worst case (paid-probe + usage tally), zero queries when feature flag off, one query when user has paid.
+- `lib/ai/credits.ts` — `spendCredits` calls `checkPerOpBonusCap` BEFORE the balance probe (placement invariant — otherwise pool credits would always satisfy balance and the cap would never fire). `SpendCreditsResult` union extends with optional `capExceeded?: true` flag on the insufficient variant — forward-compatible (existing route handlers see the same 402 path without code changes; per-route bespoke "free trial cap reached" copy can be added later via the optional flag).
+- `scripts/test-per-op-bonus-cap.mjs` — 26 assertions across 3 sections (A: helper surface, B: spendCredits wire-in, C: forward-compat invariants). Critical guard B6 enforces the "cap check before balance probe" placement invariant. Wired into aggregator between `gap4-gap5` and `aggregator-coverage`.
+- `docs/GAP2_DESIGN_OPTIONS.md` — status updated from OPEN to SHIPPED with activation instructions.
+
+**Activation:** Hostinger panel → add `BONUS_PER_OP_CAP_ENABLED=true` and redeploy. To roll back: remove the env var and redeploy. When off, the helper short-circuits with zero DB cost.
+
+**Why feature-flagged default OFF:**
+- Gives the founder a reversible decision lever (no redeploy needed to roll back during a future cascade).
+- Lets prod-traffic A/B test the cap's friction profile before fully committing.
+- Decouples the code-change deploy from the policy-change activation — if the deploy itself triggers cascade #9, the cap doesn't activate until the next env-var change anyway.
+
+**All 5 code gaps from the post-plan audit are now CLOSED** (Gap #1 `c635015`, Gap #3 `c635015`, Gap #4 `8afefa5`, Gap #5 `8afefa5`, Gap #2 this batch). Remaining items are user-action only (Hostinger env vars + cron-job.org schedule).
 
 ### 2026-05-02 night — Pricing/Telemetry auto-mode arc (Days 1 + 1.5b + 1.6 + 2 + 5-partial)
 

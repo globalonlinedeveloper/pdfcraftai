@@ -1,9 +1,19 @@
 # Gap #2 — Per-tool first-use cap: design options
 
-**Status:** OPEN — needs decision before implementation.
+**Status:** SHIPPED (Option A, feature-flagged default OFF, commit pending push).
 **Date drafted:** 2026-05-03 (post-plan auto-mode arc).
+**Date shipped:** 2026-05-03 (same day — code wired, awaiting `BONUS_PER_OP_CAP_ENABLED=true` flip in Hostinger panel to activate).
 **Owner:** rajasekarjavaee@gmail.com (founder).
 **Plan ref:** `docs/PRICING_AND_TELEMETRY_PLAN.md` §8 layer 6.
+
+## Activation
+
+The cap is wired in but **OFF by default**. To enable:
+1. Hostinger panel → Environment Variables → add `BONUS_PER_OP_CAP_ENABLED=true`.
+2. (Optional) `BONUS_PER_OP_CAP=N` to override the default cap of 2 credits per op.
+3. Save and redeploy.
+
+To roll back: remove the env var (or set to anything other than `"true"`) and redeploy. The helper short-circuits to `{capped:false}` immediately when off — zero performance cost when disabled.
 
 ---
 

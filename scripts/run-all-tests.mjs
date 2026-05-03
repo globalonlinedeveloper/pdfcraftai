@@ -1056,6 +1056,22 @@ const SUITES = [
   // coverage (which would error if a new test file was orphaned).
   // Pure static-parse — no DB, no live route — adds ~5ms.
   { name: "gap4-gap5", file: "test-gap4-gap5.mjs" },
+  // 2026-05-03 plan §8 layer 6 / Gap #2 Option A — per-op signup-bonus
+  // cap (feature-flagged, default OFF). Helper at
+  // lib/payments/per-op-bonus-cap.ts caps how many of a free-trial
+  // user's 5-credit pool can land on any single AI op type
+  // (BONUS_PER_OP_CAP, default 2). Wires into spendCredits BEFORE
+  // the balance probe — placement invariant preserved by guard B6
+  // (otherwise pool credits would always satisfy balance and the cap
+  // would never fire). Returns the new spend variant
+  // { reason: "insufficient", capExceeded: true } so existing route
+  // handlers see the same 402 path without code changes
+  // (forward-compat — bespoke "free trial cap" copy can be added
+  // per-route later via the optional capExceeded flag).
+  // 26 assertions across 3 sections (A: helper surface, B: spendCredits
+  // wire-in, C: forward-compat invariants). Sequenced after gap4-gap5
+  // and before aggregator-coverage. Pure static-parse — no DB.
+  { name: "per-op-bonus-cap", file: "test-per-op-bonus-cap.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
