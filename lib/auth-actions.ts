@@ -130,6 +130,16 @@ export async function registerAction(
   const reqHeaders = await headers();
   const signupIp = readClientIp(reqHeaders);
 
+  // 2026-05-03 plan §8 layer 5 — device fingerprint from client.
+  // Hidden field populated by computeFingerprint() on mount.
+  // Cap to 64 chars to match users.device_fingerprint column type
+  // (migration 0018). Empty string → "no signal" (treated as null).
+  const deviceFingerprintRaw = formData.get("deviceFingerprint");
+  const deviceFingerprint =
+    typeof deviceFingerprintRaw === "string"
+      ? deviceFingerprintRaw.slice(0, 64).trim()
+      : "";
+
   // 2026-05-03 plan §8 layer 7 — Cloudflare Turnstile captcha verify
   // BEFORE any DB write. Token comes from a hidden form field that
   // the Turnstile widget injects on the client side. Fails open when
@@ -250,8 +260,11 @@ export async function registerAction(
       // power the admin abuse-signal page.
       emailNormalized: normalizedEmail,
       signupIp: signupIp || null,
-      // deviceFingerprint not yet populated — needs FingerprintJS
-      // client integration which lands in Day 5.5.
+      // 2026-05-03 plan §8 layer 5 — device fingerprint from hidden
+      // form field. Empty string = no signal (SSR or computeFingerprint
+      // failure on the client). Cap to 64 chars to match the column
+      // type in migration 0018.
+      deviceFingerprint: deviceFingerprint || null,
     });
 
     await db.insert(schema.credits).values({

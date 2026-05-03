@@ -1022,6 +1022,13 @@ const SUITES = [
   // / 5 sections covering surface, token submission, failure
   // handling, registerAction wire-in, client widget rendering.
   { name: "turnstile", file: "test-turnstile.mjs" },
+  // 2026-05-03 plan §8 layer 5 (Day 5.5) — vanilla device fingerprint.
+  // computeFingerprint() collects browser signals (UA, screen, canvas,
+  // WebGL, timezone, hardware) → SHA-256 hex hash. Falls back to a
+  // 64-char non-crypto hash on insecure-origin browsers. Submitted
+  // via hidden form field, persisted to users.device_fingerprint.
+  // 25 assertions / 6 sections.
+  { name: "fingerprint", file: "test-fingerprint.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

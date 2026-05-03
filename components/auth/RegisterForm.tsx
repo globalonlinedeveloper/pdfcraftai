@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
+// 2026-05-03 plan §8 layer 5 — vanilla device fingerprint.
+import { computeFingerprint } from "@/lib/auth/fingerprint";
 import { registerAction, type RegisterState } from "@/lib/auth-actions";
 import { sanitizeCallbackUrl } from "@/lib/auth-callback";
 import { signIn } from "next-auth/react";
@@ -55,6 +57,25 @@ export function RegisterForm() {
   const search = useSearchParams();
   const callbackUrl = sanitizeCallbackUrl(search?.get("callbackUrl"));
 
+  // 2026-05-03 plan §8 layer 5 — compute device fingerprint on mount.
+  // The hidden input below carries it to registerAction, which writes
+  // to users.device_fingerprint (migration 0018).
+  const fingerprintRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let cancelled = false;
+    computeFingerprint().then((fp) => {
+      if (cancelled) return;
+      if (fingerprintRef.current) fingerprintRef.current.value = fp;
+    }).catch(() => {
+      // Failure is non-fatal — empty fingerprint = no signal, registerAction
+      // still proceeds. Caught here so unhandled-promise-rejection
+      // warnings don't pollute the console.
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <>
       <button
@@ -73,6 +94,12 @@ export function RegisterForm() {
         {/* 2026-05-01 — hidden callbackUrl input so registerAction (server)
             knows where to redirect after credentials sign-up. */}
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        {/* 2026-05-03 plan §8 layer 5 — device fingerprint hidden field.
+            computeFingerprint() runs on mount via useEffect above; the
+            value lands here just before the user submits. Empty value
+            (SSR or fingerprint failed) → registerAction treats as
+            "no signal" and proceeds without a fingerprint. */}
+        <input type="hidden" name="deviceFingerprint" ref={fingerprintRef} defaultValue="" />
         <Field
           label="Full name"
           name="name"
