@@ -3,9 +3,42 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-03 early AM (Pricing/Telemetry plan auto-mode arc — 11 substantive commits + STATUS syncs).
-**Live commit:** `cd3116d` (Day 6 wire-in — `grantSignupBonus` called from registerAction + auth.ts events.signIn for new users; flag still OFF). All 70 suites green, 4239 tests passing. Two zombie-next-server cascades hit + recovered this session — repeated deploys are the trigger; mass-kill recovery in <60s both times.
-**Aggregator:** 4219 passed across 69 suites in 7.0s (+124 from `4095/63` — 5 new CI guards `no-supply-chain-leaks` + `no-credit-number-hardcodes` + `estimate` + `auth-hardening` + `dpdp-endpoints` + `abuse-prevention`).
+**Last updated:** 2026-05-03 mid-day (Pricing/Telemetry plan + post-plan gap closure batch).
+**Live commit:** `c635015` (Gap #1 + Gap #3: signup bonus deferred to /verify-email after email-ownership proof; CreditEstimateBadge wired into 9/9 AI tools — Summarize/Rewrite/Table/Compare/Generate/Translate added to existing Ocr/Redact/Sign). All 75 suites green, **4378 tests passing**. Six zombie-next-server cascades + 2 auto-pull jams survived across the full plan arc; deploy at `c635015` clean (no cascade, fresh build at uptimeSec=0 visible at health endpoint within ~3 min of push).
+**Aggregator:** 4378 passed across 75 suites in 8.8s (+283 from earlier 4095/63 baseline — new CI guards added across the arc: `no-supply-chain-leaks`, `no-credit-number-hardcodes`, `estimate`, `auth-hardening`, `dpdp-endpoints`, `abuse-prevention`, `signup-bonus`, `out-of-credits-alert`, `expire-grants`, `turnstile`, `fingerprint`, `login-rate-limit`).
+
+### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
+
+After the full Pricing/Telemetry plan landed at gross level, an honest audit identified 5 code-side gaps and 2 user-action gaps. This batch closes the two highest-bang-for-buck items:
+
+**Gap #1 — Defer signup bonus to email-verified landing (commit `c635015`)**
+
+Before this batch, the credentials path called `grantSignupBonus` immediately at registration — meaning a bot that completed Turnstile + dodged the disposable-email + IP-bucket layers could collect 5 free credits without ever proving email ownership. The plan had explicitly listed "verification gate" as layer 3 of the 7-layer abuse stack, but layer 3 was only enforced for the link-click side; the grant itself wasn't gated on it.
+
+Fix: removed `grantSignupBonus(id)` call from `lib/auth-actions.ts:registerAction` (credentials path). Added it to `app/verify-email/page.tsx` where it now fires after `consumeVerificationToken` succeeds. OAuth path is unchanged — Google/etc. already verified the email server-side, so `auth.ts` events.signIn still fires the idempotent grant on first sign-in.
+
+The IP-bucket throttle decision is still logged in registerAction under the new event name `signup_bonus_deferred_throttled` — admin reviews `/admin/abuse-signals` BEFORE the user clicks the verify link, and can claw back via ledger debit if a flagged account does verify. CI guard `abuse-prevention` G6 updated to expect the new event name.
+
+The verify-email page now renders a "✨ N free credits added — valid until <date>" pill on success when the grant lands. Failures of the grant itself are logged but don't break the verify UX.
+
+**Gap #3 — Estimator badge wired into 9/9 AI tools (commit `c635015`)**
+
+Before this batch, only Ocr/Redact/Sign showed the inline "this run costs N credits. You have M." badge. The 6 remaining AI tools left users hitting Run without a pre-flight quote.
+
+Fix: imported `CreditEstimateBadge` into Summarize, Rewrite, Table, Compare, Generate, Translate. Render placement matches each tool's flow:
+- Summarize/Rewrite/Table: render once a file is picked. Flat-cost ops, badge passes `pageCount={1}` and the estimator returns baseCost regardless.
+- Compare: render once both files are uploaded (`bothReady` gate).
+- Generate: prompt-only — render once trimmed prompt ≥ 10 chars. `charCount` drives the badge but op is flat-cost.
+- Translate: per-chunk pricing. `charCount = file.size / 20` as a conservative density proxy (PDFs are ~5% text by byte). Server chunker reads real extracted text, so live charge is at or below quote — never above (plan §5 "margin direction in user's favour" rule).
+
+CI: full aggregator 4378/4378 passed across 75 suites; `tsc --noEmit` exit 0. No new test guards needed (existing `estimate` suite still validates the badge contract).
+
+**Remaining post-plan gaps (not closed in this batch — see audit response for full list):**
+- Gap #2: per-tool first-use cap (5 credits should be one-use-per-tool, currently pooled) — deferred for design review
+- Gap #4: personalized "Last 7 days you used" recap on OutOfCreditsAlert (~1h)
+- Gap #5: admin action buttons (grant/debit/ban) on `/admin/users/[id]` (~2h)
+- User-side: Hostinger panel env vars (CRON_SECRET, NEXT_PUBLIC_TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY) → Save and redeploy
+- User-side: cron-job.org daily 03:00 UTC GET schedule for `/api/cron/expire-grants`
 
 ### 2026-05-02 night — Pricing/Telemetry auto-mode arc (Days 1 + 1.5b + 1.6 + 2 + 5-partial)
 
