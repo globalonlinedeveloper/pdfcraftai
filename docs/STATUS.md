@@ -3,9 +3,40 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-03 late evening (post-plan + ops-doc polish — all 5 code gaps closed + ops runbook + cron registry shipped).
-**Live commit:** `bdfc8be` (`docs/OPS_RUNBOOK.md` + `docs/CRON_JOBS.md` — closes the two doc gaps flagged in NEXT_SESSION.md §3). Last code-bearing live commit `4f3a4c7` (Gap #2 Option A). All 77 suites green, **4462 tests passing**. **Eight zombie-next-server cascades** + 3 auto-pull jams survived across the full plan arc; the documented "wait 5–10 min" + "ONE pkick max" + "empty-commit nudge" playbook held under all stress conditions.
-**Aggregator:** 4462 passed across 77 suites (+26 from prior 4436/76 — `per-op-bonus-cap` CI guard with 26 assertions across 3 sections: helper surface, spendCredits wire-in, forward-compat invariants).
+**Last updated:** 2026-05-04 (post-plan activation + e2e + tool improvement plan + 7 ship items).
+**Live commit:** `9f8bf07` (T2-5 capExceeded copy through 20 files — 10 AI route handlers + 9 tool components + OutOfCreditsAlert; deployed via empty-commit nudge after auto-pull jam #4). Last clean code-bearing deploy: `0ad19d8` (T1-1 + T1-3). All 78 suites green, **4619 tests passing**. **Nine zombie-next-server cascades** + 4 auto-pull jams survived across the full multi-day arc; the documented "ONE pkick + restart.txt" + "empty-commit nudge" + "wait 5–10 min if SSH fork-saturates" playbook handled every case.
+**Aggregator:** 4619 passed across 78 suites in ~6.5s (+157 from prior 4462/77 — added `csp-turnstile` guard with 4 assertions, `gap4-gap5` extension, plus all the assertion deltas absorbed by existing guards as new tools/SEO landings shipped).
+
+### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
+
+**Production activation (founder-action items completed this session):**
+- Hostinger panel env vars set live: `CRON_SECRET`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `BONUS_PER_OP_CAP_ENABLED=true`, `SIGNUP_GRANT_ENABLED=true`. Verified via curl + admin dashboard.
+- cron-job.org: 3 schedules created (expire-grants `0 3 * * *`, reconcile-payments `0 3 * * *`, ai-margin-rollup `15 0 * * *`). All UTC, failure auto-disable on. Verified each returns 200 with auth + 401 without; ai-margin-rollup captured **81.6% margin on Anthropic Haiku 4.5 summarize** on first run.
+
+**Critical bug found + fixed during e2e smoke (commit `383793a` + SSH .htaccess edit):**
+- CSP was missing `https://challenges.cloudflare.com` from script-src + frame-src, so the Turnstile widget was silently blocked from loading. Bug was COSMETIC before today's `TURNSTILE_SECRET_KEY` activation (Turnstile failed-open without the secret); activation flipped it to fail-closed, exposing the gap as a release-blocking outage where every credentials registration would have returned "Captcha verification failed."
+- Fix shipped via direct SSH edit to `/home/u692382124/domains/pdfcraftai.com/public_html/.htaccess` (Apache reads .htaccess per-request — no deploy needed). Surprise discovery: the live `.htaccess` was NEVER in the GitHub repo, despite being the source-of-truth for all production headers (next.config.mjs CSP gets stripped + replaced by Apache's `Header always unset` + `Header always set` pattern). Snapshot now committed at `public/.htaccess.prod-snapshot` (commit `35abd8c`) for source-control visibility.
+- New CI guard `csp-turnstile` (4 assertions) locks in the next.config.mjs side; the .htaccess side is documented in the snapshot file's header.
+
+**Tool improvement plan + shipped Tier 1/2 items (commit chain `19e52a4` → `0ad19d8` → `8d47400`):**
+- New `docs/TOOL_IMPROVEMENT_PLAN.md` (242 lines). Audits 111 tools (53 AI + 58 free); identifies coverage gaps (first-page preview 22/110, handoff suggestions 17/110); proposes 3-tier roadmap with 18 distinct improvements.
+- T1-1 shipped: Removed `/compress-pdf` bait-and-switch (SEO landing advertised "20-75% smaller, three levels" but no compress tool exists; pdf-lib limitation, intentional). Deleted SEO_PAGES entry + ~80-line longform body + slug from union type + `compress` from 16 related[] arrays + KNOWN_BROKEN_RELATED_IDS allowlist. Redirect kept (`/compress-pdf` → `/tools` 308) for indexed-URL hits.
+- T1-3 shipped: Backfilled 18 tools missing handoff suggestions (ai-chat, 4 extract-* tools, 5 inspectors, 3 compliance checkers, 4 object inspectors). Each curated by "user's next likely action," max 3-4 targets per source.
+- T1-2 honestly downgraded: Original "80% missing first-page preview" claim was misleading — most "missing" tools either don't take a PDF input (generators, image converters) or render the doc themselves (visual editors on canvas, grid bases with thumbnails). Real preview gap is much smaller than implied.
+- T2-5 shipped: Plumbed Gap #2's `capExceeded` flag from spendCredits → 402 response → tool error string (`[trial-cap]` marker) → OutOfCreditsAlert prop → friendlier copy. Users hitting the per-op cap now see "Free trial cap reached on this tool — paid credits don't have a per-tool cap" instead of the confusing "Not enough credits / you have 0" copy. 20 files modified across the chain (10 routes + 9 tool components + OutOfCreditsAlert + 1 nudge).
+
+**Cascade-pattern data (validated):**
+- Cascades 7, 8, 9 all on code-bearing deploys; doc-only commits and env-var-only redeploys deployed clean every time.
+- Pattern hypothesis confirmed: cascade frequency scales with the size of the webpack-cache invalidation surface. T1-1 + T1-3 (modest changes to 5 lib files) deployed clean; T2-5 (20 files including all 10 AI route handlers) cascaded.
+- Mitigation playbook: when SSH mass-kill returns `bash: fork: retry: Resource temporarily unavailable`, STOP — the cgroup is saturated and additional attempts compound the problem. Wait 5–10 min for kernel to drain pending threads. Verified twice this arc.
+- Cascade #9 specifically: T2-5 deployed via empty-commit nudge (auto-pull jam #4 had to be cleared first); ONE pkick recovered to live within ~60s. No cgroup saturation this time — the saturation seems correlated with the SECOND pkick, not the first.
+
+**Total session shipped (multi-day arc):**
+- 25+ commits since context compaction
+- All 5 post-plan code gaps closed
+- 6 Tier-1/Tier-2 items from the new improvement plan shipped (T1-1, T1-3, T2-5, plus the cascade-discovered CSP-Turnstile fix and the .htaccess snapshot)
+- Full doc trail: `PRICING_AND_TELEMETRY_PLAN`, `NEXT_SESSION`, `OPS_RUNBOOK`, `CRON_JOBS`, `ABUSE_PREVENTION`, `GAP2_DESIGN_OPTIONS`, `TOOL_IMPROVEMENT_PLAN`, `STATUS`
+- Test surface: 4619/4619 across 78 suites — every assertion in green
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
