@@ -4,8 +4,8 @@ _Single source of truth for what's done, what's pending, and who owns each item.
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
 **Last updated:** 2026-05-04 (17 ship items + Batch 2 instrumentation + Batch A FeedbackChip finish — table/compare wired).
-**Live commit:** `94db9e18ada8` (Generate FeedbackChip wire-up — 9/10 markdown-rendering AI ops now have the chip). Deployed via single mass-kill recovery in cascade #19 (~5 min — fastest in last 4 cascades, back to typical range after #18's 50-min worst-case). All 86 suites green, **4991 tests passing**. **Nineteen zombie-next-server cascades** survived total.
-**Aggregator:** 4991 passed across 86 suites in ~7s (+3 from prior 4988/86 — Generate adds 3 cross-checks in the chip pilot guard).
+**Live commit:** `cb013ab5a772` (Chat FeedbackChip wire-up — **10/10 AI ops now have the chip**). Deployed CLEAN — single push, no cascade, no nudge required. The data flywheel is structurally complete on every leveraged AI route. All 86 suites green, **4994 tests passing**. **Nineteen zombie-next-server cascades** total (no new cascade on this commit).
+**Aggregator:** 4994 passed across 86 suites in ~8s (+3 from prior 4991/86 — Chat adds 3 cross-checks in the chip pilot guard).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -276,6 +276,25 @@ Generate + chat have non-standard UX shapes (PDF base64 download / conversationa
 - Health came back at uptime 0s on commit `25a49a4` — clean deploy of the fix
 
 **Hypothesis update:** the small-commit-scope hypothesis (3 files this commit) doesn't perfectly predict cascade behavior. This was a 3-file commit and it cascaded hard. The dominant factor seems to be Hostinger plan cgroup pressure at push time — sometimes the kernel is already near saturation from background processes and ANY push triggers a hard cascade. Recovery playbook still works; it's just slower under saturation.
+
+### 2026-05-04 — FeedbackChip wired into Generate + Chat (commits `94db9e1`, `cb013ab`) — 10/10 milestone
+
+**Two doc-bearing commits closing out Stage 3 batch A** of the AI feedback rollout. After cascade #18 cleared, the chip rollout resumed on the last two AI ops still missing a chip: Generate (markdown-rendering ResultCard) and Chat (per-message conversational UX).
+
+**`94db9e1` — Generate chip wire-up.** `components/tools/GeneratePdfTool.tsx` got the standard 4-line surface: `FeedbackChip` import, `aiUsageId: string | null` on the `Result` type, capture from response body in both 200 + 207 branches (already plumbed at the route side), `<FeedbackChip operation="generate" aiUsageId={result.aiUsageId} fileId={result.fileId ?? null} providerId={result.providerId} model={result.model} />` rendered at the bottom of the ResultCard. `scripts/test-ai-feedback-pilot.mjs` WIRED_TOOLS list extended from 8 → 9. Aggregator 4988 → 4991 (+3 cross-checks). Cascade #19 was a typical-fast recovery (~5 min via single mass-kill) — back to nominal range after #18's 50-min worst case. Doc-only paper trail in `94b592e`.
+
+**`cb013ab` — Chat chip wire-up (final tool, 10/10 milestone).** Higher complexity than the other 9 tools because chat is per-message and SSE-streamed:
+- `app/api/ai/chat/route.ts`: reordered to call `recordAiUsage` BEFORE the `done` SSE emit (was AFTER, so the `aiUsageId` couldn't ride out on the wire). Captured `usageRecord` return, extended `SseEvent` type union with `aiUsageId?: string | null` on the `done` variant, attached `aiUsageId: usageRecord.applied ? usageRecord.id : null` to the done event payload.
+- `components/app/chat/ChatClient.tsx`: extended `LocalMessage` with `aiUsageId`/`providerId`/`model` fields. Extended the client-side `SseEvent` discriminated union (separate from the route's — this was the TS2339 trap) with the same `aiUsageId` field on the done variant. Captured fields on both `meta` and `done` SSE events. Rendered `<FeedbackChip>` per assistant `MessageBubble`. Layout flipped row → column so the chip sits below the bubble instead of next to it (chat bubbles are full-width on mobile; row layout would have wrapped weirdly).
+- `scripts/test-ai-feedback-pilot.mjs` WIRED_TOOLS list extended 9 → 10 with `{component: "components/app/chat/ChatClient.tsx", route: "app/api/ai/chat/route.ts", operation: "chat_turn"}`. Suite 60/0 passed.
+
+**Deploy was CLEAN** — single push, no cascade, no nudge. First clean deploy in the last 4 chip wire-ups. The chat chip change touched a per-message render path so the build artifact differed in shape from the 9 prior single-shot tools, but the cgroup happened to have headroom at push time and Passenger respawned without saturation.
+
+**10/10 AI ops now have FeedbackChip:** summarize, translate, rewrite, ocr, table, compare, sign, redact, generate, chat. Every leveraged AI route surfaces both `aiUsageId` (from `recordAiUsage`) and a thumbs ↑/↓ chip. The data flywheel is **structurally complete** on the chip side — Stage 3 batch A is closed.
+
+**Stage 3 batches B + C remain pending** (43 tools — variants + specialist + tail). Those are lower priority than batch A (these 10 are the highest-traffic AI ops carrying the bulk of feedback signal); they'll get wired in batched commits once the variant runner pattern is consolidated.
+
+**Aggregator state:** 4994 passed across 86 suites in ~8s. `npx tsc --noEmit` exit 0 on both commits.
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
