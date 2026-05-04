@@ -40,6 +40,7 @@ import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 // Generate is prompt-only (no file). We pass charCount = trimmed prompt
 // length so the badge surfaces only when there's a real query to run.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { downloadBytes } from "@/lib/client/download";
 
 // Keep in sync with VALID_DOC_TYPES / VALID_LENGTHS / VALID_TONES in the
@@ -95,6 +96,12 @@ type GenerateResult = {
   replay?: boolean;
   /** Non-empty on 207 — compute succeeded, persist failed. */
   persistWarning?: string;
+  /**
+   * 2026-05-04 (PENDING §6b stage 3 / Generate). FeedbackChip flip-
+   * semantics dependency from generate route.ts (Batch 2
+   * instrumentation, commit 37b6573).
+   */
+  aiUsageId: string | null;
 };
 
 const SIGN_IN_HREF =
@@ -194,6 +201,8 @@ export function GeneratePdfTool() {
           tone: (body.tone as Tone | undefined) ?? tone,
           wasTruncated: Boolean(body.wasTruncated),
           replay: Boolean(body.replay),
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -217,6 +226,8 @@ export function GeneratePdfTool() {
             typeof body.detail === "string"
               ? body.detail
               : "PDF generated, but the source couldn't be saved to your files. Download it below before leaving.",
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -586,7 +597,29 @@ function ResultCard({ result }: { result: GenerateResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />    </div>
+      />
+
+      {/* 2026-05-04 (PENDING §6b stage 3 / Generate) — FeedbackChip
+          flywheel; generate route surfaces aiUsageId since Batch 2.
+          Placement is after the markdown preview and after the
+          download button; gives the user a chance to evaluate the
+          output before rating. */}
+      <div
+        style={{
+          padding: "12px 22px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg-2, rgba(0,0,0,0.02))",
+        }}
+      >
+        <FeedbackChip
+          operation="generate"
+          aiUsageId={result.aiUsageId}
+          fileId={result.fileId ?? null}
+          providerId={result.providerId}
+          model={result.model}
+        />
+      </div>
+    </div>
   );
 }
 

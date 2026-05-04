@@ -104,6 +104,17 @@ const WIRED_TOOLS = [
     route: "app/api/ai/redact/route.ts",
     operation: "redact",
   },
+  // 2026-05-04 — Generate is the last markdown-rendering AI tool to
+  // get the chip. Its UX is different from the other 8 (returns
+  // base64 PDF + markdown source preview) so the chip lives in the
+  // ResultCard footer below the markdown preview, after the
+  // download button. Only chat remains unchipped — its conversational
+  // UX needs per-message chips, not per-result-card.
+  {
+    component: "components/tools/GeneratePdfTool.tsx",
+    route: "app/api/ai/generate/route.ts",
+    operation: "generate",
+  },
 ];
 
 // ============================================================================
