@@ -4,8 +4,8 @@ _Single source of truth for what's done, what's pending, and who owns each item.
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
 **Last updated:** 2026-05-04 (17 ship items + Batch 2 instrumentation + Batch A FeedbackChip finish — table/compare wired).
-**Live commit:** `168474143e17` (FeedbackChip wired into sign + redact tools — 8/10 markdown-rendering AI ops now have the chip). Deployed clean (no cascade, no nudge required) — first single-push clean deploy in several turns. All 86 suites green, **4986 tests passing**. **Seventeen zombie-next-server cascades** survived total. The cascade rate has cooled significantly in the last 3 commits: 1 of 3 cascaded (vs. earlier mini-arc where 5/6 cascaded). Working theory: smaller commit scopes (2 surgical files vs. 5+) seem to correlate with cascade-free deploys.
-**Aggregator:** 4986 passed across 86 suites in ~7s (+6 from prior 4980/86 — 2 new wired tools × 3 cross-checks each in the chip pilot guard).
+**Live commit:** `25a49a41947d` (PENDING §11a fix — webhook audit-after-process ordering). Deployed after cascade #18 — the worst-case SSH-fork-saturation event of the arc, ~50 min total recovery time. Multi-stage recovery: initial mass-kill failed because SSH cgroup was saturated; ~25 min wait restored SSH; mass-kill THEN succeeded; another ~25 min for Passenger to fully respawn workers under the still-stressed cgroup. All 86 suites green, **4988 tests passing**. **Eighteen zombie-next-server cascades** survived total.
+**Aggregator:** 4988 passed across 86 suites in ~7s (+2 from prior 4986/86 — F2 + F3 added to webhook-reconcile-resilience for the §11a fix).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -257,6 +257,25 @@ PENDING §6b stage 3. Now that all 10 routes surface aiUsageId (Batch 3 instrume
 Generate + chat have non-standard UX shapes (PDF base64 download / conversational multi-turn) so they're tracked separately and require custom chip placement.
 
 **Cascade-free deploy.** Single push, clean deploy, no nudge, no pkick. The cascade rate has cooled noticeably in the last 3 code-bearing commits: 1 of 3 cascaded (vs. an earlier mini-arc where 5/6 cascaded). Working theory: smaller commit scopes (2-3 surgical files vs. 5+) correlate with cascade-free deploys, possibly because the Passenger restart cycle handles smaller webpack-cache deltas more reliably. Tracking this hypothesis going forward.
+
+### 2026-05-04 — Webhook audit-after-process fix + cascade #18 (commit `25a49a4`)
+
+**Code change** (PENDING §11a closed): inverted webhook handler ordering. Before: `recordWebhookEvent` → `applyPaymentEvent`. After: `applyPaymentEvent` → `recordWebhookEvent`. Failure path now skips audit insert entirely → next retry actually re-runs the processor. Safe because the ledger layer is idempotent on `${paymentId}:base|bonus|refund:${ref}|...` keys; a retry that re-runs processing no-ops at the ledger via UNIQUE on idempotency_key.
+
+**3 files changed:**
+- `lib/payments/webhook-handler.ts` — invert ordering with detailed inline rationale
+- `scripts/test-webhook-reconcile-resilience.mjs` — Section F flipped (F1 asserts post-fix ordering; F2 asserts catch path skips audit; F3 asserts response distinguishes 'ok' fresh vs 'duplicate' retry); A2/A3/A5 regexes updated for unified response shape
+- `docs/PENDING_WORK_ANALYSIS.md` §11a — marked ✅ FIXED with rationale + trade-off + test surface
+
+**Cascade #18 — the worst-case path so far** (~50 min total recovery):
+- 503 hit immediately on push
+- First mass-kill attempt: SSH connection closed by remote host (cgroup saturated)
+- ~25 min wait per CLAUDE.md "STOP — wait 5-10 min" playbook (actual drain took longer than nominal range this time)
+- SSH eventually recovered → mass-kill succeeded
+- Another ~25 min for Passenger to fully respawn workers under the still-stressed cgroup
+- Health came back at uptime 0s on commit `25a49a4` — clean deploy of the fix
+
+**Hypothesis update:** the small-commit-scope hypothesis (3 files this commit) doesn't perfectly predict cascade behavior. This was a 3-file commit and it cascaded hard. The dominant factor seems to be Hostinger plan cgroup pressure at push time — sometimes the kernel is already near saturation from background processes and ANY push triggers a hard cascade. Recovery playbook still works; it's just slower under saturation.
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
