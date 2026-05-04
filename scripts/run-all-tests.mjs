@@ -1072,6 +1072,17 @@ const SUITES = [
   // wire-in, C: forward-compat invariants). Sequenced after gap4-gap5
   // and before aggregator-coverage. Pure static-parse — no DB.
   { name: "per-op-bonus-cap", file: "test-per-op-bonus-cap.mjs" },
+  // 2026-05-04 — CSP must allow Cloudflare Turnstile origin. Discovered
+  // during post-activation E2E smoke test that the CSP was missing
+  // https://challenges.cloudflare.com from script-src + frame-src.
+  // The Turnstile widget script couldn't load → empty widget div →
+  // empty cf-turnstile-response form field → server-side verify
+  // returned false → every credentials registration failed with
+  // "Captcha verification failed". The bug was cosmetic before today's
+  // TURNSTILE_SECRET_KEY activation (Turnstile failed-open without the
+  // secret); activation flipped it to fail-closed, exposing the gap as
+  // a release-blocking outage. Guard locks in the fix.
+  { name: "csp-turnstile", file: "test-csp-turnstile.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

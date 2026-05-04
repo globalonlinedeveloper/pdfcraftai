@@ -116,6 +116,20 @@ const ANALYTICS_ORIGINS_SCRIPT = [
   "https://www.clarity.ms",
   "https://static.cloudflareinsights.com",
 ];
+
+// 2026-05-04 — Cloudflare Turnstile (Plan §8 Layer 7). The widget loads
+// its bundle from challenges.cloudflare.com/turnstile/v0/api.js and
+// renders its challenge inside an iframe from the same origin. Discovered
+// during the post-activation E2E smoke test that the CSP blocked the
+// script load entirely, causing the widget to render empty + every
+// signup to fail with "Captcha verification failed" (server-side verify
+// against an empty token returned false). Activation of TURNSTILE_SECRET_KEY
+// in Hostinger panel changed Turnstile from fail-open (no secret) to
+// fail-closed (secret present + widget can't load) — the CSP gap that
+// was previously cosmetic became a release-blocking outage. Adding the
+// origin to script-src + frame-src closes the gap. PCI scope unchanged:
+// Turnstile is bot-defense for /register, no card data path.
+const TURNSTILE_ORIGINS = ["https://challenges.cloudflare.com"];
 const ANALYTICS_ORIGINS_CONNECT = [
   "https://www.google-analytics.com",
   "https://www.clarity.ms",
@@ -138,11 +152,11 @@ const CSP = [
   // unaffected. Without it, @hyzyla/pdfium fails on first user click
   // with: "WebAssembly.instantiate(): violates Content Security policy".
   // Required for: PageCountTool and every future PDFium-backed tool.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${RAZORPAY_ORIGINS.join(" ")} ${ANALYTICS_ORIGINS_SCRIPT.join(" ")}`.trim(),
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${RAZORPAY_ORIGINS.join(" ")} ${ANALYTICS_ORIGINS_SCRIPT.join(" ")} ${TURNSTILE_ORIGINS.join(" ")}`.trim(),
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${ANALYTICS_ORIGINS_IMG.join(" ")}`,
   "font-src 'self' data:",
-  `frame-src 'self' ${RAZORPAY_ORIGINS.join(" ")}`,
+  `frame-src 'self' ${RAZORPAY_ORIGINS.join(" ")} ${TURNSTILE_ORIGINS.join(" ")}`,
   `connect-src 'self' ${RAZORPAY_ORIGINS.join(" ")} ${ANALYTICS_ORIGINS_CONNECT.join(" ")}`,
   "worker-src 'self' blob:",
   // Free PDF tools run WASM client-side — blob: lets pdf-lib instantiate.
