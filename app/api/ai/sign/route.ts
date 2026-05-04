@@ -32,6 +32,9 @@ import { PDFDocument } from "pdf-lib";
 import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
+// 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP) —
+// Batch 3 (final): sign joins the instrumented set.
+import { recordAiUsage } from "@/lib/ai/usage";
 import {
   NoAIProviderConfiguredError,
   SignParseError,
@@ -201,6 +204,8 @@ export async function POST(req: Request): Promise<Response> {
   // call, anchor location, and pdf-lib drawing. There's no separate
   // extract step here — `signPdf` is the whole pipeline (same shape
   // as /api/ai/redact).
+  // 2026-05-04 — capture provider start time for recordAiUsage latency.
+  const providerStartedAt = Date.now();
   let result: Awaited<ReturnType<typeof signPdf>>;
   try {
     result = await signPdf({
@@ -263,6 +268,26 @@ export async function POST(req: Request): Promise<Response> {
       ocrCandidatePages: result.ocrCandidatePages,
     });
   }
+
+  // 2026-05-04 — Phase A1 audit row. Only written on the kept-credits
+  // path (after looksScanned refund branch above). The signPdf
+  // pipeline does positioned extraction + AI call + pdf-lib drawing
+  // in one helper; usage tokens come from the AI call inside.
+  const usageRecord = await recordAiUsage({
+    userId,
+    operation: "sign",
+    providerId: result.providerId,
+    model: result.model,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    latencyMs: Date.now() - providerStartedAt,
+    creditsSpent: creditCost,
+    costMicros: null,
+    success: true,
+    responseTruncated: result.wasTruncated ? 1 : 0,
+    ledgerId: spend.ledgerId,
+    idempotencyKey: spendKey,
+  });
 
   // -- 6. Persist summary + ai_outputs row -----------------------------
   const fileId = randomUUID();
@@ -327,6 +352,8 @@ export async function POST(req: Request): Promise<Response> {
       wasTruncated: result.wasTruncated,
       pageCount: result.pageCount,
       ocrCandidatePages: result.ocrCandidatePages,
+      // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -346,6 +373,8 @@ export async function POST(req: Request): Promise<Response> {
     wasTruncated: result.wasTruncated,
     pageCount: result.pageCount,
     ocrCandidatePages: result.ocrCandidatePages,
+    // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 

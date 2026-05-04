@@ -32,6 +32,9 @@ import { PDFDocument } from "pdf-lib";
 import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
+// 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP) —
+// Batch 3 (final): redact joins the instrumented set.
+import { recordAiUsage } from "@/lib/ai/usage";
 import {
   NoAIProviderConfiguredError,
   RedactParseError,
@@ -172,6 +175,8 @@ export async function POST(req: Request): Promise<Response> {
   // per-item rectangles, which the shared extractPdfText strips). So
   // there's no separate extract step here like /api/ai/table has —
   // `redactPdf` is the whole pipeline.
+  // 2026-05-04 — capture provider start time for recordAiUsage latency.
+  const providerStartedAt = Date.now();
   let result: Awaited<ReturnType<typeof redactPdf>>;
   try {
     result = await redactPdf({
@@ -233,6 +238,24 @@ export async function POST(req: Request): Promise<Response> {
       ocrCandidatePages: result.ocrCandidatePages,
     });
   }
+
+  // 2026-05-04 — Phase A1 audit row. Same shape as sign — only on
+  // the kept-credits path (after the looksScanned refund branch).
+  const usageRecord = await recordAiUsage({
+    userId,
+    operation: "redact",
+    providerId: result.providerId,
+    model: result.model,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    latencyMs: Date.now() - providerStartedAt,
+    creditsSpent: creditCost,
+    costMicros: null,
+    success: true,
+    responseTruncated: result.wasTruncated ? 1 : 0,
+    ledgerId: spend.ledgerId,
+    idempotencyKey: spendKey,
+  });
 
   // -- 6. Persist summary + ai_outputs row ------------------------------
   const fileId = randomUUID();
@@ -297,6 +320,8 @@ export async function POST(req: Request): Promise<Response> {
       wasTruncated: result.wasTruncated,
       pageCount: result.pageCount,
       ocrCandidatePages: result.ocrCandidatePages,
+      // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -316,6 +341,8 @@ export async function POST(req: Request): Promise<Response> {
     wasTruncated: result.wasTruncated,
     pageCount: result.pageCount,
     ocrCandidatePages: result.ocrCandidatePages,
+    // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 

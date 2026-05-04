@@ -126,8 +126,15 @@ For each of the 8 missing ops:
 | table | app/api/ai/table/route.ts | components/tools/TableExtractTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
 | compare | app/api/ai/compare/route.ts | components/tools/ComparePdfTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
 | generate | app/api/ai/generate/route.ts | components/tools/GeneratePdfTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
-| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ❌ no ai_usage write (Batch 3) |
-| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ❌ no ai_usage write (Batch 3) |
+| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ✅ instrumented (Batch 3, 2026-05-04); chip wire-up pending |
+| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ✅ instrumented (Batch 3, 2026-05-04); chip wire-up pending |
+
+**🎉 As of 2026-05-04 all 10 AI ops are instrumented.** /admin/margin
+now sees 100% of fleet; per-op error rates measurable across the
+board; FeedbackChip flip semantics work for any of the 10 routes
+once the chip is wired into the matching tool component. Stage 3
+chip rollout can now proceed for sign + redact (and the deferred
+generate, which has its own UX shape).
 
 ## Rollout plan
 

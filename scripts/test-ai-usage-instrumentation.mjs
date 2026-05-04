@@ -109,12 +109,29 @@ const INSTRUMENTED_OPS = [
     route: "app/api/ai/generate/route.ts",
     surfacesAiUsageId: true,
   },
+  // 2026-05-04 — Batch 3 (final): sign + redact close the last 2
+  // observability gaps. All 10 ops now write ai_usage rows;
+  // /admin/margin sees 100% of fleet. Both routes refund + 422 on
+  // looksScanned (no extractable text); recordAiUsage fires only
+  // on the kept-credits path so audit rows match billing reality.
+  {
+    op: "sign",
+    route: "app/api/ai/sign/route.ts",
+    surfacesAiUsageId: true,
+  },
+  {
+    op: "redact",
+    route: "app/api/ai/redact/route.ts",
+    surfacesAiUsageId: true,
+  },
 ];
 
 const MISSING_OPS = [
-  // Batch 3 (pending, lowest traffic):
-  { op: "sign", route: "app/api/ai/sign/route.ts" },
-  { op: "redact", route: "app/api/ai/redact/route.ts" },
+  // Empty as of 2026-05-04 — all 10 AI ops are now instrumented.
+  // The guard's section C (missing ops MUST NOT have recordAiUsage)
+  // is now a no-op array; if a new op gets added to the AIOp union
+  // without a recordAiUsage call, section D's coverage check still
+  // catches it.
 ];
 
 // ============================================================================
