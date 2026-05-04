@@ -16,6 +16,9 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
+// 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP) —
+// rewrite joins the instrumented set. Pattern from summarize.
+import { recordAiUsage } from "@/lib/ai/usage";
 import {
   NoAIProviderConfiguredError,
   rewritePdf,
@@ -161,6 +164,8 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // -- 6. Rewrite ------------------------------------------------------
+  // 2026-05-04 — capture provider start time for recordAiUsage latency.
+  const providerStartedAt = Date.now();
   let rewrite: Awaited<ReturnType<typeof rewritePdf>>;
   try {
     rewrite = await rewritePdf({
@@ -183,6 +188,27 @@ export async function POST(req: Request): Promise<Response> {
     const message = err instanceof Error ? err.message : "rewrite_failed";
     return json(502, { error: "rewrite_failed", detail: message });
   }
+
+  // 2026-05-04 — Phase A1 audit row. Same shape as translate (no
+  // stopReason; the rewrite library doesn't surface it, and the
+  // chunking inside the lib produces a single joined output).
+  // wasTruncated comes from the lib's truncateForContext step (input
+  // exceeded the model context window and was clipped).
+  const usageRecord = await recordAiUsage({
+    userId,
+    operation: "rewrite",
+    providerId: rewrite.providerId,
+    model: rewrite.model,
+    inputTokens: rewrite.usage.inputTokens,
+    outputTokens: rewrite.usage.outputTokens,
+    latencyMs: Date.now() - providerStartedAt,
+    creditsSpent: creditCost,
+    costMicros: null,
+    success: true,
+    responseTruncated: rewrite.wasTruncated ? 1 : 0,
+    ledgerId: spend.ledgerId,
+    idempotencyKey: spendKey,
+  });
 
   // -- 7. Persist files row + ai_outputs row ---------------------------
   const fileId = randomUUID();
@@ -235,6 +261,8 @@ export async function POST(req: Request): Promise<Response> {
       model: rewrite.model,
       wasTruncated: rewrite.wasTruncated,
       mode,
+      // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -251,6 +279,8 @@ export async function POST(req: Request): Promise<Response> {
     pageCount: extracted.pageCount,
     ocrCandidatePages: extracted.ocrCandidatePages,
     mode,
+    // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 

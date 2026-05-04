@@ -72,15 +72,34 @@ const INSTRUMENTED_OPS = [
     route: "app/api/ai/chat/route.ts",
     surfacesAiUsageId: false, // chat is its own UI; FeedbackChip not wired
   },
+  // 2026-05-04 — Batch 1 of the AI_USAGE_INSTRUMENTATION_GAP.md
+  // rollout: top-3 missing ops by traffic. Each route now captures
+  // providerStartedAt, calls recordAiUsage after the provider succeeds,
+  // and surfaces aiUsageId in BOTH 200 + 207 response paths so the
+  // FeedbackChip's UNIQUE(user_id, ai_usage_id) flip semantics work.
+  {
+    op: "translate",
+    route: "app/api/ai/translate/route.ts",
+    surfacesAiUsageId: true,
+  },
+  {
+    op: "rewrite",
+    route: "app/api/ai/rewrite/route.ts",
+    surfacesAiUsageId: true,
+  },
+  {
+    op: "ocr",
+    route: "app/api/ai/ocr/route.ts",
+    surfacesAiUsageId: true,
+  },
 ];
 
 const MISSING_OPS = [
-  { op: "translate", route: "app/api/ai/translate/route.ts" },
-  { op: "rewrite", route: "app/api/ai/rewrite/route.ts" },
+  // Batch 2 (pending, see docs/AI_USAGE_INSTRUMENTATION_GAP.md):
   { op: "table", route: "app/api/ai/table/route.ts" },
   { op: "compare", route: "app/api/ai/compare/route.ts" },
-  { op: "ocr", route: "app/api/ai/ocr/route.ts" },
   { op: "generate", route: "app/api/ai/generate/route.ts" },
+  // Batch 3 (pending, lowest traffic):
   { op: "sign", route: "app/api/ai/sign/route.ts" },
   { op: "redact", route: "app/api/ai/redact/route.ts" },
 ];

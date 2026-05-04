@@ -120,14 +120,14 @@ For each of the 8 missing ops:
 |---|---|---|---|
 | summarize | app/api/ai/summarize/route.ts | components/tools/SummarizePdfTool.tsx | ✅ instrumented + chip wired |
 | chat | app/api/ai/chat/route.ts | components/app/chat/ChatClient.tsx | ✅ instrumented; chip not wired (chat-turn UI is different) |
-| translate | app/api/ai/translate/route.ts | components/tools/TranslatePdfTool.tsx | ❌ no ai_usage write |
-| rewrite | app/api/ai/rewrite/route.ts | components/tools/RewritePdfTool.tsx | ❌ no ai_usage write |
-| table | app/api/ai/table/route.ts | components/tools/TableExtractTool.tsx | ❌ no ai_usage write |
-| compare | app/api/ai/compare/route.ts | components/tools/ComparePdfTool.tsx | ❌ no ai_usage write |
-| ocr | app/api/ai/ocr/route.ts | components/tools/OcrPdfTool.tsx | ❌ no ai_usage write |
-| generate | app/api/ai/generate/route.ts | components/tools/GeneratePdfTool.tsx | ❌ no ai_usage write |
-| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ❌ no ai_usage write |
-| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ❌ no ai_usage write |
+| translate | app/api/ai/translate/route.ts | components/tools/TranslatePdfTool.tsx | ✅ instrumented (Batch 1, 2026-05-04); chip wire-up pending |
+| rewrite | app/api/ai/rewrite/route.ts | components/tools/RewritePdfTool.tsx | ✅ instrumented (Batch 1, 2026-05-04); chip wire-up pending |
+| ocr | app/api/ai/ocr/route.ts | components/tools/OcrPdfTool.tsx | ✅ instrumented (Batch 1, 2026-05-04); chip wire-up pending |
+| table | app/api/ai/table/route.ts | components/tools/TableExtractTool.tsx | ❌ no ai_usage write (Batch 2) |
+| compare | app/api/ai/compare/route.ts | components/tools/ComparePdfTool.tsx | ❌ no ai_usage write (Batch 2) |
+| generate | app/api/ai/generate/route.ts | components/tools/GeneratePdfTool.tsx | ❌ no ai_usage write (Batch 2) |
+| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ❌ no ai_usage write (Batch 3) |
+| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ❌ no ai_usage write (Batch 3) |
 
 ## Rollout plan
 

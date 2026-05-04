@@ -29,6 +29,11 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
+// 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP §11a):
+// translate joins the instrumented set. Pattern lifted from summarize —
+// see docs/AI_USAGE_INSTRUMENTATION_GAP.md "Fix recipe" for the
+// canonical shape.
+import { recordAiUsage } from "@/lib/ai/usage";
 // 2026-05-02 plan §3 (Day 1.7) — multiplier-aware spend.
 import { isMultiplierPricingEnabled } from "@/lib/pricing";
 import {
@@ -201,6 +206,9 @@ export async function POST(req: Request): Promise<Response> {
   const newBalance = spend.newBalance;
 
   // -- 5. Translate ----------------------------------------------------
+  // 2026-05-04 — capture provider start time so recordAiUsage can
+  // log latencyMs accurately. Same pattern as summarize.
+  const providerStartedAt = Date.now();
   let translated: Awaited<ReturnType<typeof translatePdf>>;
   try {
     translated = await translatePdf({
@@ -224,6 +232,36 @@ export async function POST(req: Request): Promise<Response> {
     const message = err instanceof Error ? err.message : "translate_failed";
     return json(502, { error: "translate_failed", detail: message });
   }
+
+  // 2026-05-04 — Phase A1 audit row. Runs BEFORE the persistence
+  // transaction so even a persistence failure (which we hard-error-
+  // log and return 207) still has an audit trail of the provider
+  // spend. Translate's TranslateResult exposes providerId/model/usage/
+  // wasTruncated but does NOT carry stopReason or prompt-registry
+  // fields (it pre-dates the registry — the chunked map-reduce path
+  // doesn't slot cleanly into the per-call audit framing). Those
+  // fields are passed null/undefined so the audit row is honest about
+  // what we know. The id is captured for FeedbackChip flip semantics.
+  const usageRecord = await recordAiUsage({
+    userId,
+    operation: "translate",
+    providerId: translated.providerId,
+    model: translated.model,
+    inputTokens: translated.usage.inputTokens,
+    outputTokens: translated.usage.outputTokens,
+    latencyMs: Date.now() - providerStartedAt,
+    creditsSpent: creditCost,
+    costMicros: null,
+    success: true,
+    // Translate doesn't surface a single stopReason — the chunked
+    // path joins multiple provider calls. wasTruncated tells us
+    // whether the INPUT exceeded the hard upper bound; stopReason
+    // would describe terminal behavior of one chunk, which isn't
+    // meaningful at the route-level. Leaving null is honest.
+    responseTruncated: translated.wasTruncated ? 1 : 0,
+    ledgerId: spend.ledgerId,
+    idempotencyKey: spendKey,
+  });
 
   // -- 6. Persist files + ai_outputs -----------------------------------
   const fileId = randomUUID();
@@ -286,6 +324,9 @@ export async function POST(req: Request): Promise<Response> {
       wasChunked: translated.wasChunked,
       wasTruncated: translated.wasTruncated,
       chunkCount: translated.chunkCount,
+      // 2026-05-04 (PENDING §6b stage 2). Surface ai_usage row id so
+      // the FeedbackChip can attach feedback to a concrete call.
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -305,6 +346,8 @@ export async function POST(req: Request): Promise<Response> {
     chunkCount: translated.chunkCount,
     pageCount: extracted.pageCount,
     ocrCandidatePages: extracted.ocrCandidatePages,
+    // 2026-05-04 (PENDING §6b stage 2). FeedbackChip dependency.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 

@@ -45,6 +45,9 @@ import { db, schema } from "@/db/client";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
 import { findAiOutputByIdempotencyKey } from "@/lib/ai/idempotency";
 import { guardAiRoute } from "@/lib/ai/route-guards";
+// 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP) —
+// ocr joins the instrumented set. Pattern from summarize.
+import { recordAiUsage } from "@/lib/ai/usage";
 import {
   MAX_OCR_PAGES,
   NoOcrProviderConfiguredError,
@@ -174,6 +177,8 @@ export async function POST(req: Request): Promise<Response> {
   const newBalance = spend.newBalance;
 
   // -- 5. Run OCR ------------------------------------------------------
+  // 2026-05-04 — capture provider start time for recordAiUsage latency.
+  const providerStartedAt = Date.now();
   let result: Awaited<ReturnType<typeof ocrPdf>>;
   try {
     result = await ocrPdf({
@@ -195,6 +200,27 @@ export async function POST(req: Request): Promise<Response> {
     const message = err instanceof Error ? err.message : "ocr_failed";
     return json(502, { error: "ocr_failed", detail: message });
   }
+
+  // 2026-05-04 — Phase A1 audit row. OCR's per-page-loop sums tokens
+  // into a single result.usage; wasTruncated is set when input.pageCount
+  // exceeded MAX_OCR_PAGES (50) and we processed only the first 50.
+  // No stopReason — the lib doesn't surface it (multiple per-page calls
+  // make a single terminal reason meaningless).
+  const usageRecord = await recordAiUsage({
+    userId,
+    operation: "ocr",
+    providerId: result.providerId,
+    model: result.model,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    latencyMs: Date.now() - providerStartedAt,
+    creditsSpent: creditCost,
+    costMicros: null,
+    success: true,
+    responseTruncated: result.wasTruncated ? 1 : 0,
+    ledgerId: spend.ledgerId,
+    idempotencyKey: spendKey,
+  });
 
   // -- 6. Persist files + ai_outputs -----------------------------------
   const fileId = randomUUID();
@@ -252,6 +278,8 @@ export async function POST(req: Request): Promise<Response> {
       model: result.model,
       processedPageCount: result.processedPageCount,
       wasTruncated: result.wasTruncated,
+      // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -267,6 +295,8 @@ export async function POST(req: Request): Promise<Response> {
     pageCount,
     processedPageCount: result.processedPageCount,
     wasTruncated: result.wasTruncated,
+    // 2026-05-04 (PENDING §6b stage 2). FeedbackChip flip semantics.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 
