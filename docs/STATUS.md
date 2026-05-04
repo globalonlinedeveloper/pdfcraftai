@@ -4,8 +4,8 @@ _Single source of truth for what's done, what's pending, and who owns each item.
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
 **Last updated:** 2026-05-04 (17 ship items + Batch 2 instrumentation + Batch A FeedbackChip finish — table/compare wired).
-**Live commit:** `beeb902eadbb` (FeedbackChip live on translate/rewrite/ocr tool result cards — every thumbs ↑/↓ click now lands a row in ai_feedback with full provenance). Deployed clean (no cascade) after empty-nudge `5b839cf`. All 86 suites green, **4964 tests passing**. **Fifteen zombie-next-server cascades** to-date (no new cascade on this commit despite 3-component code change). Worth noting: this is the 3rd consecutive code-bearing commit since the cascade pattern stabilized; the recovery playbook is now reflexive enough that even cascade-bearing commits ship cleanly within 1 push cycle most of the time.
-**Aggregator:** 4964 passed across 86 suites in ~9s (+9 from prior 4955/86 — `ai-feedback-pilot` guard's WIRED_TOOLS list grew from 1 → 4 tools; each new tool adds 3 cross-checks for component existence + chip render + operation literal).
+**Live commit:** `ff54b07e8ca6` (Stage 3 Batch A finished — FeedbackChip live on 5/5 top-traffic AI tools: summarize + translate + rewrite + ocr + table + compare). Deployed clean after cascade #16 + auto-pull jam #10 (3 nudge attempts). All 86 suites green, **4976 tests passing**. **Sixteen zombie-next-server cascades** survived; auto-pull jams now at 10 — escalating jam pattern: simple 1-nudge clears the early jams, this one needed 3+ nudges + cascade recovery. Possibly Hostinger rate-limiting auto-pull when too many commits queue (5+ commits between successful pulls).
+**Aggregator:** 4976 passed across 86 suites in ~7s (+12 from prior 4964/86 — Batch 2 instrumentation added 6 ops × 2 = 12 instrumented assertions for table/compare/generate; chip wire-up added 6 more for table+compare wiring; offset by some refactors).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -207,6 +207,20 @@ PENDING §6b stage 3 / Batch A (3 of 5). Ships the user-facing data flywheel for
 **Smoke verified post-deploy:** `/tool/ai-translate`, `/tool/ai-rewrite`, `/tool/ai-ocr` all return 200. The chip is live; once users click thumbs, `/admin/ai-feedback` will show per-op NPS for these ops.
 
 **Cascade-free deploy.** Code-bearing commit (3 component changes) deployed clean after empty-commit nudge. No zombie cascade. The 5/6-cascade-rate from the previous mini-arc has cooled — recovery playbook discipline + smaller commit scope (3 surgical files vs. 5+) likely contributing factors. Recovery playbook continues to hold whenever needed; cascades just aren't deterministic per code change.
+
+### 2026-05-04 — AI usage Batch 2 + FeedbackChip Batch A finish (commits `37b6573`, `ff54b07`)
+
+Two-step rollout completing the top-5-traffic AI fleet:
+
+**Step 1 (commit `37b6573`)** — instrumentation Batch 2: table/compare/generate routes write ai_usage rows + surface aiUsageId. Pattern identical to Batch 1. Closes 3 more observability gaps. Instrumentation state: 8/10 ops (80%, up from 50%); only sign + redact remain (Batch 3).
+
+**Step 2 (commit `ff54b07`)** — FeedbackChip Batch A finish: chips live on TableExtractTool + ComparePdfTool. Now that both routes surface aiUsageId (from step 1), the chip's UNIQUE(user_id, ai_usage_id) flip semantics work. Generate is excluded from Batch A — its UX returns a PDF blob via base64 and the chip placement needs different layout work.
+
+**Stage 3 wired-tools:** 6/53 (11.3%, up from 7.5%). All 5 top-traffic ops: summarize ✅ translate ✅ rewrite ✅ ocr ✅ table ✅ compare ✅. The data flywheel is now collecting feedback signal across every high-traffic AI op except chat (different UI shape) and generate (deferred).
+
+**Cascade #16 + auto-pull jam #10 — multi-step recovery:** Auto-pull stalled hard on the rapid sequence of pushes (Batch 2 → empty nudge → Batch A finish → empty nudge → status bump → empty nudge — 6 commits in ~30 min). 3 separate nudges + 1 cascade recovery via the documented `awk | xargs kill -KILL` pattern. Post-recovery jumped from `0fbcbaa` → `ff54b07` (skipping the intermediate nudge commits — auto-pull pulls latest main, not commit-by-commit).
+
+**Possible cause hypothesized:** Hostinger may rate-limit auto-pull when too many commits queue between successful pulls. The 7+ commit chain in this turn was the first time we saw this pattern. Keep this in mind: when shipping rapid-fire rollouts, expect auto-pull to lag and don't pile on more nudges.
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
