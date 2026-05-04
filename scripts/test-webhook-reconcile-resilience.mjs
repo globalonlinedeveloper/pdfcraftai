@@ -74,21 +74,25 @@ assert(
   "A1: webhook returns 400 on signature verification failure (provider stops retrying — bad signature is config drift, not transient)",
 );
 
-// 200 on duplicate event. The audit row dedupe at recordWebhookEvent
-// returns recorded:false when the (providerId, providerEventId) pair
-// is already in the table; the handler responds 200 status:duplicate.
+// 200 on duplicate event. After the PENDING §11a fix (audit-after-
+// process), the unified success response uses a ternary on
+// audit.recorded to decide between "ok" and "duplicate". Both return
+// 200 (provider stops retrying either way). The earlier shape had a
+// separate short-circuit branch; this regex anchors on the ternary.
 assert(
-  /audit\.recorded[\s\S]{0,300}status:\s*"duplicate"[\s\S]{0,200}status:\s*200/.test(
+  /status:\s*audit\.recorded\s*\?\s*"ok"\s*:\s*"duplicate"[\s\S]{0,200}status:\s*200/.test(
     webhookSrc,
   ),
-  "A2: webhook returns 200 on duplicate (provider stops retrying — already delivered)",
+  "A2: webhook returns 200 with status:'ok'|'duplicate' on success (provider stops retrying either way; ledger idempotency handles the actual dedup)",
 );
 
 // 500 on processing error. The catch block around applyPaymentEvent
 // MUST return 500, not 200. A 200 here would tell the provider "we
-// got it" while we silently lost the payment event.
+// got it" while we silently lost the payment event. Window expanded
+// to 1500 to accommodate the inline rationale comment block in the
+// post-§11a-fix structure.
 assert(
-  /catch\s*\(\s*err\s*\)\s*\{[\s\S]{0,500}status:\s*500/.test(webhookSrc),
+  /catch\s*\(\s*err\s*\)\s*\{[\s\S]{0,1500}status:\s*500/.test(webhookSrc),
   "A3: webhook returns 500 on applyPaymentEvent error (provider retries — this is the linchpin of the safety net)",
 );
 
@@ -100,10 +104,15 @@ assert(
   "A4: webhook emits 'processing_failed' error code on 500 (operator log filter contract)",
 );
 
-// 200 on success.
+// 200 on success — after the §11a fix, the success response is
+// inside the unified-ternary block. The 200 status appears AFTER
+// the JSON body that includes status:"ok"|"duplicate". Window
+// expanded for the multi-line response object.
 assert(
-  /status:\s*"ok"[\s\S]{0,80}status:\s*200/.test(webhookSrc),
-  "A5: webhook returns 200 status:ok on success (provider marks delivered)",
+  /status:\s*audit\.recorded\s*\?\s*"ok"[\s\S]{0,300}status:\s*200/.test(
+    webhookSrc,
+  ),
+  "A5: webhook returns 200 on success (provider marks delivered)",
 );
 
 // ============================================================================
@@ -241,34 +250,49 @@ assert(
 );
 
 // ============================================================================
-// Section F — Audit row dedupe runs BEFORE processing
+// Section F — Audit row dedupe runs AFTER processing (PENDING §11a fix)
 // ============================================================================
 
-// recordWebhookEvent runs before applyPaymentEvent. If processing
-// failed the audit row exists but no payment event was applied. The
-// next retry sees `recorded:false` from the audit dedupe — but our
-// handler returns 200 status:duplicate which would tell the provider
-// "we got it" while we never actually credited the user.
+// 2026-05-04 — fix shipped. The earlier shape (audit-first) had a
+// silent-loss bug: a first-delivery processing failure would persist
+// the audit row, then the retry's audit-dedupe would short-circuit
+// to 200 duplicate WITHOUT re-running processing. Reconcile sweep
+// covered this within ~24h, but it was a real correctness issue.
 //
-// THIS IS A SUBTLE BUG. Let's audit whether this is actually how the
-// code is structured. Looking at handleWebhook:
-//   1. recordWebhookEvent → if duplicate, return 200
-//   2. applyPaymentEvent → if throws, return 500
-//
-// If step 2 throws on FIRST delivery, we return 500 (provider
-// retries). On retry, step 1 sees the audit row from the previous
-// attempt → returns 200 duplicate. The provider thinks delivered;
-// we never re-ran step 2.
-//
-// This guard documents the issue rather than failing the build —
-// the actual fix would require deferring audit insert until AFTER
-// processing succeeds, which is a real code change. Tracking as a
-// flagged invariant rather than asserting on behavior we want.
+// New shape: applyPaymentEvent FIRST, then recordWebhookEvent AFTER
+// success. The ledger layer is idempotent on `${paymentId}:base`
+// etc., so a retry that re-runs processing is correct (no double-
+// grant). On processing failure → 500 with NO audit row inserted →
+// next retry actually re-runs the processor. F1 now asserts the
+// CORRECT (post-fix) ordering: applyPaymentEvent BEFORE
+// recordWebhookEvent.
 const recordIdx = webhookSrc.search(/await\s+recordWebhookEvent/);
 const applyIdx = webhookSrc.search(/await\s+applyPaymentEvent/);
 assert(
-  recordIdx > 0 && applyIdx > 0 && recordIdx < applyIdx,
-  "F1: recordWebhookEvent runs BEFORE applyPaymentEvent (current behavior — note: this means a FIRST-DELIVERY failure can result in 500 → audit-row exists → next retry duplicates → silent loss. Reconcile is the safety net for this. Documented in PENDING_WORK_ANALYSIS §1f.)",
+  recordIdx > 0 && applyIdx > 0 && applyIdx < recordIdx,
+  "F1: applyPaymentEvent runs BEFORE recordWebhookEvent (PENDING §11a fix — audit row only persists on successful processing, so retries actually re-run the processor)",
+);
+
+// F2: when processing throws, the catch path returns 500 BEFORE the
+// audit insert. Anchor on the catch block referencing
+// processing_failed and verify it appears between the apply call and
+// the audit insert (so the audit insert is unreachable from the
+// failure path). 1500-char window absorbs the inline rationale
+// comment in the catch block (PENDING §11a fix narration is verbose).
+const catchIdx = webhookSrc.search(
+  /catch\s*\(\s*err\s*\)[\s\S]{0,1500}processing_failed/,
+);
+assert(
+  catchIdx > 0 && catchIdx > applyIdx && catchIdx < recordIdx,
+  "F2: processing_failed catch block sits between applyPaymentEvent and recordWebhookEvent (failure path skips audit insert)",
+);
+
+// F3: on success the response shape carries status:ok|duplicate
+// (depending on whether the audit was a fresh insert or a retry of
+// already-audited event).
+assert(
+  /status:\s*audit\.recorded\s*\?\s*"ok"\s*:\s*"duplicate"/.test(webhookSrc),
+  "F3: success response distinguishes 'ok' (fresh) from 'duplicate' (provider re-delivered the same event)",
 );
 
 // ============================================================================

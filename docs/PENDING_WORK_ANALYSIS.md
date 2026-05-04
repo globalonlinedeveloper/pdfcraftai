@@ -373,33 +373,33 @@ The codebase + production are healthy. What's pending is genuine forward work, n
 
 ## 11. Newly identified subtle issues
 
-### 11a. Webhook audit-row insert before processing (PENDING §1f follow-up)
+### 11a. ~~Webhook audit-row insert before processing~~ ✅ FIXED 2026-05-04
 
-**State:** discovered while writing the webhook-reconcile-resilience CI
-guard. `lib/payments/webhook-handler.ts` calls `recordWebhookEvent`
-BEFORE `applyPaymentEvent`. If processing throws on first delivery:
+**Original state:** `lib/payments/webhook-handler.ts` called
+`recordWebhookEvent` BEFORE `applyPaymentEvent`. A first-delivery
+processing failure persisted the audit row, then the retry's audit-
+dedupe short-circuited to 200 duplicate without re-running
+processing. Reconcile sweep covered within ~24h.
 
-1. Audit row inserts (recorded:true)
-2. Processing throws → 500 → provider retries
-3. On retry, audit dedupe sees existing row → recorded:false → 200 duplicate
-4. Provider marks delivered. Processing never re-ran.
+**Fix shipped (this commit):** invert the order — `applyPaymentEvent`
+FIRST, then `recordWebhookEvent` AFTER success. Safe because the
+ledger layer is idempotent on `${paymentId}:base|bonus|refund:${ref}|
+:promo_bonus|:chargeback:${ref}` keys (per
+`lib/payments/ledger.ts:204` contract); a retry that re-runs
+processing no-ops at the ledger via UNIQUE on idempotency_key.
+Failure path now skips the audit insert entirely → next retry
+actually re-runs processing.
 
-**Mitigation today:** the nightly reconciliation cron (commit
-`f02c5b3`) catches this — it asks the provider "what happened in the
-last 48h" and synthesizes any missing events through the same
-idempotent path. Maximum credit-grant latency on a webhook-failure
-event is ~24h.
+**Trade-off accepted:** lose handler-level dedup for retried-after-
+success webhooks (each retry now redoes processing instead of
+short-circuiting at the audit layer). Cost is bounded — applyPay-
+mentEvent's hot path on a duplicate is a unique-key conflict +
+early-return, ~ms. For our scale, correctness wins.
 
-**Real fix:** defer the audit row insert until AFTER `applyPaymentEvent`
-succeeds, OR mark the row as "processing_failed" and update to
-"processed" on success. The latter is more robust because it preserves
-the audit trail of what we attempted.
-
-**Risk:** medium — actual occurrence requires applyPaymentEvent to
-throw on first delivery, which is rare (DB write inside a transaction;
-either commits or rolls back fully). When it does happen, the
-reconcile sweep recovers within 24h.
-
-**Estimate:** ~2 hours (handler logic change + new test cases). Not
-prioritized for this arc because the safety net works; tracking here
-so the next compliance/payments review picks it up.
+**Test surface:** `webhook-reconcile-resilience` Section F was
+inverted to assert the post-fix ordering. F1 now verifies
+applyPaymentEvent precedes recordWebhookEvent. F2 verifies the
+catch path (processing_failed → 500) sits between them, so the
+audit insert is unreachable from the failure path. F3 verifies
+the success response distinguishes "ok" (fresh) from "duplicate"
+(provider re-delivery).
