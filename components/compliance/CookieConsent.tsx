@@ -204,6 +204,25 @@ export function CookieConsent({ initialLevel }: Props) {
         </Link>
         .
       </div>
+      {/*
+        2026-05-04 (SECURITY_COMPLIANCE_AUDIT.md §2.2): Accept-all and
+        Essential-only buttons share IDENTICAL visual prominence —
+        same border, same transparent background, same fontWeight 500
+        — to satisfy EDPB Guidelines 03/2022 on deceptive design
+        patterns and DPDP Act 2023 §6 (consent must be free, specific,
+        informed, unambiguous). Earlier styling had Accept-all filled
+        with the accent color + fontWeight 600 (visual primary),
+        which is the exact unequal-prominence pattern flagged by
+        CNIL deliberation 2021-152 (€60M Facebook fine). The
+        consent-gating logic is unchanged; only the visual weights
+        are equalized. The "Accept all" button still gets the
+        autofocus on render (acceptButtonRef) because the EDPB
+        guidance is about VISUAL prominence, not keyboard tab order
+        — focus on a default option is industry-standard and not a
+        manipulation vector. Customize is a Link (de-emphasized
+        muted color) because it leads to a deeper menu, not because
+        we want to bury it.
+      */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button
           ref={acceptButtonRef}
@@ -212,11 +231,11 @@ export function CookieConsent({ initialLevel }: Props) {
           style={{
             padding: "8px 14px",
             borderRadius: 6,
-            border: "1px solid var(--accent, #6aa9ff)",
-            background: "var(--accent, #6aa9ff)",
-            color: "var(--bg, #0f1116)",
+            border: "1px solid var(--border, #2e313c)",
+            background: "transparent",
+            color: "var(--fg, #e6e6ea)",
             fontSize: 13,
-            fontWeight: 600,
+            fontWeight: 500,
             cursor: "pointer",
           }}
         >

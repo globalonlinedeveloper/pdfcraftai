@@ -1094,6 +1094,28 @@ const SUITES = [
   // components, spendCredits union, forward-compat). Pure static-
   // parse — adds ~3ms.
   { name: "cap-exceeded-wireup", file: "test-cap-exceeded-wireup.mjs" },
+  // 2026-05-04 (Plan T1-6 ext) — locks in the OutOfCreditsAlert
+  // "Start Plus" CTA + the /enterprise sales-qualified-lead landing
+  // page + sitemap inclusion. Both items shipped at commit 96ac693
+  // (sitemap fix at 2a3263f). Drop the Plus CTA → revert to lower-
+  // LTV one-shot funnel. Drop /enterprise → SMB+ leads with no
+  // landing path. Pure static-parse — adds ~2ms.
+  {
+    name: "enterprise-and-plus-cta",
+    file: "test-enterprise-and-plus-cta.mjs",
+  },
+  // 2026-05-04 (SECURITY_COMPLIANCE_AUDIT.md §2.2) — cookie banner
+  // Accept-all and Essential-only buttons must share equal visual
+  // prominence (same border, background, fontWeight, color). Earlier
+  // styling had Accept-all filled-accent + fontWeight 600 (visual
+  // primary), the exact pattern flagged by EDPB Guidelines 03/2022
+  // §3.2.1 ("Hindering") and CNIL 2021-152 (€60M Facebook fine).
+  // Equalized to outlined-neutral 500-weight. Pure static-parse —
+  // anchors on JSX label sentinels + style block extraction.
+  {
+    name: "cookie-banner-prominence",
+    file: "test-cookie-banner-prominence.mjs",
+  },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
