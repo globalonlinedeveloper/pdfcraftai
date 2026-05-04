@@ -126,8 +126,8 @@ For each of the 8 missing ops:
 | table | app/api/ai/table/route.ts | components/tools/TableExtractTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
 | compare | app/api/ai/compare/route.ts | components/tools/ComparePdfTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
 | generate | app/api/ai/generate/route.ts | components/tools/GeneratePdfTool.tsx | ✅ instrumented (Batch 2, 2026-05-04); chip wire-up pending |
-| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ✅ instrumented (Batch 3, 2026-05-04); chip wire-up pending |
-| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ✅ instrumented (Batch 3, 2026-05-04); chip wire-up pending |
+| sign | app/api/ai/sign/route.ts | components/tools/SignPdfTool.tsx | ✅ instrumented + chip wired (2026-05-04) |
+| redact | app/api/ai/redact/route.ts | components/tools/RedactPdfTool.tsx | ✅ instrumented + chip wired (2026-05-04) |
 
 **🎉 As of 2026-05-04 all 10 AI ops are instrumented.** /admin/margin
 now sees 100% of fleet; per-op error rates measurable across the

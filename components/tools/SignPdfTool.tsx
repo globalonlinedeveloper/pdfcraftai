@@ -44,6 +44,7 @@ import {
 } from "@/components/upsell/OutOfCreditsAlert";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimator badge.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -91,6 +92,8 @@ type SignResult = {
   persistWarning?: string;
   /** True on idempotency replay — signals "PDF not downloadable again." */
   replay?: boolean;
+  /** 2026-05-04 (PENDING §6b stage 3). FeedbackChip dependency. */
+  aiUsageId: string | null;
 };
 
 type CustomRow = { key: string; value: string };
@@ -288,6 +291,8 @@ export function SignPdfTool() {
           model: String(body.model ?? ""),
           wasTruncated: Boolean(body.wasTruncated),
           replay: Boolean(body.replay),
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -317,6 +322,8 @@ export function SignPdfTool() {
             typeof body.detail === "string"
               ? body.detail
               : "PDF filled and signed, but the summary couldn't be saved to your files. Download the PDF below before leaving.",
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -851,7 +858,26 @@ function ResultCard({ result }: { result: SignResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />    </div>
+      />
+
+      {/* 2026-05-04 (PENDING §6b stage 3) — FeedbackChip flywheel.
+          sign route surfaces aiUsageId since Batch 3. */}
+      <div
+        style={{
+          padding: "12px 22px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg-2, rgba(0,0,0,0.02))",
+        }}
+      >
+        <FeedbackChip
+          operation="sign"
+          aiUsageId={result.aiUsageId}
+          fileId={result.fileId ?? null}
+          providerId={result.providerId}
+          model={result.model}
+        />
+      </div>
+    </div>
   );
 }
 

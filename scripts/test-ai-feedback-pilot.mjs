@@ -90,6 +90,20 @@ const WIRED_TOOLS = [
     route: "app/api/ai/compare/route.ts",
     operation: "compare",
   },
+  // 2026-05-04 — Sign + Redact wire-up (chip rollout for the
+  // newly-instrumented Batch 3 routes). Now 8/10 markdown-rendering
+  // AI ops have the chip. Generate (different UX, returns base64
+  // PDF) and Chat (different UX, conversational) remain.
+  {
+    component: "components/tools/SignPdfTool.tsx",
+    route: "app/api/ai/sign/route.ts",
+    operation: "sign",
+  },
+  {
+    component: "components/tools/RedactPdfTool.tsx",
+    route: "app/api/ai/redact/route.ts",
+    operation: "redact",
+  },
 ];
 
 // ============================================================================

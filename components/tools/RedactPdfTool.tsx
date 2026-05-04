@@ -41,6 +41,7 @@ import {
 } from "@/components/upsell/OutOfCreditsAlert";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimator badge.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
@@ -101,6 +102,8 @@ type RedactResult = {
   persistWarning?: string;
   /** True on idempotency replay — signals "PDF not downloadable again." */
   replay?: boolean;
+  /** 2026-05-04 (PENDING §6b stage 3). FeedbackChip dependency. */
+  aiUsageId: string | null;
 };
 
 // Pre-encoded Sign-in CTA target — see SummarizePdfTool for rationale.
@@ -229,6 +232,8 @@ export function RedactPdfTool() {
           model: String(body.model ?? ""),
           wasTruncated: Boolean(body.wasTruncated),
           replay: Boolean(body.replay),
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -258,6 +263,8 @@ export function RedactPdfTool() {
             typeof body.detail === "string"
               ? body.detail
               : "PDF redacted, but the summary couldn't be saved to your files. Download the PDF below before leaving.",
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -567,7 +574,26 @@ function ResultCard({ result }: { result: RedactResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />    </div>
+      />
+
+      {/* 2026-05-04 (PENDING §6b stage 3) — FeedbackChip flywheel.
+          redact route surfaces aiUsageId since Batch 3. */}
+      <div
+        style={{
+          padding: "12px 22px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg-2, rgba(0,0,0,0.02))",
+        }}
+      >
+        <FeedbackChip
+          operation="redact"
+          aiUsageId={result.aiUsageId}
+          fileId={result.fileId ?? null}
+          providerId={result.providerId}
+          model={result.model}
+        />
+      </div>
+    </div>
   );
 }
 
