@@ -356,7 +356,14 @@ export async function POST(req: Request): Promise<Response> {
   // Phase A1: log the successful call. Runs before the persistence
   // transaction so even a persistence failure (which we hard-error-log
   // and return 207) still has an audit trail of the provider spend.
-  await recordAiUsage({
+  //
+  // 2026-05-04 (PENDING §6b stage 2): capture the returned id so the
+  // response can surface it as `aiUsageId`. The FeedbackChip on the
+  // result card uses this to attach feedback to a concrete usage row,
+  // which makes flips work via UNIQUE(user_id, ai_usage_id) on the
+  // ai_feedback table. Without the id, every thumbs click would
+  // create a new row instead of flipping in place.
+  const usageRecord = await recordAiUsage({
     userId,
     operation: "summarize",
     providerId: summary.providerId,
@@ -457,6 +464,13 @@ export async function POST(req: Request): Promise<Response> {
       providerId: summary.providerId,
       model: summary.model,
       wasTruncated: summary.wasTruncated,
+      // 2026-05-04 (PENDING §6b stage 2). Surface ai_usage row id so
+      // FeedbackChip can attach feedback to a concrete call. On 207
+      // (persist failed) the usage row STILL exists — recordAiUsage
+      // ran before the persist transaction. If recordAiUsage itself
+      // duplicate-keyed, we fall through to null and the chip
+      // gracefully degrades (no flip semantics, but ↑/↓ still inserts).
+      aiUsageId: usageRecord.applied ? usageRecord.id : null,
     });
   }
 
@@ -472,6 +486,9 @@ export async function POST(req: Request): Promise<Response> {
     wasTruncated: summary.wasTruncated,
     pageCount: extracted.pageCount,
     ocrCandidatePages: extracted.ocrCandidatePages,
+    // 2026-05-04 (PENDING §6b stage 2). Same rationale as the 207
+    // branch above — needed for FeedbackChip flip semantics.
+    aiUsageId: usageRecord.applied ? usageRecord.id : null,
   });
 }
 

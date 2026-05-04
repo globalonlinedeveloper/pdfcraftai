@@ -1141,6 +1141,15 @@ const SUITES = [
     name: "ai-feedback-foundation",
     file: "test-ai-feedback-foundation.mjs",
   },
+  // 2026-05-04 (PENDING §6b stage 2 pilot) — FeedbackChip wired
+  // into SummarizePdfTool. Locks in: chip component contract,
+  // summarize route surfaces aiUsageId in 200 + 207 paths, tool
+  // captures + passes the id, rollout doc tracks fleet status.
+  // Stage 3 batches extend WIRED_TOOLS as new tools land.
+  {
+    name: "ai-feedback-pilot",
+    file: "test-ai-feedback-pilot.mjs",
+  },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

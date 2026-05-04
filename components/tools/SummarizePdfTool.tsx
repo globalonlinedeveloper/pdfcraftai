@@ -46,6 +46,7 @@ import { ToolDropzone } from "./ToolDropzone";
 // Summarize is a flat-cost op; the badge renders once a file is
 // picked so the user sees "this run costs N credits" before committing.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { MacroBar, type MacroBarItem } from "./MacroBar";
@@ -74,6 +75,13 @@ type SummaryResult = {
   wasTruncated: boolean;
   /** Non-empty on 207 — summary generated but couldn't be saved. */
   persistWarning?: string;
+  /**
+   * 2026-05-04 (PENDING §6b stage 2). ai_usage row id captured from
+   * the response. The FeedbackChip on the result card uses this for
+   * flip semantics on the ai_feedback table's
+   * UNIQUE(user_id, ai_usage_id). Null on legacy responses.
+   */
+  aiUsageId: string | null;
 };
 
 const DEPTH_OPTIONS: ReadonlyArray<{
@@ -289,6 +297,10 @@ export function SummarizePdfTool() {
           providerId: String(body.providerId ?? ""),
           model: String(body.model ?? ""),
           wasTruncated: Boolean(body.wasTruncated),
+          // 2026-05-04 (PENDING §6b stage 2). Capture aiUsageId for
+          // the FeedbackChip on the result card.
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
         });
         return;
       }
@@ -302,6 +314,9 @@ export function SummarizePdfTool() {
           providerId: String(body.providerId ?? ""),
           model: String(body.model ?? ""),
           wasTruncated: Boolean(body.wasTruncated),
+          // Same — surface aiUsageId on the persist-failed branch.
+          aiUsageId:
+            typeof body.aiUsageId === "string" ? body.aiUsageId : null,
           persistWarning:
             typeof body.detail === "string"
               ? body.detail
@@ -672,7 +687,34 @@ function ResultCard({ result }: { result: SummaryResult }) {
         className="prose-mini"
         style={{ padding: "20px 22px", fontSize: 14, lineHeight: 1.65 }}
         dangerouslySetInnerHTML={{ __html: renderMarkdown(result.markdown) }}
-      />    </div>
+      />
+
+      {/*
+        2026-05-04 (PENDING §6b stage 2 pilot) — FeedbackChip data
+        flywheel. SummarizePdfTool is the pilot; rollout to the
+        remaining 52 AI tools is stage 3 (separate cascade arc, see
+        docs/AI_FEEDBACK_ROLLOUT.md). On click → POST /api/ai/feedback
+        → row in ai_feedback → /admin/ai-feedback computes per-op NPS.
+        aiUsageId enables UNIQUE(user_id, ai_usage_id) flip semantics:
+        a user re-clicking the OTHER button replaces the row in place
+        rather than inserting a new one.
+      */}
+      <div
+        style={{
+          padding: "12px 22px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg-2, rgba(0,0,0,0.02))",
+        }}
+      >
+        <FeedbackChip
+          operation="summarize"
+          aiUsageId={result.aiUsageId}
+          fileId={result.fileId ?? null}
+          providerId={result.providerId}
+          model={result.model}
+        />
+      </div>
+    </div>
   );
 }
 
