@@ -1128,6 +1128,19 @@ const SUITES = [
     name: "contact-persistence",
     file: "test-contact-persistence.mjs",
   },
+  // 2026-05-04 (PENDING_WORK_ANALYSIS §6b) — AI feedback foundation.
+  // Migration 0022 (ai_feedback table), POST /api/ai/feedback,
+  // /admin/ai-feedback page. The data flywheel for AI quality.
+  // Stage 1 of 2: schema + persist + admin viewer ship in this
+  // commit; FeedbackChip on AI tool result cards (the UI that
+  // populates the table) follows in a separate cascade-conscious
+  // commit. 63 assertions across 5 sections (migration shape, schema
+  // parity, route auth + zod + upsert + rate-limit + try/catch,
+  // admin page sections, layout NAV).
+  {
+    name: "ai-feedback-foundation",
+    file: "test-ai-feedback-foundation.mjs",
+  },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

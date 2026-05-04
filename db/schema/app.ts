@@ -846,6 +846,96 @@ export const contactSubmissions = mysqlTable(
   }),
 );
 
+/**
+ * 2026-05-04 — AI feedback (thumbs ↑/↓) for quality flywheel.
+ *
+ * PENDING_WORK_ANALYSIS.md §6b: AI quality has zero subjective signal
+ * today. This table is the foundation — every user-side thumbs ↑/↓
+ * click on an AI result persists here. Downstream consumers:
+ *   - /admin/ai-feedback (per-op + per-(provider, model) NPS slice)
+ *   - lib/ai/quality-signal.ts (consecutive-negative-feedback detector
+ *     for re-routing; not yet shipped)
+ *   - prompt registry A/B eval (compare variants by feedback NPS)
+ *
+ * Why a separate table not a column on ai_outputs / ai_usage:
+ *   - ai_outputs is content (rendered markdown). Feedback is metadata
+ *     about that content. Mixing them complicates the GDPR export
+ *     (the user's content goes into the export, but their feedback on
+ *     OTHER users' content shouldn't — and we have no such data, but
+ *     the schema shape should keep these orthogonal anyway).
+ *   - ai_usage is per-call audit. Feedback CAN come back hours later
+ *     (user re-opens the chat, re-reads the summary). Bolting it onto
+ *     ai_usage would require updating an aged row, which complicates
+ *     the rollup queries.
+ *
+ * Verdict semantics: stored as varchar (not enum) so the next
+ * "n/a" / "flag-as-harmful" verdict doesn't need a migration. Today
+ * the route validator accepts only "up" | "down".
+ *
+ * Idempotency: UNIQUE(user_id, ai_usage_id) means a flip from up →
+ * down updates in place via INSERT ... ON DUPLICATE KEY UPDATE. The
+ * `updated_at ON UPDATE CURRENT_TIMESTAMP` clause auto-bumps the
+ * timestamp so flip rate is observable.
+ *
+ * Denormalized columns (operation, provider_id, model): these duplicate
+ * data already in ai_usage but let admin queries answer
+ * "thumbs-down rate by op" without joining. Storage cost is trivial
+ * (~50 bytes/row); query cost saved is real (admin page renders in
+ * ~5ms vs ~50ms with the join).
+ *
+ * Migration: db/migrations/0022_ai_feedback.sql.
+ */
+export const aiFeedback = mysqlTable(
+  "ai_feedback",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // Nullable because legacy chat_turn calls and pre-feedback-launch
+    // ai_outputs rows don't have an ai_usage row to point at. The
+    // route only writes a non-null ai_usage_id when the caller passes
+    // one.
+    aiUsageId: varchar("ai_usage_id", { length: 36 }),
+    fileId: varchar("file_id", { length: 36 }),
+    operation: varchar("operation", { length: 32 }).notNull(),
+    // "up" | "down" — varchar not enum so future verdicts (n/a, flag)
+    // don't require ALTER TABLE. Route validator gates on the literal
+    // union before insert.
+    verdict: varchar("verdict", { length: 8 }).notNull(),
+    reason: varchar("reason", { length: 128 }),
+    note: text("note"),
+    // Denormalized from ai_usage so admin slices don't need a join.
+    providerId: varchar("provider_id", { length: 32 }),
+    model: varchar("model", { length: 128 }),
+    createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (t) => ({
+    // At-most-one feedback per (user, call). Route handler upserts
+    // via ON DUPLICATE KEY UPDATE so flips replace in place.
+    userCallUq: uniqueIndex("ai_feedback_user_call_uq").on(
+      t.userId,
+      t.aiUsageId,
+    ),
+    createdIdx: index("ai_feedback_created_idx").on(t.createdAt),
+    verdictCreatedIdx: index("ai_feedback_verdict_created_idx").on(
+      t.verdict,
+      t.createdAt,
+    ),
+    opCreatedIdx: index("ai_feedback_op_created_idx").on(
+      t.operation,
+      t.createdAt,
+    ),
+    providerModelCreatedIdx: index(
+      "ai_feedback_provider_model_created_idx",
+    ).on(t.providerId, t.model, t.createdAt),
+  }),
+);
+
 // --- Phase 6.3 Agent tables — REMOVED on 2026-04-20 ---------------------
 //
 // `agent_runs` + `agent_run_steps` powered the authenticated /app/studio

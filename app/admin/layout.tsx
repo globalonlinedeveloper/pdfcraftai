@@ -95,6 +95,12 @@ const NAV: NavItem[] = [
   // ("which tool is healthy / which is leaking margin?"), not a
   // money-flow rollup (that's /admin/margin).
   { section: "Ops", href: "/admin/tools", label: "Tools" },
+  // 2026-05-04 (PENDING_WORK_ANALYSIS §6b) — AI feedback (thumbs ↑/↓)
+  // overview. Lives in Ops because it's a "are our AI ops healthy"
+  // question, not a money-flow rollup. Per-op NPS + recent thumbs-
+  // down rows let an operator drill into bad outputs and re-route
+  // (eventually) or update the prompt registry.
+  { section: "Ops", href: "/admin/ai-feedback", label: "AI feedback" },
   { section: "Ops", href: "/admin/ops", label: "Operations" },
   { section: "Ops", href: "/admin/providers", label: "Providers" },
   { section: "Ops", href: "/admin/router", label: "Router" },
