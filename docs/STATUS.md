@@ -3,9 +3,9 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-04 (post-plan activation + e2e + tool improvement plan + 10 ship items + compliance audit + contact persistence + AI feedback foundation).
-**Live commit:** `d74fefed0f47` (AI feedback foundation — schema 0022 + POST /api/ai/feedback + /admin/ai-feedback; deployed via empty-commit nudge `e1657ac` after auto-pull jam #7). Last code-bearing deploys: `52307a3` (contact), `d74fefe` (ai-feedback). All 83 suites green, **4845 tests passing**. **Twelve zombie-next-server cascades** + 7 auto-pull jams survived; the documented "ONE pkick + restart.txt" + "empty-commit nudge" + "wait 5–10 min if SSH fork-saturates" playbook handled every case (7/7 jams cleared via empty-commit nudge alone).
-**Aggregator:** 4845 passed across 83 suites in ~9s (+63 from prior 4782/82 — added `ai-feedback-foundation` (63) covering migration 0022 + Drizzle schema parity + route auth+zod+upsert+rate-limit+try/catch + admin page + nav wiring).
+**Last updated:** 2026-05-04 (post-plan activation + e2e + tool improvement plan + 11 ship items + compliance audit + contact persistence + AI feedback foundation + AI feedback stage 2 pilot).
+**Live commit:** `e99ac1c8a61b` (FeedbackChip + Summarize pilot wire-up; deployed after the documented zombie-cleanup mass-kill recovery — pkick alone didn't clear stuck workers, the explicit `awk | xargs kill -KILL` pipeline did). Last code-bearing deploys: `52307a3` (contact), `d74fefe` (ai-feedback foundation), `e99ac1c` (ai-feedback pilot). All 84 suites green, **4878 tests passing**. **Thirteen zombie-next-server cascades** survived. Cascade #13 was the longest of the arc (~25 min recovery vs. the typical 1–5 min) and validated the documented zombie-cleanup pattern as the LAST-resort recovery when pkill alone fails.
+**Aggregator:** 4878 passed across 84 suites in ~8s (+33 from prior 4845/83 — added `ai-feedback-pilot` (33) locking in chip contract + summarize route surfacing aiUsageId + tool wire-up + rollout doc).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -89,6 +89,30 @@ PENDING_WORK_ANALYSIS.md §6b. AI quality has zero subjective signal today — q
 **CI guard:** `ai-feedback-foundation` (63 assertions across 5 sections — migration shape, schema parity, route auth+zod+upsert+rate-limit+try/catch, admin page, layout NAV).
 
 **Cascade-pattern data:** Auto-pull jam #7 hit on this commit. Empty-commit nudge `e1657ac` resolved it. 7/7 jams resolved via empty nudge alone. Stage 2 (FeedbackChip in AI tool result cards) is genuinely larger — touches 53 AI tool components — so it'll cascade differently and ships separately.
+
+### 2026-05-04 — AI feedback stage 2 pilot (commit `e99ac1c`)
+
+PENDING §6b stage 2. The user-facing FeedbackChip + Summarize wire-up.
+
+**Why pilot first:** rolling out the chip across all 53 AI tools in a single commit cascades hard (53+ files = large webpack-cache invalidation surface). Pilot proves the full loop on one tool, then `docs/AI_FEEDBACK_ROLLOUT.md` enumerates the 3-batch rollout for stage 3.
+
+**Files shipped:**
+- `components/feedback/FeedbackChip.tsx` (NEW) — client component with optimistic UI, "Yes"/"No" buttons (less fraught than literal "thumbs up/down"), 5 props, 401 → sign-in pivot, network errors revert state
+- `app/api/ai/summarize/route.ts` — captures `recordAiUsage` return value, surfaces `aiUsageId` in BOTH 200 + 207 response paths
+- `components/tools/SummarizePdfTool.tsx` — imports FeedbackChip, extends SummaryResult type, captures aiUsageId from response, renders chip in ResultCard
+- `docs/AI_FEEDBACK_ROLLOUT.md` (NEW) — 3-stage tracker, Batch A/B/C plan with per-tool wire-up recipe
+- `scripts/test-ai-feedback-pilot.mjs` (NEW) — 33 assertions locking in 4-layer chain
+
+**End-to-end smoke** (post-deploy): POST /api/ai/feedback → 401 `auth_required` (auth gate first); /admin/ai-feedback → 404 (admin posture); /tool/ai-summarize → 200 (FeedbackChip wired into the renderer).
+
+**Cascade #13 — the longest of the arc** (~25 min recovery):
+- Initial 503 hit ~15 min after push. Empty-commit nudge wasn't applicable (auto-pull HAD picked up the new build — `.next/server/app/api/ai/feedback/route.js` existed in prod; the issue was stuck WORKERS, not stuck pull).
+- 12 zombie next-server processes from before my commit kept serving 503s; new workers spawned but didn't fully take over.
+- ONE pkick (`pkill -9 -u u692382124 -f "next-server"`) at +15 min didn't kill them all — some processes survived the SIGKILL (rare; possibly due to timing with Passenger respawn supervision).
+- Touch restart.txt didn't help.
+- Documented mass-kill pattern (`ps -fu | grep next-server | awk '{print $2}' | xargs kill -KILL`) FINALLY cleared. uptime=0s on next health check, commit=`e99ac1c8a61b` confirmed.
+
+**New playbook learning:** when `pkill -9 -f "next-server"` doesn't clear all processes within 60s, escalate to the explicit `awk | xargs kill -KILL` pattern. The latter sends signals one-at-a-time per PID, which appears to bypass whatever batching hiccup pkill ran into. Documented in CLAUDE.md zombie-cleanup section but worth re-emphasizing — this was the first time in 13 cascades that pkill alone wasn't sufficient.
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
