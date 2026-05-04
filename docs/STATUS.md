@@ -3,9 +3,9 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-04 (post-plan activation + e2e + tool improvement plan + 8 ship items + compliance audit).
-**Live commit:** `78a02771fcf3` (compliance audit + cookie banner equal-prominence + 2 CI guards; deployed via empty-commit nudge `07a3cc4` after auto-pull jam #5). Last code-bearing deploys: `9f8bf07` (T2-5), `96ac693` (T1-6 + /enterprise), `78a0277` (compliance). All 81 suites green, **4736 tests passing**. **Ten zombie-next-server cascades** + 5 auto-pull jams survived across the full multi-day arc; the documented "ONE pkick + restart.txt" + "empty-commit nudge" + "wait 5–10 min if SSH fork-saturates" playbook handled every case.
-**Aggregator:** 4736 passed across 81 suites in ~13s (+117 from prior 4619/78 — added `enterprise-and-plus-cta` (25), `cookie-banner-prominence` (15), and the T2-5 cap-exceeded-wireup sweeps from earlier in this arc).
+**Last updated:** 2026-05-04 (post-plan activation + e2e + tool improvement plan + 9 ship items + compliance audit + contact persistence).
+**Live commit:** `52307a332996` (contact form persistence + /admin/contact-submissions viewer; migration 0021 applied to prod via SSH HEREDOC pre-push; deployed via empty-commit nudge `3f4a495` after auto-pull jam #6). Last code-bearing deploys: `9f8bf07` (T2-5), `96ac693` (T1-6 + /enterprise), `78a0277` (compliance), `52307a3` (contact). All 82 suites green, **4782 tests passing**. **Eleven zombie-next-server cascades** + 6 auto-pull jams survived across the full multi-day arc; the documented "ONE pkick + restart.txt" + "empty-commit nudge" + "wait 5–10 min if SSH fork-saturates" playbook handled every case.
+**Aggregator:** 4782 passed across 82 suites in ~10s (+46 from prior 4736/81 — added `contact-persistence` (46) covering migration 0021 + Drizzle schema parity + route persist+catch+stdout fallback + admin page + nav wiring).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -55,6 +55,22 @@ Two new CI guards: `enterprise-and-plus-cta` (25 assertions) locks in the T1-6 O
 
 **Cascade #10 + auto-pull jam #5** (recovery clean):
 - Auto-pull stuck on first push (health stayed on `2a3263f`/`9f8bf07` for ~7 min). Empty-commit nudge `07a3cc4` cleared it; next health check showed `78a02771fcf3` with uptime 0s — fresh restart, no pkick needed. The "code-bearing commits sometimes need an empty nudge" pattern continues to hold (5/5 jams resolved this way).
+
+### 2026-05-04 — contact form persistence + admin viewer (commit `52307a3`)
+
+PENDING_WORK_ANALYSIS.md §4c flagged the orphaned `TODO(Phase E)` in `app/api/contact/route.ts:116` ("wire SendGrid / Postmark here"). Real risk: with /enterprise live as a sales-qualified-lead landing, every SMB+ ask was funneling through the contact form which logged to stdout only. Hostinger log rotation would have eaten leads. Wiring transactional email is a founder decision (which provider, sending domain, template); persisting to MariaDB is cascade-friendly and unblocks the founder TODAY.
+
+**Migration 0021** (applied to prod pre-push via SSH HEREDOC): `contact_submissions` table — 11 cols (id/name/email/topic/message/ip/user_agent/referer/status/created_at/read_at), 3 secondary indexes (created, status+created, email), no FK so anonymous visitors can submit. Verified in prod via `SHOW COLUMNS` + `SHOW INDEX`.
+
+**Route changes** (`app/api/contact/route.ts`): persist call wrapped in try/catch (transient DB error never bricks the form), stdout fallback log preserved (defense-in-depth so data survives even if DB silently lost the row), User-Agent + Referer captured for triage (Referer lets us tell /enterprise leads from /contact leads in the admin view).
+
+**New admin viewer** (`/admin/contact-submissions`): `requireAdmin` gate (404 for non-admins per the project's "don't reveal admin surfaces exist" posture). Three summary cards (Total / New unread / Top topics with counts) + 100-row table with status chips + topic chips + 200-char message excerpt + IP + truncated UA + Referer. v1 read-only — admin reads here, replies manually from their mail client. Status transitions (mark-as-read / replied / spam) are a future commit gated on the email wire-up.
+
+**End-to-end verification:** POST /api/contact with smoke payload → 200 with `{ok:true}` → row persisted to MariaDB with all fields populated correctly. Smoke row deleted post-test (kept the test surface clean).
+
+**CI guard:** `contact-persistence` (46 assertions across 5 sections — migration shape, Drizzle schema parity, route wiring, admin page existence + admin gate + force-dynamic + nodejs runtime, layout nav). Drops anywhere in the chain → CI fails.
+
+**Cascade-pattern data:** Auto-pull jam #6 hit on this commit. Empty-commit nudge `3f4a495` resolved it. The pattern continues to hold (6/6 jams resolved via empty nudge; no SSH intervention required this round).
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
