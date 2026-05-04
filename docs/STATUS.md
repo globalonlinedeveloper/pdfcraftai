@@ -3,9 +3,9 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-04 (12 ship items + compliance audit + contact persistence + AI feedback foundation + AI feedback stage 2 pilot + webhook resilience CI guard).
-**Live commit:** `ff59b5ec691e` (webhook+reconcile resilience guard; cascade-free test-only+doc-only deploy — auto-pull jam #8 cleared via empty nudge `3956bd5`). Last code-bearing deploys: `52307a3` (contact), `d74fefe` (ai-feedback foundation), `e99ac1c` (ai-feedback pilot). All 85 suites green, **4901 tests passing**. **Thirteen zombie-next-server cascades** survived; auto-pull jams now at 8/8 cleared via empty nudge alone. Doc-only / test-only commits continue to NOT trigger zombie cascades — the resilience guard commit is fresh evidence.
-**Aggregator:** 4901 passed across 85 suites in ~8s (+23 from prior 4878/84 — added `webhook-reconcile-resilience` (23) locking in 500/200/400 contract, applyPaymentEvent shared path, lookback ≥ 24h Razorpay retry budget, idempotency key shape consistency).
+**Last updated:** 2026-05-04 (13 ship items + compliance audit + contact persistence + AI feedback foundation + AI feedback stage 2 pilot + webhook resilience CI guard + ai_usage gap tracker).
+**Live commit:** `bff73540ed8b` (ai_usage instrumentation gap tracker + 48-assertion CI guard; deploy survived cascade #14 via documented `awk | xargs kill -KILL` recovery + empty nudge `d0a0241`). All 86 suites green, **4949 tests passing**. **Fourteen zombie-next-server cascades** survived. Notable cascade-pattern revision: cascade #14 hit on a DOC-ONLY commit (no app code change at all), invalidating the earlier "doc-only commits don't cascade" hypothesis. Cascades are about Passenger restart cycle hygiene, NOT about webpack-cache surface size. Pattern is now: every push triggers some risk; recovery playbook is the constant.
+**Aggregator:** 4949 passed across 86 suites in ~8s (+48 from prior 4901/85 — added `ai-usage-instrumentation` (48) tracking the 8/10 ops-without-recordAiUsage gap, with SSOT lists, drift detection, and AIOp union coverage check).
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
@@ -154,6 +154,24 @@ clean (uptime=0s, no zombie buildup, no pkick required). 9th
 consecutive non-code-bearing commit to deploy without cascade. Pattern
 hypothesis (cascade frequency scales with webpack-cache invalidation
 surface) holds across all observations.
+
+### 2026-05-04 — AI usage instrumentation gap tracker (commit `bff7354`)
+
+Discovered while planning Stage 3 batch A of the FeedbackChip rollout. Empirical query against prod ai_usage showed 8 of 10 AI ops have ZERO rows — translate, rewrite, table, compare, ocr, generate, sign, redact don't call `recordAiUsage` at all. Only summarize + chat are instrumented.
+
+**Impact:**
+- /admin/margin sees ~20% of fleet (only chat + summarize feed the rollup)
+- FeedbackChip flip semantics broken on those 8 ops (no aiUsageId means UNIQUE(user_id, ai_usage_id) can't dedupe → each click inserts a new row)
+- /app/usage per-op breakdown wrong
+- Per-op error rates unmeasurable
+
+**Files shipped:**
+- `docs/AI_USAGE_INSTRUMENTATION_GAP.md` (NEW): SEV-1 writeup with empirical evidence, fix recipe (canonical recordAiUsage pattern from summarize), 3-batch rollout plan, per-op tracker, ~4h total estimate.
+- `scripts/test-ai-usage-instrumentation.mjs` (NEW, 48 assertions): SSOT for INSTRUMENTED_OPS + MISSING_OPS, cross-checks both directions (instrumented ops actually call it; missing ops actually don't — catches drift either way), validates against AIOp union in lib/ai/router.ts. Prints human-readable gap state on each run.
+
+**Cascade #14 — first cascade observed on a DOC-ONLY commit (this one).** Important learning: cascade frequency is NOT correlated with webpack-cache surface; even byte-identical builds can cascade because the cascade is about Passenger's restart cycle hygiene, not about what the runtime is loading. The "9 consecutive non-code commits clean" streak from earlier today was luck, not a deterministic property. Recovery: documented `awk | xargs kill -KILL` pattern (the cascade #13 lesson) + empty-nudge to push the gap-tracker commit through after recovery returned to a previous commit. ~12 min total recovery.
+
+**STATUS.md preamble updated** to revise the cascade hypothesis: every push has some cascade risk; recovery playbook is the constant, not the input commit's "size."
 
 ### 2026-05-03 mid-day — post-plan gap closure (Gap #1 + Gap #3)
 
