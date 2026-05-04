@@ -115,6 +115,20 @@ const WIRED_TOOLS = [
     route: "app/api/ai/generate/route.ts",
     operation: "generate",
   },
+  // 2026-05-04 — Chat. The last AI op to get the chip. Different
+  // shape from the other 9 tools: per-assistant-message rendering
+  // inside MessageBubble (chat is conversational, not batch-result).
+  // Operation literal is "chat_turn" (matches the value written to
+  // ai_usage.operation by the chat route — see app/api/ai/chat/
+  // route.ts:512 + lib/ai/router.ts AIOp comment about 'chat_turn'
+  // being the conventional name; ai_usage stores 'chat_turn' not
+  // 'chat'). Component path is under components/app/chat/ instead
+  // of components/tools/ because chat has its own UI surface.
+  {
+    component: "components/app/chat/ChatClient.tsx",
+    route: "app/api/ai/chat/route.ts",
+    operation: "chat_turn",
+  },
 ];
 
 // ============================================================================

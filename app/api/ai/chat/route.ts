@@ -496,18 +496,23 @@ export async function POST(req: Request): Promise<Response> {
             .set({ updatedAt: new Date() })
             .where(eq(schema.chatSessions.id, sessionId));
 
-          emit({
-            type: "done",
-            stopReason: finalStopReason,
-            usage: { inputTokens: tokensIn, outputTokens: tokensOut },
-            model,
-            providerId,
-          });
-
-          // Phase A1: audit-log the successful call. Fire-and-forget;
-          // `recordAiUsage` swallows non-duplicate errors so a usage-row
-          // write failure never surfaces to the user.
-          await recordAiUsage({
+          // 2026-05-04 (PENDING §6b stage 3 / Chat) — capture the
+          // recordAiUsage row id BEFORE emitting the done event so we
+          // can surface it as `aiUsageId`. The FeedbackChip on each
+          // assistant message uses this for flip semantics on
+          // ai_feedback's UNIQUE(user_id, ai_usage_id). Reordering
+          // the audit insert above the emit adds ~5ms of latency to
+          // the done event — imperceptible. The emit is now the LAST
+          // thing the success branch does.
+          //
+          // Phase A1: audit-log the successful call. `recordAiUsage`
+          // swallows non-duplicate errors internally so a usage-row
+          // write failure never surfaces to the user. On a duplicate-
+          // key replay (rare; only happens if the same idempotency
+          // key flows through twice), `applied` is false and we emit
+          // `aiUsageId: null` — chip degrades to "no flip semantics"
+          // gracefully.
+          const usageRecord = await recordAiUsage({
             userId,
             operation: "chat_turn",
             providerId,
@@ -532,6 +537,15 @@ export async function POST(req: Request): Promise<Response> {
             responseTruncated: isTruncatedStopReason(finalStopReason),
             ledgerId: spendLedgerId,
             idempotencyKey: `ai:${sessionId}:${idempotencyKey}`,
+          });
+
+          emit({
+            type: "done",
+            stopReason: finalStopReason,
+            usage: { inputTokens: tokensIn, outputTokens: tokensOut },
+            model,
+            providerId,
+            aiUsageId: usageRecord.applied ? usageRecord.id : null,
           });
         } else {
           // Refund the up-front debit. Provider erred; user didn't get
@@ -796,6 +810,15 @@ export type ChatSseEvent =
       model: string;
       providerId: AIProviderId;
       replay?: boolean;
+      /**
+       * 2026-05-04 (PENDING §6b stage 3 / Chat). ai_usage row id
+       * captured from recordAiUsage. The FeedbackChip on each
+       * assistant message uses this for UNIQUE(user_id, ai_usage_id)
+       * flip semantics. Null on duplicate-key replay (rare).
+       * Optional in the type so legacy clients (pre-chip wire-up)
+       * don't break — they just won't render the chip.
+       */
+      aiUsageId?: string | null;
     }
   | {
       type: "error";

@@ -24,6 +24,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { I } from "@/components/icons/Icons";
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 
 type Role = "system" | "user" | "assistant";
 
@@ -40,6 +41,18 @@ type LocalMessage = ChatClientMessage & {
   pending?: boolean;
   /** True when the last attempt ended in error. Allows a retry UX later. */
   errored?: boolean;
+  /**
+   * 2026-05-04 (PENDING §6b stage 3 / Chat). ai_usage row id captured
+   * from the SSE done event. Lets MessageBubble render a FeedbackChip
+   * with full flip-semantics support. Null on replay (we don't look
+   * up the original ai_usage row by chat-turn idempotency key —
+   * acceptable since replays are rare).
+   */
+  aiUsageId?: string | null;
+  /** providerId captured from the SSE meta or done event (for chip). */
+  providerId?: string;
+  /** model captured from the SSE meta or done event (for chip). */
+  model?: string;
 };
 
 // Crypto.randomUUID is available in all evergreen browsers + Node 19+.
@@ -262,11 +275,25 @@ function MessageBubble({ message }: { message: LocalMessage }) {
   if (message.role === "system") return null;
   const isUser = message.role === "user";
 
+  // 2026-05-04 (PENDING §6b stage 3 / Chat) — show FeedbackChip below
+  // a completed assistant message that wasn't an error. Skip while
+  // pending (still streaming), skip on errors (no provider work
+  // worth rating), skip on user messages (we rate the AI's output).
+  // Replays land with aiUsageId=null which is fine — chip still
+  // works; just no flip semantics on the rare replay path.
+  const showFeedbackChip =
+    message.role === "assistant" &&
+    !message.pending &&
+    !message.errored &&
+    message.content.length > 0;
+
   return (
     <div
       style={{
         display: "flex",
-        justifyContent: isUser ? "flex-end" : "flex-start",
+        flexDirection: "column",
+        alignItems: isUser ? "flex-end" : "flex-start",
+        gap: 6,
       }}
     >
       <div
@@ -302,6 +329,17 @@ function MessageBubble({ message }: { message: LocalMessage }) {
           <span className="subtle" aria-hidden="true">▍</span>
         ) : null}
       </div>
+      {showFeedbackChip && (
+        <div style={{ paddingLeft: 6 }}>
+          <FeedbackChip
+            operation="chat_turn"
+            aiUsageId={message.aiUsageId ?? null}
+            fileId={null}
+            providerId={message.providerId ?? null}
+            model={message.model ?? null}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -473,6 +511,13 @@ type SseEvent =
       usage: { inputTokens: number; outputTokens: number };
       model: string;
       providerId: string;
+      replay?: boolean;
+      /**
+       * 2026-05-04 (PENDING §6b stage 3 / Chat). ai_usage row id from
+       * recordAiUsage. FeedbackChip uses this for flip semantics.
+       * Optional so legacy responses (pre-wire-up) keep type-checking.
+       */
+      aiUsageId?: string | null;
     }
   | {
       type: "error";
@@ -489,11 +534,20 @@ function handleEvent(
   switch (event.type) {
     case "meta":
       // Swap the local id for the server-assigned id so a subsequent
-      // refresh doesn't show duplicate rows. Only rename — don't touch
-      // content yet.
+      // refresh doesn't show duplicate rows. Capture providerId +
+      // model here so they're attached BEFORE the done event lands —
+      // FeedbackChip needs both even on a turn that errors out
+      // mid-stream.
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === assistantMsgId ? { ...m, id: event.assistantMessageId } : m
+          m.id === assistantMsgId
+            ? {
+                ...m,
+                id: event.assistantMessageId,
+                providerId: event.providerId,
+                model: event.model,
+              }
+            : m
         )
       );
       return;
@@ -507,10 +561,25 @@ function handleEvent(
       );
       return;
     case "done":
+      // 2026-05-04 (PENDING §6b stage 3 / Chat) — capture aiUsageId
+      // from the done event so MessageBubble can render the
+      // FeedbackChip on this assistant turn. Optional in the SSE
+      // protocol so legacy (pre-wire-up) responses don't break the
+      // type check; just renders the chip with aiUsageId=null in
+      // that case (chip still works; flip semantics degraded).
       setMessages((prev) =>
         prev.map((m) =>
           m.role === "assistant" && m.pending
-            ? { ...m, pending: false, stopReason: event.stopReason }
+            ? {
+                ...m,
+                pending: false,
+                stopReason: event.stopReason,
+                aiUsageId: event.aiUsageId ?? null,
+                // Refresh providerId/model from done event in case
+                // meta wasn't captured (rare; defensive).
+                providerId: m.providerId ?? event.providerId,
+                model: m.model ?? event.model,
+              }
             : m
         )
       );

@@ -119,7 +119,8 @@ the id. No data migration needed.
 | Stage 3 batch A — top 5 ops (3 of 5) | 4 / 53 | 7.5% | `beeb902` (translate/rewrite/ocr) |
 | Stage 3 batch A — finish (table + compare) | 6 / 53 | 11.3% | `ff54b07` |
 | Stage 3 batch A — sign + redact (newly unlocked by Batch 3 ai_usage) | 8 / 53 | 15.1% | `1684741` |
-| Stage 3 — Generate (last markdown-rendering AI tool) | 9 / 53 | 17.0% | _this commit_ |
+| Stage 3 — Generate (last markdown-rendering AI tool) | 9 / 53 | 17.0% | `94db9e1` |
+| Stage 3 — Chat (per-message in conversational UX) | 10 / 53 | 18.9% | _this commit_ |
 | Stage 3 batch B — variants | — | — | pending |
 | Stage 3 batch C — specialist + tail | — | — | pending |
 
