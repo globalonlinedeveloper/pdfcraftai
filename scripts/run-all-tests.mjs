@@ -1083,6 +1083,17 @@ const SUITES = [
   // secret); activation flipped it to fail-closed, exposing the gap as
   // a release-blocking outage. Guard locks in the fix.
   { name: "csp-turnstile", file: "test-csp-turnstile.mjs" },
+  // 2026-05-04 (Plan T2-5) — capExceeded wire-up guard. Locks in the
+  // 4-layer chain shipped at commits 8d47400 + 9f8bf07: spendCredits
+  // → 402 response body → tool error string [trial-cap] marker →
+  // OutOfCreditsAlert capExceeded prop → friendlier heading. If any
+  // layer drops the flag, free-trial users hitting the per-op cap
+  // fall back to the misleading "Not enough credits / you have 0"
+  // copy instead of "Free trial cap reached on this tool". 77
+  // assertions across 5 sections (alert surface, 10 routes, 9 tool
+  // components, spendCredits union, forward-compat). Pure static-
+  // parse — adds ~3ms.
+  { name: "cap-exceeded-wireup", file: "test-cap-exceeded-wireup.mjs" },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
