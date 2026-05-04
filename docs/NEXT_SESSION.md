@@ -1,23 +1,25 @@
 # Next session — pick up here
 
-**Updated 2026-05-04 night (latest live commit `21b874a`).**
+**Updated 2026-05-04 late-night (latest live commit `3bd528a`).**
 Multi-day arc complete. Production observability rollout 100% done.
 AI feedback data flywheel structurally live on **all 10 high-leverage
 tools** (Stage 3 batch A closed; 10/10 milestone reached on
-`cb013ab`). Last documented correctness issue (PENDING §11a) closed.
+`cb013ab`). PENDING §11a (webhook audit ordering) and §4c (dunning
+persistence foundation) both closed in this arc.
 
 **Status snapshot:**
-- Latest live commit: `21b874a` (retrospective doc append for chat
-  chip wire-up)
-- Last code-bearing deploy: `cb013ab` (Chat FeedbackChip wire-up —
-  10/10 AI ops now have the chip + aiUsageId on the wire)
-- Aggregator: **4994/4994 tests passing across 86 suites** in ~8s
+- Latest live commit: `3bd528a` (retrospective doc for dunning ship)
+- Last code-bearing deploy: `76a0c82` (Dunning persistence
+  foundation — migration 0023, persist helpers, /admin/dunning
+  viewer; PENDING §4c closed)
+- Aggregator: **5053/5053 tests passing across 87 suites** in ~7.5s
 - `tsc --noEmit` exit 0
-- 19 cascade events survived; recovery playbook holds; cb013ab
-  itself deployed CLEAN (no cascade)
+- 20 cascade events survived; recovery playbook holds; cascade #20
+  was typical-fast (~3 min via single mass-kill)
 - Production: all systems active, all 10 AI ops audited, /admin/margin
   sees 100% of fleet, /admin/ai-feedback collects ↑/↓ across 10/10
-  leveraged ops
+  leveraged ops, /admin/dunning ready for Phase E (empty table by
+  design today)
 
 ## Read first
 
@@ -37,8 +39,8 @@ tools** (Stage 3 batch A closed; 10/10 milestone reached on
 |---|---|---|
 | ~~Generate FeedbackChip wire-up~~ | ~~~30 min~~ | ✅ DONE (commit `94db9e1`). 9/10 milestone. |
 | ~~Chat FeedbackChip wire-up~~ | ~~~30 min~~ | ✅ DONE (commit `cb013ab`). 10/10 milestone. Stage 3 batch A closed. |
-| `lib/payments/dunning.ts` orphaned TODO (PENDING §4c) | ~2 hours | Persist DunningRow to subscription_dunning table. Migration + persist + admin viewer. Same pattern as contact-submissions (commit `52307a3`) and ai-feedback (commit `d74fefe`). The actual dunning automation logic is bigger; foundation is small. **Now the highest-priority Tier 1 code item.** |
-| Slack alerting verification (PENDING §2a) | 30 min user-action | `AI_SPEND_ALERT_SLACK_URL` env var is unset in Hostinger. Founder sets it; lib/ai/margin-rollup.ts already has the helper code shipped. |
+| ~~`lib/payments/dunning.ts` orphaned TODO (PENDING §4c)~~ | ~~~2 hours~~ | ✅ DONE (commit `76a0c82`). Migration 0023, persist helpers, /admin/dunning viewer, 59-assertion CI guard. Empty table by design until Phase E wires the webhook handler. |
+| Slack alerting verification (PENDING §2a) | 30 min user-action | `AI_SPEND_ALERT_SLACK_URL` env var is unset in Hostinger. Founder sets it; lib/ai/margin-rollup.ts already has the helper code shipped. **Only Tier 1 code item left is the founder action.** |
 
 ### Tier 2 — medium (next arc)
 
@@ -150,7 +152,7 @@ The infrastructure groundwork is structurally complete on these axes:
 ```bash
 cd /sessions/gifted-funny-franklin/pdfcraftai-work
 npx tsc --noEmit                                # exit 0?
-node scripts/run-all-tests.mjs 2>&1 | tail -3   # 4994/0 across 86?
+node scripts/run-all-tests.mjs 2>&1 | tail -3   # 5053/0 across 87?
 curl -s https://pdfcraftai.com/api/health | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['commit'], d['uptimeSec'])"
 ```
 

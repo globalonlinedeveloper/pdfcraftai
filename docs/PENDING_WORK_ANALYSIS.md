@@ -192,15 +192,14 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 **Estimate:** 5-7 days.
 
-### 4c. Orphaned `TODO(Phase E)` markers
+### 4c. Orphaned `TODO(Phase E)` markers — ✅ FOUNDATION SHIPPED (2026-05-04)
 
-**State:** 2 TODOs in code:
-- `lib/payments/dunning.ts:236` — "persist DunningRow to a `subscription_dunning` table"
-- `app/api/contact/route.ts:116` — "wire SendGrid / Postmark here"
+**Original state (audit time):** 2 TODOs in code. Both meaningful gaps. Dunning means subscribers whose payment failed don't get retried (we lose them). Contact form means submissions go to stdout/log only, not to ops.
 
-Both are meaningful gaps. Dunning means subscribers whose payment failed don't get retried (we lose them). Contact form means submissions go to stdout/log only, not to ops.
+- ✅ `lib/payments/dunning.ts:236` — "persist DunningRow to a `subscription_dunning` table" — **FOUNDATION SHIPPED** in commit `76a0c82` (2026-05-04). Migration 0023, schema entry, three persist helpers (`loadDunningRow`, `persistDunningEvent`, `listDunningRows`), `/admin/dunning` read-only viewer, 59-assertion CI guard. Same staging discipline as ai-feedback (`d74fefe`) and contact-submissions (`52307a3`): the table + persist surface land now even though no Phase E webhook handler calls them yet, so when recurring plans ship the wire-up is a 1-file diff. Empty table by design today (no recurring SKUs); first row will land when Phase E wires `persistDunningEvent` into `webhook-handler.ts` on Razorpay `subscription.charged|pending|halted|cancelled` and Paddle `subscription.payment_succeeded|payment_failed|canceled` events.
+- ✅ `app/api/contact/route.ts:116` — "wire SendGrid / Postmark here" — **FOUNDATION SHIPPED** in commit `52307a3` (2026-05-04). Submissions persist to `contact_submissions` (migration 0021) + `/admin/contact-submissions` read-only viewer. Founder still needs to wire transactional email provider for the email part.
 
-**Estimate:** Dunning ~1 week (real flow: failed payment → 3-day grace → 7-day notice → 14-day cancel). Contact form ~2 hours (wire any transactional email provider).
+**Remaining (Phase E proper):** the actual dunning automation logic (~1 week — failed payment → 3-day grace → 7-day notice → 14-day cancel, with retry orchestration + entitlement gating + email sequence) needs the recurring billing surface to exist first. The pure reducer + persist surface this commit ships are the foundation; the lifecycle automation is a Phase E feature, not a foundation gap.
 
 ### 4d. No feature flag system beyond env vars
 
