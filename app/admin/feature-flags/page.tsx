@@ -16,11 +16,11 @@
 // - Compute A/B test stats. The flag system is deterministic-bucket
 //   only; downstream analytics is a separate Phase B item.
 
-import {
-  FEATURE_FLAGS,
-  envKey,
-  snapshotAllFlags,
-} from "@/lib/flags";
+// FEATURE_FLAGS itself is referenced only in JSX literal text on this
+// page; its values flow through snapshotAllFlags() internally. Don't
+// import it here — Next.js Page files can't re-export non-Page names
+// (see end-of-file note + commit history at a849c91).
+import { envKey, snapshotAllFlags } from "@/lib/flags";
 import type { FeatureFlagSnapshot } from "@/lib/flags";
 import { requireAdmin } from "@/lib/admin/guard";
 import {
@@ -259,8 +259,14 @@ export default async function AdminFeatureFlagsPage() {
   );
 }
 
-// Re-export to satisfy unused-import warnings on FEATURE_FLAGS — the
-// page renders the snapshot, which iterates the registry internally.
-// Kept here so a future refactor that splits the page into client/
-// server components has FEATURE_FLAGS already imported.
-export { FEATURE_FLAGS };
+// Note: do NOT add named exports here. Next.js App Router page files
+// have a strict export allowlist (`default`, `metadata`,
+// `generateMetadata`, `viewport`, `generateViewport`, etc.) — any
+// other named export fails `next build` with:
+//   "Type error: Page does not match the required types of a Next.js
+//    Page. <ExportName> is not a valid Page export field."
+// An earlier version of this file had `export { FEATURE_FLAGS }` here
+// to "preserve the import" — that broke the production build (commit
+// a849c91 → fixed in the next commit). FEATURE_FLAGS is already
+// referenced internally via snapshotAllFlags()'s iteration of the
+// registry; no re-export needed.
