@@ -1295,6 +1295,20 @@ const SUITES = [
     name: "referrals-foundation",
     file: "test-referrals-foundation.mjs",
   },
+  // 2026-05-05 (PENDING §5a foundation) — PDF compress route guard.
+  // Locks the Ghostscript wrapper invariants (level→preset map,
+  // required gs flags, mkdtemp + finally{} cleanup, SIGKILL on
+  // timeout, bypass-on-low-savings branch) and the route handler
+  // contract (auth → flag gate → size cap → magic-header check →
+  // level whitelist → gs spawn → categorized error). The flag-gate
+  // assertion is the foundation's load-bearing invariant — without
+  // it, the route would expose to all logged-in users on first
+  // deploy. 45 assertions across 4 sections including dynamic eval
+  // of the level→preset map literal.
+  {
+    name: "pdf-compress-foundation",
+    file: "test-pdf-compress-foundation.mjs",
+  },
   // 2026-05-04 (PENDING §1f) — webhook + reconcile resilience
   // contract. Locks in: 500 on processing error (provider retries),
   // 200 on duplicate (provider stops), 400 on bad sig (provider

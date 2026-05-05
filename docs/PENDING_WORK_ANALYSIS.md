@@ -254,21 +254,32 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 ## 5. Product gaps (6 customer-facing items)
 
-### 5a. Real PDF Compress (T2-1)
+### 5a. Real PDF Compress (T2-1) — ⚠️ INFRA UNBLOCKED (2026-05-05)
 
-**State:** intentional gap (pdf-lib limitation). Two SEO landings + use case + 2 blog posts had bait-and-switch references; cleaned up this session. Now honest but the demand is real.
+**State:** intentional gap (pdf-lib limitation). Two SEO landings + use case + 2 blog posts had bait-and-switch references; cleaned up earlier. Now honest but the demand is real.
 
-**Implementation:** server-side `qpdf --linearize` + `gs -sDEVICE=pdfwrite -dPDFSETTINGS=/screen`. Three levels (Light, Balanced, Strong). Run as a credit-priced AI op (~5 credits per doc) since it needs server compute.
+**What changed 2026-05-05:** verified via SSH that `/usr/bin/gs` (Ghostscript 9.54.0) IS available on the Hostinger box — `qpdf` is NOT, but Ghostscript alone is sufficient (`gs -sDEVICE=pdfwrite -dPDFSETTINGS=/screen|/ebook|/printer` covers all three quality levels). This flips the implementation from "uncertain — needs binary install" to "ready to build against existing infra".
 
-**Estimate:** 5 days.
+**Implementation (revised):** server-side `gs` invocation only (skip `qpdf --linearize` since it's not on the box; `gs` handles linearization via `-dFastWebView=true`). Three levels:
+- **Light** (`-dPDFSETTINGS=/printer`): minimal loss, ~10-30% reduction
+- **Balanced** (`-dPDFSETTINGS=/ebook`): default; ~30-50% reduction
+- **Strong** (`-dPDFSETTINGS=/screen`): aggressive; 50-80% reduction; visible image quality drop
 
-### 5b. PDF/A converter (not just check)
+**Pricing decision (deferred):** PENDING audit suggested 5 credits/doc. MVP could ship FREE bounded by 50MB + 200 pages (matches existing OCR cap pattern); if abuse surfaces, add credit pricing. Ghostscript on a 50MB PDF takes ~5s CPU + minimal RAM — manageable resource cost.
+
+**Abuse prevention:** existing rate limit (10 req/hr/user) + 50MB file cap + 200 page cap.
+
+**Estimate:** 3-4 days for full UX (route + tool component + registry entry + redirect cleanup + tests). Foundation (server-side helper + route + CI guard, no UI) is ~1 day.
+
+### 5b. PDF/A converter (not just check) — ⚠️ INFRA UNBLOCKED (2026-05-05)
 
 **State:** we have `/tool/pdf-a-check` (validates compliance) but no converter (makes a non-compliant PDF compliant). Real demand from compliance/archival users.
 
-**Implementation:** server-side via Ghostscript (`gs -dPDFA=2 -sProcessColorModel=DeviceRGB ...`) or qpdf. Embed required color profiles, font subset, metadata.
+**What changed 2026-05-05:** Ghostscript 9.54.0 verified on the Hostinger box. `gs -dPDFA=2 -dPDFACompatibilityPolicy=1 -sProcessColorModel=DeviceRGB -sDEVICE=pdfwrite ...` covers PDF/A-2b conversion natively. `qpdf` not available, but for PDF/A specifically Ghostscript is the canonical tool anyway.
 
-**Estimate:** 3-4 days.
+**Implementation (revised):** Ghostscript only. Need to bundle a default sRGB ICC color profile (`-sOutputICCProfile=...`) since PDF/A requires an output intent. Source the profile from a trusted upstream (sRGB.icc shipped with Ghostscript itself OR the open-source `colorprofiles.org` v4 ICC). Single quality level (PDF/A-2b is the standard archival target — most-supported, OK for embedded fonts + transparency).
+
+**Estimate:** 3-4 days. Implementation parallels §5a Compress: same Ghostscript wrapper module + new route variant + new tool component. Could share the same `lib/tools/ghostscript.ts` helper.
 
 ### 5c. Edit Text in PDFs
 

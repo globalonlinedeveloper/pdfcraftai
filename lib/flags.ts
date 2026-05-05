@@ -85,6 +85,13 @@ export const FEATURE_FLAGS = {
   MULTI_SEAT: "multi_seat",
   /** Referral program rollout — wraps the /account referral panel + invite-tracking webhook. */
   REFERRAL_PROGRAM: "referral_program",
+  /**
+   * PDF Compress (PENDING §5a) — wraps the server-side Ghostscript-
+   * backed compress route. Foundation lands without this flag set so
+   * the route is silently disabled at the handler level until the
+   * UI / catalog entry / CI smoke is ready to ship together.
+   */
+  PDF_COMPRESS: "pdf_compress",
 } as const;
 
 export type FeatureFlagName = (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS];
