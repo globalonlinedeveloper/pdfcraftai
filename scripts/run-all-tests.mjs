@@ -1264,6 +1264,21 @@ const SUITES = [
     name: "feature-flags-foundation",
     file: "test-feature-flags-foundation.mjs",
   },
+  // 2026-05-05 — closes the validation gap exposed by commit
+  // a849c91 (feature-flags foundation) where I added a non-allowlist
+  // named export to a Next.js Page file. tsc --noEmit + aggregator
+  // both passed; only `next build` caught it, and only on
+  // Hostinger's deploy. This static-parse guard scans every
+  // page.tsx / page.ts under app/ for exports outside the App
+  // Router allowlist (default / metadata / generateMetadata /
+  // viewport / generateViewport / generateStaticParams + Route
+  // Segment Config). Catches the bug class in <1s instead of at
+  // ~2-min `next build`-time. 13 assertions including extractor
+  // self-tests on 8 export forms.
+  {
+    name: "next-page-exports",
+    file: "test-next-page-exports.mjs",
+  },
   // 2026-05-04 (PENDING §1f) — webhook + reconcile resilience
   // contract. Locks in: 500 on processing error (provider retries),
   // 200 on duplicate (provider stops), 400 on bad sig (provider
