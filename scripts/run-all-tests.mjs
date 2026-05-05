@@ -1228,6 +1228,16 @@ const SUITES = [
     name: "cron-slack-escalation",
     file: "test-cron-slack-escalation.mjs",
   },
+  // 2026-05-04 (PENDING §4c automation) — dunning webhook automation.
+  // Follow-up to commit 76a0c82 (dunning persistence foundation):
+  // lib/payments/ledger.ts:handleSubscription now drives the dunning
+  // state machine alongside the existing subscriptions.status update.
+  // Dispatch is dormant today (no recurring SKUs), activates without
+  // code changes when Phase E ships. 38 assertions across 5 sections.
+  {
+    name: "dunning-automation",
+    file: "test-dunning-automation.mjs",
+  },
   // 2026-05-04 (PENDING §1f) — webhook + reconcile resilience
   // contract. Locks in: 500 on processing error (provider retries),
   // 200 on duplicate (provider stops), 400 on bad sig (provider

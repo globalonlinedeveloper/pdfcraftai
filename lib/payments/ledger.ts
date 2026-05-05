@@ -17,6 +17,15 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db/client";
+// 2026-05-04 (PENDING §4c automation) — wire subscription lifecycle
+// events to drive the dunning state machine. The persist helper is
+// idempotent on providerEventId so a re-delivered webhook no-ops at
+// the dunning layer (independent of the audit-layer dedup that
+// happens upstream in webhook-handler.ts). When recurring SKUs ship
+// in Phase E, this dispatch path activates without further code
+// changes — today it's dormant because no subscription events fire.
+import { persistDunningEvent } from "./dunning";
+import type { DunningEvent } from "./dunning";
 import {
   CREDIT_PACKS,
   packCreditsForVariant,
@@ -714,6 +723,54 @@ async function handleSubscription(
       )
     );
 
+  // 2026-05-04 (PENDING §4c automation) — drive the dunning state
+  // machine alongside the subscriptions.status update. Two reasons
+  // these need separate persistence paths:
+  //   1. subscriptions.status is a single canonical contract field;
+  //      dunning posture is an observation log keyed on a different
+  //      lifecycle (grace windows, retry counters) that may diverge
+  //      from contract status briefly during a failed-payment
+  //      retry sequence.
+  //   2. Phase E may extend `subscriptions.status` with new values
+  //      (e.g. "trialing") that don't map cleanly onto the existing
+  //      4-state dunning machine — keeping them orthogonal lets each
+  //      evolve independently.
+  //
+  // The mapping is deliberately partial: paused state has no dunning
+  // event today because it's a user-initiated pause, not a payment
+  // failure. activated/renewed both clear the dunning posture (state
+  // returns to "current"). failed advances; cancelled finalizes.
+  //
+  // The ledger layer's idempotency comes from `persistDunningEvent`'s
+  // own replay guard (lastProviderEventId equality check). The webhook
+  // audit-layer dedup upstream in handleWebhook handles the SAME event
+  // delivered twice; this layer additionally handles the case where
+  // the subscription transition gets driven from a non-webhook path
+  // (e.g. an admin manually flipping status) and we want the dunning
+  // log to skip it.
+  const dunningEvent: DunningEvent | null = mapSubscriptionStateToDunning(
+    event.state,
+    event.providerRef,
+    event.occurredAt.getTime(),
+  );
+  if (dunningEvent) {
+    try {
+      await persistDunningEvent(payment.subscriptionId, dunningEvent);
+    } catch (err) {
+      // Dunning persistence failure MUST NOT abort subscription status
+      // update — they're separate contracts. Log + swallow. The
+      // contract is: subscriptions.status is the source of truth for
+      // entitlement; dunning is the observation log. If dunning misses
+      // an event, /admin/dunning will be slightly stale but
+      // subscriptions.status is still correct.
+      console.warn(
+        `[ledger:subscription] persistDunningEvent failed for ` +
+          `subscription ${payment.subscriptionId}:`,
+        err,
+      );
+    }
+  }
+
   // Subscription activation / renewal grant is a separate path — Task
   // #53 wires /pricing Plus plan to a planCode → credits map. For now
   // we just track status transitions.
@@ -733,6 +790,62 @@ function mapSubscriptionStatus(
       return "cancelled";
     case "failed":
       return "failed";
+  }
+}
+
+/**
+ * 2026-05-04 (PENDING §4c automation) — map normalized subscription
+ * state to a DunningEvent for the dunning state machine. Returns null
+ * for states that don't drive dunning posture (today: "paused").
+ *
+ * Mapping rationale:
+ *   - activated / renewed → payment_succeeded: any successful charge
+ *     clears the dunning posture (state returns to "current").
+ *   - failed → payment_failed: advances posture toward suspended.
+ *     failedAttempts defaults to 1 because the normalized event
+ *     doesn't yet carry a retry counter — adapter-level support for
+ *     Razorpay's `attempts` field is a Phase E refinement. nextRetryAtMs
+ *     is null for the same reason: until the adapter parses provider-
+ *     specific retry hints, the reducer falls through to its grace-
+ *     window defaults from DUNNING_POLICY.
+ *   - cancelled → subscription_cancelled: final state. reason field
+ *     defaults to "provider_lifecycle" (we don't yet distinguish
+ *     "user_requested" vs "retries_exhausted" vs "fraud_block" in the
+ *     normalized event).
+ *   - paused → null: user-initiated pauses aren't dunning events.
+ *     /admin/dunning shows the user as "current" until a real failed
+ *     charge fires, which is correct.
+ */
+function mapSubscriptionStateToDunning(
+  state: "activated" | "renewed" | "cancelled" | "paused" | "failed",
+  providerEventId: string,
+  occurredAtMs: number,
+): DunningEvent | null {
+  switch (state) {
+    case "activated":
+    case "renewed":
+      return {
+        kind: "payment_succeeded",
+        providerEventId,
+        occurredAtMs,
+      };
+    case "failed":
+      return {
+        kind: "payment_failed",
+        providerEventId,
+        occurredAtMs,
+        failedAttempts: 1,
+        nextRetryAtMs: null,
+      };
+    case "cancelled":
+      return {
+        kind: "subscription_cancelled",
+        providerEventId,
+        occurredAtMs,
+        reason: "provider_lifecycle",
+      };
+    case "paused":
+      return null;
   }
 }
 
