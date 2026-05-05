@@ -179,7 +179,7 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 **Estimate:** zero Claude-work — vendor blocked. Once Paddle KYC clears, the adapter at `lib/payments/adapters/paddle.ts` is scaffolded.
 
-### 3e. No referral program — ✅ FOUNDATION SHIPPED (2026-05-05)
+### 3e. No referral program — ✅ FOUNDATION + SIGNUP-FLOW SHIPPED (2026-05-05)
 
 **Original state (audit time):** zero growth-loop infrastructure. Existing users had no incentive to refer.
 
@@ -193,14 +193,18 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 **Same staging discipline** as feature-flags / quality-signal / dunning / contact-submissions / ai-feedback: tables + read paths land NOW even though no signup-flow wire-up runs yet. Empty tables today by design — the read path is verified end-to-end against real prod schema, so when Phase E flips `REFERRALS_ENABLED=1` and adds the signup-flow attribution writer, the entire admin surface renders correctly with no further migration.
 
-**Remaining (Phase E proper):**
-- Signup-flow wire-up: read `?ref=CODE` URL param, call `recordReferralSignup()` during register/credentials-create or Google OAuth completion (~2 days).
-- Reward grant writers (`recordReferralSignup`, `grantReferrerReward`, `grantReferredReward`) in a new `lib/referrals/writers.ts` module, gated behind `REFERRALS_ENABLED=1` (~2 days, depends on reward-amount decision).
-- `/app/refer` user-facing page (share-your-code surface) (~2 days).
-- Reward UX copy + email notifications on milestone hit (~3 days, depends on transactional-email wiring — see §11 contact-submissions follow-on).
-- Slack alerter on first-rewarded-attribution (~1 day, depends on §2a Slack webhook URL — founder paperwork).
+**Phase E follow-ons shipped 2026-05-05** (this session, all verified live):
+- ✅ `/app/refer` user-facing page (commit `733cfc1`) — auth-gated, lazy-creates code, shows code + share URL + stats + honest beta banner
+- ✅ `lib/referrals/writers.ts` (commit `8f4c899`) — three idempotent flag-gated writers: `recordReferralSignup` (race-safe with self-referral guard), `grantReferrerReward` / `grantReferredReward` (IS NULL re-check inside UPDATE for race-safe idempotency)
+- ✅ Signup-flow wire-up (commit `97f12a8` after fix from `a9e006f`) — middleware-based cookie set on `/register?ref=CODE`, `events.signIn` handler in `auth.ts` reads cookie + looks up code + calls `recordReferralSignup` + clears cookie, all flag-gated. Confirmed live: `Set-Cookie: pdfcraft_ref=...; Max-Age=2592000; Secure; HttpOnly; SameSite=lax` on valid ref param; no cookie on invalid.
 
-**Estimate to go from foundation → full feature:** ~1-2 weeks once reward amounts + attribution window are decided.
+**Remaining for full Phase E (~1 day):**
+- Reward-trigger wire-up: when a referred user verifies their email, grant `REFERRED_REWARD_CREDITS` to them via `grantCredits` + call `grantReferredReward(signupId, ledgerId)` transactionally. When the referred user makes their first credit purchase, grant `REFERRER_REWARD_CREDITS` to the referrer + call `grantReferrerReward`. Both wrap two writes (credit_ledger + signup row update) in a single transaction.
+- Then set `REFERRALS_ENABLED=1` on Hostinger panel — the entire referral loop runs end-to-end.
+
+**Cascade learning (this session):** `cookies().set()` from a server-component render path throws "Cookies can only be modified in a Server Action or Route Handler" (Next.js 14). Caught only at request-time in prod (`next build` doesn't execute). Fix: move cookie-write to middleware via `auth(fn)` wrapper that re-implements the gate logic. This is now pinned by CI guard Section L.
+
+**Estimate from current state → fully live:** ~1 day (reward-trigger wire-up only).
 
 ---
 
