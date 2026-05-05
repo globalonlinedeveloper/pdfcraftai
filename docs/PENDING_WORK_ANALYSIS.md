@@ -161,11 +161,17 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 **Estimate:** 2-3 weeks for a real team plan with shared billing + per-seat permissions + SSO via Google Workspace.
 
-### 3c. No enterprise contact path
+### 3c. No enterprise contact path — ✅ ALREADY SHIPPED (re-discovered 2026-05-05)
 
-**State:** pricing page tops out at $9/mo Plus. No "contact us" CTA for SMB asks. We turn away every conversation that starts with "we have 50 employees who need..."
+**Original state (audit time):** assumed pricing page topped out at $9/mo Plus with no enterprise CTA.
 
-**Estimate:** 1 hour. Add a `/enterprise` page with sales-qualified-lead form. Wire to founder email (or HubSpot if installed).
+**Verification (2026-05-05 grep pass against the live tree):**
+- `app/enterprise/page.tsx` — sales-qualified-lead landing with `MarketingHero` + inline value sections + `ContactForm`
+- Form posts to `/api/contact` (the existing route that persists to `contact_submissions` table — see "Founder still needs to wire transactional email" caveat carried into PENDING §11 follow-on, but capture works today)
+- Page metadata: title "Enterprise & teams", canonical `/enterprise`, description references shared credit pool / admin console / audit log / SSO via Google Workspace
+- Built during the T1-5 + T1-6 + Enterprise monetization batch (commit context shows the page was the "Plan T1-6" deliverable identified during this very audit doc's first round)
+
+**Architecture note:** the page intentionally does NOT use a CRM yet (HubSpot etc.) — submissions land in the `contact_submissions` admin viewer (PENDING §11 / commit `52307a3`). The bottleneck on enterprise leads is qualification time, not capture surface, so logging-to-DB is enough for current volume.
 
 ### 3d. Rest-of-world payment processor
 
