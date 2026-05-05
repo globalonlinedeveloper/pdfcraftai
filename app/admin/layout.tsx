@@ -101,6 +101,11 @@ const NAV: NavItem[] = [
   // down rows let an operator drill into bad outputs and re-route
   // (eventually) or update the prompt registry.
   { section: "Ops", href: "/admin/ai-feedback", label: "AI feedback" },
+  // 2026-05-04 (PENDING §6c foundation) — per-user AI quality signal.
+  // Read-only consumer of lib/ai/quality-signal.ts; surfaces users
+  // with trailing thumbs-down streaks for manual outreach. Auto-
+  // routing on flagged users is a planned follow-up.
+  { section: "Ops", href: "/admin/quality-signals", label: "Quality signals" },
   // 2026-05-04 (PENDING §4c foundation) — subscription dunning posture
   // viewer. Empty by design today (no recurring plans yet); ships
   // alongside migration 0023 + persist helpers in

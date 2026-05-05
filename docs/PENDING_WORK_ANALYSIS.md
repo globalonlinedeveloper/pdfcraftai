@@ -281,13 +281,22 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 **Estimate:** 3-4 days.
 
-### 6c. No per-user quality signal
+### 6c. No per-user quality signal — ✅ FOUNDATION SHIPPED (2026-05-04)
 
-**State:** when one user gets bad outputs (provider hiccup, prompt injection in their PDF, or genuine model failure), there's no way to detect this server-side except via support email.
+**Original state (audit time):** when one user got bad outputs (provider hiccup, prompt injection, or genuine model failure), there was no way to detect this server-side except via support email.
 
-**Implementation:** track `consecutive_negative_feedback` per user. After N (3? 5?) consecutive thumbs-down on AI ops, surface to admin or auto-route to a different provider.
+**Foundation shipped** in commit (this session) — `lib/ai/quality-signal.ts` with three pure helpers (`computeConsecutiveNegative`, `classifyQualitySignal`, `QUALITY_SIGNAL_POLICY` policy constants) + two read-side queries (`loadUserQualitySignal` for one user, `listFlaggedUsers` for the admin list view) + read-only `/admin/quality-signals` page surfacing every user with a trailing thumbs-down streak. No migration needed — derives from the existing `ai_feedback` table on every read, so there's no cache-vs-truth de-sync risk.
 
-**Estimate:** ~1 week (depends on 6b shipping first).
+**Thresholds (conservative, tunable):**
+- `watchThreshold = 2` consecutive thumbs-down → bucket = `watch`
+- `flaggedThreshold = 4` consecutive thumbs-down → bucket = `flagged`
+- `recentWindow = 20` most-recent feedback rows considered
+
+**Same staging discipline** as dunning + ai-feedback: foundation lands now, automation later. The `/admin/quality-signals` page is operator-only today — a human reads the list and decides whether to email the user, refund credits, or investigate. Auto-routing on flagged users is gated by `TODO(automation)` in the lib module; right thresholds + biasing behavior need 1-2 weeks of accumulated chip data before they can be confidently set.
+
+**Remaining (Phase E proper):** auto-routing wiring into `lib/ai/router.ts` (~3 days once thresholds are confirmed), background alerter that pings Slack on new flagged users (~1 day after Slack alerting verification — PENDING §2a — completes), per-user notification email (~1 week including UX copy review).
+
+**Estimate to go from foundation → full feature:** ~1-2 weeks once chip data accumulates enough to confirm threshold values.
 
 ### 6d. No A/B testing infrastructure
 

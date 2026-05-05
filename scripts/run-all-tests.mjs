@@ -1164,6 +1164,19 @@ const SUITES = [
     name: "dunning-foundation",
     file: "test-dunning-foundation.mjs",
   },
+  // 2026-05-04 (PENDING §6c foundation) — per-user AI quality
+  // signal. Pure classifier + read-side helpers in lib/ai/
+  // quality-signal.ts (no migration — derives from existing
+  // ai_feedback table) + /admin/quality-signals viewer. Same
+  // foundation-now-automation-later discipline as dunning. 39
+  // assertions across 5 sections (lib surface, pure-function
+  // semantics including the trailing-streak break invariant +
+  // flagged-before-watch ordering trap, admin page contract,
+  // layout NAV, cross-file bucket-name invariant + PENDING anchor).
+  {
+    name: "quality-signal-foundation",
+    file: "test-quality-signal-foundation.mjs",
+  },
   // 2026-05-04 (PENDING §1f) — webhook + reconcile resilience
   // contract. Locks in: 500 on processing error (provider retries),
   // 200 on duplicate (provider stops), 400 on bad sig (provider
