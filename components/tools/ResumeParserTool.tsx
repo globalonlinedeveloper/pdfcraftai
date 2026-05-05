@@ -29,6 +29,9 @@ import { useToolTracking } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+// 2026-05-04 (PENDING §6b Stage 3 batch C) — ResumeParserTool routes
+// through /api/ai/summarize so operation="summarize" matches.
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 
 type Experience = {
   title: string;
@@ -174,9 +177,14 @@ export function ResumeParserTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resume, setResume] = useState<Resume | null>(null);
-  const [meta, setMeta] = useState<{ creditCost: number; newBalance?: number } | null>(
-    null
-  );
+  const [meta, setMeta] = useState<{
+    creditCost: number;
+    newBalance?: number;
+    fileId?: string;
+    aiUsageId?: string | null;
+    providerId?: string;
+    model?: string;
+  } | null>(null);
 
   const onFiles = useCallback((files: File[]) => {
     const f = files[0];
@@ -244,6 +252,10 @@ export function ResumeParserTool() {
         setMeta({
           creditCost: Number(body.creditCost ?? 0),
           newBalance: typeof body.newBalance === "number" ? body.newBalance : undefined,
+          fileId: typeof body.fileId === "string" ? body.fileId : undefined,
+          aiUsageId: typeof body.aiUsageId === "string" ? body.aiUsageId : null,
+          providerId: typeof body.providerId === "string" ? body.providerId : undefined,
+          model: typeof body.model === "string" ? body.model : undefined,
         });
         trackTool.success({ creditCost: Number(body.creditCost ?? 0), depth: "resume-parse", processingMs });
         return;
@@ -433,6 +445,22 @@ export function ResumeParserTool() {
                 Links: {resume.links.join(" · ")}
               </div>
             )}
+          </div>
+          {/* 2026-05-04 (PENDING §6b Stage 3 batch C) — chip on resume card */}
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <FeedbackChip
+              operation="summarize"
+              aiUsageId={meta?.aiUsageId ?? null}
+              fileId={meta?.fileId ?? null}
+              providerId={meta?.providerId}
+              model={meta?.model}
+            />
           </div>
         </div>
       )}

@@ -162,6 +162,40 @@ const WIRED_TOOLS = [
     route: "app/api/ai/summarize/route.ts",
     operation: "summarize",
   },
+  // 2026-05-04 — Stage 3 batch C: specialist + tail tools. All five
+  // route through already-instrumented endpoints (4 use /api/ai/
+  // summarize, 1 uses /api/ai/ocr). No route-level changes needed —
+  // the chip wire-up is the standard 4-line pattern adapted to each
+  // component's local state shape (some use meta, some use result,
+  // SearchablePdfTool uses local vars threaded into RunResult).
+  {
+    component: "components/tools/CourtOrderTool.tsx",
+    route: "app/api/ai/summarize/route.ts",
+    operation: "summarize",
+  },
+  {
+    component: "components/tools/ResumeParserTool.tsx",
+    route: "app/api/ai/summarize/route.ts",
+    operation: "summarize",
+  },
+  {
+    component: "components/tools/SemanticSearchPdfTool.tsx",
+    route: "app/api/ai/summarize/route.ts",
+    operation: "summarize",
+  },
+  {
+    component: "components/tools/TldrPdfTool.tsx",
+    route: "app/api/ai/summarize/route.ts",
+    operation: "summarize",
+  },
+  // SearchablePdfTool routes through /api/ai/ocr (it uses OCR markdown
+  // to overlay invisible text into a client-assembled searchable PDF).
+  // Operation matches what /api/ai/ocr's recordAiUsage persists.
+  {
+    component: "components/tools/SearchablePdfTool.tsx",
+    route: "app/api/ai/ocr/route.ts",
+    operation: "ocr",
+  },
 ];
 
 // ============================================================================

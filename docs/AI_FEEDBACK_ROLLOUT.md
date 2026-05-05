@@ -121,8 +121,8 @@ the id. No data migration needed.
 | Stage 3 batch A — sign + redact (newly unlocked by Batch 3 ai_usage) | 8 / 53 | 15.1% | `1684741` |
 | Stage 3 — Generate (last markdown-rendering AI tool) | 9 / 53 | 17.0% | `94db9e1` |
 | Stage 3 — Chat (per-message in conversational UX) | 10 / 53 | 18.9% | `cb013ab` |
-| Stage 3 batch B — variants (Summarize/Structured/Mindmap/BloodTest) | ~46 / 53 | ~87% | _this commit_ |
-| Stage 3 batch C — specialist + tail | — | — | pending |
+| Stage 3 batch B — variants (Summarize/Structured/Mindmap/BloodTest) | ~46 / 53 | ~87% | `cda2eae` |
+| Stage 3 batch C — specialist + tail (CourtOrder/Resume/Semantic/Tldr/Searchable) | ~51 / 53 | ~96% | _this commit_ |
 
 Update this table as batches ship.
 
@@ -137,3 +137,21 @@ Batch B targets the four shared variant runner components — they collectively 
 **Operation aggregation:** all variants share `operation="summarize"` on the chip (matches what `recordAiUsage` persists). `/admin/ai-feedback` rolls them up under the `summarize` op bucket. Per-variant slicing is implicit on the ai_usage row's `prompt_version` field — when the prompt registry A/B work ships, slicing by depth becomes a join, not a chip prop change.
 
 **What's left:** Stage 3 batch C (specialist + long-tail tools). The remaining ~7 tools in the registry that route through their own dedicated AI helper (not `/api/ai/summarize`) — primarily the specialist tools (`CourtOrderTool` etc) that need their own routes to surface `aiUsageId` first.
+
+## Batch C notes (this commit)
+
+The "specialist + tail" framing in the original plan was wrong: when I actually traced the AI-using components, all 5 remaining tools (`CourtOrderTool`, `ResumeParserTool`, `SearchablePdfTool`, `SemanticSearchPdfTool`, `TldrPdfTool`) **already route through already-instrumented endpoints** — 4 hit `/api/ai/summarize` and 1 hits `/api/ai/ocr`, both of which surface `aiUsageId` from the Batch 1 instrumentation work (commit `f7d5a9c`). No route changes were needed.
+
+So Batch C ended up being the same shape as Batches A + B — extend Result/meta type, capture `aiUsageId`/`providerId`/`model` from the response, render `<FeedbackChip>` after the result. Five-component edit, no migration, no route change.
+
+**One nuance** worth flagging: `SearchablePdfTool` builds the searchable PDF client-side from OCR markdown, so the chip's `fileId` points at the upstream OCR's `files` row rather than a separate "searchable PDF" file. This is correct — the chip is feedback about the OCR quality, since that's the work the user is rating; the client-side overlay step is deterministic and doesn't have a quality dimension to thumbs-up/down.
+
+**WIRED_TOOLS list now: 19 entries** covering every AI-using tool component in `components/tools/` plus the chat client. Stage 3 is structurally complete on the wired side. Aggregator went 5065/87 → 5080/87 (+15 assertions / 5 entries × 3 cross-checks).
+
+## Updated tracking — what 53 means
+
+The "53" denominator in this table came from an early count of *registered tools* in the registry, but only ~19 of those are AI-leveraged with their own runner component. The rest are:
+- Free deterministic tools (compress, merge, split, rotate, etc.) — no AI work, no chip needed
+- AI tools that route through `SummarizeVariantTool` and inherit the chip from one component edit (~30+ depth variants get the chip "for free" via the variant runner — these aren't separate `WIRED_TOOLS` entries because they share the same component)
+
+So the meaningful "% complete" metric is **WIRED_TOOLS entries / AI-using component count = 19/19 = 100%**. The 53 denominator is a leakier stat — kept in the table for historical accuracy but worth noting it conflates "tool slots" with "AI-using components". A future refactor could collapse the table to a cleaner per-route view.

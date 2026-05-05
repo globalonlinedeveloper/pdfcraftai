@@ -32,6 +32,9 @@ import { renderMarkdown } from "@/lib/markdown-mini";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+// 2026-05-04 (PENDING §6b Stage 3 batch C) — TldrPdfTool routes
+// through /api/ai/summarize so operation="summarize" matches.
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 
 const SIGN_IN_HREF = "/login?callbackUrl=/tool/ai-tldr";
 
@@ -44,6 +47,9 @@ type Result = {
   pageCount?: number;
   providerId?: string;
   wasTruncated?: boolean;
+  // 2026-05-04 (PENDING §6b Stage 3 batch C) — chip provenance.
+  aiUsageId?: string | null;
+  model?: string;
 };
 
 export function TldrPdfTool() {
@@ -116,6 +122,8 @@ export function TldrPdfTool() {
           pageCount: typeof body.pageCount === "number" ? body.pageCount : undefined,
           providerId: String(body.providerId ?? ""),
           wasTruncated: Boolean(body.wasTruncated),
+          aiUsageId: typeof body.aiUsageId === "string" ? body.aiUsageId : null,
+          model: typeof body.model === "string" ? body.model : undefined,
         });
         return;
       }
@@ -126,6 +134,9 @@ export function TldrPdfTool() {
           markdown: String(body.markdown ?? ""),
           creditCost: Number(body.creditCost ?? 0),
           wasTruncated: Boolean(body.wasTruncated),
+          aiUsageId: typeof body.aiUsageId === "string" ? body.aiUsageId : null,
+          providerId: typeof body.providerId === "string" ? body.providerId : undefined,
+          model: typeof body.model === "string" ? body.model : undefined,
         });
         return;
       }
@@ -250,6 +261,22 @@ export function TldrPdfTool() {
               window. Use AI · Summarize with depth=detailed for chunked handling.
             </div>
           )}
+          {/* 2026-05-04 (PENDING §6b Stage 3 batch C) — chip on TLDR result */}
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <FeedbackChip
+              operation="summarize"
+              aiUsageId={result.aiUsageId ?? null}
+              fileId={result.fileId ?? null}
+              providerId={result.providerId}
+              model={result.model}
+            />
+          </div>
         </div>
       )}
 

@@ -43,6 +43,10 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+// 2026-05-04 (PENDING §6b Stage 3 batch C) — SearchablePdfTool routes
+// through /api/ai/ocr (the upstream OCR), so operation="ocr" matches
+// what recordAiUsage on /api/ai/ocr persists.
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 
 // Server constants duplicated; see OcrPdfTool for rationale.
 const CLIENT_MAX_OCR_PAGES = 50;
@@ -60,6 +64,15 @@ type RunResult = {
   processedPageCount: number;
   /** Pages we couldn't overlay (e.g. empty OCR for a blank page). */
   emptyPageCount: number;
+  // 2026-05-04 (PENDING §6b Stage 3 batch C) — chip provenance from
+  // the upstream /api/ai/ocr call. fileId is null because this tool
+  // doesn't persist a server-side files row (the searchable PDF is
+  // assembled client-side from the OCR markdown), so the chip's POST
+  // links to the ai_usage row but not a specific files row.
+  fileId?: string | null;
+  aiUsageId?: string | null;
+  providerId?: string;
+  model?: string;
 };
 
 /**
@@ -281,6 +294,13 @@ export function SearchablePdfTool() {
     let newBalance: number | undefined;
     let processedPageCount = pageCount;
     let markdown = "";
+    // 2026-05-04 (PENDING §6b Stage 3 batch C) — chip provenance from
+    // the OCR response. Captured into local scope so setResult below
+    // can thread them into RunResult after the overlay step succeeds.
+    let aiUsageId: string | null = null;
+    let providerId: string | undefined;
+    let model: string | undefined;
+    let upstreamFileId: string | null = null;
 
     try {
       const res = await fetchAiWithRetry("/api/ai/ocr", {
@@ -304,6 +324,10 @@ export function SearchablePdfTool() {
           typeof body.processedPageCount === "number"
             ? body.processedPageCount
             : pageCount;
+        aiUsageId = typeof body.aiUsageId === "string" ? body.aiUsageId : null;
+        providerId = typeof body.providerId === "string" ? body.providerId : undefined;
+        model = typeof body.model === "string" ? body.model : undefined;
+        upstreamFileId = typeof body.fileId === "string" ? body.fileId : null;
       } else if (res.status === 401) {
         router.push(SIGN_IN_HREF);
         return;
@@ -360,6 +384,10 @@ export function SearchablePdfTool() {
         pageCount,
         processedPageCount,
         emptyPageCount,
+        fileId: upstreamFileId,
+        aiUsageId,
+        providerId,
+        model,
       });
     } catch (err) {
       console.error(err);
@@ -510,6 +538,22 @@ export function SearchablePdfTool() {
             Try opening the downloaded PDF and pressing Ctrl-F (Cmd-F on Mac) — search
             for any word that's visible in the document. Should highlight on the right
             page even though the text overlay is invisible.
+          </div>
+          {/* 2026-05-04 (PENDING §6b Stage 3 batch C) — chip on searchable-PDF result */}
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <FeedbackChip
+              operation="ocr"
+              aiUsageId={result.aiUsageId ?? null}
+              fileId={result.fileId ?? null}
+              providerId={result.providerId}
+              model={result.model}
+            />
           </div>
         </div>
       )}

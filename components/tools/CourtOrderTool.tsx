@@ -29,6 +29,10 @@ import { useToolTracking } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+// 2026-05-04 (PENDING §6b Stage 3 batch C) — specialist tools tail.
+// CourtOrderTool routes through /api/ai/summarize so operation
+// matches the batch-A/B convention.
+import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 
 // 2026-05-01 — logToolResultAction omitted from this runner. The
 // /api/ai/summarize endpoint already persists the output file +
@@ -151,7 +155,14 @@ export function CourtOrderTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<CourtOrder | null>(null);
-  const [meta, setMeta] = useState<{ creditCost: number; newBalance?: number } | null>(null);
+  const [meta, setMeta] = useState<{
+    creditCost: number;
+    newBalance?: number;
+    fileId?: string;
+    aiUsageId?: string | null;
+    providerId?: string;
+    model?: string;
+  } | null>(null);
 
   const onFiles = useCallback(
     (files: File[]) => {
@@ -227,6 +238,10 @@ export function CourtOrderTool() {
         setMeta({
           creditCost: Number(body.creditCost ?? 0),
           newBalance: typeof body.newBalance === "number" ? body.newBalance : undefined,
+          fileId: typeof body.fileId === "string" ? body.fileId : undefined,
+          aiUsageId: typeof body.aiUsageId === "string" ? body.aiUsageId : null,
+          providerId: typeof body.providerId === "string" ? body.providerId : undefined,
+          model: typeof body.model === "string" ? body.model : undefined,
         });
         trackTool.success({
           creditCost: Number(body.creditCost ?? 0),
@@ -295,6 +310,23 @@ export function CourtOrderTool() {
       )}
 
       {order && <CourtOrderReport order={order} meta={meta} />}
+      {/* 2026-05-04 (PENDING §6b Stage 3 batch C) — chip on judgment summary */}
+      {order && (
+        <div
+          style={{
+            paddingTop: 12,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <FeedbackChip
+            operation="summarize"
+            aiUsageId={meta?.aiUsageId ?? null}
+            fileId={meta?.fileId ?? null}
+            providerId={meta?.providerId}
+            model={meta?.model}
+          />
+        </div>
+      )}
 
       <div className="row" style={{ gap: 10, justifyContent: "flex-end" }}>
         {file && (
