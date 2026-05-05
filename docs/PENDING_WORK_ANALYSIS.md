@@ -296,13 +296,20 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 **Same staging discipline** as §5a: foundation lands now, route is reachable but flag-gated to OFF (returns `feature_disabled` 404). Operator activates via `FEATURE_PDF_A_CONVERT_OVERRIDE=on` (or per-user / per-percent flavors).
 
-**Remaining (Phase B follow-on, ~1-2 days):**
-- `components/tools/PdfaConvertTool.tsx` — UI tool (single-shot: drop PDF, click convert, download). Even simpler than compress UI because no quality picker.
-- `app/tool/pdf-a/page.tsx` (or extend `/tool/pdf-a-check` to a dual-mode tool — check or convert).
-- Add registry entry in `lib/tools.ts`.
-- ICC profile bundling — current code points at `/usr/share/ghostscript/9.54.0/iccprofiles/srgb.icc` (verified to exist on Hostinger). For belt-and-suspenders, ship a copy in the repo at `public/icc/srgb.icc` and pass that path via `iccProfilePath` option, so a Ghostscript upgrade that moves the profile location doesn't break the route.
+**Phase B UI completion shipped** in commit `c5042f4` (this session):
+- `components/tools/PdfaConvertTool.tsx` — single-shot UI (no quality picker since we expose only -2b). Honest size-delta copy ("font embedding always adds some bytes" / "smaller because we cleaned up redundant data"). 500-error copy specifically calls out the most-common cause (un-PDF/A-able content rejected by `-dPDFACompatibilityPolicy=1`) and routes user to PDF/A Compliance Check.
+- `lib/tools.ts` registry entry — slug `pdf-a-convert` (intentionally separate from `pdf-a-check`; different intents = different tools), group "Organize", icon "Shield".
+- `lib/tool-intros.ts` + `lib/tool-longforms.ts` (5 use cases / 6 FAQs / 3-step how-it-works / CTA back to PDF/A Check).
+- `lib/client/tool-suggestions.ts` — handoff: ["pdf-a-check", "sign-pdf-free", "merge"].
+- ToolRunner case + LIVE_TOOL_IDS entry.
 
-**Estimate from foundation → full feature:** ~1-2 days.
+**Verified live** at commit `c5042f4` (2026-05-05 16:32 UTC):
+- `/tool/pdf-a-convert` returns 200 (page renders, UI loads)
+- `POST /api/tools/pdf-a` returns 401 (anonymous) or 404 feature_disabled (authed but flag off)
+- Operator activation: `FEATURE_PDF_A_CONVERT_OVERRIDE=on` (or USERS=... or PERCENT=10) flips it live.
+
+**Remaining (deferred, low priority):**
+- ICC profile bundling — current code points at `/usr/share/ghostscript/9.54.0/iccprofiles/srgb.icc` (verified to exist on Hostinger). For belt-and-suspenders, ship a copy in the repo at `public/icc/srgb.icc` and pass via `iccProfilePath` option so a Ghostscript upgrade that moves the profile location doesn't break the route. Easy fix when needed.
 
 ### 5c. Edit Text in PDFs
 
