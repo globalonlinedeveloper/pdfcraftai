@@ -1177,6 +1177,28 @@ const SUITES = [
     name: "quality-signal-foundation",
     file: "test-quality-signal-foundation.mjs",
   },
+  // 2026-05-04 (PENDING §2a + §2b foundation) — operational Slack
+  // alert helper. lib/ops/slack-alert.ts as the single home for
+  // the SLACK_OPS_WEBHOOK_URL env var read + the canonical
+  // attachment payload format + the never-throws fetch wrapper.
+  // Consumed (eventually) by margin-rollup floor breaches, dunning
+  // lifecycle transitions, quality-signal flagging, and cron
+  // failure escalation — all currently writing to the same
+  // "post a Slack alert" TODO without a shared helper to call.
+  // 42 assertions across 5 sections, including the codebase's
+  // FIRST dynamic-execution guard: Section B compiles
+  // formatSlackPayload from .ts to .js via a stripped-TS regex
+  // pass and runs canonical inputs through `new Function`, so
+  // the formatter's actual output (severity → color mapping,
+  // numeric coercion, null/undefined drop, 200-char cap, ts
+  // unit) is verified rather than just the source shape.
+  // Section D additionally scans lib/ + app/ + components/ for
+  // hardcoded `https://hooks.slack.com/` URLs (credential leak
+  // tripwire).
+  {
+    name: "slack-alert-foundation",
+    file: "test-slack-alert-foundation.mjs",
+  },
   // 2026-05-04 (PENDING §1f) — webhook + reconcile resilience
   // contract. Locks in: 500 on processing error (provider retries),
   // 200 on duplicate (provider stops), 400 on bad sig (provider

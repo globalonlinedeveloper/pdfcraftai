@@ -88,28 +88,35 @@ These items are tracked in `docs/PLAN_GAP_ANALYSIS.md` from 2026-04-20. Most are
 
 ## 2. Operational / observability (4 gaps)
 
-### 2a. Slack alerting unwired
+### 2a. Slack alerting unwired — ✅ HELPER FOUNDATION SHIPPED (2026-05-04)
 
-**State:** `lib/ai/margin-rollup.ts:1224` reads `AI_SPEND_ALERT_SLACK_URL` env var. **Not set in Hostinger.**
+**Original state (audit time):** `lib/ai/margin-rollup.ts:1224` read `AI_SPEND_ALERT_SLACK_URL` env var inline. Var unset in Hostinger panel. Several other modules across the codebase had TODO markers for "post a Slack alert" without a shared helper to call.
 
-**Impact:** when a margin slice goes red (cost > 65% of revenue), the alert logs to stdout but no human sees it. Today (2026-05-04) the first margin rollup ran green; first red day will be silent.
+**Helper foundation shipped** in commit (this session) — `lib/ops/slack-alert.ts` as the single home for the webhook URL read + canonical attachment payload format + never-throws fetch wrapper. Three exported pieces:
+- `sendSlackAlert({severity, title, body, context?})` — async, returns a `SlackAlertResult` envelope, never throws (a Slack outage shouldn't crash the alerting target). Reads `SLACK_OPS_WEBHOOK_URL` env var (canonical name, replaces the per-call-site inline reads of `AI_SPEND_ALERT_SLACK_URL`).
+- `formatSlackPayload(input)` — pure formatter (severity → color/emoji map, context fields with 200-char cap + null-drop, ts in unix-seconds). Tested via dynamic execution in the CI guard.
+- `readSlackWebhookUrl()` — defensive validator (rejects non-https URLs).
 
-**Action:** 
+**Founder action still pending** (this is the §2a work the original audit flagged):
 1. Create a Slack webhook (channel: ops or dedicated #pdfcraftai-alerts).
-2. Set `AI_SPEND_ALERT_SLACK_URL` in Hostinger panel.
-3. Verify by manually running `/api/cron/ai-margin-rollup` against a synthetic red day.
+2. Set `SLACK_OPS_WEBHOOK_URL` in the Hostinger panel.
+3. Migrate `lib/ai/margin-rollup.ts` from the inline `AI_SPEND_ALERT_SLACK_URL` read to `sendSlackAlert()` (~10-line code change once the helper is in place — separate commit).
+4. Verify by manually running `/api/cron/ai-margin-rollup` against a synthetic red day.
 
-**Estimate:** 30 min user-action + 30 min Claude verification.
+The helper foundation lands now so the migration in step 3 is a 1-file diff. Until step 2 completes, `sendSlackAlert` returns `{ok:true, sent:false, reason:"no_webhook_configured"}` — graceful no-op.
 
-### 2b. Cron failure escalation
+**Estimate:** 30 min user-action (steps 1+2) + ~30 min Claude follow-up (step 3).
+
+### 2b. Cron failure escalation — partially unblocked by §2a helper
 
 **State:** cron-job.org has the failure-auto-disable toggle ON for all 3 schedules. If a cron fails 3+ times consecutively, it disables. **No alerting** — admin only finds out by manually checking cron-job.org dashboard.
 
-**Mitigation paths:**
-- cron-job.org has email-on-failure built in — enable it for the 3 schedules (5 min user-action)
-- OR pipe the cron URLs through a healthcheck.io / dead-mans-switch (stronger; alerts when the cron *doesn't* fire, not just when it errors)
+**Mitigation paths (in increasing order of robustness):**
+- cron-job.org has email-on-failure built in — enable it for the 3 schedules (5 min user-action).
+- OR pipe the cron URLs through a healthcheck.io / dead-mans-switch (stronger; alerts when the cron *doesn't* fire, not just when it errors).
+- Application-level: each cron route can call `sendSlackAlert({severity:"alarm", title:"Cron <name> failed", body, context:{...}})` from `lib/ops/slack-alert.ts` (foundation shipped 2026-05-04; see §2a). This catches application-level failures (assertion thrown, downstream API down) that wouldn't necessarily surface as a non-200 to cron-job.org.
 
-**Estimate:** 15 min user-action.
+**Estimate:** 15 min user-action (cron-job.org email) + ~30 min Claude follow-up to thread `sendSlackAlert` calls into the 3 cron route handlers once the env var lands.
 
 ### 2c. No staging / preview environment
 
