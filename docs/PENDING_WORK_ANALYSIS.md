@@ -179,11 +179,28 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 **Estimate:** zero Claude-work — vendor blocked. Once Paddle KYC clears, the adapter at `lib/payments/adapters/paddle.ts` is scaffolded.
 
-### 3e. No referral program
+### 3e. No referral program — ✅ FOUNDATION SHIPPED (2026-05-05)
 
-**State:** zero growth-loop infrastructure. Existing users have no incentive to refer.
+**Original state (audit time):** zero growth-loop infrastructure. Existing users had no incentive to refer.
 
-**Estimate:** 1-2 weeks for a real referral program (referral codes, attribution, reward credit grants both sides, fraud detection).
+**Foundation shipped** in commit `6a49736` (this session) — full storage + helper + admin viewer surface:
+- Migration 0024 (`referral_codes` + `referral_signups`) applied pre-push to prod via SSH HEREDOC pipe.
+- Drizzle schema entries in `db/schema/app.ts` with full per-column docstrings.
+- `lib/referrals/codes.ts` — 3 exports: `generateReferralCode` (pure RNG), `getOrCreateReferralCode` (idempotent fetch-or-create with collision retry), `lookupReferralCode` (case-insensitive). Alphabet excludes visually ambiguous 0/O/1/I/L; namespace ≈ 27.5B codes (31 chars × 7 positions).
+- `lib/referrals/queries.ts` — 4 read-side helpers (`listRecentReferralSignups`, `loadReferrerStats`, `loadAdminReferralStats`, `isReferralsEnabled` env-flag check). No writers — they come in Phase E.
+- `/admin/referrals/page.tsx` — read-only viewer with 4 summary cards, top 10 referrers leaderboard, 200-row attribution log, status banner showing whether `REFERRALS_ENABLED` is on or off.
+- 73-assertion CI guard (`scripts/test-referrals-foundation.mjs`) covering migration DDL, schema parity, helper public surface, alphabet contents, admin page export hygiene + read-only invariant, and 200-sample dynamic execution of the code generator.
+
+**Same staging discipline** as feature-flags / quality-signal / dunning / contact-submissions / ai-feedback: tables + read paths land NOW even though no signup-flow wire-up runs yet. Empty tables today by design — the read path is verified end-to-end against real prod schema, so when Phase E flips `REFERRALS_ENABLED=1` and adds the signup-flow attribution writer, the entire admin surface renders correctly with no further migration.
+
+**Remaining (Phase E proper):**
+- Signup-flow wire-up: read `?ref=CODE` URL param, call `recordReferralSignup()` during register/credentials-create or Google OAuth completion (~2 days).
+- Reward grant writers (`recordReferralSignup`, `grantReferrerReward`, `grantReferredReward`) in a new `lib/referrals/writers.ts` module, gated behind `REFERRALS_ENABLED=1` (~2 days, depends on reward-amount decision).
+- `/app/refer` user-facing page (share-your-code surface) (~2 days).
+- Reward UX copy + email notifications on milestone hit (~3 days, depends on transactional-email wiring — see §11 contact-submissions follow-on).
+- Slack alerter on first-rewarded-attribution (~1 day, depends on §2a Slack webhook URL — founder paperwork).
+
+**Estimate to go from foundation → full feature:** ~1-2 weeks once reward amounts + attribution window are decided.
 
 ---
 
