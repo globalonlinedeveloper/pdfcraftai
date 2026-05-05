@@ -140,13 +140,20 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 ## 3. Business model gaps (5 monetization items)
 
-### 3a. No annual plan (T1-5 from improvement plan)
+### 3a. No annual plan (T1-5 from improvement plan) — ✅ ALREADY SHIPPED (re-discovered 2026-05-05)
 
-**State:** pricing page only shows monthly Plus ($9 = 200 credits + rollover to 400). No annual discount.
+**Audit-pass finding:** the original "estimate ~3 hours" turned out to be wrong-side-of-zero — the work had already shipped before the audit doc was written, and the doc was never refreshed.
 
-**Industry standard:** 15-20% annual discount. $9/mo × 12 = $108/yr → ship at $89-90/yr.
+**Verification (2026-05-05 grep pass against the live tree):**
+- `lib/pricing.ts` — `PackVariant = "monthly" | "annual"` literal union, `ANNUAL_DISCOUNT_BPS = 2000` (20%), `ANNUAL_MONTHS = 12`, `packAmountMinor(pack, currency, { variant })` applies the 12× × 0.8 math, `creditsForPurchase(pack, "annual")` returns 12× credit grant.
+- `components/billing/PackUpsellPanel.tsx` — UI toggle between "Monthly" and "Annual · 20% off" tabs, drives `variant` state into `CheckoutButton`.
+- `components/billing/CheckoutButton.tsx` — accepts `packVariant: PackVariant` prop, threads it into the server action.
+- `lib/payments/checkout-actions.ts` — records `annualVariant: variant === "annual" ? 1 : 0` on the payment row.
+- `lib/payments/ledger.ts` — reads `variant` from the payment row (`purchase_annual` reason, ledger meta `annualVariant: 1`), grants `pack.credits × 12` on annual purchases.
 
-**Estimate:** ~3 hours (pricing page + checkout flow + variant handling — already scaffolded in `lib/pricing.ts:annual` per the existing infrastructure).
+**Concrete next steps (if any):**
+- (Optional) Wire the `FEATURE_FLAGS.ANNUAL_PLAN` flag (registered in commit `a849c91` for exactly this) to gate the toggle visibility — useful if the founder wants A/B testing or partial rollout in a future commit. Today the toggle is hardcoded-visible. Estimate: ~30 min.
+- (Optional) FAQ copy / pricing page content audit to make sure the "annual = 12× credits at 20% off" framing is consistent everywhere users encounter it.
 
 ### 3b. No team / multi-seat plan
 
@@ -248,21 +255,39 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 **Estimate:** 2-3 weeks. Significant complexity; deferred for good reason.
 
-### 5d. True OCR-then-searchable workflow
+### 5d. True OCR-then-searchable workflow — ✅ ALREADY SHIPPED (re-discovered 2026-05-05)
 
-**State:** we have `ai-ocr` (returns markdown) and `ai-searchable-pdf` (returns PDF with searchable text layer) as separate tools. No unified flow that takes a scanned PDF → OCRed + searchable PDF in one click.
+**Original state (audit time):** thought to be two separate flows (ai-ocr returns markdown, ai-searchable-pdf returns a PDF with text layer).
 
-**Implementation:** combine the two pipelines into one route `ai-ocr-searchable` that takes the OCR output + bakes it back into a searchable PDF using the original page imagery.
+**Verification (2026-05-05 grep pass against the live tree):**
+- `components/tools/SearchablePdfTool.tsx` (591 lines, last edit 2026-05-05) — single-click unified flow:
+  1. POST the PDF to `/api/ai/ocr` (reuses existing credits / idempotency / kill-switch / refund-on-error)
+  2. Split returned markdown into per-page text segments
+  3. Load original PDF with pdf-lib client-side
+  4. For each page: `drawText(textForThatPage, { opacity: 0 })` — invisible text layer in the content stream so Ctrl-F + copy/paste work, while the visual page stays identical to the scan
+  5. Save → download with `-searchable` suffix
+- Tool is registered as `/tool/ai-searchable-pdf` (verified via `SIGN_IN_HREF` constant in source)
+- Credit cost: 2 credits/page (matches OcrPdfTool); page cap: 50
 
-**Estimate:** 1 week.
+**Architecture note:** the original "Implementation" suggestion was to build a server-side `ai-ocr-searchable` route. The shipped version is even simpler — one client tool composes the existing `/api/ai/ocr` route + pdf-lib in the browser. No new route, no new credit ledger entries, no new kill-switch wire-up. The OCR pipeline is reused as-is.
 
-### 5e. Bulk processing (T3-1)
+**Limitation called out in the source comments:** word positions aren't exact — copy-paste yields a single text block per page, not word-by-word coordinates. Acrobat-grade word positioning would need bbox-aware OCR (Tesseract HOCR or similar) which is a future enhancement, not a blocker for the core "Ctrl-F finds matches" UX.
 
-**State:** every operation is single-file. Real workflows = "process 50 invoices."
+### 5e. Bulk processing (T3-1) — ✅ ALREADY SHIPPED (re-discovered 2026-05-05)
 
-**Implementation:** ZIP upload OR multi-select with shared config. Background job processing with progress UI. Per-file results table + bulk download as ZIP.
+**Original state (audit time):** assumed every operation was single-file.
 
-**Estimate:** 2-3 weeks.
+**Verification (2026-05-05 grep pass against the live tree):**
+- `components/tools/PdfBatchProcessTool.tsx` (482 lines, dated 2026-05-01) — multi-PDF input + one operation across all files
+- 8 supported batch operations via `BatchOpId`: `rotate-90` / `rotate-180` / `rotate-270` / `page-numbers` / `watermark` / `remove-metadata` / `flatten-forms` / `strip-links`
+- `MAX_BATCH_SIZE = 50` (matches the "50 invoices" use case from the original spec)
+- All 7 standardized hooks wired (handoff consumer, file-URL consumer, scroll-error, tool tracking, etc.)
+- Output: per-file results + JSZip-bundled ZIP download
+- Operation library at `lib/pdf/ops/batch.ts` (referenced via `BatchOpId` + `BatchOutputItem` type imports)
+
+**Architecture note:** runs entirely client-side via pdf-lib (no server-side queue or background jobs needed). Progress UI updates synchronously per-file, error handling is per-file (one bad PDF doesn't fail the batch). This works because the included ops are all metadata/page-level transforms with bounded per-file cost.
+
+**Genuinely-still-missing (deferred):** AI-op batching (e.g. "summarize 50 invoices") — that one DOES need a server-side queue because each op is 5-30s of LLM round-trips and a browser tab can't reliably hold 50× that. Tracked separately as part of OpenAI Batch API rollout (Phase A Task #13, already shipped for `summarize` + `translate` at the route level — UX wire-up to a "drop 50 PDFs" surface remains).
 
 ### 5f. Mobile UI hardening (T1-4)
 
