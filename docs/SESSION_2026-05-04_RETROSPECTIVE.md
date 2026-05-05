@@ -300,3 +300,100 @@ The infrastructure groundwork is structurally complete. Future work plugs into e
 ### Aggregator endpoint state
 
 **4988/0 across 86 suites in ~7s.** All green; no skipped suites; no flakes observed across the arc.
+
+---
+
+## §10. Session-continuation extension (2026-05-04 late-night → 2026-05-05 early)
+
+This appendix captures lessons from the multi-turn continuation that followed the original 28-commit arc. **Aggregator state at the start of the extension: 4988/86. State at this writing: 5190/90 (+202 assertions, +4 suites)** across 7 substantial code commits + multiple doc retrospectives.
+
+### What shipped (extension)
+
+- `cb013ab` — Chat FeedbackChip wire-up (10/10 AI ops milestone)
+- `76a0c82` — Dunning persistence foundation (PENDING §4c closed) — migration 0023, schema, persist helpers, /admin/dunning, 59-assertion CI guard
+- `cda2eae` — Stage 3 batch B chip rollout (4 shared variant runners → ~36 depth variants inherit chip)
+- `2a459f3` — Stage 3 batch C chip rollout (5 specialist tools — chip rollout 100% on AI-using components: 19/19)
+- `81087df` — Per-user quality-signal foundation (PENDING §6c closed) — pure classifier + read helpers + /admin/quality-signals, 39-assertion CI guard
+- `36821aa` — Operational Slack alert helper (PENDING §2a + §2b foundation) — codebase's first dynamic-execution CI guard, 42 assertions
+- `b4e382b` — margin-rollup → shared Slack helper migration (first consumer of §2a foundation) — 26-assertion separate guard for clean attribution
+
+Plus 6+ doc-only retrospective commits keeping STATUS.md / NEXT_SESSION.md / PENDING_WORK_ANALYSIS.md current.
+
+### Lesson 1 — the "foundation now, automation later" pattern
+
+The arc shipped 4 different foundations following the same 4-step recipe. Each pattern instance:
+
+1. **Schema or pure-helper module lands** with a CI guard locking in the contract.
+2. **Read-side helper or admin page** consumes the contract — empty-by-design today, ready for real data tomorrow.
+3. **Automation layer is gated** with a `TODO(automation)` marker explaining what it needs to ship safely.
+4. **First consumer migration follows in a SEPARATE commit** (when applicable) with its own CI guard — keeps failure attribution clean.
+
+| Foundation | Commit | Ships | Gates | First consumer |
+|---|---|---|---|---|
+| ai-feedback | `d74fefe` (earlier) | table + persist endpoint + /admin/ai-feedback | chip wire-up | `cb013ab` (chat — 10/10) |
+| dunning | `76a0c82` | table + persist + /admin/dunning | webhook events on recurring SKUs | (Phase E) |
+| quality-signal | `81087df` | classifier + read helpers + /admin/quality-signals | accumulated chip data + threshold tuning | (1-2 weeks of data) |
+| slack-alert | `36821aa` | helper module + dynamic-exec guard | webhook URL env var | `b4e382b` (margin-rollup) |
+
+**The pattern works because** each foundation surface is independently useful from day 1 (admin page renders, helper compiles, guard catches regressions) AND because the gate condition is well-defined (env var set, data accumulated, recurring SKU added). Future Claude sessions reading this should reach for the same pattern when they see TODO markers that depend on operational state changes.
+
+### Lesson 2 — separate CI guards per consumer migration
+
+`b4e382b` (margin-rollup migration) ships its own 26-assertion CI guard SEPARATE from the foundation's 45-assertion guard rather than extending it. Rationale: when the aggregator fails in CI, the suite name tells you where the regression lives.
+
+- `slack-alert-foundation` failure → helper API broke (every consumer affected)
+- `margin-rollup-slack-migration` failure → margin-rollup's call-site broke (other consumers fine)
+
+This costs ~50 lines of duplicated test scaffolding per migration. It's worth it because: future migrations of `dunning` or `quality-signal` to consume the same helper will add their own guards under the same naming convention (`<consumer>-slack-migration`), and a "clean fail attribution per consumer" guarantee scales to N migrations without crowding the foundation suite.
+
+### Lesson 3 — dynamic-execution CI guards (the slack-alert breakthrough)
+
+Every prior CI guard in `scripts/test-*.mjs` was static-parse only — read source as text, regex for patterns. `slack-alert-foundation` is the codebase's **first dynamic-execution guard**. Section B extracts the `formatSlackPayload` function body + its color/emoji map dependencies via regex, strips TS-only syntax (Record<...>, type unions, return-type annotations) into a JS subset, compiles via `new Function()`, and runs canonical inputs through the real formatter.
+
+This catches bugs that static-parse misses:
+- Boundary-off-by-one: `>` vs `>=` on a threshold check.
+- Color/emoji map drift: a refactor that moves entries between maps but forgets one severity.
+- Number→string coercion: a numeric context value that should render as `"3"` but renders as `3` (Slack rejects non-string field values).
+- Truncation: a 500-char value that should cap at 200 chars.
+
+The TS-strip regex pass is approximate but works for the simple TS subset used in pure helper modules. It would NOT work for files that use generics deeply, decorators, namespace declarations, or other complex features. Useful pattern: keep dynamic-execution guards scoped to small pure-helper files.
+
+### Lesson 4 — empirical cgroup pattern
+
+Across this extension, **4 consecutive clean foundation/follow-up deploys** (`81087df` → `36821aa` → `f08b520` → `b4e382b`) confirmed an empirical pattern from the original arc: foundation/migration commits without new migrations or many tool components are reliably cgroup-safe.
+
+**Cascade-prone commits this extension:**
+- `cda2eae` (batch B chip rollout — 4 component edits): clean deploy, but auto-pull lag of ~10 min
+- `2a459f3` (batch C chip rollout — 5 component edits): cascade #21, single-mass-kill recovered ~3 min
+- `76a0c82` (dunning foundation — new migration + new admin page): cascade #20, single-mass-kill recovered ~3 min
+
+**Cascade-clean commits:**
+- `cb013ab` (chat chip — single component + route reorder): clean
+- `81087df` (quality-signal — pure helper + admin page, no migration): clean
+- `36821aa` (slack-alert — pure helper + CI guard, no admin page): clean
+- `b4e382b` (margin-rollup migration — single function refactor): clean
+
+**Hypothesis (now stronger):** the dominant cascade trigger is the COMBINATION of (a) new schema migration applied to prod, (b) new admin page registered, (c) >5 component edits. Any one of those alone is usually fine; the combination puts cgroup pressure during Passenger respawn that triggers a cascade in ~50% of deploys. Foundation commits avoid all 3 by design.
+
+### Lesson 5 — auto-pull lag is a separate failure mode from cascades
+
+Earlier in this extension, `76a0c82` had an auto-pull jam that didn't clear via empty-commit nudge for ~25 min. Eventually 2 nudges + waiting ~10 min cleared it. Then `cda2eae` had a different ~10-min auto-pull lag that resolved on its own without nudging.
+
+These are different failure modes:
+- **Cascade**: 503 from origin; LSAPI workers thrashing; needs SSH pkick or hPanel restart.
+- **Auto-pull lag**: 200 from origin (older commit deployed); next commit on main waiting for Hostinger's GitHub App webhook to fire; eventually self-resolves; nudge SOMETIMES helps, often doesn't.
+
+**Recommended response for auto-pull lag:** wait 15 min before any action; only nudge if the queued commit blocks something time-sensitive. Multiple rapid nudges have NEVER demonstrably improved auto-pull pickup speed in any cascade observed across the arc.
+
+### Lesson 6 — write the guard before the doc retrospective
+
+A pattern that emerged: code commit → CI guard verifies it → doc retrospective references the guard. Reverse order tempting (doc the lesson learned first, then add the guard) but sequencing forward catches a class of "doc says X but code says Y" drift bugs at write-time. The guard is the executable spec; the doc is the human-readable summary.
+
+### Closing state at extension end
+
+- **Aggregator: 5190/90 in ~5.5s** (was 4988/86 at start)
+- **`tsc --noEmit` exit 0**
+- **21 cascades survived total** across the entire arc (recovery playbook held under all conditions including the 50-min worst-case fork-saturation event)
+- **PENDING items closed in the extension:** §11a (webhook ordering), §4c (dunning), §6c (quality-signal), §2a + §2b (slack helper + first consumer)
+- **FeedbackChip rollout: 100%** on AI-using components (19/19)
+- **What remains:** founder action (set webhook URL env var); multi-day product work (mobile UI hardening, real PDF Compress, edit text in PDFs, bulk processing). Every infrastructure foundation is structurally complete on the code side.
