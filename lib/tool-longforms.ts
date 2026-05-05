@@ -3473,6 +3473,91 @@ export const TOOL_LONGFORMS: Record<string, ToolLongformData> = {
     },
   },
 
+  // PENDING §5b Phase B (2026-05-05): server-side Ghostscript-backed
+  // PDF/A-2b converter. Companion to compress; same wrapper module.
+  "pdf-a-convert": {
+    useCasesTitle: "Why people convert to PDF/A",
+    useCasesIntro:
+      "PDF/A is the archival flavor of PDF — embedded fonts, declared color profile, no encryption, no JavaScript, no external dependencies. It's the format institutional repositories accept, court e-filing systems require, and government archives mandate. The actual document content stays the same; we just wrap it in the conformance envelope that long-term preservation systems insist on.",
+    useCases: [
+      {
+        icon: "Shield",
+        title: "Court &amp; government e-filing",
+        text: "Many e-filing systems require PDF/A specifically because the format guarantees the document will render the same way in 30 years as it does today. Indian e-Courts, US PACER, and EU regulatory portals all enforce this — your judge's clerk rejects regular PDFs and pretends not to know what's wrong.",
+      },
+      {
+        icon: "Edit",
+        title: "Institutional repository deposit",
+        text: "University thesis repositories, research data archives, and library digital collections all require PDF/A. They reject regular PDFs because they can't guarantee that a font referenced today will be available decades from now. PDF/A bakes the fonts into the file itself.",
+      },
+      {
+        icon: "Pages",
+        title: "Long-term contract archival",
+        text: "Contracts that need to be readable in 30 years (real estate deeds, corporate governance records, professional licenses) should be archived as PDF/A. Regular PDFs that reference system fonts or use modern features may not render correctly on whatever software exists in 2055.",
+      },
+      {
+        icon: "Sparkle",
+        title: "ISO compliance &amp; quality systems",
+        text: "ISO 9001 / 14001 / 27001 quality management systems often require document control with archival format. PDF/A satisfies the ISO 19005 standard which is referenced by these QMS frameworks.",
+      },
+      {
+        icon: "Convert",
+        title: "Tax &amp; financial records",
+        text: "Multi-year tax records, audit trails, and financial statements that regulators may need to access years after the fact. Many tax authorities (IRS, HMRC, Indian Income Tax Department) explicitly accept or require PDF/A for digitized records.",
+      },
+    ],
+    howWorksTitle: "How Convert to PDF/A works",
+    howWorks: [
+      {
+        step: "1",
+        title: "Drop your PDF",
+        text: "Up to 50 MB. Sent to our server (Ghostscript runs server-side; the browser can&rsquo;t do this conversion alone).",
+      },
+      {
+        step: "2",
+        title: "Ghostscript embeds + validates",
+        text: "Every font referenced in your PDF gets embedded into the file. The sRGB color profile gets declared as the output intent. Encryption + JavaScript + external file dependencies get rejected (with -dPDFACompatibilityPolicy=1, gs fails honestly rather than producing files that lie about conformance).",
+      },
+      {
+        step: "3",
+        title: "Download the conformant PDF/A-2b",
+        text: "Output filename suffixed -pdfa.pdf. The file is slightly larger than your input because of font embedding — that&rsquo;s expected and required for archival format. We surface the size delta honestly so you&rsquo;re not surprised.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Why is the output bigger than my input?",
+        a: "PDF/A requires every font to be embedded in the file (a regular PDF can reference system fonts, which works only as long as those fonts exist on the renderer's machine). Embedding adds bytes — often 20-50% growth for documents with multiple fonts. This is expected and required; an archival format that referenced external fonts wouldn't be archival.",
+      },
+      {
+        q: "What's the difference between PDF/A-1, -2, and -3?",
+        a: "PDF/A-1 is the strictest (no transparency, no layers, no embedded files). Most modern PDFs fail PDF/A-1. PDF/A-2 (what we produce) supports transparency, layers, JPEG2000, and is the practical sweet spot for most archival needs. PDF/A-3 allows arbitrary file embedding which defeats the archival intent. We expose only -2b (the &ldquo;basic&rdquo; conformance level) because -2u and -2a require structurally-tagged source PDFs that most user uploads aren't.",
+      },
+      {
+        q: "What if my PDF has features PDF/A doesn&rsquo;t allow?",
+        a: "We tell you honestly. Our converter uses -dPDFACompatibilityPolicy=1 which makes Ghostscript fail loudly when the source has un-PDF/A-able content (encryption, embedded JavaScript, certain transparency groups). The alternative — silently stripping those features and producing a file that LIES about being PDF/A — is what some tools do. We don't. Run PDF/A Compliance Check first to see what's blocking.",
+      },
+      {
+        q: "Do I need to run PDF/A Check first?",
+        a: "Not strictly required, but recommended. The check is browser-based + instant + free; it tells you whether conversion is needed and what specific features are blocking it. If your PDF is already PDF/A conformant, the converter would just rebuild it — wasted time and server compute. Check first, convert if needed.",
+      },
+      {
+        q: "Is text still searchable in the output?",
+        a: "Yes. PDF/A doesn't flatten text — it just enforces font embedding, color profile declaration, and removal of dynamic features. Ctrl-F finds words, copy-paste pulls real text, screen readers work normally. The exception is if your input PDF was a scan-with-no-text-layer; in that case PDF/A can&rsquo;t add text that wasn&rsquo;t there. Run OCR (Searchable PDF) first if you need that.",
+      },
+      {
+        q: "Are my files retained on your server?",
+        a: "No. Same handling as Compress PDF: temp directory write → Ghostscript run → response body return → temp directory delete, all within the same request. The PDF/A bytes are sent in the response and not persisted anywhere on our side after the response completes.",
+      },
+    ],
+    cta: {
+      title: "Verify your PDF/A conformance first",
+      text: "Run the read-only PDF/A Compliance Check before converting. It tells you whether conversion is even needed, and if it is, what features are blocking conformance — so you can fix the source PDF rather than wrestling with conversion errors.",
+      linkHref: "/tool/pdf-a-check",
+      linkLabel: "Run PDF/A Check",
+    },
+  },
+
   "pdf-batch": {
     useCasesTitle: "Why people use batch PDF processing",
     useCasesIntro:

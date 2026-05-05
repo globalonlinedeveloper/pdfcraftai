@@ -197,6 +197,16 @@ const PdfCompressTool = dyn(() =>
     default: m.PdfCompressTool,
   })),
 );
+// PENDING §5b Phase B (2026-05-05) — server-side Ghostscript-backed
+// PDF/A-2b converter. Companion to compress; same flag-gate pattern
+// (PDF_A_CONVERT). Intentionally separate slug from /tool/pdf-a-check
+// because read-only validation and mutating conversion are different
+// user intents.
+const PdfaConvertTool = dyn(() =>
+  import("@/components/tools/PdfaConvertTool").then((m) => ({
+    default: m.PdfaConvertTool,
+  })),
+);
 const PdfDiffTool = dyn(() =>
   import("@/components/tools/PdfDiffTool").then((m) => ({
     default: m.PdfDiffTool,
@@ -703,6 +713,8 @@ export function ToolRunner({ id }: { id: string }) {
       return <PdfBatchProcessTool />;
     case "compress-pdf":
       return <PdfCompressTool />;
+    case "pdf-a-convert":
+      return <PdfaConvertTool />;
     case "pdf-diff":
       return <PdfDiffTool />;
     case "pdf-search":

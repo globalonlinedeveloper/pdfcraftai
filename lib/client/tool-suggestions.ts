@@ -27,6 +27,11 @@ export const TOOL_SUGGESTIONS: Record<string, readonly string[]> = {
   // typically want to merge the smaller files, sign for sharing,
   // or strip metadata they didn't realize was embedded.
   "compress-pdf": ["merge", "sign-pdf-free", "remove-metadata"],
+  // PENDING §5b Phase B (2026-05-05): after converting to PDF/A,
+  // users typically want to verify conformance, sign for archival
+  // submission, or merge with other PDF/A documents into a single
+  // archive package.
+  "pdf-a-convert": ["pdf-a-check", "sign-pdf-free", "merge"],
 
   // Visual editors — natural pairs (PageEditorTool consumers)
   "highlight-pdf": ["redact-free", "add-links", "page-numbers"],

@@ -90,6 +90,14 @@ export const TOOLS: readonly Tool[] = [
   // Replaces the long-standing "no compress" gap that motivated the
   // T1-1 bait-and-switch removal.
   { id: "compress-pdf", name: "Compress PDF", desc: "Shrink PDF file size with adjustable quality (Light, Balanced, Strong). Server-side via Ghostscript — keeps text searchable, embeds web-optimized linearization. Falls back to your original if compression doesn't actually help.", icon: "Compress", free: true, cost: "free", group: "Convert" },
+  // PENDING §5b Phase B (2026-05-05): server-side Ghostscript-backed
+  // PDF/A-2b converter. Different tool id from /tool/pdf-a-check
+  // (read-only validator) — separate intents = separate tools.
+  // Behind PDF_A_CONVERT feature flag. Output is conformant PDF/A-2b
+  // with embedded fonts + sRGB output intent + dPDFACompatibilityPolicy=1
+  // policy (gs fails honestly on un-PDF/A-able content rather than
+  // silently producing files that LIE about conformance).
+  { id: "pdf-a-convert", name: "Convert to PDF/A", desc: "Convert any PDF to PDF/A-2b for archival storage. Embeds all fonts, declares sRGB output intent, ensures long-term renderability. Pairs with PDF/A Compliance Check — run check first to see if conversion is needed; run convert to make it conformant.", icon: "Shield", free: true, cost: "free", group: "Organize" },
   { id: "pdf-diff", name: "Compare PDFs", desc: "Pixel-level visual diff between two PDFs — output a comparison PDF with red highlighting on regions that differ + per-page diff percentage. Pairs with AI Compare for content-level diffs.", icon: "Search", free: true, cost: "free", group: "Organize" },
 
   // Build 2 Wave 3 (2026-04-27): Search + Extract Images. Both

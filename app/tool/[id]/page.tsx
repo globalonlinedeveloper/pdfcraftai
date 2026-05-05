@@ -138,6 +138,11 @@ const LIVE_TOOL_IDS = new Set<string>([
   // enhancement (today the entry is visible regardless; flag only
   // affects whether it actually works).
   "compress-pdf",
+  // PENDING §5b Phase B (2026-05-05): server-side PDF/A-2b converter.
+  // Same flag-gate model as compress-pdf — listing here makes the
+  // catalog entry render the runner; the API enforces the feature
+  // flag. Catalog filtering by flag state is a future enhancement.
+  "pdf-a-convert",
   "pdf-diff",
   // AI tools.
   "ai-summarize",

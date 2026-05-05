@@ -544,6 +544,10 @@ export const TOOL_INTROS: Record<string, ToolIntro> = {
     text: "What you'll get: a smaller PDF with the same content. Three quality levels — Light (~10–30% smaller, almost no visible change), Balanced (~30–50%, the default), Strong (~50–80% but visible image-quality drop). If your PDF is already well-optimized, we'll return the original and tell you we couldn't make it smaller.",
     related: { id: "pdf-inspector", label: "PDF Inspector (see what's in your file before compressing)" },
   },
+  "pdf-a-convert": {
+    text: "What you'll get: a PDF/A-2b conformant version of your PDF — embedded fonts, declared sRGB output intent, no encryption, no JavaScript. Long-term archival format that institutional repositories, court e-filing systems, and government archives accept. The file may be slightly LARGER than your input because PDF/A requires embedding fonts your PDF was previously referencing externally.",
+    related: { id: "pdf-a-check", label: "PDF/A Compliance Check (run first to see what's blocking)" },
+  },
   "pdf-diff": {
     text: "What you'll get: a comparison PDF where every page shows visual differences between two PDFs highlighted in red, plus a per-page diff percentage table. For content-level diffs, see AI Compare.",
     related: { id: "ai-compare", label: "AI Compare (semantic content diff)" },
