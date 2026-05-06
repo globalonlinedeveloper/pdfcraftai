@@ -444,18 +444,56 @@ export default async function AdminEvalsDrilldownPage({
                     <Td>{g.scoreFaithfulness}</Td>
                     <Td>{g.scoreActionability}</Td>
                     <Td>
-                      {g.notes ? (
-                        <span style={{ fontSize: 12, lineHeight: 1.5 }}>
-                          {g.notes}
-                        </span>
-                      ) : (
-                        <span
-                          className="muted"
-                          style={{ fontSize: 11, fontStyle: "italic" }}
-                        >
-                          (no notes)
-                        </span>
-                      )}
+                      {/* Notes block — surfaces grader feedback. When
+                          aiOutputExcerpt is also present, render it
+                          below as a collapsed <details> so the row
+                          stays compact but admins can expand to see
+                          the actual output that was graded. */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {g.notes ? (
+                          <span style={{ fontSize: 12, lineHeight: 1.5 }}>
+                            {g.notes}
+                          </span>
+                        ) : (
+                          <span
+                            className="muted"
+                            style={{ fontSize: 11, fontStyle: "italic" }}
+                          >
+                            (no notes)
+                          </span>
+                        )}
+                        {g.aiOutputExcerpt ? (
+                          <details style={{ fontSize: 11 }}>
+                            <summary
+                              style={{
+                                cursor: "pointer",
+                                color: "var(--fg-subtle)",
+                              }}
+                            >
+                              View graded output ({g.aiOutputExcerpt.length}{" "}
+                              chars)
+                            </summary>
+                            <pre
+                              style={{
+                                marginTop: 4,
+                                padding: "8px 10px",
+                                background: "var(--bg-2)",
+                                borderRadius: 4,
+                                fontSize: 11,
+                                lineHeight: 1.5,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                maxHeight: 240,
+                                overflow: "auto",
+                                fontFamily:
+                                  "ui-monospace, SFMono-Regular, monospace",
+                              }}
+                            >
+                              {g.aiOutputExcerpt}
+                            </pre>
+                          </details>
+                        ) : null}
+                      </div>
                     </Td>
                   </tr>
                 ))}

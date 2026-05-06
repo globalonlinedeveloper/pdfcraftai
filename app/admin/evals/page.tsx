@@ -291,7 +291,19 @@ export default async function AdminEvalsPage() {
               </tr>
             </thead>
             <tbody>
-              {recent.map((r) => (
+              {recent.map((r) => {
+                // Phase G-2 follow-on: link the Op cell on the
+                // Recent grades table to the drilldown surface so
+                // admins can navigate from "this grade was low" →
+                // "what's the broader trend on this combo" in one
+                // click. Same encodeURI pattern as the per-op
+                // averages table above.
+                const drilldownHref = `/admin/evals/${encodeURIComponent(
+                  r.operation,
+                )}/${encodeURIComponent(r.providerId)}/${encodeURIComponent(
+                  r.model,
+                )}`;
+                return (
                 <tr key={r.id}>
                   <Td>
                     <span
@@ -301,7 +313,16 @@ export default async function AdminEvalsPage() {
                     </span>
                   </Td>
                   <Td>
-                    <code style={{ fontSize: 12 }}>{r.operation}</code>
+                    <Link
+                      href={drilldownHref}
+                      style={{
+                        color: "var(--accent)",
+                        textDecoration: "underline",
+                        textUnderlineOffset: 2,
+                      }}
+                    >
+                      <code style={{ fontSize: 12 }}>{r.operation}</code>
+                    </Link>
                   </Td>
                   <Td>
                     <code style={{ fontSize: 12 }}>{r.providerId}</code>
@@ -322,7 +343,8 @@ export default async function AdminEvalsPage() {
                   <Td>{r.scoreFaithfulness}</Td>
                   <Td>{r.scoreActionability}</Td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}

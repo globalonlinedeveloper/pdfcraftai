@@ -584,6 +584,29 @@ if (fs.existsSync(DRILLDOWN_PAGE)) {
     /n\s*>\s*0\s*\?\s*\(\s*\n[\s\S]{0,400}?<TrendChart/.test(ddSrc),
     "G28: trend chart section is wrapped in n > 0 ternary (matches TrendChart's empty-state contract)",
   );
+
+  // ----- aiOutputExcerpt expansion (Phase G-2 polish, 2026-05-06) -----
+  // Drilldown shows the actual graded output as an expandable
+  // <details> block under each row's notes. Lets admins see WHAT
+  // was graded without a separate query.
+  assert(
+    /g\.aiOutputExcerpt/.test(ddSrc),
+    "G29: drilldown shows aiOutputExcerpt per grade row",
+  );
+  assert(
+    /<details/.test(ddSrc),
+    "G30: aiOutputExcerpt rendered as collapsed <details> (row stays compact, expandable on demand)",
+  );
+  assert(
+    /<pre/.test(ddSrc) && /whiteSpace:\s*"pre-wrap"/.test(ddSrc),
+    "G31: excerpt rendered in <pre> with whiteSpace:pre-wrap (preserves linebreaks but allows wrap on long lines)",
+  );
+  // Cap the rendered excerpt height so a 10K-char output doesn't
+  // dominate the page
+  assert(
+    /maxHeight:\s*240/.test(ddSrc),
+    "G32: excerpt <pre> caps at maxHeight:240 with overflow:auto (page stays scannable)",
+  );
 }
 
 if (fs.existsSync(ADMIN_PAGE)) {
@@ -609,6 +632,20 @@ if (fs.existsSync(ADMIN_PAGE)) {
   assert(
     /<Link\s+href=\{drilldownHref\}/.test(adminSrc),
     "G18: per-op row wraps the operation cell in a Link to the drilldown URL",
+  );
+
+  // ----- Recent grades table also links to drilldown (Phase G-2
+  //       polish, 2026-05-06) -----
+  // The Recent grades table at the bottom of /admin/evals now also
+  // links each row's Op cell to the drilldown surface, so admins
+  // can navigate from "this grade was low" → "what's the broader
+  // trend on this combo" in one click. We verify the drilldownHref
+  // is computed inside the recent.map() loop (not just the per-op
+  // map) by checking for two separate occurrences.
+  const drilldownHrefMatches = adminSrc.match(/const drilldownHref =/g) ?? [];
+  assert(
+    drilldownHrefMatches.length >= 2,
+    "G33: drilldownHref is computed in BOTH the per-op averages table AND the recent-grades table (Phase G-2 polish)",
   );
 }
 
