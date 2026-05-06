@@ -530,6 +530,60 @@ if (fs.existsSync(DRILLDOWN_PAGE)) {
     !/(form\s+action|action="\/api|method="post"|method="POST")/.test(ddSrc),
     "G14: drilldown is read-only (no form/POST surface — Phase G-1 grader writes; this drilldown is observational)",
   );
+
+  // ----- Trend chart (Phase G-2 final, 2026-05-06) -----
+  assert(
+    /function\s+TrendChart\(/.test(ddSrc),
+    "G19: drilldown defines TrendChart inline SVG component (Phase G-2 trend chart)",
+  );
+  // Empty-state branch — returns null on zero grades so the section
+  // doesn't paint an empty rectangle
+  assert(
+    /grades\.length\s*===\s*0[\s\S]{0,40}?return\s+null/.test(ddSrc),
+    "G20: TrendChart returns null on empty grades (no meaningless empty-rectangle render)",
+  );
+  // Sorts ASC for left-to-right time progression (loadGradesForOpCombo
+  // returns DESC; chart needs ASC)
+  assert(
+    /a\.createdAt\.getTime\(\)\s*-\s*b\.createdAt\.getTime\(\)/.test(ddSrc),
+    "G21: TrendChart sorts ASC by createdAt (left=oldest, right=newest — eye-natural)",
+  );
+  // Threshold floor line at HUMAN_GRADE_FLOOR
+  assert(
+    /yOf\(HUMAN_GRADE_FLOOR\)/.test(ddSrc),
+    "G22: TrendChart draws threshold line at HUMAN_GRADE_FLOOR (red/green visual reference)",
+  );
+  // Score-axis range is fixed [1, 5] (Likert)
+  assert(
+    /\(s\s*-\s*1\)\s*\/\s*4/.test(ddSrc),
+    "G23: TrendChart maps score [1,5] to y-axis (Likert range fixed)",
+  );
+  // Polyline (not bar/scatter) — connects dots chronologically
+  assert(
+    /<polyline\s/.test(ddSrc),
+    "G24: TrendChart renders a <polyline> for the trend (connected chronological line)",
+  );
+  // Per-point dots colored by HUMAN_GRADE_FLOOR (matches scoreColor
+  // semantics — red below floor, neutral mid, green high)
+  assert(
+    /p\.score\s*<\s*HUMAN_GRADE_FLOOR/.test(ddSrc),
+    "G25: TrendChart colors per-point dots by floor (matches scoreColor semantics)",
+  );
+  // Single-grade case handled (avoids divide-by-zero on tSpan)
+  assert(
+    /points\.length\s*===\s*1/.test(ddSrc),
+    "G26: TrendChart handles single-grade case (avoids /0 on tSpan and pins dot to viewport midpoint)",
+  );
+  // Accessibility: role + aria-label on the SVG
+  assert(
+    /role="img"[\s\S]{0,300}?aria-label=/.test(ddSrc),
+    "G27: TrendChart has role='img' + aria-label for screen readers",
+  );
+  // Section is gated on n > 0 (no chart card when zero grades)
+  assert(
+    /n\s*>\s*0\s*\?\s*\(\s*\n[\s\S]{0,400}?<TrendChart/.test(ddSrc),
+    "G28: trend chart section is wrapped in n > 0 ternary (matches TrendChart's empty-state contract)",
+  );
 }
 
 if (fs.existsSync(ADMIN_PAGE)) {

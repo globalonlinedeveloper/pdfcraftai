@@ -49,6 +49,212 @@ function scoreColor(avg: number): string {
   return "#4caf50";
 }
 
+/**
+ * Inline SVG trend chart — overall score over time. No external
+ * chart library; pure SVG polyline. Phase G-2 (PENDING §6a,
+ * 2026-05-06).
+ *
+ * Layout: 600 × 180 viewBox, 32px left padding for y-axis labels +
+ * 16px right padding, 8px top + 24px bottom for x-axis labels.
+ * Points plotted in chronological order (oldest → newest, left →
+ * right) so a left-to-right downward slope reads as quality
+ * regression — the visually expected direction.
+ *
+ * Renders a horizontal threshold line at y = HUMAN_GRADE_FLOOR
+ * with red tint below + green tint above (matches the per-op
+ * table's red/green semantics). Empty-state branch returns null
+ * so the chart section just doesn't render when there are zero
+ * grades — avoids a meaningless empty rectangle.
+ */
+function TrendChart({
+  grades,
+}: {
+  grades: Array<{
+    createdAt: Date;
+    scoreRelevance: number;
+    scoreCompleteness: number;
+    scoreFaithfulness: number;
+    scoreActionability: number;
+  }>;
+}) {
+  if (grades.length === 0) return null;
+
+  // Sort chronologically (loadGradesForOpCombo returns DESC; chart
+  // wants ASC for the eye-natural left-to-right time progression).
+  const points = [...grades]
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .map((g) => ({
+      t: g.createdAt.getTime(),
+      score:
+        (g.scoreRelevance +
+          g.scoreCompleteness +
+          g.scoreFaithfulness +
+          g.scoreActionability) /
+        4,
+    }));
+
+  // Viewbox geometry. Score axis is fixed [1, 5] (Likert range);
+  // time axis spans from earliest to latest grade. Single-grade
+  // case: lay the dot at x = midpoint so it doesn't pin to the
+  // left edge.
+  const W = 600;
+  const H = 180;
+  const padLeft = 32;
+  const padRight = 16;
+  const padTop = 8;
+  const padBottom = 24;
+  const innerW = W - padLeft - padRight;
+  const innerH = H - padTop - padBottom;
+
+  const minT = points[0]!.t;
+  const maxT = points[points.length - 1]!.t;
+  const tSpan = maxT - minT > 0 ? maxT - minT : 1; // avoid /0
+
+  const xOf = (t: number) =>
+    points.length === 1
+      ? padLeft + innerW / 2
+      : padLeft + ((t - minT) / tSpan) * innerW;
+  // Map score [1, 5] → y [padTop+innerH, padTop] (flip — high score
+  // is high on screen)
+  const yOf = (s: number) =>
+    padTop + innerH - ((s - 1) / 4) * innerH;
+
+  const polyline = points
+    .map((p) => `${xOf(p.t).toFixed(2)},${yOf(p.score).toFixed(2)}`)
+    .join(" ");
+
+  const floorY = yOf(HUMAN_GRADE_FLOOR);
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      style={{
+        width: "100%",
+        maxWidth: 640,
+        height: "auto",
+        display: "block",
+        marginBottom: 8,
+      }}
+      role="img"
+      aria-label={`Trend chart of overall score over ${points.length} grade${points.length === 1 ? "" : "s"}`}
+    >
+      {/* Background tint above + below the floor line */}
+      <rect
+        x={padLeft}
+        y={padTop}
+        width={innerW}
+        height={floorY - padTop}
+        fill="color-mix(in oklab, #4caf50 4%, transparent)"
+      />
+      <rect
+        x={padLeft}
+        y={floorY}
+        width={innerW}
+        height={padTop + innerH - floorY}
+        fill="color-mix(in oklab, #c00 4%, transparent)"
+      />
+
+      {/* Y-axis grid lines at integer scores (1, 2, 3, 4, 5) */}
+      {[1, 2, 3, 4, 5].map((s) => (
+        <g key={s}>
+          <line
+            x1={padLeft}
+            y1={yOf(s)}
+            x2={W - padRight}
+            y2={yOf(s)}
+            stroke="var(--border)"
+            strokeWidth="1"
+            strokeDasharray={s === Math.round(HUMAN_GRADE_FLOOR) ? "0" : "2,2"}
+            opacity="0.5"
+          />
+          <text
+            x={padLeft - 6}
+            y={yOf(s) + 4}
+            textAnchor="end"
+            fontSize="10"
+            fill="var(--fg-subtle)"
+          >
+            {s}
+          </text>
+        </g>
+      ))}
+
+      {/* Threshold floor line — solid + red */}
+      <line
+        x1={padLeft}
+        y1={floorY}
+        x2={W - padRight}
+        y2={floorY}
+        stroke="#c00"
+        strokeWidth="1"
+        strokeDasharray="4,3"
+        opacity="0.6"
+      />
+      <text
+        x={W - padRight - 4}
+        y={floorY - 4}
+        textAnchor="end"
+        fontSize="10"
+        fill="#c00"
+        fontWeight="600"
+      >
+        floor {HUMAN_GRADE_FLOOR.toFixed(1)}
+      </text>
+
+      {/* X-axis labels — first + last timestamp only (more would
+          clutter at this width) */}
+      <text
+        x={padLeft}
+        y={H - 6}
+        fontSize="10"
+        fill="var(--fg-subtle)"
+      >
+        {new Date(minT).toISOString().slice(0, 10)}
+      </text>
+      {points.length > 1 ? (
+        <text
+          x={W - padRight}
+          y={H - 6}
+          textAnchor="end"
+          fontSize="10"
+          fill="var(--fg-subtle)"
+        >
+          {new Date(maxT).toISOString().slice(0, 10)}
+        </text>
+      ) : null}
+
+      {/* Trend line */}
+      {points.length > 1 ? (
+        <polyline
+          points={polyline}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
+
+      {/* Per-point dots */}
+      {points.map((p, i) => (
+        <circle
+          key={i}
+          cx={xOf(p.t)}
+          cy={yOf(p.score)}
+          r="3"
+          fill={
+            p.score < HUMAN_GRADE_FLOOR
+              ? "#c00"
+              : p.score < 4.0
+              ? "var(--fg)"
+              : "#4caf50"
+          }
+        />
+      ))}
+    </svg>
+  );
+}
+
 export default async function AdminEvalsDrilldownPage({
   params,
 }: {
@@ -154,6 +360,34 @@ export default async function AdminEvalsDrilldownPage({
               </div>
             </div>
           ))}
+        </section>
+      ) : null}
+
+      {/* Trend chart — overall score over time. Renders only when
+          there's at least one grade (TrendChart returns null on
+          empty input so we don't paint a meaningless rectangle). */}
+      {n > 0 ? (
+        <section style={{ marginBottom: 24 }}>
+          <SectionTitle>Trend — overall score over time</SectionTitle>
+          <div className="card" style={{ padding: 16 }}>
+            <TrendChart grades={grades} />
+            <p
+              className="muted"
+              style={{
+                fontSize: 11,
+                marginTop: 4,
+                lineHeight: 1.4,
+              }}
+            >
+              Each dot is one grade&rsquo;s overall score (mean of
+              relevance / completeness / faithfulness /
+              actionability). Dashed red line at{" "}
+              <strong>{HUMAN_GRADE_FLOOR.toFixed(1)}</strong> is the
+              quality floor — green tint above, red tint below.
+              Left = oldest grade, right = newest. Single-grade case:
+              one dot at the midpoint.
+            </p>
+          </div>
         </section>
       ) : null}
 
