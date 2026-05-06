@@ -167,7 +167,18 @@ The helper foundation + first consumer migration both lands ahead of the founder
 - `/admin/orgs` — read-only viewer with 4 summary cards (orgs / memberships / pending invites / accepted invites), top-10 leaderboard by member count, and a status banner showing `MULTI_SEAT` flag state.
 - 91-assertion CI guard (`scripts/test-orgs-foundation.mjs`) covering migration DDL (three tables, slug/token/(org,user) uniques, all columns, no DROP/MODIFY/CHANGE), Drizzle schema parity, helper public surface, FEATURE_FLAGS.MULTI_SEAT pin, admin page export shape + read-only invariant, expired-invite filter, plus dynamic execution of `slugify` against 5 normalization invariants.
 
-**Same staging discipline** as feature-flags / referrals / quality-signal: schema + read paths land NOW behind the MULTI_SEAT flag (already registered in lib/flags.ts §4d). Phase F flips the flag + adds:
+**Same staging discipline** as feature-flags / referrals / quality-signal: schema + read paths land NOW behind the MULTI_SEAT flag (already registered in lib/flags.ts §4d).
+
+**Phase F core writers shipped 2026-05-05** (this session) — `lib/orgs/writers.ts` with three flag-gated functions:
+- ✅ `recordOrgCreate({ownerUserId, name, billingMode?})` — atomic transaction inserts the org row + the owner's `organization_members` row (role="owner"). Slug generated via `slugify(name)` with bounded collision-retry (suffix `-2`, `-3`, …, max 16 attempts). Empty-slug fallback to `org-<random>` for names that produce no alphanumeric content (e.g. emoji-only names).
+- ✅ `inviteMember({organizationId, email, role, invitedByUserId, ttlDays?})` — generates a 32-char base36 token, atomically replaces any prior pending invite for the same `(org, email)` (DELETE old → INSERT new in transaction so the prior email link goes dead immediately — important when the prior email might be in the wrong inbox). Email lowercased for case-insensitive matching. Role rejected unless `"admin" | "member"` (no "owner" via invite — owner role is set only at org creation).
+- ✅ `acceptInvite({token, userId})` — validates token (not-expired + not-already-accepted), atomic INSERT into `organization_members` + UPDATE `acceptedAt` on the invite. 4 distinct error codes for the failure modes (`INVITE_NOT_FOUND` / `INVITE_EXPIRED` / `INVITE_ALREADY_ACCEPTED` / `ALREADY_MEMBER`) so the future `/invite/<token>` UI renders appropriate copy. ALREADY_MEMBER path marks the invite acceptedAt anyway so it doesn't hang as pending forever.
+
+`OrgWriteError` class with codes `DISABLED | EMPTY_REQUIRED | SLUG_GENERATION_FAILED | INVITE_NOT_FOUND | INVITE_EXPIRED | INVITE_ALREADY_ACCEPTED | ALREADY_MEMBER | DB_ERROR`. `ORG_INVITE_DEFAULT_TTL_DAYS = 7` constant.
+
+26-assertion guard expansion in CI Section G covering all three writers' public surface, flag-gates per function, transaction wrapping on recordOrgCreate + acceptInvite, slug-collision retry bounds, empty-slug fallback, role validation rejecting "owner" via invite, email-lowercase, all 4 acceptInvite error codes, and writers imported from the canonical query module (single source of truth on `isMultiSeatEnabled`).
+
+**Phase F deferred Phase F-2:**
 - Writer module (`recordOrgCreate`, `inviteMember`, `acceptInvite`, role-change, ownership-transfer) — all flag-gated
 - /app/org/<slug>/* management surfaces (member directory, settings, invite UI)
 - Permission enforcement on tool routes (org-admin can see members' usage; org-member can only see their own)

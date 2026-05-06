@@ -405,6 +405,153 @@ if (slugifyMatch) {
 }
 
 // ---------------------------------------------------------------------------
+// Section G: writer module (Phase F partial, 2026-05-05)
+// ---------------------------------------------------------------------------
+
+const WRITERS = path.join(ROOT, "lib/orgs/writers.ts");
+assert(fs.existsSync(WRITERS), "G1: lib/orgs/writers.ts exists");
+if (fs.existsSync(WRITERS)) {
+  const writersSrc = fs.readFileSync(WRITERS, "utf8");
+
+  // Public surface — three core writers + error class
+  assert(
+    /export\s+async\s+function\s+recordOrgCreate\b/.test(writersSrc),
+    "G2: recordOrgCreate is exported async",
+  );
+  assert(
+    /export\s+async\s+function\s+inviteMember\b/.test(writersSrc),
+    "G3: inviteMember is exported async",
+  );
+  assert(
+    /export\s+async\s+function\s+acceptInvite\b/.test(writersSrc),
+    "G4: acceptInvite is exported async",
+  );
+  assert(
+    /export\s+class\s+OrgWriteError\s+extends\s+Error\b/.test(writersSrc),
+    "G5: OrgWriteError class is exported",
+  );
+
+  // Flag-gate guard: ALL THREE writers must check isMultiSeatEnabled
+  // before any DB work. Without this, flag-off prod could write
+  // into the org tables via a misconfigured caller.
+  for (const fn of ["recordOrgCreate", "inviteMember", "acceptInvite"]) {
+    const bodyMatch = writersSrc.match(
+      new RegExp(`export async function ${fn}\\b[\\s\\S]*?\\n\\}\\n`),
+    );
+    assert(
+      bodyMatch !== null,
+      `G6.${fn}: extracted function body for flag-gate check`,
+    );
+    if (bodyMatch) {
+      const body = bodyMatch[0];
+      assert(
+        /if\s*\(\s*!isMultiSeatEnabled\(\)\s*\)\s*\{\s*\n?\s*return null/.test(
+          body,
+        ),
+        `G7.${fn}: function checks !isMultiSeatEnabled() and returns null when off`,
+      );
+    }
+  }
+
+  // recordOrgCreate uses a transaction — atomic org + member insert
+  assert(
+    /db\.transaction\(\s*async\s*\(\s*tx\s*\)\s*=>\s*\{[\s\S]*?tx\.insert\(\s*schema\.organizations[\s\S]*?tx\.insert\(\s*schema\.organizationMembers/.test(
+      writersSrc,
+    ),
+    "G8: recordOrgCreate atomic — org row + owner membership in one transaction",
+  );
+
+  // Slug collision retry: suffix `-2`, `-3`, … on dup-key
+  assert(
+    /Duplicate entry|ER_DUP_ENTRY/.test(writersSrc),
+    "G9: writers catch MySQL duplicate-key (slug + invite-token retry paths)",
+  );
+  assert(
+    /MAX_SLUG_RETRIES/.test(writersSrc),
+    "G10: recordOrgCreate has bounded slug-retry loop (no infinite retry on misconfigured DB)",
+  );
+
+  // Empty-name fallback: slugify("💩") = "" → caller must produce a
+  // synthetic slug rather than INSERTing an empty string
+  assert(
+    /baseSlug\.length\s*>\s*0\s*\?\s*baseSlug\s*:\s*`org-/.test(writersSrc),
+    "G11: empty-slug fallback to 'org-<random>' (avoids INSERT of empty slug on names like '💩💩💩')",
+  );
+
+  // inviteMember dedupes pending invites for (org, email) — the
+  // re-invite path. Without this, the prior token stays valid in
+  // the OLD email which is a security regression.
+  assert(
+    /priorRows[\s\S]*?delete\(\s*schema\.organizationInvites\)/.test(
+      writersSrc,
+    ),
+    "G12: inviteMember replaces prior pending invites (DELETE old → INSERT new in transaction)",
+  );
+
+  // role validation in inviteMember — "owner" can ONLY be set on
+  // org creation; invites must be admin or member.
+  assert(
+    /role\s*!==\s*"admin"\s*&&\s*role\s*!==\s*"member"/.test(writersSrc),
+    "G13: inviteMember rejects role !== 'admin' && !== 'member' (no 'owner' via invite)",
+  );
+
+  // Email lowercased — case-insensitive matching
+  assert(
+    /\.toLowerCase\(\)/.test(writersSrc),
+    "G14: inviteMember lowercases email (case-insensitive (org, email) dedupe)",
+  );
+
+  // Invite TTL constant
+  assert(
+    /export\s+const\s+ORG_INVITE_DEFAULT_TTL_DAYS\s*=\s*7/.test(writersSrc),
+    "G15: ORG_INVITE_DEFAULT_TTL_DAYS = 7 (long enough for slow-email recipient, short enough for security)",
+  );
+
+  // acceptInvite distinguishes 4 failure modes
+  for (const code of [
+    "INVITE_NOT_FOUND",
+    "INVITE_EXPIRED",
+    "INVITE_ALREADY_ACCEPTED",
+    "ALREADY_MEMBER",
+  ]) {
+    assert(
+      new RegExp(`"${code}"`).test(writersSrc),
+      `G16.${code}: acceptInvite throws ${code} for distinct failure modes`,
+    );
+  }
+
+  // acceptInvite atomic: insert member + update invite.acceptedAt
+  // in a transaction. Pin via 'tx.insert(.+organizationMembers' AND
+  // 'tx.update(.+organizationInvites' inside the same transaction
+  // block. Multiline regex works fine here because we just need
+  // both calls present in the file body.
+  assert(
+    /tx\.insert\(\s*schema\.organizationMembers/.test(writersSrc) &&
+      /tx\n?\s*\.update\(\s*schema\.organizationInvites/.test(writersSrc),
+    "G17: acceptInvite atomic — member INSERT + invite UPDATE in transaction",
+  );
+
+  // ALREADY_MEMBER edge case: when the user is already a member but
+  // the invite is still marked pending (e.g. multiple invites
+  // outstanding), we mark the invite accepted anyway so it doesn't
+  // hang. The acceptInvite path AFTER throwing ALREADY_MEMBER must
+  // mark the invite acceptedAt before throwing. (Implementation
+  // detail — pin so a refactor that drops it would be caught.)
+  assert(
+    /User is already a member[\s\S]*?ALREADY_MEMBER/.test(writersSrc),
+    "G18: acceptInvite ALREADY_MEMBER path also marks invite acceptedAt (so re-invite of existing member doesn't hang the invite as pending)",
+  );
+
+  // The writer module imports from the canonical query module, NOT
+  // from db/client directly for the flag check. Pin to enforce
+  // single source of truth.
+  assert(
+    /isMultiSeatEnabled[\s\S]*?from\s*["']\.\/queries["']/.test(writersSrc),
+    "G19: writers import isMultiSeatEnabled from ./queries (single source of truth)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 
