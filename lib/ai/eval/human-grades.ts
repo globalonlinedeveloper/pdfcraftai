@@ -29,6 +29,12 @@ export interface HumanGradeRow {
   notes: string | null;
   aiOutputExcerpt: string | null;
   createdAt: Date;
+  /** Grader's email — populated when the row was loaded via a query
+   *  that leftJoins on users (listRecentHumanGrades, loadGradesForOpCombo).
+   *  Null when the users row went missing OR when loaded via a path
+   *  that didn't join. UI fallback chain: email → name → shortUser. */
+  graderEmail?: string | null;
+  graderName?: string | null;
 }
 
 export interface PerOpAvgRow {
@@ -62,12 +68,29 @@ export const HUMAN_GRADE_FLOOR = 3.5;
 export async function listRecentHumanGrades(
   limit = 200,
 ): Promise<HumanGradeRow[]> {
+  // leftJoin on users for graderEmail/graderName so the admin
+  // /admin/evals "Recent grades" table can render human-readable
+  // labels instead of opaque user-id fragments. Same pattern as
+  // loadGraderActivity. leftJoin (not innerJoin) is defensive
+  // against missing users rows.
   const rows = await db
-    .select()
+    .select({
+      grade: schema.evalHumanGrades,
+      email: schema.users.email,
+      name: schema.users.name,
+    })
     .from(schema.evalHumanGrades)
+    .leftJoin(
+      schema.users,
+      eq(schema.users.id, schema.evalHumanGrades.graderUserId),
+    )
     .orderBy(desc(schema.evalHumanGrades.createdAt))
     .limit(limit);
-  return rows.map(toRow);
+  return rows.map((r) => ({
+    ...toRow(r.grade),
+    graderEmail: r.email ?? null,
+    graderName: r.name ?? null,
+  }));
 }
 
 /**

@@ -803,6 +803,41 @@ if (fs.existsSync(ADMIN_PAGE)) {
     ),
     "I6: label falls back email → name → shortUser (defensive against missing users-row)",
   );
+
+  // Recent-grades table also uses the email/name fallback chain
+  // (Phase G-2 follow-on: same leftJoin polish applied to the
+  // listRecentHumanGrades-driven table)
+  assert(
+    /r\.graderEmail/.test(adminSrc),
+    "I7: Recent grades table reads r.graderEmail (listRecentHumanGrades now leftJoins users)",
+  );
+  assert(
+    /r\.graderEmail[\s\S]{0,200}?r\.graderName[\s\S]{0,200}?shortUser\(r\.graderUserId\)/.test(
+      adminSrc,
+    ),
+    "I8: Recent grades label falls back email → name → shortUser",
+  );
+}
+
+// ----- listRecentHumanGrades leftJoins users + projects email/name -----
+if (fs.existsSync(QUERIES)) {
+  const queriesSrc = fs.readFileSync(QUERIES, "utf8");
+
+  assert(
+    /listRecentHumanGrades[\s\S]*?\.leftJoin\(\s*schema\.users/.test(
+      queriesSrc,
+    ),
+    "I9: listRecentHumanGrades leftJoins users (gives admin table human-readable labels)",
+  );
+  // HumanGradeRow type has the optional graderEmail + graderName
+  assert(
+    /graderEmail\?:\s*string\s*\|\s*null/.test(queriesSrc),
+    "I10: HumanGradeRow type has optional graderEmail (typed nullable)",
+  );
+  assert(
+    /graderName\?:\s*string\s*\|\s*null/.test(queriesSrc),
+    "I11: HumanGradeRow type has optional graderName (typed nullable)",
+  );
 }
 
 // ---------------------------------------------------------------------------

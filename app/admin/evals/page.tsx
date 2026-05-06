@@ -351,9 +351,16 @@ export default async function AdminEvalsPage() {
                     <code style={{ fontSize: 12 }}>{r.goldenSetId}</code>
                   </Td>
                   <Td>
-                    <code style={{ fontSize: 12 }}>
-                      {shortUser(r.graderUserId)}
-                    </code>
+                    {/* listRecentHumanGrades now leftJoins users —
+                        prefer email, fall back to name, then to
+                        shortUser for the missing-users-row case. */}
+                    <span style={{ fontSize: 12 }}>
+                      {r.graderEmail && r.graderEmail.length > 0
+                        ? r.graderEmail
+                        : r.graderName && r.graderName.length > 0
+                        ? r.graderName
+                        : shortUser(r.graderUserId)}
+                    </span>
                   </Td>
                   <Td>{r.scoreRelevance}</Td>
                   <Td>{r.scoreCompleteness}</Td>
