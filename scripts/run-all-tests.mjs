@@ -1324,6 +1324,23 @@ const SUITES = [
     name: "eval-human-grades-foundation",
     file: "test-eval-human-grades-foundation.mjs",
   },
+  // 2026-05-05 (PENDING §5f foundation) — mobile UI hardening guard.
+  // Two-layer coverage:
+  //   1. Static parse: scans every tool component for hardcoded
+  //      width / minWidth > 380px (iPhone 14 viewport breathing
+  //      room) WITHOUT a maxWidth companion + gridTemplateColumns
+  //      repeat(4+) without minmax floor. Catches the bug class
+  //      that horizontal-scrolls mobile users.
+  //   2. Pin presence + shape of tests/e2e/mobile-tools.spec.ts —
+  //      iPhone 14 device emulation, body.scrollWidth assertion,
+  //      above-fold CTA assertion, console-error filter for known
+  //      third-party noise, ≥ 5 tool URLs covered.
+  // The static guard runs sub-second; Playwright spec is in the
+  // E2E suite (run separately via `npx playwright test`).
+  {
+    name: "mobile-hostile-styles",
+    file: "test-mobile-hostile-styles.mjs",
+  },
   // 2026-05-05 (PENDING §5a foundation) — PDF compress route guard.
   // Locks the Ghostscript wrapper invariants (level→preset map,
   // required gs flags, mkdtemp + finally{} cleanup, SIGKILL on

@@ -379,13 +379,31 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 
 **Genuinely-still-missing (deferred):** AI-op batching (e.g. "summarize 50 invoices") — that one DOES need a server-side queue because each op is 5-30s of LLM round-trips and a browser tab can't reliably hold 50× that. Tracked separately as part of OpenAI Batch API rollout (Phase A Task #13, already shipped for `summarize` + `translate` at the route level — UX wire-up to a "drop 50 PDFs" surface remains).
 
-### 5f. Mobile UI hardening (T1-4)
+### 5f. Mobile UI hardening (T1-4) — ⚠️ AUDIT-PASS FOUNDATION SHIPPED (2026-05-05)
 
-**State:** unaudited. Visual editors (PageEditorTool consumers) likely have poor touch behavior. ~40% of typical PDF tool traffic is mobile.
+**State pre-foundation:** unaudited. Visual editors (PageEditorTool consumers) likely had poor touch behavior. ~40% of typical PDF tool traffic is mobile.
 
-**Implementation:** Playwright mobile spec across 13 visual editors. Fix issues found. Add bottom-sheet config panel on small screens.
+**Foundation shipped** in this session — two-layer coverage:
+- **Static-parse guard** (`scripts/test-mobile-hostile-styles.mjs`) — scans every tool component in `components/tools/` for hardcoded `width:` / `minWidth:` values exceeding 380px (iPhone 14 viewport breathing room) WITHOUT a companion `maxWidth:`, plus `gridTemplateColumns: repeat(N+, …)` where N ≥ 4 without `minmax()` floor. Catches the bug class (horizontal scroll on mobile) at commit time. Result: 0 violations across 30+ tool components — tool runners are mobile-clean at the inline-style level.
+- **Playwright mobile spec** (`tests/e2e/mobile-tools.spec.ts`) — iPhone 14 device emulation (390×844). 10 representative URLs (homepage + top 4 free tools + 3 AI tools + 2 visual editors). Three runtime asserts per URL: (1) `body.scrollWidth ≤ window.innerWidth + 1` — the no-horizontal-scroll invariant which is the #1 mobile UX anti-signal, (2) at least one button or link visible above the 844px fold (key CTA reachable without scroll), (3) no console errors from page code (third-party noise from Clarity / GA4 filtered out).
 
-**Estimate:** 3-5 days.
+**What this foundation catches now:**
+- A future PR that adds `style={{ width: 1200 }}` to a tool component fails the static guard at commit time
+- A new tool that ships without responsive layout fails the Playwright spec on the URLs it covers
+- An existing tool that regresses (e.g. a sidebar pushed outside the 390px viewport) fails the spec
+
+**What this foundation does NOT cover** (Phase G):
+- Touch gesture issues (drag-to-reorder, pinch-zoom on PDF preview). Playwright mobile emulation simulates click/tap but not multi-touch cleanly.
+- Per-visual-editor touch-behavior audit (the 13 PageEditorTool consumers). Each needs a hand-test on real device to verify drag handles are reachable + stylus-friendly.
+- Tablet (iPad) baselining. iPhone 14 covers the tightest constraint; passing it = tablet works.
+- Bottom-sheet config-panel UX redesign on small screens (the original audit recommended this). That's a UI redesign decision, not a defect fix; defer until usage analytics indicate which tools actually need it.
+
+**CI guard summary (Section A + B):** 9 assertions:
+- A1: ≥30 tool components scanned (sanity check)
+- A2: 0 inline-style width/minWidth/grid violations across the corpus (umbrella pass)
+- B1-B6: Playwright spec exists, uses iPhone 14, asserts no-overflow + above-fold CTA, filters known third-party console noise, covers ≥5 URLs
+
+**Estimate to full Phase G coverage:** ~3-5 days for the per-visual-editor manual touch-behavior audit + bottom-sheet redesign on tools where small-screen layout is actually constrained. The static + spec foundation makes regressions catchable at commit time, so the per-tool work doesn't have to happen all at once.
 
 ---
 
