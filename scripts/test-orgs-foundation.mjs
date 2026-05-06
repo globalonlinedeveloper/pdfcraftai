@@ -1534,6 +1534,88 @@ if (fs.existsSync(ORG_PAGE)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section N: Phase F-4 dashboard wire-up — Organizations section
+// (PENDING §3b, 2026-05-06)
+//
+// /app/dashboard renders an Organizations section between the
+// stat-cards row and the recent-activity section. Section gating:
+//   - User belongs to ≥1 org → ALWAYS show (navigation back to org)
+//   - User belongs to 0 orgs AND MULTI_SEAT enabled → show empty-
+//     state with Create-org CTA
+//   - User belongs to 0 orgs AND MULTI_SEAT off → section hidden
+//     entirely (no UI debt for users who'll never see this feature)
+// ---------------------------------------------------------------------------
+
+const DASHBOARD_PAGE = path.join(ROOT, "app/app/dashboard/page.tsx");
+
+assert(
+  fs.existsSync(DASHBOARD_PAGE),
+  "N1: app/app/dashboard/page.tsx exists",
+);
+
+if (fs.existsSync(DASHBOARD_PAGE)) {
+  const dashSrc = fs.readFileSync(DASHBOARD_PAGE, "utf8");
+
+  // ----- Imports the orgs queries -----
+  assert(
+    /import\s*\{[\s\S]*?loadOrgsForUser[\s\S]*?\}\s*from\s*"@\/lib\/orgs\/queries"/.test(
+      dashSrc,
+    ),
+    "N2: dashboard imports loadOrgsForUser",
+  );
+  assert(
+    /import\s*\{[\s\S]*?isMultiSeatEnabled[\s\S]*?\}\s*from\s*"@\/lib\/orgs\/queries"/.test(
+      dashSrc,
+    ),
+    "N3: dashboard imports isMultiSeatEnabled",
+  );
+
+  // ----- Loads orgs only inside the userId-guarded block -----
+  // loadOrgsForUser must be called only when userId is defined;
+  // otherwise we'd hit Drizzle with undefined and either crash or
+  // (worse) leak orgs from another user.
+  assert(
+    /if\s*\(\s*userId\s*\)\s*\{[\s\S]*?orgs\s*=\s*await\s+loadOrgsForUser\(userId\)/.test(
+      dashSrc,
+    ),
+    "N4: dashboard calls loadOrgsForUser(userId) ONLY inside the userId-guarded block (anti-leak)",
+  );
+
+  // ----- Section gating predicate -----
+  // Section renders when orgs.length > 0 OR multiSeatEnabled.
+  // Hides entirely when both are false (no UI debt for users
+  // who'll never see this feature).
+  assert(
+    /orgs\.length\s*>\s*0\s*\|\|\s*multiSeatEnabled/.test(dashSrc),
+    "N5: dashboard section gates on orgs.length > 0 || multiSeatEnabled (no UI debt for non-feature users)",
+  );
+
+  // ----- Org row links to /app/org/<slug> -----
+  assert(
+    /href=\{`\/app\/org\/\$\{entry\.org\.slug\}`\}/.test(dashSrc),
+    "N6: dashboard org row links to /app/org/<slug>",
+  );
+
+  // ----- Create-org CTA gated on multiSeatEnabled -----
+  // The "Create organization" link/button must NOT show when
+  // MULTI_SEAT is off (operators viewing the dashboard during
+  // pre-launch should still see their orgs but shouldn't create
+  // new ones outside the staged rollout).
+  assert(
+    /multiSeatEnabled\s*\?\s*\(?[\s\S]{0,400}?\/app\/org\/new/.test(
+      dashSrc,
+    ),
+    "N7: dashboard Create-org CTA is gated on multiSeatEnabled (no creation outside staged rollout)",
+  );
+
+  // ----- Role chip rendered next to each org row -----
+  assert(
+    /entry\.role\s*===\s*"owner"/.test(dashSrc),
+    "N8: dashboard renders role chip per org row (owner/admin/member visual distinction)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

@@ -6,6 +6,11 @@ import { eq, desc } from "drizzle-orm";
 import { I } from "@/components/icons/Icons";
 import { getSpendSummary } from "@/lib/user/queries";
 import { formatCredits, formatCount } from "@/lib/user/format";
+import {
+  isMultiSeatEnabled,
+  loadOrgsForUser,
+  type OrganizationRow,
+} from "@/lib/orgs/queries";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -26,6 +31,11 @@ export default async function DashboardPage() {
     last7dCalls: 0,
     last30dCalls: 0,
   };
+  let orgs: Array<{ org: OrganizationRow; role: string }> = [];
+  // Multi-seat flag is checked outside the userId-guard so the section
+  // gate (render-or-not) doesn't depend on whether the user is signed
+  // in (signed-out users hit auth gate before reaching here anyway).
+  const multiSeatEnabled = isMultiSeatEnabled(userId ?? null);
 
   if (userId) {
     const [creditRow] = await db
@@ -48,6 +58,12 @@ export default async function DashboardPage() {
 
     const summary = await getSpendSummary(userId);
     spend = summary.data;
+
+    // Load orgs unconditionally — even when MULTI_SEAT is off, an
+    // operator account that's a member of an org should still see
+    // it on the dashboard (so they can navigate to it). The Create-
+    // org CTA below is the only thing gated on the flag.
+    orgs = await loadOrgsForUser(userId);
   }
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
@@ -101,6 +117,135 @@ export default async function DashboardPage() {
           cta={{ href: "/app/refer", text: "Open" }}
         />
       </div>
+
+      {/* Organizations section (Phase F-4 follow-on, 2026-05-06).
+          Renders when:
+            - User belongs to ≥1 org (always show — they need a way
+              to navigate back to it), OR
+            - MULTI_SEAT is enabled and they belong to 0 orgs (show
+              the Create-org CTA so they can opt in).
+          When MULTI_SEAT is off AND they have 0 orgs, the section
+          is hidden entirely (no UI debt for users who'll never
+          see this feature). */}
+      {orgs.length > 0 || multiSeatEnabled ? (
+        <section>
+          <div
+            className="row"
+            style={{
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: 12,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 18,
+                letterSpacing: "-0.01em",
+                margin: 0,
+              }}
+            >
+              Organizations
+            </h2>
+            {multiSeatEnabled ? (
+              <Link
+                href="/app/org/new"
+                className="subtle"
+                style={{ fontSize: 13, textDecoration: "none" }}
+              >
+                Create organization →
+              </Link>
+            ) : null}
+          </div>
+
+          {orgs.length === 0 ? (
+            <div
+              className="card"
+              style={{
+                padding: 24,
+                textAlign: "center",
+                borderStyle: "dashed",
+              }}
+            >
+              <p style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>
+                You&rsquo;re not in any organizations yet
+              </p>
+              <p
+                className="muted"
+                style={{
+                  fontSize: 13,
+                  marginTop: 4,
+                  marginBottom: 14,
+                }}
+              >
+                Set one up to share credits + tools with your team.
+              </p>
+              <Link href="/app/org/new" className="btn btn-primary btn-sm">
+                Create organization
+              </Link>
+            </div>
+          ) : (
+            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+              {orgs.map((entry, i) => (
+                <Link
+                  key={entry.org.id}
+                  href={`/app/org/${entry.org.slug}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "14px 16px",
+                    borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <I.Layers size={16} />
+                  <div style={{ flex: 1, overflow: "hidden" }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {entry.org.name}
+                    </div>
+                    <div className="subtle" style={{ fontSize: 12 }}>
+                      <code style={{ fontSize: 11 }}>{entry.org.slug}</code>
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      background:
+                        entry.role === "owner"
+                          ? "color-mix(in oklab, #4caf50 14%, transparent)"
+                          : entry.role === "admin"
+                          ? "color-mix(in oklab, var(--accent) 14%, transparent)"
+                          : "var(--bg-2)",
+                      color:
+                        entry.role === "owner"
+                          ? "#4caf50"
+                          : entry.role === "admin"
+                          ? "var(--accent)"
+                          : "var(--fg-subtle)",
+                      fontWeight: 600,
+                      letterSpacing: 0.4,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {entry.role}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
 
       <section>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
