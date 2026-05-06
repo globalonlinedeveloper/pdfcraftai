@@ -3,9 +3,37 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-04 (17 ship items + Batch 2 instrumentation + Batch A FeedbackChip finish — table/compare wired).
-**Live commit:** `834d61199f61` (post-batch retrospective doc, deployed cleanly atop the 4 code commits). All 93 suites green, **5285 tests passing**. **Twenty-three zombie-next-server cascades** total — cascade #23 self-recovered during the §6c→doc deploy window without operator intervention (single `uv_thread_create` thread-cap failure captured in stderr.log; worker respawned successfully without external pkick). Verified post-batch: uptime grew monotonically 126s → 157s → 188s across 90s observation window, no flapping.
-**Aggregator:** 5190 passed across 90 suites in ~5.5s (+29 from prior 5161/89 — new `margin-rollup-slack-migration` suite locks in the consumer-specific contract: imports, all 4 message branches preserved, severity typed as `SlackAlertSeverity`, no inline `fetch(url, ...)`, no legacy `{text:...}` payload, `urlOverride` backward-compat for `AI_SPEND_ALERT_SLACK_URL`, never-throws guarantee, context block populated. Foundation guard also gained 3 new assertions (A9-A11) for the new `SendSlackAlertOptions` interface + `urlOverride` field + the https:// validation gate on the override path.
+**Last updated:** 2026-05-06 (Phase F-4 multi-seat closeout — 6 commits shipping the entire owner+admin management surface for organizations).
+**Live commit:** `5165cf1a615f` (dashboard Organizations section). All 101 suites green, **5979 tests passing** (+694 from the 2026-05-04 close-out, of which +111 are direct multi-seat coverage in Sections I/J/K/L/M/N of `test-orgs-foundation.mjs`). **Twenty-four zombie-next-server cascades** total — cascade #24 hit on commit `0f2d0e0` (per-member usage rollup, deploy #4 of the 6-commit run) and recovered cleanly with one mass-kill + Passenger restart per the CLAUDE.md §5 runbook; deploys 5 + 6 went clean.
+
+### 2026-05-06 — Phase F-4 multi-seat: complete owner+admin management surface (6 commits)
+
+The user-facing organizations feature is now fully usable for owners + admins: every membership mutation has a writer + server action + UI, plus the lifecycle ops (rename + delete) and the dashboard navigation entry.
+
+**Commit chain (b19dd58 → be71297 → d687782 → 0f2d0e0 → 847bd63 → 5165cf1):**
+
+- `b19dd58` **F-4 writers** — `lib/orgs/writers.ts:changeRole` + `removeMember` + `transferOwnership` + the `ROLE_RANK` constant (owner=3 > admin=2 > member=1). Strict-outrank + authority-to-grant predicates enforced inside one tx; owner-protection on remove ("transfer first" copy); 3-write atomic ownership transfer with column-not-role verification on the actor (`organizations.owner_user_id` check defends against drift between role + column). **Section I (+15 assertions)**.
+- `be71297` **F-4 UI** — three server actions wrapping the writers (anti-impersonation: `byUserId` from session, never input — pinned by positive AND negative regex), new `MemberActions.tsx` per-row inline button group (Make admin/Make member/Remove/Transfer ownership →/Leave organization), client-side ROLE_RANK mirror pinned by CI to match writer's source of truth. **Section J (+26 assertions)**.
+- `d687782` **cancelInvite** — closes the pending-invites loop so admins can revoke a typoed invite. Cross-org confusion attack defense (`invite.organizationId === input.organizationId` check inside the writer's tx), already-accepted no-op rejection. **Section K (+17 assertions)**.
+- `0f2d0e0` **per-member usage rollup** — `loadOrgMemberUsage(orgId, days)` aggregates `ai_usage` by user_id within the org's membership list. Owner + admin only (members don't see peer usage). Honest disclosure of cross-org double-counting (ai_usage missing `organization_id`) in both the docstring + the user-facing copy. **Section L (+12 assertions)**. Triggered cascade #24 mid-deploy; recovered with one-shot pkick.
+- `847bd63` **settings page** — `/app/org/<slug>/settings` owner-only render (`role !== "owner"` → `notFound()` not 403, anti-existence-leak). `renameOrg` writer (slug intentionally NOT regenerated so URLs stay valid) + `deleteOrg` writer (3-write atomic cascade: invites → members → org, since migration 0025 has no FK ON DELETE CASCADE on the children). Two-step delete confirmation: armed → typed-name match → fire. Action layer re-checks `confirmName === expectedName` (defense-in-depth — hostile clients can skip the form gate). **Section M (+33 assertions)**.
+- `5165cf1` **dashboard org section** — `/app/dashboard` renders an Organizations section between stat-cards and recent activity. Section gates on `orgs.length > 0 || multiSeatEnabled` (no UI debt for users who'll never see the feature). `loadOrgsForUser` called only inside the userId-guarded block (anti-leak — pinned by CI N4). Create-org CTA gated on `multiSeatEnabled`. **Section N (+8 assertions)**.
+
+**Defense-in-depth pattern pinned across the entire surface:**
+- Render-time UI hide + Server Action permission re-check + writer-tx column verification (not just role check)
+- `byUserId` / `fromUserId` from session, never input — positive AND negative regex pairs in CI assertions catch refactors that introduce input-derived actor identity
+- `notFound()` not `forbidden()` for non-members on org-landing AND non-owners on settings (anti-existence-leak: admins + members don't even know the settings URL exists)
+- Client-side ROLE_RANK mirror in MemberActions.tsx pinned by CI (J15) to match writer's source of truth — drift would render buttons that fail with confusing errors
+- Cross-org confusion attack defense on cancelInvite (admin in org A can't pass an invite ID from org B)
+
+**Phase F-4 still pending after this run:**
+- Permission enforcement on tool routes (org-admin sees members' usage; org-member sees only their own) — distinct ~2-3 day deliverable
+- Email invite delivery (gated on §11 SendGrid/Postmark)
+- Billing wire-up (3-mode placeholder columns + credit_ledger routing rework against org payment method)
+- Change-billing-mode action (paired with billing wire-up)
+- SSO via Google Workspace domain-match (e.g. all `@acme.com` signups join the Acme org by default)
+
+**Aggregator:** 5868 → 5979 (+111) across 101 suites. `tsc --noEmit` clean throughout. Six deploys to Hostinger; one cascade (deploy #4 of 6, recovered in ~30s); deploys 5 + 6 went clean.
 
 ### 2026-05-04 — Activation + e2e + tool improvement plan + Tier 1/2 ships
 
