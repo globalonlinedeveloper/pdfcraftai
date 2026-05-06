@@ -25,10 +25,9 @@ export function CreateOrgForm() {
     startTransition(async () => {
       const result = await createOrgAction({ name, billingMode });
       if (result.ok) {
-        // Future Phase F-2 part 2 builds /app/org/<slug>; until
-        // then route back to dashboard with a query param so the
-        // dashboard can show a "your org was created" toast.
-        router.push(`/app/dashboard?org_created=${encodeURIComponent(result.slug)}`);
+        // Phase F-3 (commit landing now): redirect to the new
+        // org's landing page where the owner can invite members.
+        router.push(`/app/org/${encodeURIComponent(result.slug)}`);
       } else {
         setError(result.error);
       }

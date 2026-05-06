@@ -182,8 +182,18 @@ The helper foundation + first consumer migration both lands ahead of the founder
 - ✅ `/app/org/new` — create-org page with form (org name + billing-mode radio: central / per_seat / credit_pool). Server Action `createOrgAction` wraps `recordOrgCreate`. `ownerUserId` from session (anti-impersonation). Honest beta banner when `MULTI_SEAT` is off.
 - ✅ `/invite/[token]` — accept-invite landing. Three states: not signed in → redirect to /login with callbackUrl preserved (round-trips back); signed in + valid invite → calls `acceptInvite` → redirect to dashboard with success copy; signed in + invalid/expired/already-accepted/already-member → graceful per-error-code copy.
 
-**Phase F-2 deferred Phase F-3:**
-- /app/org/<slug>/* management surfaces (member directory, settings, invite UI). Today's create-org page redirects to /app/dashboard with a query param; Phase F-3 adds the org landing page.
+**Phase F-3 org-landing + invite-form shipped 2026-05-05** (this session):
+- ✅ `/app/org/[slug]` — auth-gated server component. Resolves slug → org via `loadOrgBySlug()`, checks membership via `getMemberRole()` (returns `notFound()` not 403 for non-members so we don't leak org existence to outsiders). Renders org header with role chip, member directory (highlighting "you"), pending invites section (owners + admins only), and inline invite form (owners + admins only). The create-org flow now redirects here on success.
+- ✅ `InviteMemberForm` (client) — email + role-select + invite button. On success surfaces the generated invite URL with a Copy button (clipboard.writeText). On 7-day-replace path shows "re-sent (prior link revoked)" copy.
+- ✅ `inviteMemberAction` (Server Action) — permission re-check at write time via `canManageMembers()` (defense-in-depth — render-time hide isn't enough). `invitedByUserId` from session, never input. Cheap email-shape validation. Maps writer errors to user copy.
+- ✅ Three new query helpers in `lib/orgs/queries.ts`:
+  - `loadOrgBySlug(slug)` — slug → org row
+  - `getMemberRole(orgId, userId)` — membership check (returns null on miss)
+  - `canManageMembers(orgId, userId)` — owner OR admin predicate
+
+23-assertion guard expansion (Section H) covering: 3 new query exports + role-check shape (owner OR admin), page export shape, auth gate with callbackUrl preservation, `notFound()` not `forbidden()` for non-members (anti-existence-leak invariant), `canManage`-gated invite UI surface, pending-invites loaded ONLY when canManage (anti-leak), client-component shape, action `"use server"` directive + permission re-check + anti-impersonation (`invitedByUserId` from session not input) + email-shape validation.
+
+**Phase F-2 deferred Phase F-4:**
 - changeRole / transferOwnership writers + UI
 - Permission enforcement on tool routes (org-admin can see members' usage; org-member can only see their own)
 - Email invite delivery (depends on SendGrid/Postmark — see §11 follow-on)

@@ -552,6 +552,145 @@ if (fs.existsSync(WRITERS)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section H: Phase F-3 helpers + org-landing page
+// ---------------------------------------------------------------------------
+
+if (fs.existsSync(QUERIES)) {
+  const queriesSrc = fs.readFileSync(QUERIES, "utf8");
+
+  // Three new helpers added by Phase F-3
+  assert(
+    /export\s+(?:async\s+)?function\s+loadOrgBySlug\b/.test(queriesSrc),
+    "H1: loadOrgBySlug is exported (slug → org row, used by /app/org/<slug>)",
+  );
+  assert(
+    /export\s+(?:async\s+)?function\s+getMemberRole\b/.test(queriesSrc),
+    "H2: getMemberRole is exported (org × user → role | null)",
+  );
+  assert(
+    /export\s+(?:async\s+)?function\s+canManageMembers\b/.test(queriesSrc),
+    "H3: canManageMembers is exported (permission predicate)",
+  );
+
+  // canManageMembers must accept owner + admin and reject member.
+  // Pin the role-check shape so a refactor that flips the predicate
+  // (e.g. inverts owner vs admin) is caught.
+  assert(
+    /role\s*===\s*"owner"\s*\|\|\s*role\s*===\s*"admin"/.test(queriesSrc),
+    "H4: canManageMembers accepts owner + admin, rejects member",
+  );
+}
+
+const ORG_PAGE = path.join(ROOT, "app/app/org/[slug]/page.tsx");
+const INVITE_FORM = path.join(ROOT, "app/app/org/[slug]/InviteMemberForm.tsx");
+const ORG_ACTIONS = path.join(ROOT, "app/app/org/[slug]/actions.ts");
+
+assert(fs.existsSync(ORG_PAGE), "H5: app/app/org/[slug]/page.tsx exists");
+if (fs.existsSync(ORG_PAGE)) {
+  const pageSrc = fs.readFileSync(ORG_PAGE, "utf8");
+
+  assert(
+    /export\s+default\s+async\s+function\s+OrgLandingPage/.test(pageSrc),
+    "H6: OrgLandingPage is the default export",
+  );
+  assert(
+    /export\s+const\s+dynamic\s*=\s*"force-dynamic"/.test(pageSrc),
+    "H7: dynamic = force-dynamic",
+  );
+  assert(
+    /export\s+const\s+runtime\s*=\s*"nodejs"/.test(pageSrc),
+    "H8: runtime = nodejs",
+  );
+
+  // Auth gate
+  assert(
+    /redirect\(\s*[`'"]\/login/.test(pageSrc) ||
+      /redirect\([\s\S]*?callbackUrl[\s\S]*?\/app\/org/.test(pageSrc),
+    "H9: page redirects unauthenticated users to /login with callbackUrl",
+  );
+
+  // Membership check via getMemberRole — non-members notFound() not
+  // 403 (don't leak org existence to non-members)
+  assert(
+    /getMemberRole\(/.test(pageSrc),
+    "H10: page calls getMemberRole() to check membership",
+  );
+  assert(
+    /role\s*===\s*null[\s\S]*?notFound\(\)/.test(pageSrc) ||
+      /if\s*\(\s*role\s*===\s*null\s*\)\s*notFound/.test(pageSrc),
+    "H11: page returns notFound() for non-members (don't leak org existence)",
+  );
+
+  // canManage gate for invite UI surface
+  assert(
+    /canManageMembers\(/.test(pageSrc),
+    "H12: page uses canManageMembers() to gate the invite UI",
+  );
+  // Pending-invites loaded ONLY if canManage (avoid leaking pending
+  // invites to non-admin members)
+  assert(
+    /canManage\s*\?\s*loadOrgInvites/.test(pageSrc),
+    "H13: pending invites are loaded only if canManage (avoids leaking invite list to non-admin members)",
+  );
+}
+
+assert(
+  fs.existsSync(INVITE_FORM),
+  "H14: app/app/org/[slug]/InviteMemberForm.tsx exists",
+);
+if (fs.existsSync(INVITE_FORM)) {
+  const formSrc = fs.readFileSync(INVITE_FORM, "utf8");
+  assert(
+    /^"use client"/m.test(formSrc),
+    "H15: InviteMemberForm is a client component",
+  );
+  assert(
+    /navigator\.clipboard\.writeText/.test(formSrc),
+    "H16: form copies invite URL via navigator.clipboard",
+  );
+}
+
+assert(
+  fs.existsSync(ORG_ACTIONS),
+  "H17: app/app/org/[slug]/actions.ts exists",
+);
+if (fs.existsSync(ORG_ACTIONS)) {
+  const actionsSrc = fs.readFileSync(ORG_ACTIONS, "utf8");
+
+  assert(
+    /^"use server"/m.test(actionsSrc),
+    "H18: actions.ts is a server-action module",
+  );
+  assert(
+    /export\s+async\s+function\s+inviteMemberAction\b/.test(actionsSrc),
+    "H19: inviteMemberAction is exported async",
+  );
+
+  // Permission re-check at action layer — belt-and-braces against
+  // a malicious client that bypassed the form-render gate
+  assert(
+    /canManageMembers\(/.test(actionsSrc),
+    "H20: action re-checks canManageMembers (defense-in-depth — render-time hide is not enough)",
+  );
+
+  // invitedByUserId from session, NEVER from input
+  assert(
+    /invitedByUserId:\s*userId/.test(actionsSrc),
+    "H21: invitedByUserId from session.user.id (anti-impersonation pattern)",
+  );
+  assert(
+    !/invitedByUserId:\s*input\.invitedByUserId/.test(actionsSrc),
+    "H22: action does NOT read invitedByUserId from input (would allow attribution forgery)",
+  );
+
+  // Cheap email-shape validation
+  assert(
+    /\^\[\^\\s@\]\+@\[\^\\s@\]\+\\.\[\^\\s@\]\+\$/.test(actionsSrc),
+    "H23: action validates email shape (cheap regex, catches typos)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

@@ -171,6 +171,86 @@ export async function loadOrgInvites(
 }
 
 /**
+ * Look up an organization by its URL slug. Returns null on miss.
+ * Used by /app/org/<slug> page to resolve the URL param to the
+ * underlying org row. Caller is responsible for the membership /
+ * permission check after this.
+ */
+export async function loadOrgBySlug(
+  slug: string,
+): Promise<OrganizationRow | null> {
+  if (typeof slug !== "string" || slug.length === 0) return null;
+  const rows = await db
+    .select()
+    .from(schema.organizations)
+    .where(eq(schema.organizations.slug, slug))
+    .limit(1);
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    ownerUserId: r.ownerUserId,
+    billingMode: r.billingMode,
+    createdAt: r.createdAt,
+  };
+}
+
+/**
+ * Look up the role a user has in a given org. Returns null if the
+ * user is not a member of the org. Used for permission checks at
+ * page-render time (which UI to show) and at server-action time
+ * (whether to allow the write).
+ *
+ * Pinned by CI: any caller doing a permission check MUST use this
+ * helper rather than re-querying organizationMembers inline (single
+ * source of truth on what "membership" means).
+ */
+export async function getMemberRole(
+  organizationId: string,
+  userId: string,
+): Promise<string | null> {
+  if (
+    typeof organizationId !== "string" ||
+    organizationId.length === 0 ||
+    typeof userId !== "string" ||
+    userId.length === 0
+  ) {
+    return null;
+  }
+  const rows = await db
+    .select({ role: schema.organizationMembers.role })
+    .from(schema.organizationMembers)
+    .where(
+      and(
+        eq(schema.organizationMembers.organizationId, organizationId),
+        eq(schema.organizationMembers.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (rows.length === 0) return null;
+  return rows[0]!.role;
+}
+
+/**
+ * Permission predicate: can this user invite + remove members in
+ * this org? Owner + admin can; member can't.
+ *
+ * Owner is the only role that can: transfer ownership, change
+ * billing mode, delete the org. Admin can: invite + remove
+ * members, change member roles below their own. Member can:
+ * use tools, see org-shared resources.
+ */
+export async function canManageMembers(
+  organizationId: string,
+  userId: string,
+): Promise<boolean> {
+  const role = await getMemberRole(organizationId, userId);
+  return role === "owner" || role === "admin";
+}
+
+/**
  * Look up an invite by its token. Returns null if not found OR if
  * the invite has expired. Used by the (future Phase F)
  * /invite/<token> route to validate the token before showing the
