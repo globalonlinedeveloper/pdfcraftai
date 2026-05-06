@@ -1165,6 +1165,123 @@ if (fs.existsSync(ORG_PAGE)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section L: Phase F-4 follow-on — per-member usage rollup
+// (PENDING §3b, 2026-05-05)
+//
+// New query: lib/orgs/queries.ts:loadOrgMemberUsage(orgId, days) —
+// aggregates ai_usage per member of the org over the lookback
+// window. Joins via ai_usage.user_id IN (org's member ids) since
+// ai_usage doesn't carry organization_id today (honest limitation
+// pinned in the queries module's docstring).
+//
+// New page surface: org-landing renders a "Usage — last 30 days"
+// section ONLY when canManage is truthy (members don't see what
+// other members have spent — that's owner/admin info).
+// ---------------------------------------------------------------------------
+
+if (fs.existsSync(QUERIES)) {
+  const queriesSrc = fs.readFileSync(QUERIES, "utf8");
+
+  // ----- Public surface -----
+  assert(
+    /export\s+(?:async\s+)?function\s+loadOrgMemberUsage\b/.test(
+      queriesSrc,
+    ),
+    "L1: loadOrgMemberUsage is exported",
+  );
+  assert(
+    /export\s+interface\s+OrgMemberUsageRow\b/.test(queriesSrc),
+    "L2: OrgMemberUsageRow result type is exported",
+  );
+
+  // ----- Membership-scoped: must restrict to current members only -----
+  // Pin the WHERE clause shape so a refactor that drops the
+  // membership filter doesn't quietly include ex-members or non-
+  // members in the rollup.
+  assert(
+    /inArray\(\s*schema\.aiUsage\.userId,\s*memberUserIds\s*\)/.test(
+      queriesSrc,
+    ),
+    "L3: loadOrgMemberUsage filters ai_usage by IN(memberUserIds) (membership-scoped)",
+  );
+
+  // ----- Lookback window: must use a Date cutoff, not e.g. raw days -----
+  assert(
+    /gte\(\s*schema\.aiUsage\.createdAt,\s*cutoff\s*\)/.test(queriesSrc),
+    "L4: loadOrgMemberUsage filters ai_usage by createdAt >= cutoff (lookback window)",
+  );
+
+  // ----- Aggregations: COUNT(*) calls + SUM(credits_spent) -----
+  assert(
+    /calls:\s*sql<number>`COUNT\(\*\)`/.test(queriesSrc),
+    "L5: loadOrgMemberUsage aggregates COUNT(*) as calls",
+  );
+  assert(
+    /COALESCE\(SUM\(\$\{schema\.aiUsage\.creditsSpent\}\),\s*0\)/.test(
+      queriesSrc,
+    ),
+    "L6: loadOrgMemberUsage aggregates SUM(credits_spent) with COALESCE-zero fallback",
+  );
+
+  // ----- Empty-membership early-return: if the org has no members,
+  //       don't issue an empty IN() clause (some MySQL dialects
+  //       choke on `WHERE col IN ()`) -----
+  assert(
+    /memberUserIds\.length\s*===\s*0/.test(queriesSrc),
+    "L7: loadOrgMemberUsage early-returns [] on empty membership (avoids `WHERE x IN ()` SQL)",
+  );
+
+  // ----- Honest-limitation comment: ai_usage doesn't carry org_id -----
+  // The query tags this as a known limitation in the docstring;
+  // pinning the comment ensures a future contributor doesn't
+  // accidentally remove the disclosure.
+  assert(
+    /ai_usage\s+doesn't\s+carry\s+an\s+organization_id\s+column/i.test(
+      queriesSrc,
+    ),
+    "L8: docstring discloses ai_usage's missing organization_id (honest limitation)",
+  );
+}
+
+// ----- Page wires usage rollup, owner/admin only -----
+if (fs.existsSync(ORG_PAGE)) {
+  const pageSrc = fs.readFileSync(ORG_PAGE, "utf8");
+
+  assert(
+    /import\s*\{[\s\S]*?loadOrgMemberUsage[\s\S]*?\}\s*from\s*"@\/lib\/orgs\/queries"/.test(
+      pageSrc,
+    ),
+    "L9: page imports loadOrgMemberUsage",
+  );
+
+  // Must call loadOrgMemberUsage ONLY when canManage is truthy —
+  // members don't see other members' usage. Pinned via the
+  // ternary `canManage ? loadOrgMemberUsage(...) : []` shape.
+  assert(
+    /canManage\s*\?\s*loadOrgMemberUsage\(/.test(pageSrc),
+    "L10: usage rollup is loaded only when canManage (owners + admins) — members don't see peer usage",
+  );
+
+  // The "Usage — last 30 days" section must be wrapped in a
+  // canManage gate so members never render the section
+  assert(
+    /canManage\s*\?\s*\(\s*\n[\s\S]{0,800}?Usage\s+—\s+last\s+30\s+days/.test(
+      pageSrc,
+    ),
+    "L11: 'Usage — last 30 days' section is wrapped in canManage ternary (owner/admin only render)",
+  );
+
+  // Honest disclosure of the cross-org double-counting limitation
+  // in the page copy itself
+  assert(
+    /multiple\s+organizations[\s\S]{0,200}?counted\s+in\s+each/i.test(
+      pageSrc,
+    ),
+    "L12: page surfaces the cross-org double-counting limitation (honest copy)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

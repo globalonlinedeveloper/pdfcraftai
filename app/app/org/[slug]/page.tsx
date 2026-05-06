@@ -47,6 +47,7 @@ import {
   loadOrgBySlug,
   loadOrgInvites,
   loadOrgMembers,
+  loadOrgMemberUsage,
 } from "@/lib/orgs/queries";
 import { CancelInviteButton } from "./CancelInviteButton";
 import { InviteMemberForm } from "./InviteMemberForm";
@@ -105,10 +106,27 @@ export default async function OrgLandingPage({
 
   // -- 4. Load org details --------------------------------------------
   const canManage = await canManageMembers(org.id, userId);
-  const [members, pendingInvites] = await Promise.all([
+  const [members, pendingInvites, memberUsage] = await Promise.all([
     loadOrgMembers(org.id),
     canManage ? loadOrgInvites(org.id, { includeAccepted: false }) : [],
+    // Per-member usage rollup is owners + admins only — members
+    // don't see what other members have spent.
+    canManage ? loadOrgMemberUsage(org.id, 30) : [],
   ]);
+
+  // userId → { calls, creditsSpent } lookup so the usage section can
+  // render in the same order as the member directory.
+  const usageByUserId = new Map(
+    memberUsage.map((u) => [u.userId, u]),
+  );
+  const totalOrgCredits = memberUsage.reduce(
+    (acc, u) => acc + u.creditsSpent,
+    0,
+  );
+  const totalOrgCalls = memberUsage.reduce(
+    (acc, u) => acc + u.calls,
+    0,
+  );
 
   const enabled = isMultiSeatEnabled(userId);
 
@@ -244,6 +262,83 @@ export default async function OrgLandingPage({
           ))}
         </div>
       </section>
+
+      {/* Usage rollup (last 30 days) — owners + admins only.
+          Caveat: ai_usage doesn't carry org_id today, so a user
+          who's in multiple orgs has their calls double-counted
+          across orgs. Honest disclosure in copy below. */}
+      {canManage ? (
+        <section className="card" style={{ padding: 20 }}>
+          <h2
+            style={{
+              fontSize: 16,
+              margin: "0 0 4px",
+              fontWeight: 700,
+            }}
+          >
+            Usage — last 30 days
+          </h2>
+          <p
+            className="muted"
+            style={{ fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}
+          >
+            Total: <strong>{totalOrgCalls.toLocaleString()}</strong> calls,{" "}
+            <strong>{totalOrgCredits.toLocaleString()}</strong> credits spent.
+            {memberUsage.length === 0
+              ? " No activity yet."
+              : ""}{" "}
+            Note: a member who&rsquo;s in multiple organizations has
+            their per-call usage counted in each — billing-mode
+            wire-up (Phase F-4 follow-on) is what disambiguates which
+            org actually paid.
+          </p>
+          {memberUsage.length > 0 ? (
+            <div style={{ display: "grid", gap: 6 }}>
+              {members
+                .map((m) => {
+                  const u = usageByUserId.get(m.userId);
+                  const calls = u?.calls ?? 0;
+                  const credits = u?.creditsSpent ?? 0;
+                  return { m, calls, credits };
+                })
+                .sort((a, b) => b.credits - a.credits)
+                .map(({ m, calls, credits }) => (
+                  <div
+                    key={m.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "6px 12px",
+                      borderRadius: 4,
+                      background:
+                        m.userId === userId ? "var(--bg-2)" : "transparent",
+                      border: "1px solid var(--border)",
+                      fontSize: 12,
+                    }}
+                  >
+                    <code style={{ fontSize: 11 }}>
+                      {shortUser(m.userId)}
+                    </code>
+                    <span
+                      className={credits === 0 ? "muted" : undefined}
+                      style={{
+                        fontFamily: "ui-monospace, monospace",
+                        fontSize: 11,
+                      }}
+                    >
+                      {calls.toLocaleString()} calls ·{" "}
+                      <strong>
+                        {credits.toLocaleString()}
+                      </strong>{" "}
+                      credits
+                    </span>
+                  </div>
+                ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* Pending invites — owners + admins only */}
       {canManage ? (

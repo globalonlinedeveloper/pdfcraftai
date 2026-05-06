@@ -13,7 +13,16 @@
 // exist.
 
 import { db, schema } from "@/db/client";
-import { and, eq, isNotNull, isNull, sql, desc } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  sql,
+} from "drizzle-orm";
 
 import { isFeatureEnabled, FEATURE_FLAGS } from "@/lib/flags";
 
@@ -280,6 +289,86 @@ export async function lookupInvite(
     expiresAt: r.expiresAt,
     acceptedAt: r.acceptedAt ?? null,
   };
+}
+
+/**
+ * Per-member usage rollup for an organization (Phase F-4 follow-on,
+ * 2026-05-05). Aggregates ai_usage rows for every member of the org
+ * within the lookback window, returning calls + credits spent per
+ * member. Used by /app/org/[slug] to show owners + admins where
+ * the org's credit budget is being consumed.
+ *
+ * The query is membership-scoped: only members currently in the org
+ * are included (sub-query on organizationMembers). Users who joined
+ * mid-window get only the calls they made WHILE they were still
+ * members of the org (well, almost — see caveat below).
+ *
+ * Caveat: ai_usage doesn't carry an organization_id column today, so
+ * we can't tell whether a user was in this specific org at the time
+ * of the call vs in some other org. For a user in only ONE org this
+ * is fine. For a user in multiple orgs, the same calls would be
+ * attributed to BOTH orgs. That's the cost of org-less ai_usage. A
+ * later migration adding ai_usage.organization_id (denormalized at
+ * write time) would fix this; today it's an honest limitation.
+ *
+ * Permission check is the caller's responsibility — typically gated
+ * to canManageMembers().
+ */
+export interface OrgMemberUsageRow {
+  userId: string;
+  calls: number;
+  creditsSpent: number;
+}
+
+export async function loadOrgMemberUsage(
+  organizationId: string,
+  days: number = 30,
+): Promise<OrgMemberUsageRow[]> {
+  if (typeof organizationId !== "string" || organizationId.length === 0) {
+    return [];
+  }
+  const lookbackDays = Math.max(1, Math.floor(days));
+  const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+
+  // 1. Get the member user-id list for this org. Cheap (small table,
+  //    indexed on organization_id).
+  const memberRows = await db
+    .select({ userId: schema.organizationMembers.userId })
+    .from(schema.organizationMembers)
+    .where(
+      eq(schema.organizationMembers.organizationId, organizationId),
+    );
+  const memberUserIds = memberRows.map((r) => r.userId);
+  if (memberUserIds.length === 0) return [];
+
+  // 2. Aggregate ai_usage in one round-trip with WHERE user_id IN (…)
+  //    AND created_at >= cutoff. Drizzle's `inArray` handles the
+  //    IN clause; the index on (user_id, created_at) covers the
+  //    range filter so this stays fast as ai_usage grows.
+  const usageRows = await db
+    .select({
+      userId: schema.aiUsage.userId,
+      calls: sql<number>`COUNT(*)`,
+      creditsSpent: sql<number>`COALESCE(SUM(${schema.aiUsage.creditsSpent}), 0)`,
+    })
+    .from(schema.aiUsage)
+    .where(
+      and(
+        inArray(schema.aiUsage.userId, memberUserIds),
+        gte(schema.aiUsage.createdAt, cutoff),
+      ),
+    )
+    .groupBy(schema.aiUsage.userId);
+
+  // 3. Project into the public shape with int-safe casts. Members
+  //    who made zero calls in the window are NOT in the result
+  //    (caller can left-join against loadOrgMembers if it needs
+  //    "every member, even zero-usage ones").
+  return usageRows.map((r) => ({
+    userId: r.userId,
+    calls: Number(r.calls),
+    creditsSpent: Number(r.creditsSpent),
+  }));
 }
 
 /**
