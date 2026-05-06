@@ -181,6 +181,42 @@ export async function loadGradesForCombo(
   return rows.map(toRow);
 }
 
+/**
+ * Load all grades for a specific (operation × providerId × model)
+ * combo across all golden-set fixtures. Used by Phase G-2's
+ * /admin/evals/[op]/[providerId]/[model] drilldown to surface
+ * the full grade history for a single model/op pair — useful
+ * for spotting trends across fixtures (e.g. "summarize on
+ * Claude Haiku 4.5 is degrading on long inputs").
+ *
+ * Differs from loadGradesForCombo: that takes a goldenSetId
+ * (single fixture); this takes none and includes all fixtures.
+ *
+ * Limit defaults to 200 — same ceiling as listRecentHumanGrades
+ * to keep the drilldown table renderable without pagination.
+ */
+export async function loadGradesForOpCombo(
+  operation: string,
+  providerId: string,
+  model: string,
+  limit: number = 200,
+): Promise<HumanGradeRow[]> {
+  const safeLimit = Math.max(1, Math.min(500, Math.floor(limit)));
+  const rows = await db
+    .select()
+    .from(schema.evalHumanGrades)
+    .where(
+      and(
+        eq(schema.evalHumanGrades.operation, operation),
+        eq(schema.evalHumanGrades.providerId, providerId),
+        eq(schema.evalHumanGrades.model, model),
+      ),
+    )
+    .orderBy(desc(schema.evalHumanGrades.createdAt))
+    .limit(safeLimit);
+  return rows.map(toRow);
+}
+
 function toRow(r: typeof schema.evalHumanGrades.$inferSelect): HumanGradeRow {
   return {
     id: r.id,

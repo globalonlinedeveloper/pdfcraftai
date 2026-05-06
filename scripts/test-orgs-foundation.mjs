@@ -1752,6 +1752,101 @@ if (fs.existsSync(ADMIN_USER_DETAIL)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section Q: Phase F-4 admin drill-down — /admin/orgs/[id] per-org
+// detail (PENDING §3b admin polish, 2026-05-06).
+//
+// Closes the admin observability loop: aggregate stats live at
+// /admin/orgs (top-10 by member count); per-org detail lives at
+// /admin/orgs/[id]. Read-only (admins drill in to debug or audit;
+// they don't act on the org's behalf — that requires impersonation
+// which we don't do).
+//
+// Routes by org id (stable across renames), not slug. Slug is the
+// user-facing URL identifier and could theoretically change in a
+// future migration; id is durable.
+// ---------------------------------------------------------------------------
+
+const ADMIN_ORG_DETAIL = path.join(ROOT, "app/admin/orgs/[id]/page.tsx");
+const ADMIN_ORGS_AGGREGATE = path.join(ROOT, "app/admin/orgs/page.tsx");
+
+// ----- New loadOrgById query -----
+if (fs.existsSync(QUERIES)) {
+  const queriesSrc = fs.readFileSync(QUERIES, "utf8");
+  assert(
+    /export\s+(?:async\s+)?function\s+loadOrgById\b/.test(queriesSrc),
+    "Q1: loadOrgById is exported (admin drill-down by stable id, not slug)",
+  );
+  // Filters by id column (not slug)
+  assert(
+    /loadOrgById[\s\S]*?eq\(\s*schema\.organizations\.id,\s*id\s*\)/.test(
+      queriesSrc,
+    ),
+    "Q2: loadOrgById filters by organizations.id (stable identifier)",
+  );
+}
+
+// ----- /admin/orgs/[id] page -----
+assert(
+  fs.existsSync(ADMIN_ORG_DETAIL),
+  "Q3: app/admin/orgs/[id]/page.tsx exists",
+);
+if (fs.existsSync(ADMIN_ORG_DETAIL)) {
+  const detailSrc = fs.readFileSync(ADMIN_ORG_DETAIL, "utf8");
+
+  // Admin-gated
+  assert(
+    /requireAdmin\(\)/.test(detailSrc),
+    "Q4: admin org-detail calls requireAdmin (admin gate)",
+  );
+
+  // Routes by id (params.id), not slug
+  assert(
+    /loadOrgById\(params\.id\)/.test(detailSrc),
+    "Q5: admin org-detail loads by params.id (stable identifier, not slug)",
+  );
+
+  // Returns notFound() when org missing
+  assert(
+    /if\s*\(\s*!org\s*\)\s*notFound\(\)/.test(detailSrc),
+    "Q6: admin org-detail returns notFound() when org row missing",
+  );
+
+  // Loads members WITH users (email + name surfaced)
+  assert(
+    /loadOrgMembersWithUsers\(/.test(detailSrc),
+    "Q7: admin org-detail uses loadOrgMembersWithUsers (email + name visible)",
+  );
+
+  // Loads pending invites + per-member usage rollup
+  assert(
+    /loadOrgInvites\(/.test(detailSrc) &&
+      /loadOrgMemberUsage\(/.test(detailSrc),
+    "Q8: admin org-detail loads pending invites + per-member usage rollup",
+  );
+
+  // Cross-link to /admin/users/[id] for ops drill-down
+  assert(
+    /\/admin\/users\/\$\{m\.userId\}/.test(detailSrc),
+    "Q9: per-member rows link to /admin/users/<userId> (cross-table drill-down)",
+  );
+
+  // "View as user" affordance — admin can click through to /app/org/<slug>
+  assert(
+    /\/app\/org\/\$\{org\.slug\}/.test(detailSrc),
+    "Q10: header has 'View as user' link to /app/org/<slug>",
+  );
+}
+
+// ----- Aggregate page links to drill-down -----
+if (fs.existsSync(ADMIN_ORGS_AGGREGATE)) {
+  const aggSrc = fs.readFileSync(ADMIN_ORGS_AGGREGATE, "utf8");
+  assert(
+    /\/admin\/orgs\/\$\{o\.organizationId\}/.test(aggSrc),
+    "Q11: /admin/orgs aggregate page links each top-org row to /admin/orgs/<id> (drill-down loop closed)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

@@ -424,6 +424,141 @@ if (fs.existsSync(ROUTE)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section G: Phase G-2 drilldown — /admin/evals/[op]/[providerId]/
+// [model]/page.tsx + loadGradesForOpCombo helper. PENDING §6a,
+// 2026-05-06.
+//
+// Purpose: when the parent /admin/evals page renders a (provider×
+// model×op) row red (overall average < HUMAN_GRADE_FLOOR), ops
+// needs to drill into the actual grades + grader notes to
+// understand WHY. This drilldown surface aggregates all grades
+// for the combo across all golden-set fixtures, with notes
+// expanded inline + per-fixture grouping.
+// ---------------------------------------------------------------------------
+
+const DRILLDOWN_PAGE = path.join(
+  ROOT,
+  "app/admin/evals/[op]/[providerId]/[model]/page.tsx",
+);
+
+if (fs.existsSync(QUERIES)) {
+  const queriesSrc = fs.readFileSync(QUERIES, "utf8");
+
+  assert(
+    /export\s+async\s+function\s+loadGradesForOpCombo\b/.test(queriesSrc),
+    "G1: loadGradesForOpCombo is exported (Phase G-2 drilldown helper)",
+  );
+  // Filters on operation + providerId + model. NO goldenSetId
+  // filter (that's loadGradesForCombo's purpose) — drilldown
+  // shows ALL fixtures.
+  assert(
+    /loadGradesForOpCombo[\s\S]*?eq\(\s*schema\.evalHumanGrades\.operation/.test(
+      queriesSrc,
+    ),
+    "G2: loadGradesForOpCombo filters on operation",
+  );
+  assert(
+    /loadGradesForOpCombo[\s\S]*?eq\(\s*schema\.evalHumanGrades\.providerId/.test(
+      queriesSrc,
+    ),
+    "G3: loadGradesForOpCombo filters on providerId",
+  );
+  assert(
+    /loadGradesForOpCombo[\s\S]*?eq\(\s*schema\.evalHumanGrades\.model/.test(
+      queriesSrc,
+    ),
+    "G4: loadGradesForOpCombo filters on model",
+  );
+  // Limit clamp — defensive against caller passing huge limits
+  assert(
+    /Math\.max\(\s*1,\s*Math\.min\(\s*500/.test(queriesSrc),
+    "G5: loadGradesForOpCombo clamps limit to [1, 500] (defensive against huge values)",
+  );
+}
+
+assert(
+  fs.existsSync(DRILLDOWN_PAGE),
+  "G6: app/admin/evals/[op]/[providerId]/[model]/page.tsx exists",
+);
+
+if (fs.existsSync(DRILLDOWN_PAGE)) {
+  const ddSrc = fs.readFileSync(DRILLDOWN_PAGE, "utf8");
+
+  assert(
+    /export\s+default\s+async\s+function\s+AdminEvalsDrilldownPage/.test(
+      ddSrc,
+    ),
+    "G7: drilldown page default export",
+  );
+  assert(
+    /requireAdmin\(\)/.test(ddSrc),
+    "G8: drilldown page is admin-gated via requireAdmin()",
+  );
+
+  // Calls the new helper with URL params
+  assert(
+    /loadGradesForOpCombo\(\s*op,\s*providerId,\s*model/.test(ddSrc),
+    "G9: drilldown calls loadGradesForOpCombo with the URL params",
+  );
+
+  // Defensive trim on URL params
+  assert(
+    /decodeURIComponent\(params\.op\)\.trim\(\)/.test(ddSrc),
+    "G10: drilldown defensively trims decoded URL params",
+  );
+
+  // Computes combo averages from result set (self-contained)
+  assert(
+    /grades\.reduce\(/.test(ddSrc),
+    "G11: drilldown computes combo averages from result set (self-contained — no round-trip to loadPerOpAverages)",
+  );
+
+  // Groups by goldenSetId for per-fixture rendering
+  assert(
+    /byFixture\.set\(g\.goldenSetId/.test(ddSrc),
+    "G12: drilldown groups grades by goldenSetId (per-fixture rendering for trend visibility)",
+  );
+
+  // Back link to /admin/evals
+  assert(
+    /href="\/admin\/evals"/.test(ddSrc),
+    "G13: drilldown has a back link to /admin/evals",
+  );
+
+  // Read-only invariant — no forms/POST (matches D6 on the parent page)
+  assert(
+    !/(form\s+action|action="\/api|method="post"|method="POST")/.test(ddSrc),
+    "G14: drilldown is read-only (no form/POST surface — Phase G-1 grader writes; this drilldown is observational)",
+  );
+}
+
+if (fs.existsSync(ADMIN_PAGE)) {
+  const adminSrc = fs.readFileSync(ADMIN_PAGE, "utf8");
+
+  // encodeURIComponent on each segment so dots/hyphens survive
+  // (multi-line argument formatting allowed: `encodeURIComponent(\n
+  // r.operation,\n)` and `encodeURIComponent(r.operation)` should
+  // both pass)
+  assert(
+    /encodeURIComponent\(\s*r\.operation\s*,?\s*\)/.test(adminSrc),
+    "G15: per-op table encodes r.operation in drilldown URL",
+  );
+  assert(
+    /encodeURIComponent\(\s*r\.providerId\s*,?\s*\)/.test(adminSrc),
+    "G16: per-op table encodes r.providerId in drilldown URL",
+  );
+  assert(
+    /encodeURIComponent\(\s*r\.model\s*,?\s*\)/.test(adminSrc),
+    "G17: per-op table encodes r.model in drilldown URL",
+  );
+  // Wraps the operation cell in a Link
+  assert(
+    /<Link\s+href=\{drilldownHref\}/.test(adminSrc),
+    "G18: per-op row wraps the operation cell in a Link to the drilldown URL",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

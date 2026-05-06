@@ -27,6 +27,8 @@
 // is itself useful — confirms the read path works end-to-end
 // against real prod schema.
 
+import Link from "next/link";
+
 import { requireAdmin } from "@/lib/admin/guard";
 import {
   loadAdminOrgStats,
@@ -153,7 +155,14 @@ export default async function AdminOrgsPage() {
             {stats.topOrgs.map((o, i) => (
               <tr key={o.organizationId}>
                 <Td>{i + 1}</Td>
-                <Td>{o.name}</Td>
+                <Td>
+                  <Link
+                    href={`/admin/orgs/${o.organizationId}`}
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {o.name}
+                  </Link>
+                </Td>
                 <Td>
                   <code style={{ fontSize: 12 }}>{o.slug}</code>
                 </Td>

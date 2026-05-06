@@ -33,6 +33,8 @@ import {
   loadGraderActivity,
   loadPerOpAverages,
 } from "@/lib/ai/eval/human-grades";
+import Link from "next/link";
+
 import { SectionTitle, Td, Th, tableStyle } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
@@ -170,10 +172,30 @@ export default async function AdminEvalsPage() {
             </tr>
           </thead>
           <tbody>
-            {perOp.map((r) => (
+            {perOp.map((r) => {
+              // Phase G-2 drilldown link (PENDING §6a). encodeURIComponent
+              // each segment because operation IDs sometimes contain
+              // hyphens + provider/model names can contain dots ("claude-
+              // 3-5-sonnet"); Next.js routes handle these natively but
+              // explicit encoding keeps the URL honest in the address bar.
+              const drilldownHref = `/admin/evals/${encodeURIComponent(
+                r.operation,
+              )}/${encodeURIComponent(r.providerId)}/${encodeURIComponent(
+                r.model,
+              )}`;
+              return (
               <tr key={`${r.operation}.${r.providerId}.${r.model}`}>
                 <Td>
-                  <code style={{ fontSize: 12 }}>{r.operation}</code>
+                  <Link
+                    href={drilldownHref}
+                    style={{
+                      color: "var(--accent)",
+                      textDecoration: "underline",
+                      textUnderlineOffset: 2,
+                    }}
+                  >
+                    <code style={{ fontSize: 12 }}>{r.operation}</code>
+                  </Link>
                 </Td>
                 <Td>
                   <code style={{ fontSize: 12 }}>{r.providerId}</code>
@@ -197,7 +219,8 @@ export default async function AdminEvalsPage() {
                   </span>
                 </Td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       )}

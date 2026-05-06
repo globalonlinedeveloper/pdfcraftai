@@ -271,6 +271,34 @@ export async function loadOrgBySlug(
 }
 
 /**
+ * Look up an organization by its primary id. Used by the
+ * /admin/orgs/<id> drill-down page (admin routes use the opaque
+ * id rather than the user-facing slug — id is stable across
+ * renames; slug is the user-facing URL identifier and could in
+ * principle change in a future migration).
+ */
+export async function loadOrgById(
+  id: string,
+): Promise<OrganizationRow | null> {
+  if (typeof id !== "string" || id.length === 0) return null;
+  const rows = await db
+    .select()
+    .from(schema.organizations)
+    .where(eq(schema.organizations.id, id))
+    .limit(1);
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    ownerUserId: r.ownerUserId,
+    billingMode: r.billingMode,
+    createdAt: r.createdAt,
+  };
+}
+
+/**
  * Look up the role a user has in a given org. Returns null if the
  * user is not a member of the org. Used for permission checks at
  * page-render time (which UI to show) and at server-action time
