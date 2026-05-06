@@ -178,9 +178,13 @@ The helper foundation + first consumer migration both lands ahead of the founder
 
 26-assertion guard expansion in CI Section G covering all three writers' public surface, flag-gates per function, transaction wrapping on recordOrgCreate + acceptInvite, slug-collision retry bounds, empty-slug fallback, role validation rejecting "owner" via invite, email-lowercase, all 4 acceptInvite error codes, and writers imported from the canonical query module (single source of truth on `isMultiSeatEnabled`).
 
-**Phase F deferred Phase F-2:**
-- Writer module (`recordOrgCreate`, `inviteMember`, `acceptInvite`, role-change, ownership-transfer) — all flag-gated
-- /app/org/<slug>/* management surfaces (member directory, settings, invite UI)
+**Phase F-2 user-facing surfaces shipped 2026-05-05** (this session):
+- ✅ `/app/org/new` — create-org page with form (org name + billing-mode radio: central / per_seat / credit_pool). Server Action `createOrgAction` wraps `recordOrgCreate`. `ownerUserId` from session (anti-impersonation). Honest beta banner when `MULTI_SEAT` is off.
+- ✅ `/invite/[token]` — accept-invite landing. Three states: not signed in → redirect to /login with callbackUrl preserved (round-trips back); signed in + valid invite → calls `acceptInvite` → redirect to dashboard with success copy; signed in + invalid/expired/already-accepted/already-member → graceful per-error-code copy.
+
+**Phase F-2 deferred Phase F-3:**
+- /app/org/<slug>/* management surfaces (member directory, settings, invite UI). Today's create-org page redirects to /app/dashboard with a query param; Phase F-3 adds the org landing page.
+- changeRole / transferOwnership writers + UI
 - Permission enforcement on tool routes (org-admin can see members' usage; org-member can only see their own)
 - Email invite delivery (depends on SendGrid/Postmark — see §11 follow-on)
 - Billing wire-up: `billing_mode` column has three placeholder values ("central" | "per_seat" | "credit_pool"); Phase F enforces semantics + plumbs the credit_ledger to bill against the org's payment method instead of the individual member's
@@ -437,8 +441,11 @@ Large files = higher bug density. Refactor each into composed sub-components, mo
 - ✅ `lib/ai/eval/human-grade-writer.ts` — `recordHumanGrade` (INSERT, throws DUPLICATE on the 5-col unique) + `replaceGrade` (transactional DELETE+INSERT for explicit overwrite). 1..5 Likert validation rejects out-of-range or non-integer scores (no silent clamp). HumanGradeWriteError class with codes INVALID_SCORE / EMPTY_REQUIRED / DUPLICATE / ROW_NOT_FOUND / DB_ERROR.
 - ✅ `app/api/admin/evals/grade/route.ts` — POST handler. Auth-gated by admin email allowlist (mirrors /api/admin/reconcile pattern). graderUserId taken from session.user.id, **never from body** (load-bearing anti-impersonation guard pinned in CI Section F). Error codes mapped to HTTP status: INVALID_SCORE → 400, DUPLICATE → 409 Conflict (so client can retry with replace=true), DB_ERROR → 500. Replace-flag opt-in via `body.replace === true`.
 
-**Remaining (Phase G UI):**
-- `/admin/evals/grade` interactive form: golden-set fixture + AI output side-by-side + 4 Likert sliders + notes textarea + submit. Loads existing grades from `loadGradesForCombo` so the operator sees what other graders said. POSTs to the now-shipped `/api/admin/evals/grade`. ~2 days
+**Phase G grader UI (basic) shipped 2026-05-05** (this session):
+- ✅ `/admin/evals/grade` — basic form: text inputs for fixture metadata (golden-set id / operation / provider / model / optional eval-run-id) + 4 Likert dimensions as 1-5 button rows + notes + AI output excerpt textarea (4KB cap). POSTs to the now-shipped `/api/admin/evals/grade`. On 409 Conflict (grade already exists), surfaces a "Replace prior grade" button that re-POSTs with `replace=true`.
+
+**Remaining (Phase G enhancements):**
+- Side-by-side rich UI: golden-set dropdown + auto-fetch of fixture content + "regenerate output now" button that calls `route(op,…)` and shows the live AI output for grading. ~1-2 days
 - `/admin/evals/<id>` per-grade drilldown (full output excerpt + grader notes) ~half day
 - Per-op trend chart over time on `/admin/evals` ~half day
 - Slack alerter when a (provider × model × op) overall average crosses below `HUMAN_GRADE_FLOOR` (depends on §2a Slack webhook)
