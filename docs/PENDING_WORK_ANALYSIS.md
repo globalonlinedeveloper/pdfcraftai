@@ -200,11 +200,25 @@ The helper foundation + first consumer migration both lands ahead of the founder
 - ✅ `ROLE_RANK = { owner: 3, admin: 2, member: 1 }` constant + `rankOf(role)` helper used by all three writers — single source of truth for the role hierarchy. Pinned by CI (Section I, assertion I4) so a future PR can't quietly bump member to 2 and break the strict-outrank check semantics.
 - 15-assertion guard expansion (Section I): writer exports + ROLE_RANK ordering + newRole allowlist (`'admin'|'member'` only) + self-targeting rejection + strict-outrank + authority-to-grant + owner protection on remove + self-leave allowed + transferOwnership atomicity + `owner_user_id` column verification + existing-member precondition + self-transfer rejection + former-owner-demoted-to-admin invariant.
 
+**Phase F-4 UI shipped 2026-05-05** (this session, second pass):
+- ✅ `app/app/org/[slug]/MemberActions.tsx` — per-row inline button group rendered in the member directory. Visibility computed client-side from `(actorRole, targetRole, isSelf)` using the same rank semantics the writers enforce. Buttons rendered:
+  - **"Make admin" / "Make member"** when actor strictly outranks target AND has authority to grant the proposed new role
+  - **"Remove"** when actor strictly outranks target AND target.role !== "owner"
+  - **"Transfer ownership →"** when actor.role === "owner" AND target.role !== "owner" AND !isSelf
+  - **"Leave organization"** when target === actor AND actor.role !== "owner"
+- ✅ Three Server Actions in `app/app/org/[slug]/actions.ts`:
+  - `changeRoleAction({ orgId, targetUserId, newRole })` — `byUserId` from session (anti-impersonation), `canManageMembers()` re-check at write time, `newRole` allowlist enforced (`'admin'|'member'`)
+  - `removeMemberAction({ orgId, targetUserId })` — splits on self-leave vs cross-user paths (both require membership; cross-user requires `canManageMembers()`). Returns `{ ok: true, selfLeave: boolean }` so client can `router.push("/app/dashboard")` on self-leave (org won't appear in user's list anymore) vs `router.refresh()` on cross-user.
+  - `transferOwnershipAction({ orgId, toUserId })` — owner-only via outer-layer `getMemberRole === "owner"` check; writer ALSO verifies `organizations.owner_user_id` column matches actor (column-not-role check, paranoid against inconsistent state).
+- ✅ All three actions catch `OrgWriteError` and surface `err.message` to client; unexpected errors get logged + a generic "something went wrong" copy.
+- ✅ Page wiring: `<MemberActions actorUserId={userId} actorRole={role} ... />` rendered next to each member row in the directory. The component handles its own visibility (renders `null` when actor has no available actions on this row, common for member-viewing-member).
+- 26-assertion guard expansion (Section J): writer-action wrapping pattern (3 new actions exported), anti-impersonation positive + negative pin (`byUserId: userId` AND `fromUserId: userId` AND `!byUserId: input.byUserId` AND `!fromUserId: input.fromUserId`), permission re-check at action layer (`canManageMembers` for cross-user; `role === "owner"` for transfer), `OrgWriteError` mapping, `newRole` allowlist on action surface, `selfLeave: boolean` discriminator return, MemberActions client-component shape, ROLE_RANK mirror with same ordering pin as I4, strict-outrank predicate, owner-protection on Remove, owner-only Transfer, self-leave gated on `actorRole !== "owner"`, `confirm()` before destructive actions, action imports, self-leave router.push to dashboard, page imports MemberActions + passes `actorUserId={userId}` + `actorRole={role}` from server-side session lookup.
+
 **Phase F-4 still pending:**
-- Role-change dropdown + transfer-ownership flow + settings page UI (writers shipped this turn; UI deferred to next push)
-- Permission enforcement on tool routes (org-admin can see members' usage; org-member can only see their own)
+- Permission enforcement on tool routes (org-admin can see members' usage; org-member can only see their own) — distinct deliverable, ~2-3 days
 - Email invite delivery (depends on SendGrid/Postmark — see §11 follow-on)
 - Billing wire-up: `billing_mode` column has three placeholder values ("central" | "per_seat" | "credit_pool"); Phase F enforces semantics + plumbs the credit_ledger to bill against the org's payment method instead of the individual member's
+- Org settings page (rename / change billing mode / delete org)
 - SSO via Google Workspace domain-match for auto-org-assignment (e.g. all `@acme.com` signups join the Acme org by default)
 
 **Estimate Phase F → fully live:** ~2-3 weeks (matches the original audit estimate; no shortcut found, but the foundation removes ~1 week of schema + admin-tooling work that's now done).

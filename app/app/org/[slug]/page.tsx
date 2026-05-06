@@ -19,12 +19,18 @@
 // and admins. Pinned by `canManageMembers()`. Members of the org
 // see the org details + member list but no manage UI.
 //
-// What this page does NOT do (deferred F-4)
-// -----------------------------------------
-// - Per-member role-change UI (admin can change other members' roles
-//   below their own)
-// - Remove-member UI
-// - Transfer-ownership flow
+// Phase F-4 (2026-05-05) added per-member management actions:
+//   - Per-member role-change ("Make admin" / "Make member") — wired
+//     to changeRoleAction with strict-outrank + authority-to-grant
+//     enforcement at write time.
+//   - Remove-member — wired to removeMemberAction. Self-leave path
+//     for non-owners on their own row.
+//   - Transfer-ownership flow — wired to transferOwnershipAction.
+//     Owner-only, gated by actor role check on render AND owner_user_id
+//     column verification at write time.
+//
+// What this page STILL does NOT do
+// --------------------------------
 // - Org settings (rename / change billing mode / delete org)
 // - Per-member usage stats (would query ai_usage joined on
 //   organization_members)
@@ -43,6 +49,7 @@ import {
   loadOrgMembers,
 } from "@/lib/orgs/queries";
 import { InviteMemberForm } from "./InviteMemberForm";
+import { MemberActions } from "./MemberActions";
 
 export const metadata: Metadata = {
   title: "Organization",
@@ -220,6 +227,17 @@ export default async function OrgLandingPage({
                 >
                   joined {fmtDate(m.joinedAt)}
                 </span>
+                {/* Per-member management actions (Phase F-4). The
+                    component handles its own visibility — renders
+                    null when actor has no available actions on
+                    this row. */}
+                <MemberActions
+                  orgId={org.id}
+                  actorUserId={userId}
+                  actorRole={role}
+                  targetUserId={m.userId}
+                  targetRole={m.role}
+                />
               </div>
             </div>
           ))}

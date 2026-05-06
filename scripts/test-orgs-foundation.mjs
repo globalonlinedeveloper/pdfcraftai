@@ -794,6 +794,227 @@ if (fs.existsSync(WRITERS)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section J: Phase F-4 server actions + MemberActions client surface
+// (PENDING §3b, 2026-05-05)
+//
+// Pins the wrapping pattern around the three Phase F-4 writers:
+//   - changeRoleAction       wraps lib/orgs/writers.ts:changeRole
+//   - removeMemberAction     wraps lib/orgs/writers.ts:removeMember
+//   - transferOwnershipAction wraps lib/orgs/writers.ts:transferOwnership
+//
+// Each must:
+//   1. Pull the actor's userId from session, NEVER from input
+//      (anti-impersonation — pinned via positive + negative regex).
+//   2. Re-check permissions before calling the writer (defense-in-
+//      depth; the writer also re-checks but a render-time UI hide
+//      isn't enough on its own).
+//   3. Catch OrgWriteError + map to user-facing copy.
+//
+// MemberActions client component must:
+//   - Mirror ROLE_RANK from writers.ts (no hardcoded ranks that
+//     could drift from the writer's source of truth).
+//   - Hide buttons with the same predicates the writer enforces, so
+//     we don't render an action the user can't actually take.
+//   - Confirm destructive actions (remove + transfer) before firing.
+// ---------------------------------------------------------------------------
+
+const MEMBER_ACTIONS = path.join(
+  ROOT,
+  "app/app/org/[slug]/MemberActions.tsx",
+);
+
+if (fs.existsSync(ORG_ACTIONS)) {
+  const actionsSrc = fs.readFileSync(ORG_ACTIONS, "utf8");
+
+  // ----- Three new server actions exported -----
+  assert(
+    /export\s+async\s+function\s+changeRoleAction\b/.test(actionsSrc),
+    "J1: changeRoleAction is exported async",
+  );
+  assert(
+    /export\s+async\s+function\s+removeMemberAction\b/.test(actionsSrc),
+    "J2: removeMemberAction is exported async",
+  );
+  assert(
+    /export\s+async\s+function\s+transferOwnershipAction\b/.test(actionsSrc),
+    "J3: transferOwnershipAction is exported async",
+  );
+
+  // ----- Anti-impersonation: actor identity from session -----
+  // changeRole + removeMember writers take byUserId; transferOwnership
+  // takes fromUserId. Both must come from session.user.id, never from
+  // input.
+  assert(
+    /byUserId:\s*userId/.test(actionsSrc),
+    "J4: changeRole + removeMember actions pass byUserId from session userId (anti-impersonation)",
+  );
+  assert(
+    /fromUserId:\s*userId/.test(actionsSrc),
+    "J5: transferOwnership action passes fromUserId from session userId (anti-impersonation)",
+  );
+
+  // Negative anti-impersonation checks: input must NOT carry actor id
+  assert(
+    !/byUserId:\s*input\.byUserId/.test(actionsSrc),
+    "J6: actions do NOT read byUserId from input (would allow actor-id forgery)",
+  );
+  assert(
+    !/fromUserId:\s*input\.fromUserId/.test(actionsSrc),
+    "J7: transferOwnershipAction does NOT read fromUserId from input (would allow ownership-transfer forgery)",
+  );
+
+  // ----- Permission re-checks at action layer -----
+  // changeRoleAction + removeMemberAction (cross-user path) check
+  // canManageMembers(). Self-leave path falls through to the writer.
+  assert(
+    /canManageMembers\([\s\S]*?canManageMembers\(/.test(actionsSrc),
+    "J8: changeRoleAction + removeMemberAction both call canManageMembers (defense-in-depth)",
+  );
+
+  // transferOwnershipAction owner-only check via getMemberRole
+  assert(
+    /role\s*!==\s*"owner"/.test(actionsSrc),
+    "J9: transferOwnershipAction rejects callers whose role !== 'owner' (outer-layer check)",
+  );
+
+  // ----- Error mapping: OrgWriteError → user-facing copy -----
+  assert(
+    /err\s+instanceof\s+OrgWriteError/.test(actionsSrc),
+    "J10: actions catch OrgWriteError and surface err.message to the client",
+  );
+
+  // ----- newRole allowlist on the action surface -----
+  assert(
+    /input\.newRole\s*!==\s*"admin"\s*&&\s*input\.newRole\s*!==\s*"member"/.test(
+      actionsSrc,
+    ),
+    "J11: changeRoleAction rejects newRole !== 'admin' && !== 'member' (no owner-promotion via this path)",
+  );
+
+  // ----- Self-leave path returns a discriminator -----
+  // selfLeave: boolean lets the client decide whether to refresh or
+  // navigate away (the org won't appear in the user's list anymore).
+  assert(
+    /selfLeave:\s*isSelfLeave/.test(actionsSrc),
+    "J12: removeMemberAction returns selfLeave:boolean so client can decide router.push vs router.refresh",
+  );
+}
+
+assert(
+  fs.existsSync(MEMBER_ACTIONS),
+  "J13: app/app/org/[slug]/MemberActions.tsx exists",
+);
+
+if (fs.existsSync(MEMBER_ACTIONS)) {
+  const maSrc = fs.readFileSync(MEMBER_ACTIONS, "utf8");
+
+  // ----- Client component -----
+  assert(
+    /^"use client"/m.test(maSrc),
+    "J14: MemberActions is a client component (uses useTransition + router.refresh)",
+  );
+
+  // ----- ROLE_RANK mirrors writer's source of truth -----
+  // Same ordering pin as I4 so client-side hides match server-side
+  // rejects. A regression that flipped them would let the UI render
+  // a button that the action then rejects with a confusing error.
+  assert(
+    /owner:\s*3,?\s*\n\s*admin:\s*2,?\s*\n\s*member:\s*1/.test(maSrc),
+    "J15: MemberActions mirrors ROLE_RANK (owner=3 > admin=2 > member=1) — must match writer's source of truth",
+  );
+
+  // ----- Strict-outrank predicate for cross-user actions -----
+  assert(
+    /actorRank\s*>\s*targetRank/.test(maSrc),
+    "J16: MemberActions hides cross-user actions when actorRank <= targetRank (matches writer's strict-outrank check)",
+  );
+
+  // ----- Owner protection on Remove button -----
+  assert(
+    /targetRole\s*!==\s*"owner"/.test(maSrc),
+    "J17: MemberActions hides 'Remove' when target.role === 'owner' (matches writer's owner-protection)",
+  );
+
+  // ----- Owner-only Transfer button -----
+  assert(
+    /actorRole\s*===\s*"owner"/.test(maSrc),
+    "J18: MemberActions hides 'Transfer ownership' for non-owners (matches writer's owner-only check)",
+  );
+
+  // ----- Self-leave button gated on actorRole !== owner -----
+  // Owner can't self-leave (writer rejects). UI must hide the button
+  // for owners so they don't get a confusing error after click.
+  assert(
+    /isSelf\s*&&\s*actorRole\s*!==\s*"owner"/.test(maSrc),
+    "J19: MemberActions hides 'Leave organization' for the owner viewing themselves (must transfer first)",
+  );
+
+  // ----- Destructive action confirmation -----
+  // confirm() before remove + transfer so a stray click can't drop
+  // a member or hand over the org.
+  assert(
+    /confirm\(/.test(maSrc),
+    "J20: MemberActions confirms destructive actions (remove + transfer) before firing",
+  );
+
+  // ----- Wires through the three new actions -----
+  assert(
+    /import\s*\{[^}]*changeRoleAction[^}]*\}\s*from\s*"\.\/actions"/.test(
+      maSrc,
+    ) ||
+      /import\s*\{[\s\S]*?changeRoleAction[\s\S]*?\}\s*from\s*"\.\/actions"/.test(
+        maSrc,
+      ),
+    "J21: MemberActions imports changeRoleAction from ./actions",
+  );
+  assert(
+    /import\s*\{[^}]*removeMemberAction[^}]*\}\s*from\s*"\.\/actions"/.test(
+      maSrc,
+    ) ||
+      /import\s*\{[\s\S]*?removeMemberAction[\s\S]*?\}\s*from\s*"\.\/actions"/.test(
+        maSrc,
+      ),
+    "J22: MemberActions imports removeMemberAction from ./actions",
+  );
+  assert(
+    /import\s*\{[^}]*transferOwnershipAction[^}]*\}\s*from\s*"\.\/actions"/.test(
+      maSrc,
+    ) ||
+      /import\s*\{[\s\S]*?transferOwnershipAction[\s\S]*?\}\s*from\s*"\.\/actions"/.test(
+        maSrc,
+      ),
+    "J23: MemberActions imports transferOwnershipAction from ./actions",
+  );
+
+  // ----- Self-leave navigates away (org won't appear in dashboard) -----
+  assert(
+    /result\.selfLeave[\s\S]*?router\.push/.test(maSrc),
+    "J24: MemberActions navigates to dashboard on selfLeave success (org disappeared from user's list)",
+  );
+}
+
+// ----- Page wires MemberActions into the member directory -----
+if (fs.existsSync(ORG_PAGE)) {
+  const pageSrc = fs.readFileSync(ORG_PAGE, "utf8");
+
+  assert(
+    /import\s*\{\s*MemberActions\s*\}\s*from\s*"\.\/MemberActions"/.test(
+      pageSrc,
+    ),
+    "J25: page imports MemberActions",
+  );
+  assert(
+    /<MemberActions[\s\S]*?actorUserId=\{userId\}[\s\S]*?actorRole=\{role\}/.test(
+      pageSrc,
+    ) ||
+      /<MemberActions[\s\S]*?actorRole=\{role\}[\s\S]*?actorUserId=\{userId\}/.test(
+        pageSrc,
+      ),
+    "J26: page passes actorUserId + actorRole from server-side session/role lookup (anti-impersonation pattern preserved at render layer)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 
