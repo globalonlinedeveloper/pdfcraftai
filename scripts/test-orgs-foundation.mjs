@@ -1847,6 +1847,60 @@ if (fs.existsSync(ADMIN_ORGS_AGGREGATE)) {
 }
 
 // ---------------------------------------------------------------------------
+// Section R: settings page Details metadata block (PENDING §3b
+// polish, 2026-05-06)
+//
+// Owners need org metadata visible (id, slug, created, member
+// count, billing mode) for support emails + accounting + confirming
+// what billing mode they're on. Honest disclosure that billing
+// mode is a metadata column TODAY (credit_ledger routing pending
+// Phase F-4 follow-on).
+// ---------------------------------------------------------------------------
+
+if (fs.existsSync(SETTINGS_PAGE)) {
+  const settingsSrc = fs.readFileSync(SETTINGS_PAGE, "utf8");
+
+  // Loads member list for the count
+  assert(
+    /loadOrgMembers\(org\.id\)/.test(settingsSrc),
+    "R1: settings page loads loadOrgMembers for member-count display",
+  );
+
+  // Renders org id (for support emails)
+  assert(
+    /Organization id/.test(settingsSrc) && /\{org\.id\}/.test(settingsSrc),
+    "R2: settings Details renders organization id (support-email reference)",
+  );
+
+  // Member count display with singular/plural
+  assert(
+    /memberCount\s*===\s*1\s*\?\s*"member"\s*:\s*"members"/.test(
+      settingsSrc,
+    ),
+    "R3: member count uses singular/plural copy correctly",
+  );
+
+  // Billing-mode mapping renders human-readable description
+  assert(
+    /billingModeLabel:\s*Record<string,\s*string>/.test(settingsSrc),
+    "R4: billing-mode mapping is typed Record<string, string>",
+  );
+  assert(
+    /central:\s*"[^"]*owner pays/i.test(settingsSrc),
+    "R5: central mode description mentions owner pays + shared pool",
+  );
+
+  // Honest disclosure that billing routing isn't wired yet
+  assert(
+    /credit_ledger\s+routing[\s\S]{0,200}?Phase F-4 follow-on/i.test(
+      settingsSrc,
+    ) ||
+      /billing\s+mode\s+is\s+a\s+metadata\s+column/i.test(settingsSrc),
+    "R6: settings page discloses that billing mode is metadata-only today (honest copy — owners aren't surprised when per_seat orgs still bill personal balance)",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 

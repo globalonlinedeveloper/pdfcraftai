@@ -28,6 +28,7 @@ import {
   getMemberRole,
   isMultiSeatEnabled,
   loadOrgBySlug,
+  loadOrgMembers,
 } from "@/lib/orgs/queries";
 import { DeleteOrgForm } from "./DeleteOrgForm";
 import { RenameOrgForm } from "./RenameOrgForm";
@@ -74,6 +75,27 @@ export default async function OrgSettingsPage({
 
   const enabled = isMultiSeatEnabled(userId);
 
+  // Member count — used by the Details block below. Cheap query
+  // (small table, indexed on organization_id). Owners need this
+  // for support emails ("we have 8 seats"); it's always-relevant
+  // metadata for any settings/lifecycle action.
+  const members = await loadOrgMembers(org.id);
+  const memberCount = members.length;
+
+  // Human-readable description of the billing mode. The 3 values
+  // ("central"|"per_seat"|"credit_pool") are placeholders today —
+  // the credit_ledger doesn't yet route by mode (Phase F-4 billing
+  // wire-up). Surfacing the mode + the honest "not yet enforced"
+  // copy here so owners aren't surprised if their per-seat org
+  // still bills against their personal balance.
+  const billingModeLabel: Record<string, string> = {
+    central: "Central — owner pays, members consume from a shared pool",
+    per_seat: "Per seat — each member has their own pool",
+    credit_pool: "Shared pool — pooled balance with per-member tracking",
+  };
+  const billingModeDescription =
+    billingModeLabel[org.billingMode] ?? org.billingMode;
+
   return (
     <div
       style={{
@@ -113,6 +135,77 @@ export default async function OrgSettingsPage({
           flow is not yet exposed publicly.
         </div>
       ) : null}
+
+      {/* Details — read-only metadata. Owners need this for
+          support emails, accounting reconciliation, and to
+          confirm the billing mode they're on. */}
+      <section className="card" style={{ padding: 20 }}>
+        <h2
+          style={{
+            fontSize: 16,
+            margin: "0 0 12px",
+            fontWeight: 700,
+          }}
+        >
+          Details
+        </h2>
+        <dl
+          style={{
+            display: "grid",
+            gridTemplateColumns: "max-content 1fr",
+            gap: "8px 16px",
+            margin: 0,
+            fontSize: 13,
+            lineHeight: 1.5,
+          }}
+        >
+          <dt className="muted">Organization id</dt>
+          <dd style={{ margin: 0 }}>
+            <code style={{ fontSize: 12 }}>{org.id}</code>
+          </dd>
+
+          <dt className="muted">URL slug</dt>
+          <dd style={{ margin: 0 }}>
+            <code style={{ fontSize: 12 }}>/{org.slug}</code>
+          </dd>
+
+          <dt className="muted">Created</dt>
+          <dd style={{ margin: 0 }}>
+            {org.createdAt.toISOString().slice(0, 10)}
+          </dd>
+
+          <dt className="muted">Members</dt>
+          <dd style={{ margin: 0 }}>
+            {memberCount} {memberCount === 1 ? "member" : "members"}
+          </dd>
+
+          <dt className="muted">Billing mode</dt>
+          <dd style={{ margin: 0 }}>
+            <code style={{ fontSize: 12 }}>{org.billingMode}</code>
+            <span
+              className="muted"
+              style={{ fontSize: 12, marginLeft: 8 }}
+            >
+              — {billingModeDescription}
+            </span>
+            <p
+              className="muted"
+              style={{
+                fontSize: 11,
+                marginTop: 6,
+                lineHeight: 1.4,
+                fontStyle: "italic",
+              }}
+            >
+              Note: today the billing mode is a metadata column;
+              credit_ledger routing against the org&rsquo;s payment
+              method is Phase F-4 follow-on work. Members in any
+              billing mode currently bill against their own
+              balance.
+            </p>
+          </dd>
+        </dl>
+      </section>
 
       {/* Rename */}
       <section className="card" style={{ padding: 20 }}>
