@@ -1749,6 +1749,18 @@ if (fs.existsSync(ADMIN_USER_DETAIL)) {
     /entry\.org\.billingMode/.test(detailSrc),
     "P5: section renders billing_mode column for ops segmentation",
   );
+
+  // Phase F-4 polish (edb7d8d): loadOrgsForUser now returns
+  // memberCount; admin user-detail surfaces it for ops debugging
+  // "is this an org of one or a team of 20"
+  assert(
+    /<Th>Members<\/Th>/.test(detailSrc),
+    "P6: admin user-detail Organizations table has Members column header",
+  );
+  assert(
+    /entry\.memberCount/.test(detailSrc),
+    "P7: admin user-detail Organizations table renders entry.memberCount",
+  );
 }
 
 // ---------------------------------------------------------------------------

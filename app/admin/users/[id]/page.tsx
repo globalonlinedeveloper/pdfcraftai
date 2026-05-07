@@ -217,6 +217,7 @@ export default async function AdminUserDetailPage({
                   <Th>Slug</Th>
                   <Th>Role</Th>
                   <Th>Billing mode</Th>
+                  <Th>Members</Th>
                   <Th>Joined</Th>
                 </tr>
               </thead>
@@ -257,6 +258,7 @@ export default async function AdminUserDetailPage({
                     <Td>
                       <code style={{ fontSize: 11 }}>{entry.org.billingMode}</code>
                     </Td>
+                    <Td>{entry.memberCount}</Td>
                     <Td>{formatUtcDate(entry.org.createdAt)}</Td>
                   </tr>
                 ))}
