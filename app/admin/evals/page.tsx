@@ -92,6 +92,29 @@ export default async function AdminEvalsPage() {
           (provider × model × op) combo renders red. Recalibrate
           after 2-3 weeks of grading data accumulates.
         </p>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            marginTop: 14,
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            href="/admin/evals/grade"
+            className="btn btn-primary"
+            style={{ fontSize: 13 }}
+          >
+            Enter human grade →
+          </Link>
+          <Link
+            href="/admin/evals/grade-pairwise"
+            className="btn btn-outline"
+            style={{ fontSize: 13 }}
+          >
+            Side-by-side pairwise grader →
+          </Link>
+        </div>
       </header>
 
       {/* Summary cards */}

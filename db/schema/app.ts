@@ -1319,6 +1319,61 @@ export const evalHumanGrades = mysqlTable(
   }),
 );
 
+// Phase G-2 final (2026-05-07): pairwise comparison grader.
+// Grader compares TWO outputs (from different provider×model
+// configs) on the same op + fixture, picks a preference, and
+// optionally scores each absolutely. left_*/right_* are
+// canonically ordered alphabetically by (provider_id, model) at
+// write time so (A vs B) and (B vs A) end up as the same row.
+// Migration 0028. Pairs with eval_human_grades; both flows can
+// be active simultaneously.
+export const evalPairwiseGrades = mysqlTable(
+  "eval_pairwise_grades",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    goldenSetId: varchar("golden_set_id", { length: 255 }).notNull(),
+    op: varchar("op", { length: 64 }).notNull(),
+    leftProviderId: varchar("left_provider_id", { length: 64 }).notNull(),
+    leftModel: varchar("left_model", { length: 255 }).notNull(),
+    rightProviderId: varchar("right_provider_id", { length: 64 }).notNull(),
+    rightModel: varchar("right_model", { length: 255 }).notNull(),
+    graderUserId: varchar("grader_user_id", { length: 255 }).notNull(),
+    // Preference enum: "left"|"right"|"tie"|"both_bad" (varchar
+    // for forward-compat; writer enforces the allowlist).
+    preference: varchar("preference", { length: 16 }).notNull(),
+    leftOverallScore: tinyint("left_overall_score", { unsigned: true }),
+    rightOverallScore: tinyint("right_overall_score", { unsigned: true }),
+    notes: text("notes"),
+    leftOutputExcerpt: text("left_output_excerpt"),
+    rightOutputExcerpt: text("right_output_excerpt"),
+    createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // One pairwise grade per (fixture × pair × op × grader).
+    // Replace path handles intentional re-grading.
+    uniquePair: uniqueIndex("eval_pairwise_grades_unique").on(
+      t.goldenSetId,
+      t.leftProviderId,
+      t.leftModel,
+      t.rightProviderId,
+      t.rightModel,
+      t.op,
+      t.graderUserId,
+    ),
+    pairIdx: index("eval_pairwise_grades_pair_idx").on(
+      t.op,
+      t.leftProviderId,
+      t.leftModel,
+      t.rightProviderId,
+      t.rightModel,
+    ),
+    graderIdx: index("eval_pairwise_grades_grader_idx").on(
+      t.graderUserId,
+      t.createdAt,
+    ),
+  }),
+);
+
 // --- Phase 6.3 Agent tables — REMOVED on 2026-04-20 ---------------------
 //
 // `agent_runs` + `agent_run_steps` powered the authenticated /app/studio
