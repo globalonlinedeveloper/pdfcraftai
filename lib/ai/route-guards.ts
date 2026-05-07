@@ -48,6 +48,11 @@
 
 import "server-only";
 
+import {
+  EmailNotVerifiedError,
+  assertEmailVerified,
+} from "@/lib/auth/email-verification";
+
 import { OpKilledError, assertOpNotKilled } from "./kill-switches";
 import {
   DailyCostCeilingExceededError,
@@ -73,6 +78,11 @@ export async function guardAiRoute(
   try {
     assertOpNotKilled(op);
     await assertWithinDailyCap(userId);
+    // 2026-05-06 — third pre-spend check (foreshadowed in this
+    // file's header comment). Gates AI ops on email verification.
+    // Behind EMAIL_VERIFICATION_GATE env flag — graceful staging
+    // rollout. Throws EmailNotVerifiedError; caught below.
+    await assertEmailVerified(userId);
     return null;
   } catch (err) {
     if (err instanceof OpKilledError) {
@@ -116,6 +126,24 @@ export async function guardAiRoute(
             "Content-Type": "application/json",
             "Retry-After": String(err.retryAfterSeconds),
           },
+        },
+      );
+    }
+    if (err instanceof EmailNotVerifiedError) {
+      // 403 with structured body so the client can render an inline
+      // "verify your email" prompt instead of a generic auth error.
+      // No Retry-After — the gate clears the moment users.email_verified
+      // gets set, which is action-driven (user click) not time-based.
+      return new Response(
+        JSON.stringify({
+          error: "email_not_verified",
+          detail:
+            "Verify your email address to use AI tools. Check your inbox or click 'Resend verification' on the dashboard.",
+          recoveryUrl: "/app/dashboard",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
         },
       );
     }

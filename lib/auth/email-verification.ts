@@ -180,3 +180,156 @@ export async function sendVerificationEmail(
     html,
   });
 }
+
+// ---------------------------------------------------------------------------
+// 2026-05-06 — Honest gaps in the flow: resend + verification gate
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when an AI op route is called by a user whose
+ * users.email_verified is NULL. Caught by lib/ai/route-guards.ts:
+ * guardAiRoute and converted to a 403 response with the same shape
+ * as the other gates in that helper (op_killed, daily_cap_exceeded).
+ *
+ * Existence of this class — not just an error string — is the
+ * extension point that lib/ai/route-guards.ts foreshadowed at line
+ * 12-15: "if we add a third pre-spend check later — e.g. a TOS-
+ * acceptance gate for EU users per Task #24 — we add it here and
+ * every handler gets it". Same shape for email verification.
+ */
+export class EmailNotVerifiedError extends Error {
+  constructor() {
+    super("email_not_verified");
+    this.name = "EmailNotVerifiedError";
+  }
+}
+
+/**
+ * Throws EmailNotVerifiedError if the given user's
+ * users.email_verified is NULL. Honest semantics:
+ *   - Throws on null email_verified → AI op blocked
+ *   - Returns silently when email_verified is set → AI op allowed
+ *   - Returns silently when the env flag is off (graceful staging
+ *     rollout — operators can disable the gate while monitoring
+ *     for false positives)
+ *
+ * No-ops when the user record is missing (defensive — auth already
+ * gated, but if a stale session somehow points at a deleted user
+ * the route's outer auth check should have caught it; we don't
+ * compound by adding a "user not found" rejection here).
+ */
+export async function assertEmailVerified(userId: string): Promise<void> {
+  // Feature flag — operators can disable the gate via env var while
+  // they monitor for false positives (e.g. SMTP outage backlogs
+  // verification emails and lots of users hit the gate at once).
+  // Default OFF — explicit opt-in. Set EMAIL_VERIFICATION_GATE=on
+  // in production once the resend UI is shipped + monitored for a
+  // week.
+  if (process.env.EMAIL_VERIFICATION_GATE !== "on") {
+    return;
+  }
+
+  const [row] = await db
+    .select({ emailVerified: schema.users.emailVerified })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
+  // Missing user row → defer to outer auth (don't compound errors).
+  if (!row) return;
+
+  if (row.emailVerified === null) {
+    throw new EmailNotVerifiedError();
+  }
+}
+
+/**
+ * Resend the verification email. Used by the dashboard "Resend
+ * verification" banner when:
+ *   - The user's original email was lost in the inbox
+ *   - The 24h token expired before they clicked
+ *   - The original SMTP send failed (the fire-and-forget path in
+ *     registerAction logs but doesn't block signup; this is the
+ *     recovery path)
+ *
+ * Honest no-op semantics:
+ *   - If the user is already verified, returns { ok: true,
+ *     alreadyVerified: true } without sending — saves the user the
+ *     "did this work?" loop when they click resend after already
+ *     verifying.
+ *   - If the user record is missing (stale session), returns
+ *     { ok: false }. Caller surfaces a generic error.
+ *
+ * Rate-limit: 1 resend per 60s per user, enforced by checking the
+ * existing token's age (createVerificationToken deletes the old
+ * row + creates a new one with a fresh 24h expiry; we infer "last
+ * resend time" from the gap between the new expiry and 24h).
+ *
+ * Returns:
+ *   - { ok: true, alreadyVerified: true }  → user is already verified
+ *   - { ok: true, sent: true }              → email queued
+ *   - { ok: false, error: "rate_limited" }  → too soon since last send
+ *   - { ok: false, error: "user_not_found" }
+ *   - { ok: false, error: "smtp_failed" }   → SMTP returned an error
+ */
+const RESEND_THROTTLE_MS = 60 * 1000; // 1 minute
+
+export async function resendVerificationEmail(
+  userId: string,
+): Promise<
+  | { ok: true; alreadyVerified: true }
+  | { ok: true; sent: true }
+  | { ok: false; error: "rate_limited" | "user_not_found" | "smtp_failed" }
+> {
+  if (typeof userId !== "string" || userId.length === 0) {
+    return { ok: false, error: "user_not_found" };
+  }
+
+  // 1. Look up the user — need email + emailVerified state
+  const [user] = await db
+    .select({
+      id: schema.users.id,
+      email: schema.users.email,
+      emailVerified: schema.users.emailVerified,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!user) return { ok: false, error: "user_not_found" };
+  if (user.emailVerified !== null) {
+    return { ok: true, alreadyVerified: true };
+  }
+
+  // 2. Rate-limit: check the existing token's expiry. If a token
+  //    was created < 60s ago, its expiry is > (24h - 60s) from now.
+  //    Use that to detect "too soon" without adding a new column.
+  const [existing] = await db
+    .select({ expires: schema.verificationTokens.expires })
+    .from(schema.verificationTokens)
+    .where(eq(schema.verificationTokens.identifier, userId))
+    .limit(1);
+  if (existing) {
+    const ageMs = TOKEN_TTL_MS - (existing.expires.getTime() - Date.now());
+    if (ageMs < RESEND_THROTTLE_MS && ageMs >= 0) {
+      return { ok: false, error: "rate_limited" };
+    }
+  }
+
+  // 3. Fire the resend. createVerificationToken (called inside
+  //    sendVerificationEmail) deletes the old row + inserts new one,
+  //    so the old token becomes invalid the moment we send the new
+  //    email — prevents a "two valid tokens" window.
+  const result = await sendVerificationEmail(user.email, user.id);
+  if (!result.ok) {
+    console.error(
+      JSON.stringify({
+        event: "resend_verification_smtp_failed",
+        userId,
+        error: result.error ?? "unknown",
+        ts: new Date().toISOString(),
+      }),
+    );
+    return { ok: false, error: "smtp_failed" };
+  }
+  return { ok: true, sent: true };
+}

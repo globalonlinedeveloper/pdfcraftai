@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { eq, desc } from "drizzle-orm";
 import { I } from "@/components/icons/Icons";
+import { UnverifiedEmailBanner } from "@/components/auth/UnverifiedEmailBanner";
 import { getSpendSummary } from "@/lib/user/queries";
 import { formatCredits, formatCount } from "@/lib/user/format";
 import {
@@ -24,6 +25,11 @@ export default async function DashboardPage() {
   const userId = session?.user ? (session.user as { id?: string }).id : undefined;
 
   let balance = 0;
+  // PENDING auth-flow gap #4 (2026-05-06) — surface unverified-email
+  // state on the dashboard so users can recover from SMTP-fail-open
+  // (verification email never arrived) AND from 24h token expiry.
+  // The banner POSTs to /api/auth/resend-verification.
+  let unverifiedEmail: string | null = null;
   let recent: Array<{ id: string; name: string; createdAt: Date }> = [];
   let spend = {
     last7dCredits: 0,
@@ -44,6 +50,19 @@ export default async function DashboardPage() {
       .where(eq(schema.credits.userId, userId))
       .limit(1);
     balance = creditRow?.balance ?? 0;
+
+    // Email-verification state for the banner. One row, indexed.
+    const [verifyRow] = await db
+      .select({
+        email: schema.users.email,
+        emailVerified: schema.users.emailVerified,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+    if (verifyRow && verifyRow.emailVerified === null) {
+      unverifiedEmail = verifyRow.email;
+    }
 
     recent = await db
       .select({
@@ -70,6 +89,13 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28, maxWidth: 960 }}>
+      {/* Unverified-email banner — gap #2 (resend) + gap #4 (SMTP
+          fail recovery surface). Render-time gate ensures the
+          banner is hidden the moment users.email_verified flips
+          (no client-side state to keep in sync). */}
+      {unverifiedEmail ? (
+        <UnverifiedEmailBanner email={unverifiedEmail} />
+      ) : null}
       <header>
         <div className="eyebrow" style={{ marginBottom: 6 }}>DASHBOARD</div>
         <h1 style={{ fontSize: 32, letterSpacing: "-0.025em" }}>
