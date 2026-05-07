@@ -112,8 +112,9 @@ export function isMultiSeatEnabled(userId?: string | null): boolean {
  * second query to know "am I an owner / admin / member here".
  */
 export async function loadOrgsForUser(userId: string): Promise<
-  Array<{ org: OrganizationRow; role: string }>
+  Array<{ org: OrganizationRow; role: string; memberCount: number }>
 > {
+  // 1. List the orgs the user belongs to (with their role)
   const rows = await db
     .select({
       orgId: schema.organizations.id,
@@ -130,6 +131,27 @@ export async function loadOrgsForUser(userId: string): Promise<
       eq(schema.organizations.id, schema.organizationMembers.organizationId),
     )
     .where(eq(schema.organizationMembers.userId, userId));
+
+  // 2. Member counts for each org. Single second query that
+  //    aggregates COUNT(*) per organization_id, scoped to the
+  //    org-ids returned in step 1. Avoids N+1 (one query per
+  //    org). Most users belong to ≤1 orgs so the IN-clause
+  //    stays tiny.
+  const orgIds = rows.map((r) => r.orgId);
+  const counts = orgIds.length > 0
+    ? await db
+        .select({
+          organizationId: schema.organizationMembers.organizationId,
+          memberCount: sql<number>`COUNT(*)`,
+        })
+        .from(schema.organizationMembers)
+        .where(inArray(schema.organizationMembers.organizationId, orgIds))
+        .groupBy(schema.organizationMembers.organizationId)
+    : [];
+  const countByOrgId = new Map(
+    counts.map((c) => [c.organizationId, Number(c.memberCount)]),
+  );
+
   return rows.map((r) => ({
     org: {
       id: r.orgId,
@@ -140,6 +162,7 @@ export async function loadOrgsForUser(userId: string): Promise<
       createdAt: r.createdAt,
     },
     role: r.role,
+    memberCount: countByOrgId.get(r.orgId) ?? 0,
   }));
 }
 

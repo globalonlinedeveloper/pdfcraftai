@@ -31,7 +31,7 @@ export default async function DashboardPage() {
     last7dCalls: 0,
     last30dCalls: 0,
   };
-  let orgs: Array<{ org: OrganizationRow; role: string }> = [];
+  let orgs: Array<{ org: OrganizationRow; role: string; memberCount: number }> = [];
   // Multi-seat flag is checked outside the userId-guard so the section
   // gate (render-or-not) doesn't depend on whether the user is signed
   // in (signed-out users hit auth gate before reaching here anyway).
@@ -214,6 +214,10 @@ export default async function DashboardPage() {
                     </div>
                     <div className="subtle" style={{ fontSize: 12 }}>
                       <code style={{ fontSize: 11 }}>{entry.org.slug}</code>
+                      <span style={{ marginLeft: 8 }}>
+                        · {entry.memberCount}{" "}
+                        {entry.memberCount === 1 ? "member" : "members"}
+                      </span>
                     </div>
                   </div>
                   <span
