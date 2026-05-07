@@ -1295,21 +1295,14 @@ const SUITES = [
     name: "referrals-foundation",
     file: "test-referrals-foundation.mjs",
   },
-  // 2026-05-05 (PENDING §3b foundation) — multi-seat / organizations
-  // storage + helper + admin viewer guard. Three tables created in
-  // migration 0025 (organizations + organization_members +
-  // organization_invites). Pin: slug-unique, members-(org,user)-
-  // unique, invites-token-unique, all required columns, Drizzle
-  // schema parity, helper public surface (slugify + generateInviteToken
-  // + 5 read queries + isMultiSeatEnabled), MULTI_SEAT flag pin
-  // (from §4d FEATURE_FLAGS), admin viewer read-only invariant,
-  // expired-invite filter in lookupInvite. 91 assertions. Behind
-  // MULTI_SEAT flag — Phase F flips it + adds writer module +
-  // signup-flow / billing wire-up.
-  {
-    name: "orgs-foundation",
-    file: "test-orgs-foundation.mjs",
-  },
+  // 2026-05-07 — multi-seat / organizations feature REMOVED. Three
+  // tables (organizations, organization_members, organization_invites)
+  // dropped via migration 0029. Library, pages, components, server
+  // actions, MULTI_SEAT flag, and the test-orgs-foundation guard
+  // were all deleted at founder request — feature was scoped behind
+  // the flag but never activated for users, and is not on the
+  // current product roadmap. The aggregator-coverage guard's allowlist
+  // was reduced accordingly.
   // 2026-05-05 (PENDING §6a foundation) — human eval grading layer.
   // Sits beside the automated eval infra from Phase A Task #14
   // (golden-set + rubric + runner + ai_eval_runs). New table

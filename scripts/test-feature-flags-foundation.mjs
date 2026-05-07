@@ -192,8 +192,8 @@ if (typeof envKeyFn === "function") {
     "B3: envKey('annual_plan', 'OVERRIDE') === 'FEATURE_ANNUAL_PLAN_OVERRIDE'",
   );
   assert(
-    envKeyFn("multi_seat", "PERCENT") === "FEATURE_MULTI_SEAT_PERCENT",
-    "B4: envKey('multi_seat', 'PERCENT') === 'FEATURE_MULTI_SEAT_PERCENT'",
+    envKeyFn("referral_program", "PERCENT") === "FEATURE_REFERRAL_PROGRAM_PERCENT",
+    "B4: envKey('referral_program', 'PERCENT') === 'FEATURE_REFERRAL_PROGRAM_PERCENT'",
   );
 
   // bucketUserId: deterministic, in [0, 99].
@@ -215,7 +215,7 @@ if (typeof envKeyFn === "function") {
   let collisionCount = 0;
   const TEST_USERS = ["u1", "u2", "u3", "u4", "u5"];
   for (const u of TEST_USERS) {
-    if (bucketFn(u, "annual_plan") === bucketFn(u, "multi_seat")) {
+    if (bucketFn(u, "annual_plan") === bucketFn(u, "referral_program")) {
       collisionCount++;
     }
   }

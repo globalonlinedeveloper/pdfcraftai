@@ -81,8 +81,6 @@ import { createHash } from "node:crypto";
 export const FEATURE_FLAGS = {
   /** Annual plan SKU rollout — wraps the /buy listing + checkout. */
   ANNUAL_PLAN: "annual_plan",
-  /** Multi-seat / team plan rollout — wraps the /pricing tier display + admin invite UI. */
-  MULTI_SEAT: "multi_seat",
   /** Referral program rollout — wraps the /account referral panel + invite-tracking webhook. */
   REFERRAL_PROGRAM: "referral_program",
   /**
