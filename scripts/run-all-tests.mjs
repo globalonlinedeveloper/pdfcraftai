@@ -1437,6 +1437,20 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — generated-pdf-preview guard. Pins item #10 of the
+  // improvement analysis: page-1 preview thumbnail above the
+  // Download button on Generate / Redact / Sign success cards. New
+  // GeneratedPdfPreview client component (sister to UploadedFile-
+  // Preview — bracketing the AI op with input-preview before and
+  // generated-preview after). Pure static parse: asserts the
+  // component shape (use client, named export, props type, base64-
+  // to-bytes try/catch, useFirstPagePreview reuse) plus mount-site
+  // pinning across all 3 consumer tools (each must import + mount
+  // gated on its specific result-shape field).
+  {
+    name: "generated-pdf-preview",
+    file: "test-generated-pdf-preview.mjs",
+  },
   // 2026-05-08 — marketing-honesty guard. Pins items #20 (footer)
   // and #21 (status page) of the improvement analysis. Catches the
   // regression class where lies sneak back into marketing copy

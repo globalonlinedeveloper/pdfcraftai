@@ -50,6 +50,7 @@ import { useTrackToolView } from "./useToolTracking";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+import { GeneratedPdfPreview } from "./GeneratedPdfPreview";
 
 type PiiCategory =
   | "EMAIL"
@@ -568,6 +569,26 @@ function ResultCard({ result }: { result: RedactResult }) {
           a new PDF — that flattens the overlay into pixels.
         </div>
       </div>
+
+      {/* Item #10 — page-1 preview of the redacted PDF. Critical
+          for redaction specifically: visual confirmation that the
+          redaction overlays landed on the right text BEFORE the
+          user downloads + shares the result. Higher-stakes than
+          generation: redaction failures expose information the
+          user thought they'd hidden. */}
+      {result.redactedPdfBase64 && (
+        <div
+          style={{
+            padding: "16px 22px",
+            display: "flex",
+            justifyContent: "center",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-1)",
+          }}
+        >
+          <GeneratedPdfPreview base64={result.redactedPdfBase64} />
+        </div>
+      )}
 
       {/* Rendered markdown summary */}
       <div

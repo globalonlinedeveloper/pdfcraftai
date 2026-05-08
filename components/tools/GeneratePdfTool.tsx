@@ -42,6 +42,7 @@ import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { downloadBytes } from "@/lib/client/download";
+import { GeneratedPdfPreview } from "./GeneratedPdfPreview";
 
 // Keep in sync with VALID_DOC_TYPES / VALID_LENGTHS / VALID_TONES in the
 // route handler.
@@ -589,6 +590,25 @@ function ResultCard({ result }: { result: GenerateResult }) {
           This is a replay of an earlier generation — the original PDF isn't
           stored on our servers. Re-run the generator to download a fresh PDF.
           The markdown source below is the same one we delivered before.
+        </div>
+      )}
+
+      {/* Item #10 — page-1 preview of the generated PDF. Renders
+          inline above the markdown so the user sees the visual
+          result BEFORE clicking Download. Bracketed with the
+          UploadedFilePreview pattern: upload preview before the
+          credit spend, generated preview after. */}
+      {result.pdfBase64 && (
+        <div
+          style={{
+            padding: "16px 22px",
+            display: "flex",
+            justifyContent: "center",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-1)",
+          }}
+        >
+          <GeneratedPdfPreview base64={result.pdfBase64} />
         </div>
       )}
 

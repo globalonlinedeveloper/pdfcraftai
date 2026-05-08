@@ -52,6 +52,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
 import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
+import { GeneratedPdfPreview } from "./GeneratedPdfPreview";
 
 type SignFilling = {
   label: string;
@@ -852,6 +853,25 @@ function ResultCard({ result }: { result: SignResult }) {
           Adobe Sign instead.
         </div>
       </div>
+
+      {/* Item #10 — page-1 preview of the signed PDF. Lets the
+          user verify the signature placement landed on the right
+          field BEFORE sharing the result. AI sign placement can
+          drift one or two fields off when the form's field labels
+          are visually ambiguous; the preview catches that. */}
+      {result.signedPdfBase64 && (
+        <div
+          style={{
+            padding: "16px 22px",
+            display: "flex",
+            justifyContent: "center",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-1)",
+          }}
+        >
+          <GeneratedPdfPreview base64={result.signedPdfBase64} />
+        </div>
+      )}
 
       {/* Rendered markdown summary */}
       <div
