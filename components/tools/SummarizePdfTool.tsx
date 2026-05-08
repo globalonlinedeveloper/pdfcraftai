@@ -127,6 +127,14 @@ export function SummarizePdfTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SummaryResult | null>(null);
+  // 2026-05-08 (item #5 — loading state polish): surface retry
+  // attempts to the user so an API hiccup doesn't read as a frozen
+  // "Summarizing…" button. Tracks the current attempt index when >1
+  // (= we're actively retrying after a transient failure); stays at
+  // 0 during the normal first-attempt path. Reset alongside busy in
+  // the finally block.
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
 
   // Phase 6.1 macros — chip row above the depth picker. We lazy-load
   // the list on mount because anonymous visitors get `canSave=false`
@@ -274,6 +282,17 @@ export function SummarizePdfTool() {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        // Wire onAttempt so the button can show "Retrying… (n/3)"
+        // instead of an indefinite "Summarizing…" during retry
+        // backoff. attempt is 1-indexed; only flip the UI when >1
+        // so a normal first-attempt success path doesn't briefly
+        // show "Retrying… (1/3)" which would be confusing.
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
 
       // Parse the body once; every response branch is JSON.
@@ -344,6 +363,11 @@ export function SummarizePdfTool() {
       );
     } finally {
       setBusy(false);
+      // Reset retry indicator alongside busy — the button copy goes
+      // back to "Summarize" the moment the op completes (success OR
+      // failure path).
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -560,8 +584,16 @@ export function SummarizePdfTool() {
             className="btn btn-primary"
             disabled={busy || !file}
             onClick={run}
+            // aria-busy lets assistive tech announce the in-flight
+            // state cleanly without us needing a separate live
+            // region for the button label.
+            aria-busy={busy}
           >
-            {busy ? "Summarizing…" : "Summarize"}
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Summarizing…"
+                : "Summarize"}
           </button>
         )}
       </div>

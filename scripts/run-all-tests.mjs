@@ -1437,6 +1437,20 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — retry-status-ux guard. Pins item #5 of the
+  // improvement analysis: SummarizePdfTool wires fetchAiWithRetry's
+  // onAttempt callback into a retryAttempt state so the user sees
+  // "Retrying… (2/3)" instead of an indefinite "Summarizing…"
+  // during the retry backoff window. Pure static parse: asserts
+  // retryAttempt + retryMax state declared, onAttempt wiring with
+  // the >1 gate, reset-in-finally for both states, button label
+  // ladder (retry > busy > idle priority), aria-busy attribute.
+  // Canary tool — other 9 AI runners follow the same pattern in a
+  // follow-up sweep.
+  {
+    name: "retry-status-ux",
+    file: "test-retry-status-ux.mjs",
+  },
   // 2026-05-08 — generated-pdf-preview guard. Pins item #10 of the
   // improvement analysis: page-1 preview thumbnail above the
   // Download button on Generate / Redact / Sign success cards. New
