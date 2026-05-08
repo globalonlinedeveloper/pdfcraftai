@@ -211,7 +211,8 @@ export function PdfCompressTool() {
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}
-          hint="Up to 50 MB · runs on our server (Ghostscript)"
+          prompt="Drop a PDF to compress"
+          hint="Up to 50 MB · runs on our server (Ghostscript) · output is typically 30–70% smaller"
         />
       ) : (
         <div className="card" style={{ padding: 16, marginBottom: 16 }}>

@@ -1437,6 +1437,20 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — tool-dropzone-prompt guard. Pins item #3 of the
+  // improvement analysis: empty states sweep. Every ToolDropzone
+  // consumer in components/tools/ must pass a tool-specific
+  // `prompt` prop instead of falling back to the generic "Drop a
+  // PDF here or click to browse." Audit found 38 consumers + 39
+  // <ToolDropzone> mounts; all pass. Two consumer files are name-
+  // allowlisted (ToolDropzone.tsx self-reference, ImagesToPdfTool
+  // which uses an inline image-typed dropzone, not ToolDropzone).
+  // Catches the regression where a new tool ships using ToolDropzone
+  // with default copy.
+  {
+    name: "tool-dropzone-prompt",
+    file: "test-tool-dropzone-prompt.mjs",
+  },
   // 2026-05-08 — tool-how-it-works guard. Pins item #8 of the
   // improvement analysis: inline tool explainer shipped as a
   // canary on SummarizePdfTool. Pure static parse: native <details>

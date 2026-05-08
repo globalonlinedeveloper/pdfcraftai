@@ -163,6 +163,7 @@ export function PdfaConvertTool() {
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}
+          prompt="Drop a PDF to convert to PDF/A"
           hint="Up to 50 MB · runs on our server (Ghostscript) · output is PDF/A-2b conformant"
         />
       ) : (
