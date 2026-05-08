@@ -1437,6 +1437,22 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — ai-output-actions guard. Pins the Copy markdown +
+  // Download .md affordances on /app/files/[id]/preview. Critical
+  // exit ramps for the AI artifact surface — without them the page
+  // is view-only and users fall back to right-click-view-source-copy
+  // which loses the markdown structure. Asserts client-component
+  // directive, navigator.clipboard (not legacy execCommand), object-
+  // URL revocation in finally (M6 invariant), every required prop
+  // wired through with the right shape (catches the silent swap-bug
+  // where contentMd={row.toolId} would download wrong content), and
+  // filename-sanitizer allowlist + generation special-case. Pure
+  // static parse; placed after preview-page-kind-parity since both
+  // pin properties of the same preview page.
+  {
+    name: "ai-output-actions",
+    file: "test-ai-output-actions.mjs",
+  },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in

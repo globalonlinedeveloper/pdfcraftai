@@ -27,6 +27,7 @@ import { auth } from "@/auth";
 import { db, schema } from "@/db/client";
 import { I } from "@/components/icons/Icons";
 import { renderMarkdown } from "@/lib/markdown-mini";
+import { AiOutputActions } from "@/components/app/files/AiOutputActions";
 
 type Params = { params: { id: string } };
 
@@ -258,6 +259,17 @@ export default async function FilePreviewPage({ params }: Params) {
           )}
         </p>
       </header>
+
+      {/* Copy / Download actions — exit ramps so users can paste the
+          markdown into Slack/Notion/etc. or save the .md alongside
+          the source PDF. Server-rendered button row avoids a layout
+          shift while the client component hydrates. */}
+      <AiOutputActions
+        contentMd={row.contentMd}
+        kind={kind}
+        sourceName={meta.sourceName}
+        generatedAtIso={new Date(row.outputCreatedAt).toISOString()}
+      />
 
       {/* Rendered content */}
       <article
