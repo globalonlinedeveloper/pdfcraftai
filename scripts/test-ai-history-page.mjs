@@ -1,0 +1,268 @@
+#!/usr/bin/env node
+/**
+ * 2026-05-08 — /app/ai-history page regression guard (Tier 4 #11).
+ *
+ * Background: /app/ai-history is the dedicated AI-artifact index that
+ * closes the "where did my output go?" gap. The query joins two tables:
+ *
+ *   ai_outputs  ──INNER JOIN──  files
+ *
+ * filtered by `files.userId = session.userId`. The userId filter MUST
+ * be on the `files` row, not on `ai_outputs` (which has no userId
+ * column at all — auth model is "owner of the source PDF owns the
+ * derivative"). A future contributor refactoring this query who
+ * accidentally removes the join, or filters on the wrong table, would
+ * silently leak other users' AI outputs. This guard catches that class
+ * of regression at static-parse time.
+ *
+ * Also catches:
+ *   - Nav entry deleted (page becomes unreachable from the shell)
+ *   - kind enum drift (schema gains a new kind that the page's
+ *     KIND_META doesn't render — the row would crash with a runtime
+ *     undefined-property access; we'd rather fail at CI)
+ *   - Excerpt sent untruncated (would balloon the page payload — the
+ *     content_md column is mediumtext / 16MB)
+ *   - Limit dropped (unbounded query against a high-traffic table)
+ *
+ * Pure static parse. Sub-second. No DB or runtime dependency. Output
+ * conforms to the aggregator regex `${name}: ${pass} passed, ${fail} failed`.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, "..");
+
+let passed = 0;
+let failed = 0;
+const failures = [];
+
+function assert(cond, msg) {
+  if (cond) passed++;
+  else {
+    failed++;
+    failures.push(msg);
+  }
+}
+
+const PAGE_PATH = path.join(ROOT, "app/app/ai-history/page.tsx");
+const NAV_PATH = path.join(ROOT, "components/app/AppShell.tsx");
+const SCHEMA_PATH = path.join(ROOT, "db/schema/app.ts");
+
+assert(fs.existsSync(PAGE_PATH), `Page missing at ${PAGE_PATH}`);
+assert(fs.existsSync(NAV_PATH), `AppShell missing at ${NAV_PATH}`);
+assert(fs.existsSync(SCHEMA_PATH), `Schema missing at ${SCHEMA_PATH}`);
+
+if (failed > 0) {
+  console.log(failures.map((f) => `  ✗ ${f}`).join("\n"));
+  console.log(`ai-history-page: ${passed} passed, ${failed} failed`);
+  process.exit(1);
+}
+
+const PAGE_SRC = fs.readFileSync(PAGE_PATH, "utf8");
+const NAV_SRC = fs.readFileSync(NAV_PATH, "utf8");
+const SCHEMA_SRC = fs.readFileSync(SCHEMA_PATH, "utf8");
+
+// ---------------------------------------------------------------------
+// Section A — auth + redirect.
+// ---------------------------------------------------------------------
+
+assert(
+  /import\s*\{\s*auth\s*\}\s*from\s*"@\/auth"/.test(PAGE_SRC),
+  "Page must import auth from @/auth — without it, no session = no userId.",
+);
+
+assert(
+  /const\s+userId\s*=\s*session\?\.user\s*\?\s*\(session\.user\s+as\s*\{[^}]*id\?:\s*string[^}]*\}\)\.id\s*:\s*undefined;\s*if\s*\(!userId\)\s*redirect\("\/login(?:\?[^"]*)?"\);/s.test(
+    PAGE_SRC,
+  ),
+  "Auth-then-redirect-to-login pattern not found. Expected the canonical " +
+    "`const userId = session?.user ? (session.user as { id?: string }).id : undefined; " +
+    "if (!userId) redirect(\"/login?...\");` from /app/files/page.tsx (callbackUrl optional).",
+);
+
+assert(
+  /export\s+const\s+dynamic\s*=\s*"force-dynamic"/.test(PAGE_SRC),
+  "Page must export `dynamic = 'force-dynamic'` — auth() reads cookies, " +
+    "so static generation would either crash or serve stale state.",
+);
+
+// ---------------------------------------------------------------------
+// Section B — query joins both tables and filters by files.userId.
+// ---------------------------------------------------------------------
+//
+// This is the cross-tenant safety invariant. The whole class of bugs
+// caught by this section: someone refactors the query, drops the join,
+// and filters on `ai_outputs` alone — but `ai_outputs` has no userId
+// column, so the filter compiles against the wrong column or returns
+// EVERY row. The three checks below pin down the exact join + filter
+// shape this page depends on.
+
+assert(
+  /\.from\(\s*schema\.aiOutputs\s*\)/.test(PAGE_SRC),
+  "Query must use `db.select(...).from(schema.aiOutputs)` as the FROM. " +
+    "Listing AI artifacts FROM `files` would force a left-join shape that " +
+    "leaks files with no AI output.",
+);
+
+assert(
+  /\.innerJoin\(\s*schema\.files\s*,\s*eq\(\s*schema\.aiOutputs\.fileId\s*,\s*schema\.files\.id\s*\)\s*\)/.test(
+    PAGE_SRC,
+  ),
+  "INNER JOIN on files.id = ai_outputs.fileId not found. Required for " +
+    "cross-tenant safety: the userId filter lives on `files`, and an outputs-" +
+    "only query has no way to scope by user.",
+);
+
+assert(
+  /eq\(\s*schema\.files\.userId\s*,\s*userId\s*\)/.test(PAGE_SRC),
+  "userId filter must be on `schema.files.userId`. Filtering on " +
+    "ai_outputs.userId would compile against a non-existent column and " +
+    "even if it didn't, would skip the `files` ownership check that " +
+    "every other multi-tenant query in this codebase relies on.",
+);
+
+// Negative check — there is no `ai_outputs.userId` column today, but
+// someone might "fix" a future TS error by adding `eq(schema.aiOutputs.userId, userId)`.
+// Catch that proactively.
+assert(
+  !/eq\(\s*schema\.aiOutputs\.userId\s*,/.test(PAGE_SRC),
+  "Found `eq(schema.aiOutputs.userId, ...)` — but ai_outputs has no userId column. " +
+    "userId scoping must go through the joined `files` row.",
+);
+
+assert(
+  /\.limit\(\s*\d+\s*\)/.test(PAGE_SRC),
+  "Query must `.limit(...)` — unbounded SELECT against ai_outputs " +
+    "would balloon page payload + DB load on power users.",
+);
+
+assert(
+  /\.orderBy\(\s*desc\(\s*schema\.aiOutputs\.createdAt\s*\)\s*\)/.test(PAGE_SRC),
+  "Must `orderBy(desc(schema.aiOutputs.createdAt))` — anything else " +
+    "either ignores the existing ai_outputs_created_idx index or returns " +
+    "the wrong rows when the result is truncated by the limit.",
+);
+
+// ---------------------------------------------------------------------
+// Section C — kind enum parity with db/schema/app.ts.
+// ---------------------------------------------------------------------
+//
+// db/schema/app.ts defines the ai_outputs.kind enum. The page's
+// KIND_META map MUST include every member of that enum, otherwise a
+// row with a future kind crashes the render with `Cannot read property
+// 'icon' of undefined`. Drift goes the other direction too — KIND_META
+// shouldn't include kinds the schema doesn't, since they'd be dead code.
+//
+// The schema enum is multi-line in this codebase (spans lines 491–502
+// with comments interleaved), so we extract the aiOutputs block first,
+// then pull every quoted literal from inside the kind() call.
+
+const aiOutputsBlock = SCHEMA_SRC.match(
+  /export\s+const\s+aiOutputs\s*=\s*mysqlTable\([\s\S]*?\)\s*;/,
+);
+assert(
+  aiOutputsBlock,
+  "Could not locate `export const aiOutputs = mysqlTable(...)` block in schema. " +
+    "Update this guard if the export was renamed.",
+);
+
+const kindCall = aiOutputsBlock
+  ? aiOutputsBlock[0].match(/mysqlEnum\(\s*"kind"\s*,\s*\[([\s\S]*?)\]\s*\)/)
+  : null;
+assert(
+  kindCall,
+  "Could not find `mysqlEnum('kind', [...])` for ai_outputs.kind in schema.",
+);
+
+// Strip line/block comments before pulling literals — Phase 5.6 added
+// inline `// Phase 5.6 — five new AI tools` comments inside the array.
+const kindBody = kindCall ? kindCall[1].replace(/\/\/[^\n]*\n/g, "\n") : "";
+const schemaKinds = kindBody
+  .match(/"([^"]+)"/g)
+  ? kindBody.match(/"([^"]+)"/g).map((s) => s.slice(1, -1)).sort()
+  : [];
+
+const kindMetaBlock = PAGE_SRC.match(/KIND_META\s*:\s*Record<\s*([\s\S]*?),\s*\{/);
+const pageKinds = kindMetaBlock
+  ? (kindMetaBlock[1].match(/"([^"]+)"/g) || [])
+      .map((s) => s.slice(1, -1))
+      .sort()
+  : [];
+
+assert(
+  schemaKinds.length > 0 && pageKinds.length > 0,
+  `Schema kinds: [${schemaKinds.join(", ")}], page kinds: [${pageKinds.join(", ")}]. ` +
+    "Both must be non-empty.",
+);
+assert(
+  schemaKinds.join(",") === pageKinds.join(","),
+  `Kind enum drift. Schema has [${schemaKinds.join(", ")}] but page KIND_META ` +
+    `has [${pageKinds.join(", ")}]. Add the missing kind to the page's ` +
+    "KIND_META map (with label / icon / tint) — a row with a kind not in " +
+    "KIND_META renders undefined.",
+);
+
+// ---------------------------------------------------------------------
+// Section D — content excerpt + payload size guard.
+// ---------------------------------------------------------------------
+//
+// content_md is `mediumtext` (16MB ceiling). The page MUST excerpt
+// before rendering. Catch the regression where someone "simplifies" by
+// dropping makeExcerpt and rendering r.contentMd directly.
+
+assert(
+  /function\s+makeExcerpt\s*\(/.test(PAGE_SRC),
+  "makeExcerpt() helper not found. The page must server-side truncate " +
+    "ai_outputs.content_md (mediumtext / 16MB) before sending to the client.",
+);
+
+assert(
+  /\bmakeExcerpt\s*\(\s*r\.contentMd\s*\)/.test(PAGE_SRC),
+  "Render path must call `makeExcerpt(r.contentMd)`. Rendering raw " +
+    "contentMd would let one row's 16MB worst-case push the page over " +
+    "Next.js's RSC payload ceiling.",
+);
+
+// ---------------------------------------------------------------------
+// Section E — kind filter is whitelisted, not echoed.
+// ---------------------------------------------------------------------
+//
+// The `?kind=` search param is user-controlled. If it flowed straight
+// into the Drizzle eq() call, a malformed value would surface as a TS
+// type error at runtime (Drizzle uses literal-typed enums). Worse, a
+// future refactor that loosens the type would let the user filter by
+// arbitrary strings — fine for security, ugly for caching.
+
+assert(
+  /\(ALL_KINDS\s+as\s+string\[\]\)\.includes\(\s*rawKind\s*\)/.test(PAGE_SRC),
+  "kind filter must be whitelisted via `(ALL_KINDS as string[]).includes(rawKind)`. " +
+    "Direct echo of `searchParams.kind` into eq() would either crash on " +
+    "an invalid value or compile against a future loose type.",
+);
+
+// ---------------------------------------------------------------------
+// Section F — nav entry exists in AppShell.
+// ---------------------------------------------------------------------
+
+assert(
+  /\{\s*href:\s*"\/app\/ai-history"\s*,\s*label:\s*"AI History"\s*,\s*icon:\s*"FileAi"\s+as\s+const\s*\}/.test(
+    NAV_SRC,
+  ),
+  "AppShell.tsx NAV is missing the AI History entry. Without the nav " +
+    "link, the page is reachable only by typing the URL — defeats the " +
+    "whole point of the discoverability fix.",
+);
+
+// ---------------------------------------------------------------------
+// Output
+// ---------------------------------------------------------------------
+
+if (failed > 0) {
+  console.log(failures.map((f) => `  ✗ ${f}`).join("\n"));
+}
+
+console.log(`ai-history-page: ${passed} passed, ${failed} failed`);
+process.exit(failed > 0 ? 1 : 0);

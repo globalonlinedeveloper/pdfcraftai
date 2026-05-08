@@ -1403,6 +1403,22 @@ const SUITES = [
     name: "ai-usage-instrumentation",
     file: "test-ai-usage-instrumentation.mjs",
   },
+  // 2026-05-08 — Tier 4 #11 ai-history-page guard. Pins the dedicated
+  // /app/ai-history index that closes the "where did my output go?"
+  // discoverability gap. Pure static parse (no DB / no route imports);
+  // asserts the cross-tenant safety invariant (INNER JOIN to files +
+  // userId filter on the files row, not on ai_outputs which has no
+  // userId column at all), kind enum parity with db/schema/app.ts
+  // (catches the runtime crash when a future kind is added to the
+  // schema enum but not to the page's KIND_META map), payload-size
+  // discipline (excerpt before render, content_md is mediumtext / 16MB),
+  // whitelist-not-echo of the kind search param, nav entry presence,
+  // and force-dynamic. Placed before aggregator-coverage so the latter
+  // (which checks all test files are wired) sees this entry too.
+  {
+    name: "ai-history-page",
+    file: "test-ai-history-page.mjs",
+  },
   // 2026-04-30 aggregator-coverage guard: every scripts/test-*.mjs
   // and scripts/test-*.ts must be wired into the SUITES array
   // above. Catches orphan test files that silently never run in
