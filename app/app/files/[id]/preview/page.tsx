@@ -28,6 +28,7 @@ import { db, schema } from "@/db/client";
 import { I } from "@/components/icons/Icons";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { AiOutputActions } from "@/components/app/files/AiOutputActions";
+import { DeleteAiArtifactButton } from "@/components/app/files/DeleteAiArtifactButton";
 
 type Params = { params: { id: string } };
 
@@ -288,6 +289,13 @@ export default async function FilePreviewPage({ params }: Params) {
             View all from this source
           </Link>
         ) : null}
+        {/* Delete is rightmost in the row — destructive action lives
+            at the edge so the user's mouse path to copy/download
+            doesn't pass over it. Two-click confirm pattern guards
+            against accidental click; auto-disarms after 4s. */}
+        <div style={{ marginLeft: "auto" }}>
+          <DeleteAiArtifactButton id={params.id} />
+        </div>
       </div>
 
       {/* Rendered content */}

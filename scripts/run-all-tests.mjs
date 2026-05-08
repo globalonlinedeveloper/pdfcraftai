@@ -1437,6 +1437,24 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — delete-ai-artifact guard. Pins the Delete button
+  // on /app/files/[id]/preview that closes the artifact-management
+  // loop (AI History → preview → delete-without-bouncing). Two-click
+  // confirm pattern with auto-disarm timer protects against
+  // accidental destructive clicks on this focused single-artifact
+  // surface (different UX than /app/files row trash icon, which is
+  // intentionally one-click). Pure static parse: asserts component
+  // is a client component with named export, useState armed/setArmed
+  // state, "Click again to confirm" copy in armed branch, setTimeout
+  // disarm + clearTimeout cleanup, useRouter().push("/app/ai-history")
+  // + router.refresh() on success, preview page mounts with
+  // id={params.id}, deleteFileAction revalidatePath includes
+  // /app/ai-history (so stale cached row doesn't point at 404), and
+  // canonical-action import (no fork drift).
+  {
+    name: "delete-ai-artifact",
+    file: "test-delete-ai-artifact.mjs",
+  },
   // 2026-05-08 — oauth-email-verified guard. Pins the auth.ts
   // events.signIn fix that stamps users.emailVerified=NOW() for
   // Google OAuth signups. Without this, when EMAIL_VERIFICATION_GATE=

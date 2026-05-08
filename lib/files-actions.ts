@@ -94,5 +94,12 @@ export async function deleteFileAction(
 
   revalidatePath("/app/files");
   revalidatePath("/app/dashboard");
+  // 2026-05-08 — also bust the AI History cache. Deletes from the
+  // preview page (which the artifact-management surface routes to)
+  // should make the artifact disappear from /app/ai-history on the
+  // user's next visit, not stay there for cache-TTL minutes pointing
+  // at a 404. Cheap to add; same revalidation budget as the two
+  // existing paths above.
+  revalidatePath("/app/ai-history");
   return { ok: true };
 }
