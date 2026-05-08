@@ -1437,6 +1437,17 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — tool-how-it-works guard. Pins item #8 of the
+  // improvement analysis: inline tool explainer shipped as a
+  // canary on SummarizePdfTool. Pure static parse: native <details>
+  // /<summary> shape (no useState reimplementation that would lose
+  // a11y), 3-step canonical structure, optional privacyNote prop
+  // referencing the canonical zero-retention phrases. Other 30+
+  // tool runners follow the same pattern in a follow-up sweep.
+  {
+    name: "tool-how-it-works",
+    file: "test-tool-how-it-works.mjs",
+  },
   // 2026-05-08 — color-contrast guard. Pins item #13 of the
   // improvement analysis: programmatic WCAG AA contrast check on
   // the design tokens in app/globals.css. Parses oklch(L C H) per

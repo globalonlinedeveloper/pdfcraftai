@@ -56,6 +56,7 @@ import {
   listMacrosForToolAction,
 } from "@/lib/macro-actions";
 import { fetchAiWithRetry } from "@/lib/client/fetch-ai-with-retry";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { downloadBytes } from "@/lib/client/download";
 import { UploadedFilePreview } from "./UploadedFilePreview";
 
@@ -373,6 +374,29 @@ export function SummarizePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Item #8 — inline tool explainer. Default-collapsed so it
+          doesn't push the tool UI below the fold; users who want
+          context expand it, users who don't ignore it. */}
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop a PDF",
+            body:
+              "Up to 25 MB. We extract the text in your browser before sending — scanned-only PDFs without a text layer should run through OCR first.",
+          },
+          {
+            title: "Pick a depth",
+            body:
+              "TL;DR for a one-paragraph executive summary, Standard for the default narrative summary, Detailed for a section-by-section breakdown.",
+          },
+          {
+            title: "Apply",
+            body:
+              "We send the extracted text to the AI provider configured in your account, persist the result to your /app/files for re-reading, and you get the summary back inline.",
+          },
+        ]}
+        privacyNote="Files are processed in-memory on our servers and discarded immediately — never persisted on disk. The extracted markdown summary IS persisted to your files so you can re-read it without spending credits again."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}
