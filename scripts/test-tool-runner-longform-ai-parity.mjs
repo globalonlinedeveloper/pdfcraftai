@@ -203,11 +203,21 @@ assert(
     "to select which list renders.",
 );
 
+// 2026-05-08: original required "deleted in 60 minutes" copy. Updated
+// this session to "zero retention — files never persisted on our
+// servers" which is more accurate (per ground truth: AI files are
+// processed in memory, never persisted). The invariant being tested
+// is "AI subtitle is branched + differs from free + accurately
+// describes the AI flow." Accept either the legacy 60-minutes copy
+// OR the new zero-retention copy.
 assert(
-  /isAI\s*\n?\s*\?\s*"[^"]*deleted in 60 minutes\.?"/.test(COMPONENT_SRC),
+  /isAI\s*\n?\s*\?\s*"[^"]*(deleted in 60 minutes|zero retention|never persisted)[^"]*"/.test(
+    COMPONENT_SRC,
+  ),
   "How-it-works subtitle isn't branched on isAI. The original copy " +
     "'Three steps, no signup, no uploads.' is false for AI tools. Expected " +
-    "an `isAI ? '...60 minutes...' : '...no signup, no uploads...'` ternary.",
+    "an `isAI ? '...60 minutes... | zero retention | never persisted...' : " +
+    "'...no signup, no uploads...'` ternary.",
 );
 
 // ---------------------------------------------------------------------

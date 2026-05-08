@@ -267,7 +267,7 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
                       <I.Check size={14} /> No signup
                     </span>
                     <span className="row" style={{ gap: 6 }}>
-                      <I.Check size={14} /> Files deleted in 60 min
+                      <I.Check size={14} /> Zero retention
                     </span>
                   </>
                 ) : (
@@ -280,7 +280,7 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
                       <I.Check size={14} /> 5 free credits
                     </span>
                     <span className="row" style={{ gap: 6 }}>
-                      <I.Check size={14} /> Files deleted in 60 min
+                      <I.Check size={14} /> Zero retention
                     </span>
                   </>
                 )}
@@ -646,7 +646,7 @@ export function SeoLandingPage({ data }: { data: SeoPageData }) {
             {tool.free
               ? "No signup. No watermarks. Your file stays private."
               : // 2026-05-02 plan §2 path D — was "25 free credits".
-                "5 free credits on signup, valid 7 days. No card required. Files deleted in 60 min."}
+                "5 free credits on signup, valid 7 days. No card required. Zero retention."}
           </p>
           <Link href={primaryHref} className="btn btn-lg btn-primary">
             Open {tool.name} <I.ArrowRight size={16} />

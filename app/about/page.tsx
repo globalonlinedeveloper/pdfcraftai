@@ -14,7 +14,7 @@ const VALUES: Array<{ icon: keyof typeof I; title: string; body: string }> = [
   {
     icon: "Shield",
     title: "Privacy is not a tier",
-    body: "Files auto-delete in 60 minutes. We don't train on your documents. There's no upsell to a &quot;privacy plan&quot; — everyone gets the same protection.",
+    body: "Zero retention — files are processed in memory and discarded immediately, never persisted on our servers. We don't train on your documents. There's no upsell to a &quot;privacy plan&quot; — everyone gets the same protection.",
   },
   {
     icon: "Coin",

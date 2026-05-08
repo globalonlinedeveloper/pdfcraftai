@@ -110,7 +110,7 @@ const AI_DIFFERENTIATORS: Array<[string, string]> = [
   // line entirely. Naming providers leaks supply chain (principle 2).
   // Replace with a vendor-neutral framing of the same value prop.
   ["Multi-provider routing, no vendor lock-in", "We balance multiple AI providers per call to optimise cost and quality. If one has an outage, the next call automatically tries another. You're not bound to a single vendor's pricing or downtime."],
-  ["Files deleted in 60 minutes", "Your PDF lives on our servers only as long as the API call needs it, then it's gone. We don't fine-tune models on your data. Verifiable in your dashboard's audit log."],
+  ["Zero retention by design", "Your PDF lives in memory only as long as the AI call needs it, then it's discarded — nothing is persisted to our servers. We don't fine-tune models on your data. Verifiable in your dashboard's audit log."],
   ["Honest about model limits", "When a doc exceeds the model's context window we surface that the output was truncated (we render result.wasTruncated in every AI tool's UI). When a number can't be verified from the source we flag it. No silent failures."],
 ];
 
@@ -131,7 +131,7 @@ export function ToolRunnerLongform({
   // uploaded to our server (then forwarded to the AI provider, then
   // deleted). The AI-specific subtitle reflects what actually happens.
   const howWorksSubtitle = isAI
-    ? "Three steps. Sign in to run, files deleted in 60 minutes."
+    ? "Three steps. Sign in to run, zero retention — files never persisted on our servers."
     : "Three steps, no signup, no uploads.";
   return (
     <>

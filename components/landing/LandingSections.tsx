@@ -182,7 +182,7 @@ export function Security() {
                 Your documents never sit still.
               </h2>
               <p className="muted" style={{ fontSize: 15, marginBottom: 24 }}>
-                Uploads are encrypted in transit and at rest. Files auto-delete within 60 minutes.
+                Uploads are encrypted in transit. Files are processed in memory and discarded immediately — never persisted on our servers.
                 Nothing we process is used to train models — ever.
               </p>
               <div className="col" style={{ gap: 10 }}>

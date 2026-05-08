@@ -44,6 +44,24 @@ type Params = { params: { id: string } };
 // because toolById() returns undefined → notFound() fires before this
 // Set is consulted, but they accumulated noise over many tool removals
 // (Task #100 India sweep, Task #99 govt ID reversal, etc.).
+/**
+ * Tools whose op is supported by pdf-batch (the Batch Process PDFs
+ * tool). When a user lands on the single-file tool page, we surface
+ * a "Got several PDFs?" hint linking to /tool/pdf-batch?op=<batchOp>.
+ * Item 4 from the 2026-05-08 free-tools improvement analysis.
+ *
+ * Mapping derived from pdf-batch's supported ops: rotate, page
+ * numbers, watermark, remove metadata, flatten, strip links.
+ */
+const BATCH_OP_FOR_TOOL: Record<string, string | undefined> = {
+  rotate: "rotate",
+  "add-page-numbers": "add-page-numbers",
+  "add-watermark": "add-watermark",
+  "remove-metadata": "remove-metadata",
+  flatten: "flatten",
+  "strip-links": "strip-links",
+};
+
 const LIVE_TOOL_IDS = new Set<string>([
   // pdf-lib writable tools (Build 2 Wave 9, 2026-04-27).
   "merge",
@@ -539,6 +557,44 @@ export default function ToolRunnerPage({ params }: Params) {
             <ComingSoonRunner phaseLabel={tool.free ? "PHASE 3" : "PHASE 5"} />
           )}
 
+          {/* Batch handoff hint — surfaces pdf-batch on tools whose
+              op is supported by the batch processor. Lets power
+              users with >5 PDFs avoid the per-file loop. Pinned by
+              CI guard test-batch-handoff-coverage.mjs (added with
+              this commit). Item 4 from improvement analysis. */}
+          {BATCH_OP_FOR_TOOL[tool.id] && (
+            <div
+              style={{
+                marginTop: 16,
+                padding: "10px 14px",
+                borderRadius: 6,
+                background: "var(--bg-2)",
+                border: "1px solid var(--border)",
+                fontSize: 13,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <span>
+                <strong>Got several PDFs to process?</strong>{" "}
+                <span className="muted">
+                  Apply <code style={{ fontSize: 12 }}>{BATCH_OP_FOR_TOOL[tool.id]}</code>{" "}
+                  to many files at once and download a zip.
+                </span>
+              </span>
+              <a
+                href={`/tool/pdf-batch?op=${encodeURIComponent(BATCH_OP_FOR_TOOL[tool.id]!)}`}
+                className="btn btn-outline btn-sm"
+                style={{ textDecoration: "none", whiteSpace: "nowrap" }}
+              >
+                Batch process →
+              </a>
+            </div>
+          )}
+
           {/* Reassurance row */}
           <div
             style={{
@@ -562,7 +618,7 @@ export default function ToolRunnerPage({ params }: Params) {
                   ? "Your PDF is converted in-memory on our servers and discarded the moment the download completes — nothing is stored."
                   : tool.free
                     ? "Free tools run fully on-device — nothing is uploaded to a server."
-                    : "Uploaded files are encrypted and deleted within 60 minutes."
+                    : "AI tools process your PDF in memory, send only the extracted text to the model, and discard everything immediately. No file is persisted on our servers."
               }
             />
             <ReassuranceCard
