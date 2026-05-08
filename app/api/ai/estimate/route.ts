@@ -37,7 +37,7 @@ import "server-only";
 import type { NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 
-import { auth } from "@/auth";
+import { resolveUser } from "@/lib/auth/resolve-user";
 import { db, schema } from "@/db/client";
 import {
   estimateCredits,
@@ -82,13 +82,11 @@ function consume(userId: string): boolean {
 
 export async function POST(req: NextRequest): Promise<Response> {
   // -- 1. auth -------------------------------------------------------
-  const session = await auth();
-  const userId = session?.user
-    ? (session.user as { id?: string }).id
-    : undefined;
-  if (!userId) {
+  const resolved = await resolveUser(req);
+  if (!resolved) {
     return json(401, { error: "auth_required" });
   }
+  const userId = resolved.userId;
 
   // -- 2. rate limit --------------------------------------------------
   if (!consume(userId)) {

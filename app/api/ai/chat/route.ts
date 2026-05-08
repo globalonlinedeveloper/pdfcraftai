@@ -38,7 +38,7 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { and, asc, eq } from "drizzle-orm";
 
-import { auth } from "@/auth";
+import { resolveUser } from "@/lib/auth/resolve-user";
 import { db, schema } from "@/db/client";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
@@ -89,11 +89,11 @@ const PDF_CONTEXT_CHAR_BUDGET = 240_000;
 
 export async function POST(req: Request): Promise<Response> {
   // -- 1. Auth ---------------------------------------------------------
-  const session = await auth();
-  const userId = session?.user ? (session.user as { id?: string }).id : undefined;
-  if (!userId) {
+  const resolved = await resolveUser(req);
+  if (!resolved) {
     return json(401, { error: "not_authenticated" });
   }
+  const userId = resolved.userId;
 
   // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
   // Gate runs BEFORE the session ownership lookup / idempotency replay /

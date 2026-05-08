@@ -22,7 +22,7 @@ import "server-only";
 
 import { randomUUID, createHash } from "crypto";
 
-import { auth } from "@/auth";
+import { resolveUser } from "@/lib/auth/resolve-user";
 import { db, schema } from "@/db/client";
 import { refundCredits, spendCredits } from "@/lib/ai/credits";
 // 2026-05-04 (PENDING §6b corollary / AI_USAGE_INSTRUMENTATION_GAP) —
@@ -64,13 +64,11 @@ const VALID_TONES: readonly GenerateTone[] = [
 
 export async function POST(req: Request): Promise<Response> {
   // -- 1. Auth ---------------------------------------------------------
-  const session = await auth();
-  const userId = session?.user
-    ? (session.user as { id?: string }).id
-    : undefined;
-  if (!userId) {
+  const resolved = await resolveUser(req);
+  if (!resolved) {
     return json(401, { error: "not_authenticated" });
   }
+  const userId = resolved.userId;
 
   // -- 1b. Kill switch + daily cost ceiling (Task #12) ------------------
   const gate = await guardAiRoute("generate", userId);

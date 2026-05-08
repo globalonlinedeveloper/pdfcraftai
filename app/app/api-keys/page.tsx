@@ -66,26 +66,38 @@ export default async function ApiKeysPage() {
         </p>
       </header>
 
-      {/* Honest disclosure — keys mint + list here today; the
-          actual /api/ai/* routes still require session cookies.
-          The header-verify middleware lands in a follow-up commit. */}
+      {/* Usage instructions — keys are now usable for programmatic
+          access on /api/ai/* via the x-api-key header. */}
       <div
         role="status"
         style={{
-          padding: "10px 14px",
+          padding: "12px 16px",
           borderRadius: 6,
-          background: "color-mix(in oklab, #f57c00 6%, transparent)",
-          borderLeft: "3px solid #f57c00",
+          background: "var(--bg-2)",
           fontSize: 12,
-          color: "#f57c00",
-          lineHeight: 1.5,
+          lineHeight: 1.6,
         }}
       >
-        <strong>Beta:</strong> minting + revoking keys works against
-        the live schema. Header-based authentication on the AI
-        endpoints is rolling out in a follow-up — until that lands,
-        these keys are not yet usable for programmatic access. We
-        notify when the verify middleware ships.
+        <strong>Usage:</strong> send your key in the{" "}
+        <code style={{ fontSize: 11 }}>x-api-key</code> header on
+        any <code style={{ fontSize: 11 }}>/api/ai/*</code> endpoint.
+        Same per-user credit balance + daily cost ceiling apply as
+        when calling from the browser. Example:
+        <pre
+          style={{
+            marginTop: 8,
+            padding: "8px 10px",
+            background: "var(--bg)",
+            borderRadius: 4,
+            fontSize: 11,
+            overflowX: "auto",
+            lineHeight: 1.5,
+          }}
+        >
+          {`curl https://pdfcraftai.com/api/ai/summarize \\
+  -H "x-api-key: pck_..." \\
+  -F "file=@document.pdf"`}
+        </pre>
       </div>
 
       <ApiKeyManager initialKeys={initialKeys} />

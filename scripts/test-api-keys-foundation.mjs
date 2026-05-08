@@ -310,6 +310,98 @@ assert(
 );
 
 // ---------------------------------------------------------------------------
+// Section I: resolveUser middleware + AI route wiring (Tier 1 #1
+// follow-on, 2026-05-08). Threads x-api-key header → userId
+// resolution into all 11 AI op routes via lib/auth/resolve-user.ts.
+// ---------------------------------------------------------------------------
+
+const RESOLVE_USER = path.join(ROOT, "lib/auth/resolve-user.ts");
+
+assert(fs.existsSync(RESOLVE_USER), "I1: lib/auth/resolve-user.ts exists");
+const resolveSrc = fs.existsSync(RESOLVE_USER)
+  ? fs.readFileSync(RESOLVE_USER, "utf8")
+  : "";
+
+assert(
+  /export\s+async\s+function\s+resolveUser\b/.test(resolveSrc),
+  "I2: resolveUser exported async",
+);
+// Reads x-api-key header (NOT Authorization: Bearer — that's reserved
+// for cron secret per the comment in the file)
+assert(
+  /req\.headers\.get\("x-api-key"\)/.test(resolveSrc),
+  "I3: resolveUser reads x-api-key header (NOT Authorization: Bearer)",
+);
+// Calls verifyKey from lib/api-keys
+assert(
+  /verifyKey\(/.test(resolveSrc) &&
+    /from\s+"@\/lib\/api-keys"/.test(resolveSrc),
+  "I4: resolveUser calls verifyKey from lib/api-keys",
+);
+// Anti-downgrade: if header is sent but doesn't verify, return null
+// (do NOT fall through to session-fallback)
+assert(
+  /Header was sent but didn't verify[\s\S]{0,200}?return null/.test(
+    resolveSrc,
+  ) ||
+    /\/\/ Don't[\s\S]{0,200}?return null/.test(resolveSrc),
+  "I5: resolveUser does NOT fall through to session when x-api-key is set but invalid (anti-downgrade)",
+);
+// Source discriminator on the return shape
+assert(
+  /source:\s*"(api_key|session)"/.test(resolveSrc),
+  "I6: resolveUser returns source: 'api_key' | 'session' discriminator",
+);
+
+// ----- AI route wiring -----
+const AI_OPS = [
+  "summarize",
+  "chat",
+  "translate",
+  "ocr",
+  "rewrite",
+  "table",
+  "compare",
+  "sign",
+  "redact",
+  "generate",
+  "estimate",
+];
+
+for (const op of AI_OPS) {
+  const routePath = path.join(ROOT, `app/api/ai/${op}/route.ts`);
+  if (!fs.existsSync(routePath)) {
+    assert(false, `I7-${op}: app/api/ai/${op}/route.ts exists`);
+    continue;
+  }
+  const src = fs.readFileSync(routePath, "utf8");
+
+  // Imports resolveUser (replaces the old `import { auth } from "@/auth"`)
+  assert(
+    /import\s+\{\s+resolveUser\s+\}\s+from\s+"@\/lib\/auth\/resolve-user"/.test(
+      src,
+    ),
+    `I7-${op}: imports resolveUser from "@/lib/auth/resolve-user"`,
+  );
+  // Calls it inside the handler with req
+  assert(
+    /resolveUser\(req\)/.test(src),
+    `I8-${op}: calls resolveUser(req) in the route handler`,
+  );
+  // No leftover `auth()` calls (would mean the replacement missed
+  // somewhere)
+  assert(
+    !/const session = await auth\(\)/.test(src),
+    `I9-${op}: no leftover 'const session = await auth()' (replacement complete)`,
+  );
+  // userId is still extracted
+  assert(
+    /const userId = resolved\.userId/.test(src),
+    `I10-${op}: extracts userId from resolved.userId`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------------
 
