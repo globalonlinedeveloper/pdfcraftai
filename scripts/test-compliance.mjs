@@ -309,12 +309,28 @@ assert(
   "CookieConsent writes Secure attribute (HTTPS-gated)"
 );
 
-// Reload on choice — needed so the server re-evaluates the
-// analytics gate. `router.refresh()` is NOT enough (it does an RSC
-// refresh but doesn't re-run the <Script> tags).
+// Reload on choice — needed when the user accepts analytics so the
+// server re-emits the GA4 + Clarity Script tags. router.refresh()
+// is NOT enough (it does an RSC refresh but doesn't re-run the
+// <Script> tags).
+//
+// 2026-05-08 (item #23): the reload is now CONDITIONAL — only
+// fires when the user picked "Accept all". For "Essential only"
+// there's nothing for the server to emit, so the reload was a
+// disorienting no-op-effect that the user had no reason to
+// experience. The setLevel(choice) call above hides the banner
+// via the `if (level !== "none") return null` short-circuit, so
+// no reload is needed for the banner-disappear UX.
 assert(
   /window\.location\.reload\(\)/.test(bannerSrc),
-  "CookieConsent reloads the page on click (server re-emits Script tags)"
+  "CookieConsent reloads the page on accept-all (server re-emits Script tags)"
+);
+assert(
+  /choice\s*===\s*"all"\s*&&\s*typeof\s+window\s*!==\s*"undefined"/.test(
+    bannerSrc,
+  ),
+  "CookieConsent reload is gated on `choice === \"all\"` — Essential-" +
+    "only no longer triggers an unnecessary full-page reload (item #23)."
 );
 
 // Accessibility: dialog role + focus management.

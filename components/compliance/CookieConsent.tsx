@@ -130,16 +130,24 @@ export function CookieConsent({ initialLevel }: Props) {
   const onChoose = (choice: "all" | "essential") => {
     writeConsentCookie(choice);
     setLevel(choice);
-    // Reload so the SERVER re-resolves the cookie and either emits
-    // or suppresses the GA4 + Clarity Script tags. Without this,
-    // the banner disappears but analytics don't start until the
-    // next navigation.
+    // 2026-05-08 (item #23 — cookie consent UX): skip the reload
+    // when the user picked "Essential only". The reason for the
+    // reload was always "we need the SERVER to re-resolve the
+    // cookie so the GA4 + Clarity Script tags get emitted (or not)
+    // on next render." But:
+    //   - "Essential only" means analytics WILL NOT load. There's
+    //     nothing for the server to emit. The only effect of the
+    //     reload is to disorient the user mid-scroll for 1-3
+    //     seconds while the page rebuilds — meaningfully bad UX.
+    //   - "Accept all" still needs the reload so the analytics
+    //     `<Script>` tags actually materialize on the page; a
+    //     client-only state flip wouldn't run them.
     //
-    // We deliberately use `location.reload()` and not
-    // `router.refresh()` — the latter does an RSC refresh but does
-    // NOT re-execute the `<Script>` tags on the page, which is the
-    // whole point of the reload.
-    if (typeof window !== "undefined") {
+    // The setLevel(choice) above already hides the banner via the
+    // `if (level !== "none") return null` short-circuit at the
+    // bottom of the component, so no reload is needed for the
+    // banner-disappear UX.
+    if (choice === "all" && typeof window !== "undefined") {
       window.location.reload();
     }
   };
