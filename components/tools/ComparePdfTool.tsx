@@ -77,6 +77,9 @@ export function ComparePdfTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CompareResult | null>(null);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
 
   const addA = useCallback((files: File[]) => {
     setError(null);
@@ -131,6 +134,12 @@ export function ComparePdfTool() {
           form.append("idempotencyKey", idempotencyKey);
 
           return form;
+        },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
         },
       });
 
@@ -204,6 +213,8 @@ export function ComparePdfTool() {
       );
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -299,8 +310,13 @@ export function ComparePdfTool() {
             className="btn btn-primary"
             disabled={busy || !bothReady}
             onClick={run}
+            aria-busy={busy}
           >
-            {busy ? "Comparing…" : "Compare"}
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Comparing…"
+                : "Compare"}
           </button>
         )}
       </div>

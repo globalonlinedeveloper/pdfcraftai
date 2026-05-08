@@ -43,8 +43,22 @@ function assert(cond, msg) {
   }
 }
 
-const TOOL_PATH = path.join(ROOT, "components/tools/SummarizePdfTool.tsx");
-assert(fs.existsSync(TOOL_PATH), `SummarizePdfTool missing at ${TOOL_PATH}`);
+// 2026-05-08 — sweep expansion. The retry-status pattern was first
+// shipped on SummarizePdfTool as a canary; this list grows as the
+// pattern is mass-applied to other AI tool runners. Adding a tool
+// here without the wiring fails CI; removing the wiring without
+// removing the entry also fails CI. Both directions are correct
+// regression signals.
+const TOOL_PATHS = [
+  path.join(ROOT, "components/tools/SummarizePdfTool.tsx"),
+  path.join(ROOT, "components/tools/TranslatePdfTool.tsx"),
+  path.join(ROOT, "components/tools/ComparePdfTool.tsx"),
+  path.join(ROOT, "components/tools/RewritePdfTool.tsx"),
+];
+
+for (const p of TOOL_PATHS) {
+  assert(fs.existsSync(p), `${path.basename(p)} missing at ${p}`);
+}
 
 if (failed > 0) {
   console.log(failures.map((f) => `  ✗ ${f}`).join("\n"));
@@ -52,7 +66,12 @@ if (failed > 0) {
   process.exit(1);
 }
 
-const SRC = fs.readFileSync(TOOL_PATH, "utf8");
+// Each tool gets the same set of assertions. We loop the canonical
+// SummarizePdfTool checks across every tool path; failures report
+// the offending tool so the operator sees exactly which file lost
+// the wiring.
+const SUMMARIZE_PATH = path.join(ROOT, "components/tools/SummarizePdfTool.tsx");
+const SRC = fs.readFileSync(SUMMARIZE_PATH, "utf8");
 
 // ---------------------------------------------------------------------
 // Section A — retryAttempt + retryMax state declared.
@@ -137,6 +156,53 @@ assert(
     "announces the in-flight state. Without it, screen-reader users " +
     "have no signal that the click did anything.",
 );
+
+// ---------------------------------------------------------------------
+// Section F — sweep expansion: all listed tools have the wiring.
+// ---------------------------------------------------------------------
+//
+// The canonical pattern from SummarizePdfTool above (Section A-E) is
+// now applied to multiple tools. Each must have:
+//   1. retryAttempt + retryMax state declared as useState(0)
+//   2. onAttempt: (attempt, max) => { if (attempt > 1) ... } wiring
+//      passed to fetchAiWithRetry
+//   3. setRetryAttempt(0) + setRetryMax(0) in the finally block
+//   4. aria-busy={busy} on the button
+//
+// Loop every TOOL_PATH and assert each invariant. Failures name
+// the specific tool so the regression is immediately localizable.
+
+for (const tp of TOOL_PATHS) {
+  const fname = path.basename(tp);
+  const src = fs.readFileSync(tp, "utf8");
+
+  assert(
+    /const\s+\[retryAttempt\s*,\s*setRetryAttempt\]\s*=\s*useState\(\s*0\s*\)/.test(
+      src,
+    ),
+    `${fname}: missing retryAttempt useState(0) declaration.`,
+  );
+  assert(
+    /const\s+\[retryMax\s*,\s*setRetryMax\]\s*=\s*useState\(\s*0\s*\)/.test(src),
+    `${fname}: missing retryMax useState(0) declaration.`,
+  );
+  assert(
+    /onAttempt:\s*\(attempt\s*,\s*max\)\s*=>/.test(src) &&
+      /if\s*\(\s*attempt\s*>\s*1\s*\)/.test(src),
+    `${fname}: missing onAttempt wiring with 'attempt > 1' gate inside ` +
+      "fetchAiWithRetry options.",
+  );
+  assert(
+    /finally\s*\{[\s\S]*?setRetryAttempt\(0\);[\s\S]*?setRetryMax\(0\);[\s\S]*?\}/.test(
+      src,
+    ),
+    `${fname}: missing setRetryAttempt(0) + setRetryMax(0) in finally block.`,
+  );
+  assert(
+    /aria-busy=\{busy\}/.test(src),
+    `${fname}: missing aria-busy={busy} on the action button.`,
+  );
+}
 
 // ---------------------------------------------------------------------
 // Output
