@@ -143,6 +143,9 @@ export function StructuredVariantTool(props: {
   useEffect(() => trackTool.view(), [trackTool]);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null);
   const [quizItems, setQuizItems] = useState<QuizItem[] | null>(null);
@@ -211,6 +214,12 @@ export function StructuredVariantTool(props: {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       const processingMs = Math.round(
@@ -270,6 +279,8 @@ export function StructuredVariantTool(props: {
       trackTool.error({ errorCode: "network_error", depth: props.depth });
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -528,8 +539,13 @@ export function StructuredVariantTool(props: {
             className="btn btn-primary"
             disabled={!file || busy}
             onClick={run}
+            aria-busy={busy}
           >
-            {busy ? props.busyLabel : props.runLabel}
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? props.busyLabel
+                : props.runLabel}
           </button>
         )}
       </div>

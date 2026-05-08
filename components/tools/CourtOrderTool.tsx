@@ -153,6 +153,9 @@ export function CourtOrderTool() {
   const { status } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<CourtOrder | null>(null);
   const [meta, setMeta] = useState<{
@@ -211,6 +214,12 @@ export function CourtOrderTool() {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       const processingMs = Math.round(
@@ -263,6 +272,8 @@ export function CourtOrderTool() {
       trackTool.error({ errorCode: "network_error", depth: "court-order" });
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -339,8 +350,13 @@ export function CourtOrderTool() {
             Sign in to run
           </Link>
         ) : (
-          <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}>
-            {busy ? "Analysing…" : "Summarize judgment"}
+          <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}
+            aria-busy={busy}>
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Analysing…"
+                : "Summarize judgment"}
           </button>
         )}
       </div>

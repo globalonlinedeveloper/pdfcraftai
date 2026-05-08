@@ -201,6 +201,9 @@ export function SearchablePdfTool() {
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [peekError, setPeekError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [busyLabel, setBusyLabel] = useState("Working…");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RunResult | null>(null);
@@ -312,6 +315,12 @@ export function SearchablePdfTool() {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -398,10 +407,13 @@ export function SearchablePdfTool() {
       );
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
   const ctaLabel = (() => {
+    if (retryAttempt > 0) return `Retrying… (${retryAttempt}/${retryMax})`;
     if (busy) return busyLabel;
     if (!file) return "OCR + overlay";
     if (peekError) return "Can't read this PDF";
@@ -574,6 +586,7 @@ export function SearchablePdfTool() {
             className="btn btn-primary"
             disabled={!file || busy || overLimit || typeof pageCount !== "number" || !!peekError}
             onClick={run}
+            aria-busy={busy}
           >
             {ctaLabel}
           </button>

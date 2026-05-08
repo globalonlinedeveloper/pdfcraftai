@@ -58,6 +58,18 @@ const TOOL_PATHS = [
   path.join(ROOT, "components/tools/GeneratePdfTool.tsx"),
   path.join(ROOT, "components/tools/OcrPdfTool.tsx"),
   path.join(ROOT, "components/tools/RedactPdfTool.tsx"),
+  // 2026-05-08 sweep batch 3 — full sweep close: 11 more AI runners.
+  path.join(ROOT, "components/tools/BloodTestTool.tsx"),
+  path.join(ROOT, "components/tools/CourtOrderTool.tsx"),
+  path.join(ROOT, "components/tools/MindmapPdfTool.tsx"),
+  path.join(ROOT, "components/tools/ResumeParserTool.tsx"),
+  path.join(ROOT, "components/tools/SearchablePdfTool.tsx"),
+  path.join(ROOT, "components/tools/SemanticSearchPdfTool.tsx"),
+  path.join(ROOT, "components/tools/SignPdfTool.tsx"),
+  path.join(ROOT, "components/tools/StructuredVariantTool.tsx"),
+  path.join(ROOT, "components/tools/SummarizeVariantTool.tsx"),
+  path.join(ROOT, "components/tools/TableExtractTool.tsx"),
+  path.join(ROOT, "components/tools/TldrPdfTool.tsx"),
 ];
 
 for (const p of TOOL_PATHS) {

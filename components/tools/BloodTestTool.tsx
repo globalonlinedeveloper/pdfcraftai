@@ -147,6 +147,9 @@ export function BloodTestTool() {
   const { status } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [meta, setMeta] = useState<{
@@ -205,6 +208,12 @@ export function BloodTestTool() {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       const processingMs = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0);
@@ -238,6 +247,8 @@ export function BloodTestTool() {
       trackTool.error({ errorCode: "network_error", depth: "blood-test" });
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -370,8 +381,13 @@ export function BloodTestTool() {
         {signedOut ? (
           <Link href="/login?callbackUrl=/tool/ai-blood-test" className="btn btn-primary">Sign in to parse</Link>
         ) : (
-          <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}>
-            {busy ? "Parsing…" : "Parse lab report"}
+          <button type="button" className="btn btn-primary" disabled={!file || busy} onClick={run}
+            aria-busy={busy}>
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Parsing…"
+                : "Parse lab report"}
           </button>
         )}
       </div>

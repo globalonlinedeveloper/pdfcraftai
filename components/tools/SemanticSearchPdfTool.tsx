@@ -78,6 +78,9 @@ export function SemanticSearchPdfTool() {
   const [file, setFile] = useState<File | null>(null);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [passages, setPassages] = useState<Passage[] | null>(null);
   const [meta, setMeta] = useState<{
@@ -146,6 +149,12 @@ export function SemanticSearchPdfTool() {
           form.append("idempotencyKey", idempotencyKey);
           return form;
         },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
+        },
       });
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       const processingMs = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0);
@@ -184,6 +193,8 @@ export function SemanticSearchPdfTool() {
       trackTool.error({ errorCode: "network_error", depth: "semantic-search" });
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -370,8 +381,13 @@ export function SemanticSearchPdfTool() {
             className="btn btn-primary"
             disabled={!file || !query.trim() || busy}
             onClick={run}
+            aria-busy={busy}
           >
-            {busy ? "Searching…" : "Search"}
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Searching…"
+                : "Search"}
           </button>
         )}
       </div>

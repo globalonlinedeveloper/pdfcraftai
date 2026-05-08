@@ -80,6 +80,9 @@ export function TableExtractTool() {
 
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryMax, setRetryMax] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TableResult | null>(null);
 
@@ -127,6 +130,12 @@ export function TableExtractTool() {
           form.append("idempotencyKey", idempotencyKey);
 
           return form;
+        },
+        onAttempt: (attempt, max) => {
+          if (attempt > 1) {
+            setRetryAttempt(attempt);
+            setRetryMax(max);
+          }
         },
       });
 
@@ -195,6 +204,8 @@ export function TableExtractTool() {
       );
     } finally {
       setBusy(false);
+      setRetryAttempt(0);
+      setRetryMax(0);
     }
   };
 
@@ -308,10 +319,15 @@ export function TableExtractTool() {
             className="btn btn-primary"
             disabled={busy || !file}
             onClick={run}
+            aria-busy={busy}
           >
             {/* Bundle G5: lib/tools.ts canonical "~3 credits per table" — table-billed,
                 so formatActionCost() preserves the unit since table count varies per upload. */}
-            {busy ? "Extracting…" : "Extract tables"}
+            {retryAttempt > 0
+              ? `Retrying… (${retryAttempt}/${retryMax})`
+              : busy
+                ? "Extracting…"
+                : "Extract tables"}
           </button>
         )}
       </div>
