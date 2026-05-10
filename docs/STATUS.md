@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 2: RewritePdfTool ?mode=
+
+- [x] **feat(tools): URL permalink sweep batch 2 — RewritePdfTool.** Commit `a562cc5` (2026-05-11). Item #17 sweep continues. RewritePdfTool's mode now syncs with `?mode=` (simplify / formal / casual / concise / expand). Simpler shape than TranslatePdfTool's two-state dispatch — straight 5-literal allowlist mirroring the SummarizePdfTool canary directly. Default `simplify` omitted from URL. CI guard +7 assertions in Section F. 25 total in the harness. Aggregator: 6309 passed, 0 failed across 116 suites (was 6302/116). Verified live at `a562cc5` after clean deploy. **Item #17 progress: 3 of N tools wired (Summarize / Translate / Rewrite).** **No deploy gotcha.**
+
 ### 2026-05-08 — Item #17 sweep batch 1: TranslatePdfTool ?lang=
 
 - [x] **feat(tools): URL permalink sweep batch 1 — TranslatePdfTool.** Commit `829fd1e` (2026-05-08). Item #17 sweep continues. Translate now syncs the effective target language with `?lang=` — mirrors the Summarize canary but with a more complex dispatch because Translate uses a two-state shape (langChoice flips to OTHER_CODE_SENTINEL when user picks Other; customLang holds the BCP-47 string). Mount effect mirrors applyMacro's common-vs-Other dispatch: common code → langChoice + customLang(""); arbitrary BCP-47 → SENTINEL + customLang(lang). Permalinks behave identically to manual UI picks. Sync effect lists `[currentTargetLang]` as dep (the DERIVED field, not raw langChoice/customLang) so Other-mode mid-typing with invalid BCP-47 doesn't write garbage to URL. Spanish (`es`) default omitted from URL. Lets users share `/tool/ai-translate?lang=ja` permalinks. CI guard +9 assertions in Section E. 18 total (was 9). Aggregator: 6302 passed, 0 failed across 116 suites (was 6293/116). **Deploy gotcha:** zombie cleanup again. Mass-kill + restart.txt cleared. **Item #17 progress: 2 of N tools wired (Summarize / Translate).**
