@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { ProfileForm } from "@/components/app/settings/ProfileForm";
 import { PasswordForm } from "@/components/app/settings/PasswordForm";
 import { DeleteAccountForm } from "@/components/app/settings/DeleteAccountForm";
+import { ExportDataButton } from "@/components/app/settings/ExportDataButton";
 import { BillingProfileForm } from "@/components/app/settings/BillingProfileForm";
 
 export const metadata: Metadata = {
@@ -85,6 +86,17 @@ export default async function SettingsPage() {
             gstin: user.gstin,
           }}
         />
+      </section>
+
+      {/* Item #25 — DPDP §11 right of access. Surfaces the
+          existing /api/account/export endpoint with a UI button so
+          users can actually exercise the right (rather than having
+          to craft the URL by hand). Placed BEFORE the Danger zone
+          so the natural reading order matches the access-then-erasure
+          DPDP sequence. */}
+      <section className="card" style={{ padding: 24 }}>
+        <h2 style={sectionHeading}>Export your data</h2>
+        <ExportDataButton />
       </section>
 
       <section

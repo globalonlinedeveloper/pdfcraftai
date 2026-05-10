@@ -1437,6 +1437,21 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — account-export-ui guard. Pins item #25 (account
+  // deletion polish): adds the missing UI surface for the
+  // /api/account/export endpoint that's existed since the original
+  // DPDP compliance work but had no button. ExportDataButton client
+  // component fetches the endpoint, downloads as date-stamped JSON,
+  // mounted on /app/settings ABOVE the Danger zone (matches DPDP
+  // §11 access → §12 erasure reading order). DeleteAccountForm copy
+  // updated to nudge users toward export first. Pure static parse:
+  // component shape (use client, named export, fetch URL, credentials),
+  // M6 object-URL revoke in finally, settings page import + mount,
+  // section ordering invariant, delete-form copy.
+  {
+    name: "account-export-ui",
+    file: "test-account-export-ui.mjs",
+  },
   // 2026-05-08 — tool-permalinks guard. Pins item #17 of the
   // improvement analysis: URL state encoding canary on
   // SummarizePdfTool. depth setting syncs bidirectionally with

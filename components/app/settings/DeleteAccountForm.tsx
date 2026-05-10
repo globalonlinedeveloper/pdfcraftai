@@ -33,7 +33,9 @@ export function DeleteAccountForm({ email }: { email: string }) {
     <form action={formAction}>
       <p className="muted" style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 14 }}>
         This permanently deletes your account, all associated files, API keys, and
-        credit balance. This action cannot be undone.
+        credit balance. <strong>This action cannot be undone.</strong> If you
+        haven&apos;t already, run <em>Export your data</em> above first — once
+        deletion completes the data is unrecoverable.
       </p>
 
       <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
