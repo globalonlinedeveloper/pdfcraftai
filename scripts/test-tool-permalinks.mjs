@@ -223,6 +223,64 @@ if (langEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section F — RewritePdfTool sweep batch 2 (?mode=).
+// ---------------------------------------------------------------------
+//
+// Sweep batch 2 — RewritePdfTool wires the same pattern but for
+// `?mode=<simplify|formal|casual|concise|expand>`. Single-state
+// (no Other branch like Translate's), so the dispatch is the
+// simpler 5-literal allowlist shape.
+
+const REWRITE_PATH = path.join(ROOT, "components/tools/RewritePdfTool.tsx");
+assert(fs.existsSync(REWRITE_PATH), `RewritePdfTool missing at ${REWRITE_PATH}`);
+const REWRITE = fs.existsSync(REWRITE_PATH) ? fs.readFileSync(REWRITE_PATH, "utf8") : "";
+
+assert(
+  /params\.get\("mode"\)/.test(REWRITE),
+  "RewritePdfTool: mount-effect must call `params.get(\"mode\")`.",
+);
+
+assert(
+  /raw\s*===\s*"simplify"\s*\|\|\s*raw\s*===\s*"formal"\s*\|\|\s*raw\s*===\s*"casual"\s*\|\|\s*raw\s*===\s*"concise"\s*\|\|\s*raw\s*===\s*"expand"/.test(
+    REWRITE,
+  ),
+  "RewritePdfTool: URL parser must whitelist all 5 Mode literals " +
+    "explicitly. Loosening to a generic check would let URL-injected " +
+    "garbage flow into setMode.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[mode\]\)/.test(
+    REWRITE,
+  ),
+  "RewritePdfTool: state → URL sync must live in `useEffect(..., [mode])`.",
+);
+
+assert(
+  /mode === "simplify"\s*\)\s*\{\s*params\.delete\("mode"\)/.test(REWRITE),
+  "RewritePdfTool: default value `simplify` must be omitted from URL " +
+    "via params.delete. Without this, every URL carries `?mode=simplify` " +
+    "for the most common case.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(REWRITE),
+  "RewritePdfTool: permalink effects must guard SSR with `typeof " +
+    "window === \"undefined\"`.",
+);
+
+const modeEffectMatch = REWRITE.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[mode\]\)/,
+);
+if (modeEffectMatch) {
+  assert(
+    !/pushState/.test(modeEffectMatch[1]),
+    "RewritePdfTool: mode-sync effect uses pushState — back-button " +
+      "hell. Use replaceState.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 

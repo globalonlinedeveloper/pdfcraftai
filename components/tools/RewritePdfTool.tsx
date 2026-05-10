@@ -21,7 +21,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, getSession } from "next-auth/react";
@@ -123,6 +123,42 @@ export function RewritePdfTool() {
   // Item #5 sweep — retry-status UX (mirrors SummarizePdfTool canary)
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [retryMax, setRetryMax] = useState(0);
+
+  // 2026-05-08 (item #17 sweep) — URL permalink state sync. Mirrors
+  // SummarizePdfTool canary (commit 69756b4): read ?mode= on mount,
+  // write back via history.replaceState when mode changes. Lets users
+  // share `/tool/ai-rewrite?mode=formal`. Default ("simplify") is
+  // omitted from the URL.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("mode");
+    if (
+      raw === "simplify" ||
+      raw === "formal" ||
+      raw === "casual" ||
+      raw === "concise" ||
+      raw === "expand"
+    ) {
+      setMode(raw);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (mode === "simplify") {
+      params.delete("mode");
+    } else {
+      params.set("mode", mode);
+    }
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [mode]);
 
   const addFiles = useCallback((files: File[]) => {
     setError(null);
