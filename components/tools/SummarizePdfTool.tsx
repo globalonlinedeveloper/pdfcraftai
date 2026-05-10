@@ -647,6 +647,16 @@ function ResultCard({ result }: { result: SummaryResult }) {
 
   return (
     <div
+      // Item #14 (a11y): announce result arrival to screen readers.
+      // role="status" + aria-live="polite" tells assistive tech the
+      // region is a live update worth queueing AFTER the user's
+      // current focus/announcement (vs aria-live="assertive" which
+      // would interrupt — wrong for a successful op completion).
+      // aria-atomic="true" ensures the whole region is read on
+      // arrival rather than just the diff.
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       className="card"
       style={{
         padding: 0,

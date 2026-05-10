@@ -1437,6 +1437,19 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — aria-live-results guard. Pins item #14 (screen
+  // reader announcements) on the AI tool runners' result cards.
+  // Sister to test-retry-status-ux.mjs (covers the in-flight
+  // aria-busy state); together they form: aria-busy on click → AT
+  // announces "busy", aria-live=polite + role=status + aria-atomic
+  // on result region → AT announces the result when it lands. 9
+  // tools currently wired (those with `function ResultCard`); 9
+  // more inline-result tools tracked in INLINE_RESULT_TOOLS_DEFERRED
+  // for follow-up sweep.
+  {
+    name: "aria-live-results",
+    file: "test-aria-live-results.mjs",
+  },
   // 2026-05-08 — tool-dropzone-prompt guard. Pins item #3 of the
   // improvement analysis: empty states sweep. Every ToolDropzone
   // consumer in components/tools/ must pass a tool-specific

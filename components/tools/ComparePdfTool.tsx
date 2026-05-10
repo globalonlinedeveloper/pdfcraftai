@@ -431,6 +431,10 @@ function ResultCard({ result }: { result: CompareResult }) {
 
   return (
     <div
+      
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       className="card"
       style={{
         padding: 0,

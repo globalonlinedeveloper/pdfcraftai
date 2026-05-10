@@ -618,6 +618,10 @@ function ResultCard({ result }: { result: TranslationResult }) {
 
   return (
     <div
+      
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       className="card"
       style={{
         padding: 0,

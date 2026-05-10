@@ -455,6 +455,10 @@ function ResultCard({ result }: { result: RewriteResult }) {
 
   return (
     <div
+      
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       className="card"
       style={{
         padding: 0,
