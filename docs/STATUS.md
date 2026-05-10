@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #14 follow-up sweep: aria-live on 5 inline tools
+
+- [x] **feat(a11y): aria-live on 5 inline-result tools.** Commit `d981acd` (2026-05-11). Closes 5 of 9 INLINE_RESULT_TOOLS_DEFERRED from the canary (5671b5a). TldrPdfTool / MindmapPdfTool / ResumeParserTool / BloodTestTool / SemanticSearchPdfTool now each carry `role="status"` + `aria-live="polite"` + `aria-atomic="true"` on the result-region outer div. Each location found by grep'ing for the characteristic accent-soft styling. CI guard gains INLINE_RESULT_TOOLS_WIRED list with parallel assertion loop checking all three attrs appear in the file (can't anchor on a function boundary because regions are inline; "all three together" requirement prevents stray false positives). INLINE_RESULT_TOOLS_DEFERRED shrinks 9 → 4 (CourtOrder, Searchable, Structured/SummarizeVariant remain). 56 assertions in the harness (was 46). Aggregator: 6335 passed, 0 failed across 116 suites (was 6325/116). Verified live at `d981acd` after clean deploy. **Item #14 progress: 14 of 18 AI tool runners wired (78%).** **No deploy gotcha.**
+
 ### 2026-05-11 — Item #17 sweep batch 4: PdfCompressTool (first free tool)
 
 - [x] **feat(tools): URL permalink sweep batch 4 — PdfCompressTool.** Commit `7ab5e71` (2026-05-11). FIRST free tool to get the permalink pattern (prior batches all AI). Confirms the canonical 4-piece pattern transfers cleanly to non-AI tool runners. `?level=<light|balanced|strong>` syncs bidirectionally; default `balanced` omitted. Lets users share `/tool/compress-pdf?level=strong` for ebook-PDF use cases. CI guard +7 assertions in Section H. 41 total in the harness (was 34). Aggregator: 6325 passed, 0 failed across 116 suites (was 6318/116). Verified live at `7ab5e71` after clean deploy. **No deploy gotcha.** **Item #17 progress: 5 of N tools (4 AI + 1 free).**
