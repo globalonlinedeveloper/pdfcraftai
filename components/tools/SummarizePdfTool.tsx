@@ -125,6 +125,53 @@ export function SummarizePdfTool() {
   const isAnonymous = sessionStatus === "unauthenticated";
   const [file, setFile] = useState<File | null>(null);
   const [depth, setDepth] = useState<Depth>("standard");
+
+  // 2026-05-08 (item #17 — tool sharing permalinks). Sync the depth
+  // setting bidirectionally with the URL: read it from `?depth=` on
+  // mount, and write it back via history.replaceState whenever it
+  // changes. Lets users share a preset link like
+  // `/tool/ai-summarize?depth=detailed` that lands a collaborator
+  // straight on the right config — no separate "copy this URL"
+  // step needed.
+  //
+  // Why a mount-effect, not initial state: SummarizePdfTool renders
+  // server-side first (the parent page is `force-dynamic`), and
+  // `window.location` doesn't exist there. Reading the URL inside
+  // useEffect means the first paint shows the default ("standard")
+  // and then snaps to the URL value on hydration — a one-frame
+  // flash, but no SSR hydration mismatch.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("depth");
+    if (raw === "tldr" || raw === "standard" || raw === "detailed") {
+      setDepth(raw);
+    }
+    // empty deps — only on mount. We intentionally don't react to
+    // URL changes mid-session; if the user opens a different
+    // permalink in a new tab they get the new depth, but in the
+    // current tab the depth follows their UI clicks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Whenever depth changes, write it back to the URL (no navigation
+  // — replaceState swaps the browser history entry in place). Default
+  // ("standard") is omitted from the URL to keep the bare path clean
+  // for the most common case.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (depth === "standard") {
+      params.delete("depth");
+    } else {
+      params.set("depth", depth);
+    }
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [depth]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SummaryResult | null>(null);

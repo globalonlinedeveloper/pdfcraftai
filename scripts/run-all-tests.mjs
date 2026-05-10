@@ -1437,6 +1437,19 @@ const SUITES = [
     name: "preview-page-kind-parity",
     file: "test-preview-page-kind-parity.mjs",
   },
+  // 2026-05-08 — tool-permalinks guard. Pins item #17 of the
+  // improvement analysis: URL state encoding canary on
+  // SummarizePdfTool. depth setting syncs bidirectionally with
+  // `?depth=` — read on mount, written via history.replaceState
+  // on change. Lets users share `/tool/ai-summarize?depth=detailed`
+  // links. Pure static parse: URL → state mount-effect, value
+  // whitelist (no garbage in setDepth), state → URL effect on
+  // [depth], replaceState (not pushState — back-button hell), default
+  // omitted from URL, SSR `typeof window` guard.
+  {
+    name: "tool-permalinks",
+    file: "test-tool-permalinks.mjs",
+  },
   // 2026-05-08 — aria-live-results guard. Pins item #14 (screen
   // reader announcements) on the AI tool runners' result cards.
   // Sister to test-retry-status-ux.mjs (covers the in-flight
