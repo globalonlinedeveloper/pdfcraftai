@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 3: GeneratePdfTool 3-param sync
+
+- [x] **feat(tools): URL permalink sweep batch 3 — GeneratePdfTool.** Commit `680cc0a` (2026-05-11). Most complex sweep shape so far — 3 params (docType / length / tone) syncing in tandem with `?docType=&length=&tone=`. Single useEffect with `[docType, length, tone]` dep array (NOT three separate effects: history.replaceState doesn't batch within React's render cycle, three separate effects would race and the URL would temporarily drop two of three params). 14 total allowlist values across three fields. All three defaults (other / medium / neutral) omitted from URL via per-param delete branches — typical shared link is `/tool/ai-generate?docType=letter&tone=formal` (2 of 3 specified, length stays default). CI guard +8 assertions in Section G; whitespace-tolerant regex needed for the 7-literal docType allowlist (source has multi-line breaks between OR conjuncts). 34 total in the harness (was 25). Aggregator: 6318 passed, 0 failed across 116 suites (was 6309/116). **Deploy gotcha:** zombie cleanup again. Mass-kill + restart.txt cleared. **Item #17 progress: 4 of N tools wired (Summarize / Translate / Rewrite / Generate).**
+
 ### 2026-05-11 — Item #17 sweep batch 2: RewritePdfTool ?mode=
 
 - [x] **feat(tools): URL permalink sweep batch 2 — RewritePdfTool.** Commit `a562cc5` (2026-05-11). Item #17 sweep continues. RewritePdfTool's mode now syncs with `?mode=` (simplify / formal / casual / concise / expand). Simpler shape than TranslatePdfTool's two-state dispatch — straight 5-literal allowlist mirroring the SummarizePdfTool canary directly. Default `simplify` omitted from URL. CI guard +7 assertions in Section F. 25 total in the harness. Aggregator: 6309 passed, 0 failed across 116 suites (was 6302/116). Verified live at `a562cc5` after clean deploy. **Item #17 progress: 3 of N tools wired (Summarize / Translate / Rewrite).** **No deploy gotcha.**
