@@ -58,21 +58,30 @@ const RESULT_CARD_TOOLS = [
   "TableExtractTool",
 ];
 
-// Tools that render results inline in the main component body (no
-// `function ResultCard` extraction). Tracked here as a known follow-up;
-// adding aria-live to these requires per-file inspection because the
-// "result region" boundary is less obvious. NOT a regression — just
-// scope deferred.
-const INLINE_RESULT_TOOLS_DEFERRED = [
-  "BloodTestTool",
-  "CourtOrderTool",
+// Tools that render results inline (no `function ResultCard`
+// extraction) but HAVE been wired with aria-live anyway. Each gets
+// the same three aria attributes; placement is per-file (the
+// inline result-region <div> wherever the result conditional is).
+// Asserts the three attributes are present somewhere in the file —
+// can't anchor on a function boundary because there isn't one.
+const INLINE_RESULT_TOOLS_WIRED = [
+  "TldrPdfTool",
   "MindmapPdfTool",
   "ResumeParserTool",
-  "SearchablePdfTool",
+  "BloodTestTool",
   "SemanticSearchPdfTool",
+];
+
+// Tools that still render results inline AND don't yet have aria-live.
+// Tracked here as known follow-up; per-file inspection still needed
+// to identify the result-region <div>. NOT a regression — just scope
+// deferred. As tools migrate, they move from this list to
+// INLINE_RESULT_TOOLS_WIRED above.
+const INLINE_RESULT_TOOLS_DEFERRED = [
+  "CourtOrderTool",
+  "SearchablePdfTool",
   "StructuredVariantTool",
   "SummarizeVariantTool",
-  "TldrPdfTool",
 ];
 
 for (const name of RESULT_CARD_TOOLS) {
@@ -120,6 +129,37 @@ for (const name of RESULT_CARD_TOOLS) {
   );
 }
 
+// INLINE_RESULT_TOOLS_WIRED — assert all three aria attributes
+// appear somewhere in the file. Can't anchor on a function boundary
+// because the result region is inline; the "all three together"
+// requirement is what makes a stray role="status" elsewhere
+// unable to false-positive (you'd need to also have aria-live polite
+// AND aria-atomic true in the same file by accident).
+for (const name of INLINE_RESULT_TOOLS_WIRED) {
+  const p = path.join(ROOT, `components/tools/${name}.tsx`);
+  if (!fs.existsSync(p)) {
+    assert(false, `${name}: file missing at ${p}`);
+    continue;
+  }
+  const src = fs.readFileSync(p, "utf8");
+  assert(
+    /role="status"/.test(src),
+    `${name} (inline-wired): file must contain role="status" on the ` +
+      "result region. If the result rendering was refactored, update " +
+      "the placement OR move this tool back to INLINE_RESULT_TOOLS_DEFERRED.",
+  );
+  assert(
+    /aria-live="polite"/.test(src),
+    `${name} (inline-wired): file must contain aria-live="polite" on the ` +
+      "result region.",
+  );
+  assert(
+    /aria-atomic="true"/.test(src),
+    `${name} (inline-wired): file must contain aria-atomic="true" on the ` +
+      "result region.",
+  );
+}
+
 // Sanity: deferred list isn't empty (there's known follow-up work)
 // AND the deferred-tool files still exist (file rename would silently
 // drop them from coverage tracking).
@@ -139,7 +179,8 @@ for (const name of INLINE_RESULT_TOOLS_DEFERRED) {
 }
 
 console.log(
-  `[info] aria-live wired on ${RESULT_CARD_TOOLS.length} tools; ` +
+  `[info] aria-live wired on ${RESULT_CARD_TOOLS.length + INLINE_RESULT_TOOLS_WIRED.length} ` +
+    `tools (${RESULT_CARD_TOOLS.length} ResultCard + ${INLINE_RESULT_TOOLS_WIRED.length} inline); ` +
     `${INLINE_RESULT_TOOLS_DEFERRED.length} inline-result tools deferred.`,
 );
 

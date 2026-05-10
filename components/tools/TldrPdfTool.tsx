@@ -221,6 +221,12 @@ export function TldrPdfTool() {
 
       {result && (
         <div
+          // Item #14 follow-up sweep — announce result arrival to AT.
+          // Same shape as the 9 ResultCard-extracted tools wired in
+          // commit 5671b5a; this is the inline-result variant.
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
           className="card"
           style={{ padding: 20, borderColor: "var(--accent)", background: "var(--accent-soft)" }}
         >
