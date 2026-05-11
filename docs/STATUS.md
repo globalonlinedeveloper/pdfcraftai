@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 8: PdfResizeTool mixed 2-param
+
+- [x] **feat(tools): URL permalink sweep batch 8 — PdfResizeTool.** Commit `8acf528` (2026-05-11). Same mixed-type 2-param shape as ImagesToPdfTool batch 6 (5-literal PaperSize + boolean landscape) — fewer enum members because resize always targets concrete paper (no "fit"). CI guard +10 assertions in Section L mirroring Section J. 82 total. Aggregator: 6383 passed, 0 failed across 116 suites (was 6373/116). Verified live at `8acf528` after clean deploy. **No deploy gotcha.** **Item #17 progress: 9 of N tools (4 AI + 5 free); 6 distinct state shapes verified.**
+
 ### 2026-05-11 — Item #17 sweep batch 7: PdfPageNumbersTool 3-param with unbounded number
 
 - [x] **feat(tools): URL permalink sweep batch 7 — PdfPageNumbersTool.** Commit `e8c3bda` (2026-05-11). 3-param shape (position / format / fontSize) with a NEW variant: unbounded number requiring parseInt + Number.isFinite + 4..24 bounds check on read. Without the bounds, `?fontSize=NaN` or `?fontSize=9999` would render garbage. Format literals contain spaces ("1 of N", "Page 1 of N") — URLSearchParams handles encoding transparently; allowlist matches the raw decoded values. Single useEffect with `[position, format, fontSize]` 3-tuple dep per replaceState non-batching invariant. All three defaults omitted (bottom-center / 1 of N / 11). CI guard +11 assertions in Section K. 72 total. Aggregator: 6373 passed, 0 failed across 116 suites (was 6360/116). Verified live at `e8c3bda` after clean deploy. **No deploy gotcha.** **Item #17 progress: 8 of N tools (4 AI + 4 free).** Pattern now handles 6 distinct state shapes.
