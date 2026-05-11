@@ -3150,4 +3150,174 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // ai-redact-pdf — AI redaction, paired with free Redact
+  // ============================================================
+  "ai-redact-pdf": {
+    title: "AI Redact PDF — the difference between hiding PII and actually removing it",
+    intro:
+      "Redacting a PDF is one of those operations where the consequences of doing it wrong are severe and often invisible until weeks later when a journalist or opposing counsel recovers the underlying text. The right tool removes the bytes; the wrong tool draws a black rectangle on top and leaves the original text in the content stream where anyone with a free PDF editor can recover it. Here is exactly what AI Redact does, the eight categories of PII it auto-detects (including India-specific formats), and the precise difference between AI Redact's byte-level removal and the visual-overlay redaction that ships with many free tools.",
+    sections: [
+      {
+        h: "How AI Redact actually works",
+        p: [
+          "AI Redact does three things in sequence. First, it reads every page of the source PDF and runs an AI detection pass to find candidate PII — names, contact info, identifier numbers, addresses. Second, it presents the findings as a confirmation step so you can uncheck specific instances or whole categories before applying. Third, it rasterises the redacted regions: the page bytes in those regions are converted to a pixel-level black rectangle, the underlying text is removed from the content stream entirely, and the output PDF carries no recoverable trace of the original text in those areas.",
+          "The rasterise step is the load-bearing difference from cheap-redact tools. A visual overlay (a black rectangle drawn on top) leaves the original text in the PDF's content stream — perfectly preserved, just hidden by the overlay. Anyone with a free PDF editor can remove the overlay and read the text. AI Redact removes the text from the content stream, so even with the rectangle gone, there is nothing to read.",
+        ],
+      },
+      {
+        h: "Eight PII categories auto-detected",
+        p: [
+          "AI Redact ships with detectors for the most common PII types globally, plus India-specific identifiers because of the platform's high India traffic:",
+        ],
+        list: {
+          items: [
+            { b: "Personal names.", t: "First+last name pairs, single names with title prefixes (Mr., Mrs., Dr.), names in signature blocks." },
+            { b: "Email addresses.", t: "Standard RFC-5322 patterns, including unusual TLDs and embedded mailto: links." },
+            { b: "Phone numbers.", t: "US (NPA-NXX-XXXX), India (10-digit + country code +91), UK, Germany, Canada — the common international formats." },
+            { b: "Indian PAN.", t: "5 letters + 4 digits + 1 letter pattern. Often masked to last 4 characters." },
+            { b: "Indian Aadhaar.", t: "12 digits, usually formatted XXXX-XXXX-XXXX. Masked to last 4 digits per UIDAI guidance." },
+            { b: "Bank account numbers.", t: "8-18 digit strings in financial-document context. The context check prevents false positives on random long numbers." },
+            { b: "Addresses.", t: "Street + city + zip patterns, India PIN codes, UK postcodes, US ZIP+4." },
+            { b: "GSTIN (Indian GST identifier).", t: "15-character format. Important for business documents where the GSTIN might be redactable depending on disclosure rules." },
+          ],
+        },
+      },
+      {
+        h: "The confirmation step is the safety net",
+        p: [
+          "Before any redaction is applied, the tool surfaces every detected PII instance with checkboxes. This serves three purposes:",
+        ],
+        list: {
+          items: [
+            { b: "Reviewing false positives.", t: "AI detectors are imperfect. A name in a quoted citation might not actually be PII you want to redact. The confirmation step lets you uncheck those." },
+            { b: "Reviewing for missed PII.", t: "If a particular piece of PII appears in an unusual format that the detector missed, it shows as undetected. You can either run a second pass after manual correction or use the free Redact tool to draw rectangles by hand." },
+            { b: "Selecting what to keep vs what to remove.", t: "Sometimes you want to redact employee names but keep the company name visible. Or redact phone numbers but keep email addresses. Per-category and per-instance checkboxes let you do this granularly." },
+          ],
+        },
+      },
+      {
+        h: "AI Redact vs Free Redact",
+        p: [
+          "The two redaction tools serve different needs:",
+        ],
+        list: {
+          items: [
+            { b: "AI Redact — automatic detection + byte-level removal.", t: "Costs credits per page. Auto-detects 8 categories of PII. Output is cryptographically sanitised — the original text is GONE. Use for compliance-grade redaction (legal production, regulatory submission, public-facing release of internal documents)." },
+            { b: "Free Redact — manual rectangle drawing + visual overlay.", t: "Free. You draw rectangles by hand over what to redact. The visual overlay HIDES the text but does not remove it. Use for casual redaction (sending a draft with a confidential price hidden, sharing a screenshot with email addresses hidden) where the recipient is unlikely to be hostile." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns to verify",
+        p: [
+          "Habits that catch missed PII before it leaks:",
+        ],
+        list: {
+          items: [
+            { b: "Run PDF Inspector on the output.", t: "After redacting, inspect the output to confirm no extractable text remains in the redacted areas. PDF Inspector shows extractable text per page; redacted regions should be empty." },
+            { b: "Search for the specific PII in the output.", t: "Ctrl-F in the output PDF for the redacted name / email / etc. should return zero matches. If a match comes up, the redaction didn't catch that instance." },
+            { b: "Test copy-paste from the redacted region.", t: "Select text across a redacted rectangle. The copied text should not include the redacted content. If it does, the redaction didn't remove the underlying text." },
+          ],
+        },
+      },
+      {
+        h: "When to also strip metadata after redacting",
+        p: [
+          "Redacting page content is necessary but sometimes not sufficient. PDFs carry metadata that can leak information you also wanted to hide:",
+        ],
+        list: {
+          items: [
+            { b: "/Info dictionary author + title.", t: "Often pre-filled with the document's original author name and creation timestamp. Run Remove Metadata after AI Redact for a fully-sanitised file." },
+            { b: "XMP metadata stream.", t: "Can carry version history, contributor lists, custom properties. Remove Metadata clears this too." },
+            { b: "Annotation author fields.", t: "If your document has annotations, each carries an author. Flatten before redacting, or strip annotation authors specifically." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "AI Redact charges 2 credits per page of source PDF. The tool handles PDFs up to 100 MB. Processing happens on our servers; the file is in memory only during processing and is never persisted. Output is byte-compatible with every PDF reader and carries the redacted state forward through merge / split / compress / any further operation.",
+          "Common pairings: AI Redact → Remove Metadata → Flatten for a fully-sanitised compliance-grade deliverable. AI Redact → Compress for the smallest sanitised final file.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // ai-fill-pdf-form — paired with free fill tool
+  // ============================================================
+  "ai-fill-pdf-form": {
+    title: "AI Fill PDF Form — when forms have no fillable fields and you need them filled anyway",
+    intro:
+      "About half of the PDF forms in the wild are flat — printed-looking PDFs with lines and labels that no PDF reader can actually click into. Your bank's loan application, the city's parking-permit form, the immigration paperwork from twenty years ago — these are scans or photo-PDFs without an AcroForm dictionary. Free fill tools cannot help with them because there are no fields to fill. AI Fill detects the field positions visually using OCR + vision-language reasoning, then types your provided values into the right places. Here is how that works, the four personal-info fields it remembers across sessions, and the difference between AI Fill and our free Fill PDF Form tool.",
+    sections: [
+      {
+        h: "How AI Fill solves the flat-PDF problem",
+        p: [
+          "AI Fill reads each page of your form as an image, then runs a vision-language pass to identify field positions: where the labels are (\"Name:\", \"Address:\", \"Date of Birth:\"), where the empty lines or boxes for the values are, and which value goes in which slot. It then renders your personal-info values as text at the right coordinates on each page, producing a new PDF with the form filled.",
+          "The end result looks like the form was filled out by hand or typewriter on the page, because that is effectively what it is — the values are drawn onto the page as text rather than typed into form fields. The output is one flat PDF (no live form fields), which is usually exactly what the recipient wants from a filled form anyway.",
+        ],
+      },
+      {
+        h: "Eight personal-info fields remembered across sessions",
+        p: [
+          "After you fill any form once, AI Fill remembers your standard personal info so the next form pre-fills automatically. Eight fields are remembered by default:",
+        ],
+        list: {
+          items: [
+            { b: "Full name + first / last separately.", t: "Different forms ask for name in different shapes (full name field, separate fields, last-name-first). AI Fill matches the form's structure to the right combination." },
+            { b: "Email address.", t: "Single canonical email; you can override per-form for cases where different addresses apply." },
+            { b: "Phone number.", t: "Stored with country code so international forms work without manual prefix entry." },
+            { b: "Date of birth.", t: "Stored in ISO format internally; rendered in whatever format the form expects (US MM/DD/YYYY, India DD/MM/YYYY, ISO YYYY-MM-DD)." },
+            { b: "Postal address.", t: "Street + city + state + zip + country. AI Fill picks apart the form's expected fields and maps your address pieces correctly." },
+            { b: "Company name + job title.", t: "Often paired on business forms. Stored separately so you can choose to fill only one when appropriate." },
+            { b: "Government ID numbers.", t: "Stored encrypted with optional passphrase. Common IDs: SSN (US), PAN (India), NI Number (UK). Auto-filled when the form asks for the matching ID type." },
+            { b: "Signature image.", t: "Upload once; AI Fill places it in signature fields on subsequent forms." },
+          ],
+        },
+      },
+      {
+        h: "Three things AI Fill does that free Fill cannot",
+        p: [
+          "The capabilities that justify the credit cost:",
+        ],
+        list: {
+          items: [
+            { b: "Flat-PDF detection.", t: "If the PDF has no AcroForm dictionary, AI Fill detects field positions visually. Free Fill cannot — it depends on the AcroForm structure being present." },
+            { b: "Field-label-to-value mapping.", t: "AI Fill reads the form's labels (\"Date of Birth\", \"Mother's Maiden Name\") and maps them to your stored personal info. Free Fill expects you to type into each field manually; it does not know what each field is asking for." },
+            { b: "Computed and conditional fields.", t: "Many forms have computed values (totals, dates relative to other dates) or conditional sections (\"if married, fill spouse details\"). AI Fill executes the form's logic. Free Fill does not." },
+          ],
+        },
+      },
+      {
+        h: "When to use the free Fill tool instead",
+        p: [
+          "Three cases where the free tool is the right pick:",
+        ],
+        list: {
+          items: [
+            { b: "The PDF has a proper AcroForm dictionary.", t: "Modern fillable PDFs from government portals and major institutions usually have AcroForm. PDF Form Fields inspector confirms in five seconds. If yes, the free tool fills it perfectly without using credits." },
+            { b: "You only need to fill one form once.", t: "AI Fill's persistence value compounds over many forms. For a single one-off fill of a standard fillable PDF, the free tool is faster." },
+            { b: "The fields are non-standard and personal-info defaults don't apply.", t: "A form asking for unusual data (specific account numbers, project codes) does not benefit from AI Fill's personal-info matching. Type into the free tool's fields directly." },
+          ],
+        },
+      },
+      {
+        h: "Privacy of stored personal info",
+        p: [
+          "Personal info is stored encrypted on our servers, gated by a passphrase you set when you first save it. The passphrase is the encryption key — we do not store it in plaintext, and the personal info cannot be decrypted without it. When you fill a form, the decryption happens transiently in memory during the form-fill operation; the decrypted values are not persisted.",
+          "If you forget the passphrase, the stored personal info is unrecoverable by design. We cannot restore it because we do not have the key. The trade-off is that lost passphrase = lost personal-info library; in exchange, the platform cannot accidentally leak your personal info even if our database is compromised.",
+        ],
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "AI Fill charges 5 credits per page of form. The tool handles PDFs up to 25 MB. Processing runs on our servers; the file is in memory only during the fill operation. Output is a flat filled PDF — byte-compatible with every PDF reader and ready to submit to any portal.",
+          "Common pairings: AI Fill → Sign for filled-and-signed deliverables (visual signature placed at the form's signature position). AI Fill → Flatten if the output needs to be locked down further. AI Fill multiple forms in a batch when filling many similar forms (e.g. applying to multiple employers with the same resume + personal info).",
+        ],
+      },
+    ],
+  },
 };
