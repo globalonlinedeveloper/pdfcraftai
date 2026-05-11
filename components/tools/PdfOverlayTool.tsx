@@ -18,7 +18,7 @@
 // the standardized hooks load the base/dominant input and a custom
 // dropzone handles the secondary overlay file.
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { I } from "@/components/icons/Icons";
 import { humanSize, MAX_FILE_SIZE_BYTES } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
@@ -53,9 +53,51 @@ export function PdfOverlayTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
-  const [layer, setLayer] = useState<OverlayLayer>("front");
-  const [fit, setFit] = useState<OverlayFit>("fit");
-  const [opacity, setOpacity] = useState(50); // 0-100, divides by 100 in op
+  // 2026-05-11 (item #17 batch 14) — URL permalinks for sharing
+  // overlay templates. Same default-omit + single replaceState
+  // effect pattern as the 14 prior tools wired in the #17 sweep.
+  //
+  // Defaults: layer=front, fit=fit, opacity=50.
+  //
+  // layer literals (2): front / behind
+  // fit literals (2): fit / stretch
+  // opacity bounded number: 0..100 (full-transparent ↔ full-opaque)
+  const initialFromQs = (() => {
+    if (typeof window === "undefined")
+      return { layer: "front" as OverlayLayer, fit: "fit" as OverlayFit, opacity: 50 };
+    const qs = new URLSearchParams(window.location.search);
+    const lay = qs.get("layer");
+    const ft = qs.get("fit");
+    const op = qs.get("opacity");
+    const opNum = op ? parseInt(op, 10) : NaN;
+    return {
+      layer: lay === "front" || lay === "behind" ? (lay as OverlayLayer) : "front",
+      fit: ft === "fit" || ft === "stretch" ? (ft as OverlayFit) : "fit",
+      opacity:
+        Number.isFinite(opNum) && opNum >= 0 && opNum <= 100 ? opNum : 50,
+    };
+  })();
+  const [layer, setLayer] = useState<OverlayLayer>(initialFromQs.layer);
+  const [fit, setFit] = useState<OverlayFit>(initialFromQs.fit);
+  const [opacity, setOpacity] = useState(initialFromQs.opacity); // 0-100, divides by 100 in op
+
+  // Single useEffect writes the 3-tuple to URL — replaceState is
+  // non-batching so separate effects per param would race.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (layer === "front") params.delete("layer");
+    else params.set("layer", layer);
+    if (fit === "fit") params.delete("fit");
+    else params.set("fit", fit);
+    if (opacity === 50) params.delete("opacity");
+    else params.set("opacity", String(opacity));
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [layer, fit, opacity]);
   const baseInputRef = useRef<HTMLInputElement>(null);
   const overlayInputRef = useRef<HTMLInputElement>(null);
   const [dragOverBase, setDragOverBase] = useState(false);

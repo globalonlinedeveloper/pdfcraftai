@@ -1191,6 +1191,85 @@ if (csvEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section R — PdfOverlayTool sweep batch 14 (?layer=&fit=&opacity=).
+// ---------------------------------------------------------------------
+//
+// 3-param shape with same opacity 0..100 bounded-int pattern as
+// PdfStampTool batch 11. Two 2-literal enums (layer + fit) round
+// out the shape. Useful for sharing watermark / letterhead /
+// certificate templates across team members.
+
+const OVERLAY = fs.readFileSync(
+  path.join(ROOT, "components", "tools", "PdfOverlayTool.tsx"),
+  "utf8",
+);
+
+assert(
+  /(params|qs)\.get\("layer"\)/.test(OVERLAY) &&
+    /(params|qs)\.get\("fit"\)/.test(OVERLAY) &&
+    /(params|qs)\.get\("opacity"\)/.test(OVERLAY),
+  "PdfOverlayTool: mount-effect must read all 3 params.",
+);
+
+assert(
+  /lay === "front"\s*\|\|\s*lay === "behind"/.test(OVERLAY),
+  "PdfOverlayTool: layer allowlist must enumerate both OverlayLayer literals.",
+);
+
+assert(
+  /ft === "fit"\s*\|\|\s*ft === "stretch"/.test(OVERLAY),
+  "PdfOverlayTool: fit allowlist must enumerate both OverlayFit literals.",
+);
+
+assert(
+  /Number\.isFinite\(opNum\)\s*&&\s*opNum >= 0\s*&&\s*opNum <= 100/.test(
+    OVERLAY,
+  ),
+  "PdfOverlayTool: opacity bounds 0..100 (percent). Without bounds, " +
+    "`?opacity=200` would over-saturate the alpha multiplier and " +
+    "`?opacity=-50` would invert the layer.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[layer,\s*fit,\s*opacity\]\)/.test(
+    OVERLAY,
+  ),
+  "PdfOverlayTool: state → URL sync must live in a SINGLE useEffect " +
+    "with `[layer, fit, opacity]` 3-tuple dep per the replaceState " +
+    "non-batching invariant.",
+);
+
+assert(
+  /layer === "front"\s*\)\s*params\.delete\("layer"\)/.test(OVERLAY),
+  "PdfOverlayTool: default layer `front` must be omitted from URL.",
+);
+
+assert(
+  /fit === "fit"\s*\)\s*params\.delete\("fit"\)/.test(OVERLAY),
+  "PdfOverlayTool: default fit `fit` must be omitted from URL.",
+);
+
+assert(
+  /opacity === 50\s*\)\s*params\.delete\("opacity"\)/.test(OVERLAY),
+  "PdfOverlayTool: default opacity `50` must be omitted from URL.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(OVERLAY),
+  "PdfOverlayTool: permalink effects must guard SSR.",
+);
+
+const overlayEffectMatch = OVERLAY.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[layer,\s*fit,\s*opacity\]\)/,
+);
+if (overlayEffectMatch) {
+  assert(
+    !/pushState/.test(overlayEffectMatch[1]),
+    "PdfOverlayTool: 3-param sync effect uses pushState — back-button hell.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 
