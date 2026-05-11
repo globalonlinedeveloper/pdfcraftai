@@ -4860,4 +4860,168 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // employment-contract-review — legal AI workflow
+  // ============================================================
+  "employment-contract-review": {
+    title: "Employment Contract Review — the clauses Indian candidates miss before signing",
+    intro:
+      "Most candidates sign their employment contract on the day they receive it, often without reading past the salary figure. The friction with that pattern is that Indian employment contracts often contain clauses with significant long-term impact: training bonds with steep liquidation amounts, broad non-solicits that extend well past employment, IP-assignment language that captures pre-employment work, unilateral transfer rights anywhere in India, exclusive jurisdiction in distant cities. These clauses are perfectly legal to include; they're also negotiable, and they shape years of post-employment options. Here is what the analyzer surfaces, the six clauses Indian candidates most often miss, and the redline approach that lets a non-lawyer push back without seeming difficult.",
+    sections: [
+      {
+        h: "What the analyzer audits",
+        p: [
+          "The tool reads the full appointment letter or employment contract and runs a structured audit: compensation breakdown (base + variable + benefits + ESOP), term length, notice periods (both sides — many contracts give the employer 0 days and the employee 90), severance entitlement on termination, IP-assignment scope, non-solicit and non-compete language, training bond if any, jurisdiction and dispute-resolution clauses, ESOP/RSU vesting and termination triggers, garden-leave provisions.",
+          "Each finding includes severity rating, verbatim quote of the clause, plain-language explanation of what it means for the candidate, and suggested replacement language for negotiation. Three to five specific negotiation points are surfaced at the top as priorities — the things most likely to matter most over a typical employment tenure.",
+        ],
+      },
+      {
+        h: "Six clauses Indian candidates miss",
+        p: [
+          "The patterns the analyzer catches most often:",
+        ],
+        list: {
+          items: [
+            { b: "Training bonds.", t: "Common in IT services and consulting firms. \"You agree to pay back ₹X if you leave before Y years.\" Bond amounts of ₹2-10 lakhs are typical; some companies use ₹15+ lakhs. Enforceable but negotiable — many candidates can ask for the bond to be waived, reduced, or capped at actual training cost. Always flagged high-severity." },
+            { b: "Unilateral transfer rights.", t: "\"Employer may transfer you to any location in India.\" Sounds standard; in practice it has been used to force employees to relocate within weeks of joining, or to pressure exits by transferring to undesirable locations. Negotiate either a geographic cap or a notice period for transfers." },
+            { b: "Broad non-solicits.", t: "\"You agree not to solicit any employee, customer, vendor, or partner for 24 months.\" Section 27 of the Indian Contract Act makes most post-employment non-competes unenforceable, but non-solicits are enforceable as long as they're reasonable. \"All employees of the company\" is rarely reasonable; \"direct reports + customers you worked with\" is more defensible." },
+            { b: "IP assignment that captures pre-employment work.", t: "Most assignments cover work done during employment. Some capture \"all intellectual property the employee has created or may create\" — including pre-existing personal projects. Always negotiate to scope IP assignment to work done DURING employment and USING company resources." },
+            { b: "Exclusive jurisdiction in distant cities.", t: "Bangalore-based employee, Bangalore-based employer, jurisdiction clause: \"All disputes shall be adjudicated exclusively in Mumbai courts.\" Makes any dispute economically prohibitive. Push for jurisdiction in your work city or for mutual-jurisdiction language." },
+            { b: "ESOP vesting + termination triggers.", t: "Without acceleration on termination-without-cause, getting fired before the 4-year cliff means losing all unvested options. Negotiate partial acceleration (typically 1 year of additional vesting on termination-without-cause) for senior roles where ESOPs are material." },
+          ],
+        },
+      },
+      {
+        h: "Garden leave — the nuance worth knowing",
+        p: [
+          "Garden-leave clauses are sometimes good for the employee (paid notice period where the employer doesn't expect work) and sometimes bad (unpaid or reduced-pay periods that block new employment). The analyzer separates the two cases:",
+        ],
+        list: {
+          items: [
+            { b: "Full-pay garden leave is generally fine.", t: "You can't work elsewhere during the notice period, but you're getting paid. Typically used to keep someone away from competitors for a few months. Net-positive for the employee in most cases." },
+            { b: "Reduced-pay or unpaid garden leave is a red flag.", t: "Caps your ability to start a new role while your current employer pays you less than market. If the contract specifies reduced pay during notice, push for full pay or a shorter notice." },
+          ],
+        },
+      },
+      {
+        h: "The redline approach for candidates",
+        p: [
+          "Three patterns that get pushback through without seeming difficult:",
+        ],
+        list: {
+          items: [
+            { b: "Anchor to market norms.", t: "\"Most contracts in our industry scope IP assignment to work done during employment. Could we align here?\" References standard rather than personal preference." },
+            { b: "Suggest specific replacement language.", t: "Don't say \"change this.\" Say \"could we replace [verbatim quote] with [analyzer's suggested replacement]?\" Concrete language is dramatically easier to negotiate than abstract objections." },
+            { b: "Pick your battles.", t: "Push back on 3-5 high-impact items, not every flag. The analyzer's priority section already does this triage." },
+          ],
+        },
+      },
+      {
+        h: "When to escalate to a lawyer",
+        p: [
+          "Three signals:",
+        ],
+        list: {
+          items: [
+            { b: "Senior role (VP+) with significant ESOP / RSU.", t: "Vesting acceleration, change-of-control provisions, severance multiples — all worth expert review." },
+            { b: "Founding-team / co-founder role.", t: "Founder agreements carry IP, vesting, and dispute-resolution complexity that warrants legal review beyond candidate-level negotiation." },
+            { b: "Multi-jurisdictional employment.", t: "Hired by an Indian entity but working primarily outside India, or vice versa. Tax + labor law + immigration complexity needs expert guidance." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Employment Contract Review charges 20 credits per contract. The tool handles PDFs up to 25 MB. Processing runs on our servers; the contract is in memory only during analysis and is never persisted.",
+          "Important: Not legal advice. The tool is an audit aid for non-lawyer candidates. For senior roles, founding-team roles, or multi-jurisdictional cases, consult an employment lawyer.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // court-judgment-summarizer — legal research AI
+  // ============================================================
+  "court-judgment-summarizer": {
+    title: "Court Judgment Summarizer — extracting ratio decidendi, citations, and practical implications from Indian decisions",
+    intro:
+      "Indian court judgments are long. A Supreme Court reportable decision can run to 100+ pages; High Court orders frequently span 30-80 pages; even district court orders on substantive matters routinely exceed 20. Most of that length is necessary — the court has to recite facts, summarize arguments, cite authorities, and explain reasoning before reaching its conclusion. But for a lawyer trying to figure out whether a judgment applies to their case, the load-bearing content is a small subset: the issue framed, the holding, the ratio decidendi (the principle of law on which the decision rests), and the practical implications. The court-judgment summarizer surfaces exactly that. Here is how it works, the seven structured fields it extracts, and the boundary between automated extraction and citation work that still requires the original judgment.",
+    sections: [
+      {
+        h: "What the summarizer extracts",
+        p: [
+          "The tool reads the full judgment and surfaces a structured analysis. Each finding is anchored to the paragraph in the original where it was identified, so you can verify everything by going back to the source. The output covers seven fields:",
+        ],
+        list: {
+          items: [
+            { b: "Citation.", t: "The judgment's standard citation format. \"(2024) 1 SCC 123\" for Supreme Court reports, \"AIR 2024 SC 456\" for All India Reporter, equivalent formats for High Court and tribunal reporters. Useful for shepardizing and case-tracking." },
+            { b: "Parties.", t: "Appellant(s) / petitioner(s) vs respondent(s). Names extracted verbatim from the cause-title." },
+            { b: "Issues framed.", t: "The specific legal questions the court agreed to answer. Indian courts usually frame issues explicitly in a numbered list at the start; the summarizer surfaces them with the corresponding paragraph numbers." },
+            { b: "Held / operative directions.", t: "What the court actually decided. The disposition language (\"the appeal is allowed,\" \"the petition is dismissed,\" \"the impugned order is set aside and the matter is remanded\") plus any specific directions issued." },
+            { b: "Ratio decidendi.", t: "The principle of law on which the decision rests — the part that future courts will treat as binding precedent. Surfaced both as a paraphrase and as the verbatim quote from the paragraph where it was laid down." },
+            { b: "Cited authorities.", t: "Every prior judgment and statute cited in the order. Useful for building a citation graph or for finding related precedents." },
+            { b: "Practical implications.", t: "What this decision means for similarly-placed litigants, lawyers, or authorities. 3-4 bullets capturing the operational takeaway beyond the doctrinal holding." },
+          ],
+        },
+      },
+      {
+        h: "Why ratio decidendi extraction is the hard part",
+        p: [
+          "The single most useful field in the output is also the one most prone to nuance. The ratio decidendi is the principle of law on which a decision rests; obiter dicta are incidental observations that don't form part of the binding rule. Indian appellate courts often write judgments that mix both freely. Two specific challenges:",
+        ],
+        list: {
+          items: [
+            { b: "Multi-issue judgments.", t: "A judgment that decides three legal issues has three separate ratios, one per issue. The summarizer surfaces each. But complex decisions occasionally have overlapping ratios where the principle applied to issue 2 borrows from issue 1; the summarizer's separation may collapse those subtleties. For citation work, always cross-check with the original." },
+            { b: "Distinguishing ratio from obiter.", t: "Indian courts frequently include obiter that reads like binding rule. The summarizer flags clearly-obiter passages (\"the court observed,\" \"it may be noted,\" \"by way of caution\") separately from ratio. Edge cases where the language is ambiguous get surfaced as ratio with a note." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where the summarizer earns its place",
+        p: [
+          "Specific cases:",
+        ],
+        list: {
+          items: [
+            { b: "Litigation research.", t: "A lawyer looking for binding precedent on a specific legal question runs candidate judgments through the summarizer to find ratios that match their case's facts. Faster than reading every full judgment." },
+            { b: "Compliance updates.", t: "When a regulator issues a decision (CCI orders, SEBI orders, ITAT orders), companies need to understand the operational implications. The practical-implications section translates legal language to business impact." },
+            { b: "Law-student case preparation.", t: "Reading 200-page judgments for class is overwhelming for first-year students. The summarizer doesn't replace reading the original (and students should always go back to it for the reasoning), but it provides scaffolding to know what to look for." },
+          ],
+        },
+      },
+      {
+        h: "Two patterns where the tool falls short",
+        p: [
+          "Limits worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Vernacular-language judgments.", t: "Most reportable Indian judgments are in English. Tamil Nadu HC, some Karnataka HC orders, and some lower-court judgments use the local language. Run AI Translate first, then summarize. Output quality is somewhat degraded because translation introduces some content loss, but the structure usually comes through correctly." },
+            { b: "Highly technical / specialized statutes.", t: "Judgments interpreting niche statutes (Customs Tariff Act schedules, specific GST notifications, intricate ITAT transfer-pricing decisions) sometimes carry technical context the summarizer misses. The output is still useful for orientation but should not be the only research." },
+          ],
+        },
+      },
+      {
+        h: "How to use the output responsibly",
+        p: [
+          "Three best practices:",
+        ],
+        list: {
+          items: [
+            { b: "Always read the original for citation work.", t: "The summarizer is research aid, not research substitute. If you're citing a judgment in a brief, read the full judgment after using the summarizer to identify it as relevant." },
+            { b: "Verify the citation format.", t: "Citation extraction is accurate but occasionally off by an alternate reporter. Confirm the citation matches the standard your court accepts." },
+            { b: "Use the paragraph anchors.", t: "Every finding in the output is tagged with the paragraph number where it came from in the original. Use these to navigate the source quickly when verifying." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Court Judgment Summarizer charges 20 credits per judgment. The tool handles PDFs up to 50 MB. Processing runs on our servers; the judgment is in memory only during analysis and is never persisted. Output is structured JSON suitable for legal-research databases plus a human-readable rendered summary.",
+          "Important: Not legal advice. The tool is a research aid for lawyers, paralegals, and law students. For citation work, always read the full original judgment.",
+        ],
+      },
+    ],
+  },
 };
