@@ -5685,4 +5685,177 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // generate-pdf-from-prompt — AI generation
+  // ============================================================
+  "generate-pdf-from-prompt": {
+    title: "Generate PDF from Prompt — structural drafts vs final documents, and where to invest the remaining 30%",
+    intro:
+      "Generating a PDF from a plain-English prompt produces a structural draft — section organization, register matching, formatting — that is roughly 70% of the work for most non-fiction document types. The remaining 30% is fact-checking, brand-tuning, and domain-expert review. Understanding which 70% the generator handles well and which 30% needs human investment is the difference between using this tool effectively and being disappointed. Here is how generation works, the seven document types it handles well, the three that need substantial post-edit, and the prompt patterns that produce the best output.",
+    sections: [
+      {
+        h: "What generation does well",
+        p: [
+          "Structural quality is consistently high. The generator produces appropriate section organization for the document type (executive summary, methodology, findings, conclusion for reports; recitals, definitions, terms, signatures for contracts; problem, audience, approach, timeline for proposals). Header hierarchy is correct (H1 for title, H2 for major sections, H3 for sub-sections). Register matches the document type (formal for legal / academic; conversational for marketing / blog; technical for engineering / scientific).",
+          "Format is also handled well. The output is a real PDF with consistent typography, sensible margins, page breaks at logical points, page numbers in the right place. You don't need to fix layout; you can focus on content.",
+        ],
+      },
+      {
+        h: "Seven document types the generator handles well",
+        p: [
+          "Cases where structural-quality output meaningfully accelerates the work:",
+        ],
+        list: {
+          items: [
+            { b: "Business reports.", t: "Quarterly report drafts, market analysis reports, internal status reports. Section structure is standard; the generator nails it. Content fact-check needed but the skeleton is solid." },
+            { b: "Proposals.", t: "Sales proposals, project proposals, grant proposals. The generator includes the right sections (problem statement, approach, timeline, deliverables, budget framework). You fill in specifics." },
+            { b: "Educational modules.", t: "Course material, training documents, instructional guides. Learning-objective structure + chunked content + practice prompts come out cleanly." },
+            { b: "Policy documents.", t: "Internal policies (remote work, expense, security), customer-facing policies (privacy, terms, data retention). Standard structures with placeholders for your specifics." },
+            { b: "Briefs.", t: "Executive briefs, project briefs, design briefs. Tight, scannable, structured. The generator produces a strong first draft." },
+            { b: "Standard contracts.", t: "NDAs, service agreements, basic vendor contracts. Structural quality is high; legal substance needs a lawyer's review (skeleton-prep use only)." },
+            { b: "Marketing collateral.", t: "Whitepapers, eBooks, landing-page-companion documents. Conversational register, clean visual structure." },
+          ],
+        },
+      },
+      {
+        h: "Three document types that need substantial post-edit",
+        p: [
+          "Cases where the generator's output is less complete:",
+        ],
+        list: {
+          items: [
+            { b: "Highly technical documents.", t: "Engineering specs, scientific protocols, medical procedures. The generator produces correct structure but the substantive content depends on prompt specificity that's hard to provide in plain English. Domain expert review is essential." },
+            { b: "Brand-critical documents.", t: "Documents going to customers under your brand identity. The generator's typography and visual design are sensible defaults; matching a specific brand system (custom fonts, custom color palette, specific layout grids) requires post-generation editing in InDesign / Canva / equivalent." },
+            { b: "Legal-final documents.", t: "Anything actually going into a courtroom, regulatory filing, or signed agreement. The generator drafts the structural skeleton; the legal substance, jurisdiction-specific compliance, and the precise wording need a lawyer." },
+          ],
+        },
+      },
+      {
+        h: "Prompt patterns that produce the best output",
+        p: [
+          "Five habits that improve generation quality:",
+        ],
+        list: {
+          items: [
+            { b: "Specify the document type explicitly.", t: "\"Write a sales proposal for...\" produces a better result than \"Write a document about....\" The type tells the generator which structural template to use." },
+            { b: "Provide key facts as bullet points in the prompt.", t: "Parties, dates, amounts, specific requirements — list these explicitly. The generator weaves them into the draft so you don't have to fact-check the skeleton." },
+            { b: "Specify the audience.", t: "\"For a non-technical executive audience\" vs \"For an engineering team\" produces dramatically different register. The audience drives the vocabulary and structure choices." },
+            { b: "Target a length.", t: "\"Approximately 2 pages\" vs \"approximately 10 pages\" produces different depth. Without a target, the generator picks a middle ground that may be too long or too short for your need." },
+            { b: "Note any constraints.", t: "\"Must include a clause about X,\" \"must use the word Y,\" \"must avoid mentioning Z\" — constraints help the generator hit specific requirements." },
+          ],
+        },
+      },
+      {
+        h: "When the markdown source is more useful than the PDF",
+        p: [
+          "The generator outputs both a PDF and the underlying markdown. Three cases where the markdown is the more valuable output:",
+        ],
+        list: {
+          items: [
+            { b: "Further iteration.", t: "If you need to edit substantially after generation, the markdown is much easier to edit than the PDF. Make changes, then re-render to PDF if needed." },
+            { b: "CMS / wiki ingestion.", t: "If the destination is a content management system or wiki rather than a standalone PDF, the markdown drops in directly." },
+            { b: "Translation / localization.", t: "Source-language markdown translates cleanly; the destination-language version can be re-rendered to PDF separately." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Generate PDF from Prompt charges 20 credits per document. Higher than analysis tools because generation is more compute-intensive. The tool produces both a PDF and a markdown source.",
+          "Common pairings: Generate → Improve Writing for tighter prose. Generate → AI Sign for filled-and-signed deliverables. Generate → AI Translate for multilingual output. The generator is rarely the last step in a workflow.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-accessibility-checker — WCAG / PDF/UA audit
+  // ============================================================
+  "pdf-accessibility-checker": {
+    title: "PDF accessibility checker — what WCAG and PDF/UA actually require, and how to read the audit output",
+    intro:
+      "PDF accessibility matters in three specific ways: it's a legal requirement in many jurisdictions (Section 508 in US federal procurement; the Equality Act in the UK; the Rights of Persons with Disabilities Act in India; the EU Web Accessibility Directive), it's a procurement requirement in most large-organization contracts, and it's the right thing to do for users who depend on assistive technology. The accessibility checker audits PDFs against WCAG 2.1 + PDF/UA requirements and surfaces every barrier explicitly. Here is what each requirement means in practice, the seven barriers the checker most often flags, and the fix paths for each.",
+    sections: [
+      {
+        h: "What WCAG and PDF/UA actually require",
+        p: [
+          "WCAG 2.1 (Web Content Accessibility Guidelines) and PDF/UA (Universal Accessibility) are the two main accessibility standards for PDFs. They overlap substantially; PDF/UA is essentially WCAG operationalized for PDF specifically. Both require that a PDF carries enough structural metadata for assistive technology — primarily screen readers — to navigate and read it correctly. Six categories of requirement matter most:",
+        ],
+        list: {
+          items: [
+            { b: "Tag tree present.", t: "Every page must have a tag tree — a parallel structure that describes semantic hierarchy (which text is a heading, which is a paragraph, which is a table cell, etc.). Without a tag tree, screen readers have no way to navigate the document logically." },
+            { b: "Alt text on images.", t: "Every meaningful image must have alt text — a text description of what the image conveys. Decorative images can be marked as artifacts (skipped by screen readers). Missing alt text is the single most common accessibility failure." },
+            { b: "Document title set.", t: "The PDF's /Title metadata field must be populated. Screen readers announce the title on document open; an empty title leaves users in the dark about what document they just opened." },
+            { b: "Language declared.", t: "The document's primary language (/Lang attribute) must be set. Screen readers switch pronunciation rules based on language; an undeclared language means English defaults that pronounce other languages incorrectly." },
+            { b: "Logical reading order.", t: "The tag tree's order must match the visual reading order. Multi-column documents where the tags interleave columns badly produce confusing screen-reader output." },
+            { b: "Color contrast sufficient.", t: "Text must meet WCAG AA contrast ratios (4.5:1 for normal text, 3:1 for large text). The checker flags pages where contrast fails." },
+          ],
+        },
+      },
+      {
+        h: "Seven barriers the checker most often flags",
+        p: [
+          "From real-world audits across thousands of PDFs:",
+        ],
+        list: {
+          items: [
+            { b: "Untagged document.", t: "The most fundamental failure. A PDF with no tag tree at all is essentially invisible to screen readers. Fix: re-export from source with structure preserved (Word's \"Save as PDF\" with accessibility option), or run Acrobat Pro's auto-tag and clean up manually." },
+            { b: "Missing alt text.", t: "Images that lack alt text. Fix: add alt text via Acrobat Pro's accessibility panel, or re-export from source with alt text set on images." },
+            { b: "Empty document title.", t: "Easy to fix and remarkably common to miss. Fix: set /Title in document properties before final export." },
+            { b: "Missing language declaration.", t: "The /Lang attribute isn't set. Fix: declare language in document properties (en-US, hi-IN, etc.)." },
+            { b: "Reading order interleaved.", t: "Tag tree order doesn't match visual order. Fix: re-order the tag tree in Acrobat Pro's accessibility tools, or fix the source layout to be naturally sequential (single column instead of multi-column where possible)." },
+            { b: "Tables without proper header markup.", t: "Tables need <TH> tags on header cells; without them, screen readers can't announce row/column context. Fix: mark header rows in the source (Word's table-header-row option) or in Acrobat's accessibility tools." },
+            { b: "Forms without tooltips.", t: "Every form field should have a tooltip (/TU). Screen readers announce the tooltip when focus enters the field. Fix: set tooltips in the source form designer or via Acrobat Pro." },
+          ],
+        },
+      },
+      {
+        h: "How to read the audit output",
+        p: [
+          "The checker produces a per-requirement pass/fail report with specific failure details. Three patterns for interpreting it:",
+        ],
+        list: {
+          items: [
+            { b: "Counts matter.", t: "\"3 images missing alt text on pages 2, 5, 8\" is much more actionable than \"some images missing alt text.\" The audit surfaces exact counts and locations." },
+            { b: "Severity is consistent across runs.", t: "If the checker flags \"missing alt text\" as critical on one PDF, it flags it identically on every PDF. The severity ratings are stable so you can build remediation policies around them." },
+            { b: "Some failures cascade.", t: "An untagged document fails almost every other check too — because the other checks need the tag tree to exist before they can run. Fix the tagging first; many downstream flags clear automatically." },
+          ],
+        },
+      },
+      {
+        h: "Fix paths — three approaches",
+        p: [
+          "Three workflows for remediating accessibility barriers:",
+        ],
+        list: {
+          items: [
+            { b: "Re-export from source.", t: "The cleanest fix. Modern Word, Google Docs, InDesign, LaTeX, and most authoring tools have \"Export as accessible PDF\" options. Re-exporting from source produces accessibility-correct PDFs without manual tagging." },
+            { b: "Acrobat Pro accessibility tools.", t: "If you don't have the source, Acrobat Pro has tag-tree editing, alt-text-add panels, and auto-tag (with manual cleanup). The most labor-intensive path but works on any PDF." },
+            { b: "AI Tag Generator (paid roadmap item).", t: "Auto-tags using ML with better section detection than Acrobat's built-in. Still needs human review for high-stakes documents." },
+          ],
+        },
+      },
+      {
+        h: "When auto-tagging isn't enough",
+        p: [
+          "Three cases where the audit will pass but the document still isn't accessible:",
+        ],
+        list: {
+          items: [
+            { b: "Complex tables auto-tagged poorly.", t: "Auto-taggers struggle with multi-row headers, merged cells, and nested tables. The audit may pass the basic checks but a screen-reader user will still hit reading issues. Manual review of table tagging on complex tables is essential." },
+            { b: "Mathematical content.", t: "MathML or equation markup isn't covered by the basic accessibility checks. Math-heavy documents need specific math-accessibility expertise to render correctly to screen readers." },
+            { b: "Interactive elements with custom JavaScript.", t: "Form fields with JS handlers may pass the structural audit but behave unexpectedly with assistive technology. Test with actual screen readers (JAWS, NVDA, VoiceOver) for interactive PDFs." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, accessibility checker handles PDFs up to 100 MB. Auditing runs in your browser; nothing is uploaded. Output is a structured WCAG 2.1 + PDF/UA report with pass/fail per requirement and counts of failures.",
+          "Common pairings: Accessibility Checker → re-export with accessibility enabled, or → Acrobat Pro for manual remediation, or → AI Tag Generator (paid) for auto-tagging with ML.",
+        ],
+      },
+    ],
+  },
 };
