@@ -6371,4 +6371,168 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // extract-action-items — meeting-doc AI
+  // ============================================================
+  "extract-action-items": {
+    title: "Extract Action Items from PDF — owner, due date, priority, the columns every tracker needs",
+    intro:
+      "Meeting notes, project briefs, audit reports, status updates — almost every business document contains action items mixed in with discussion, context, and decision narrative. Manually pulling them out for a project tracker is the most-skipped step in many teams' workflow, which is why action items routinely fall through the cracks. The action-item extractor produces a structured table — owner, due date, priority, source page — ready to paste into Jira, Linear, Asana, or any project tracker. Here is how it tells real actions from discussion, the five document types where it earns its place, and the three patterns that catch users on the first run.",
+    sections: [
+      {
+        h: "How the extractor tells actions from discussion",
+        p: [
+          "The challenge is distinguishing \"we should do X\" (real commitment) from \"X might be a problem\" (discussion, not action). The extractor uses both heuristic and LLM classification. Heuristic signals: action verbs (\"will,\" \"must,\" \"to do,\" \"plan to\"), explicit assignments (\"Alice to send the report,\" \"Bob will follow up with the vendor\"), date phrases (\"by Friday,\" \"next sprint,\" \"end of Q2\"), priority signals (\"P0,\" \"urgent,\" \"blocker,\" \"nice to have\").",
+          "Each candidate gets scored for action-ness. Explicit assignments with verbs and date phrases score highest and ship to the output. Implicit collectives (\"we should consider X\") get flagged with lower confidence — included but with a note. Discussion-only items (\"X might be a problem\" without follow-up commitment) get filtered out. The result is a table heavy on actually-actionable items rather than a wall of every sentence that mentions a verb.",
+        ],
+      },
+      {
+        h: "The four columns and how they're populated",
+        p: [
+          "Each row has four metadata columns plus the action text:",
+        ],
+        list: {
+          items: [
+            { b: "Owner.", t: "Person assigned. Explicit assignments (\"Alice to...,\" \"Bob: send...\") map directly. Implicit owners (\"we'll handle...\" with prior context establishing the team) inferred where possible. Unassigned actions show \"unassigned\" so they can be triaged downstream rather than dropped." },
+            { b: "Due date.", t: "When it's due. Explicit dates (\"by 2025-05-15\") parsed directly. Relative dates (\"by Friday,\" \"end of next month\") resolved against the document's date context. Indefinite (\"soon,\" \"when possible\") becomes \"TBD\" — the action is still extracted; the date is for downstream triage." },
+            { b: "Priority.", t: "Inferred from language strength. Explicit (\"P0,\" \"blocker,\" \"urgent\") preserved. Implicit (action language that signals importance — \"critical,\" \"essential,\" \"must\") classified to high/medium/low. Review the column before pasting; AI inference is noisier on priority than on the explicit fields." },
+            { b: "Source page.", t: "Page in the original PDF where the action was found. Critical for verification — click through to see the action in its original context. Like Key Points, the citation discipline forces grounding." },
+          ],
+        },
+      },
+      {
+        h: "Five document types where it earns its place",
+        p: [
+          "Specific document categories where action extraction is the load-bearing operation:",
+        ],
+        list: {
+          items: [
+            { b: "Meeting notes / transcripts.", t: "The canonical use case. Every meeting produces actions; most teams don't extract them systematically. The extractor turns the transcript into a triage-ready list." },
+            { b: "Project briefs and specs.", t: "Specifications contain implicit and explicit actions for the team building the project. Surfacing them as a structured list ensures nothing is missed when sprint planning." },
+            { b: "Audit reports.", t: "Internal-audit reports contain findings + recommendations. The recommendations are actions for the audited team. Structured extraction makes them trackable instead of buried in narrative." },
+            { b: "Status update threads.", t: "Long email threads or Slack exports about a project usually accumulate dozens of actions across the conversation. The extractor surfaces them all in one table." },
+            { b: "Post-mortems.", t: "Incident post-mortems contain follow-up actions to prevent recurrence. These are critical and often get lost. Structured extraction gates the follow-through." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns that catch users",
+        p: [
+          "Friction points worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Discussion-as-action confusion.", t: "\"We talked about doing X\" sometimes extracts as an action (\"do X\") when really X was discussed and rejected. Review the action column before importing — discussion items occasionally slip through." },
+            { b: "Implicit owners.", t: "\"The team needs to review\" leaves \"who on the team?\" ambiguous. Extracted as \"unassigned\" or with the most-likely individual from context. Always sanity-check the owner column before pasting." },
+            { b: "Relative-date drift.", t: "\"By next Friday\" resolved relative to the document's date. If the document is undated and processed weeks later, the resolved date may be wrong. The extractor includes the original phrase alongside the resolved date so you can verify." },
+          ],
+        },
+      },
+      {
+        h: "Importing into project trackers",
+        p: [
+          "Three import paths, depending on your tracker:",
+        ],
+        list: {
+          items: [
+            { b: "Jira / Linear / Asana via CSV.", t: "Each tracker has a CSV-import flow that accepts standard columns. Export the extractor's output as CSV, map columns to your tracker's fields, import. Most teams' standard workflow." },
+            { b: "Direct paste as Markdown.", t: "If your tracker accepts Markdown tables (Notion, Linear, GitHub), copy the Markdown output directly. Each row imports as a single task with the metadata fields parsed automatically." },
+            { b: "Manual triage.", t: "For small action lists, paste into a Slack channel or email and triage manually. Faster than the import workflow when there are only 3-5 actions." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Extract Action Items charges 3 credits per document. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during extraction and is never persisted.",
+          "Common pairings: Extract Action Items + Key Points for both the action list and the substantive content summary. Extract Action Items + AI Summarize for the meeting / status-update workflow where both the summary and the actions go to the team.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // extract-emails-from-pdf — regex-based contact extraction
+  // ============================================================
+  "extract-emails-from-pdf": {
+    title: "Extract emails, phones, and URLs from a PDF — regex extraction in your browser, no AI credits needed",
+    intro:
+      "Contact information scattered across a PDF — email addresses, phone numbers, URLs — is one of the most common things people want to pull out programmatically. A vendor catalog, a conference attendee list, an academic paper's author block, an annual report's investor-relations section. The regex-based extractor surfaces all of them in seconds without AI cost. Here is what patterns it matches, the three workflows where regex extraction is exactly the right shape of tool, and the two cases where you should reach for the AI variant instead.",
+    sections: [
+      {
+        h: "How the extractor finds contacts",
+        p: [
+          "The tool reads the PDF's text content (no AI involved), then runs regex patterns against the extracted text. Three patterns produce three columns of output:",
+        ],
+        list: {
+          items: [
+            { b: "Email addresses.", t: "Standard RFC-5322 pattern (with reasonable simplifications for common-case email recognition). Matches alice@example.com, jane.doe+tag@subdomain.example.co.uk, etc. Doesn't match obfuscated emails like \"jane (at) example (dot) com\" — those need the paid AI variant." },
+            { b: "Phone numbers.", t: "Practical 10-15 digit patterns covering common international formats: +1-555-123-4567 (US), +91 98765 43210 (India), (020) 7946 0958 (UK), and variants. Heuristic filtering avoids false positives on long number sequences (page numbers, ISBN fragments, encoded IDs)." },
+            { b: "URLs.", t: "http:// and https:// URLs. Matches whether the URL is hyperlinked in the PDF or appears as plain text. Doesn't match \"example.com\" without a protocol — those would need a heuristic that produces too many false positives on common phrases." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where regex extraction is exactly right",
+        p: [
+          "Cases where you want the free, fast, in-browser tool:",
+        ],
+        list: {
+          items: [
+            { b: "Vendor / customer list extraction.", t: "Catalogs, vendor lists, customer rosters. The contact info is structured and explicit; regex finds it reliably." },
+            { b: "Academic paper author block.", t: "Research papers list authors with email addresses for correspondence. Regex extracts every address in one pass." },
+            { b: "Annual reports / investor relations.", t: "Annual reports list investor-relations contacts, board email addresses, regional office phone numbers. All structured, all regex-friendly." },
+            { b: "Conference attendee lists.", t: "Many conferences publish attendee directories as PDFs. Extracting contact info for follow-up is a regex job." },
+            { b: "Government employee directories.", t: "Many ministries and PSUs publish staff directories. Phone numbers and email patterns are standardized within India-government contexts, regex-detectable." },
+          ],
+        },
+      },
+      {
+        h: "Two cases where AI extraction beats regex",
+        p: [
+          "Cases where you should reach for AI Extract Contacts (paid) instead:",
+        ],
+        list: {
+          items: [
+            { b: "Obfuscated contacts.", t: "Email addresses written as \"jane (at) example (dot) com\" or \"jane[at]example[dot]com\" to evade spam-scrapers. Phone numbers written as \"call nine-eight-seven-six-five.\" Names written with custom separators. AI handles these; regex misses them entirely." },
+            { b: "Contacts embedded as images.", t: "Some PDFs deliberately show contact info as images rather than text to prevent automated harvesting. Regex sees no text; nothing to extract. AI variant runs OCR + visual extraction to surface the contacts despite the obfuscation." },
+          ],
+        },
+      },
+      {
+        h: "Output formats and their use cases",
+        p: [
+          "Three output formats:",
+        ],
+        list: {
+          items: [
+            { b: "Per-page table view (in-tool).", t: "Each contact shown with its source page. Useful for browsing and verifying the extraction before downloading." },
+            { b: "CSV download.", t: "Type / value / source page columns. Drop into a spreadsheet for further processing, deduplication, or import into a CRM." },
+            { b: "vCard download (for emails + phones).", t: "Standard vCard format for direct import into Apple Contacts, Google Contacts, Outlook. One-click address-book population from a directory PDF." },
+          ],
+        },
+      },
+      {
+        h: "Privacy and ethics",
+        p: [
+          "Three considerations:",
+        ],
+        list: {
+          items: [
+            { b: "Client-side extraction.", t: "Everything runs in your browser. The PDF never uploads. Important for documents that contain personal information about identifiable people — none of those bytes leave your machine." },
+            { b: "Cold-outreach legality.", t: "Just because you can extract someone's email doesn't mean cold-outreach is legal. Many jurisdictions (GDPR in EU, DPDP Act in India, CAN-SPAM in US) require legitimate basis for unsolicited contact. Extract for personal use, customer-relationship management, or legitimate-interest contexts; don't bulk-extract for spam." },
+            { b: "Source acknowledgment.", t: "If you extracted contact info from someone's published work (academic paper, annual report) and you reach out, mentioning the source is good professional practice. \"I noticed your contact in the X annual report and wanted to reach out about Y.\" Sets the right expectation." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, regex extraction handles PDFs up to 100 MB with no contact-count cap. Parsing runs in your browser; nothing is uploaded. Output is the extracted-contacts table plus CSV + vCard downloads.",
+          "Common pairings: AI · OCR first if the PDF is scanned (regex needs text to operate on). AI Extract Contacts when regex doesn't catch obfuscated patterns. Remove Metadata before sharing the extracted list to avoid leaking the source PDF's metadata into a recipient's hands.",
+        ],
+      },
+    ],
+  },
 };
