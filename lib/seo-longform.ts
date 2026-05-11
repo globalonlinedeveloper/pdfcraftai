@@ -1709,4 +1709,83 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // crop-pdf — head term, /CropBox mechanism
+  // ============================================================
+  "crop-pdf": {
+    title: "Crop PDF — what cropping actually does, and why it's (usually) reversible",
+    intro:
+      "Cropping a PDF is one of those operations where what the user sees and what is actually happening underneath are different in a way that matters. Most cropping tools — including ours — do not remove the cropped content; they hide it behind a viewport. That has surprising consequences: it is reversible (great), but it is not a redaction technique (important to know). Here is exactly what the crop tool does, when that is the right behavior, and the two cases where you need a different approach.",
+    sections: [
+      {
+        h: "/CropBox vs MediaBox — the crop's mechanism",
+        p: [
+          "Every PDF page has at least two coordinate rectangles in its dictionary. /MediaBox is the page's physical paper size — the actual rectangle of the page itself. /CropBox is the visible viewport — the rectangle that viewers display. By default they are identical: the whole page is shown. When you crop a PDF, the tool sets /CropBox to a smaller rectangle inside /MediaBox. Viewers honor /CropBox and show only the cropped area. The original page bytes — text, images, vectors outside the crop — are still there, just clipped at display time.",
+          "That is why cropping is reversible. Acrobat Pro, pdf-lib, qpdf, and most other PDF tools can read /CropBox and reset it to /MediaBox, restoring the full original view. Nothing was removed; only the viewport changed.",
+        ],
+      },
+      {
+        h: "When viewport-style cropping is the right answer",
+        p: [
+          "The non-destructive nature of /CropBox is a feature, not a bug — for the cases where users actually want cropping:",
+        ],
+        list: {
+          items: [
+            { b: "Trimming scanner edges.", t: "Flatbed scanners often capture 2-5 mm of black border around the page. Crop trims that border for cleaner-looking pages. The black-border bytes are still in the file, but no one will ever see them." },
+            { b: "Removing page numbers, headers, or footers for export.", t: "If you want to use a page as an image inside another doc without its surrounding chrome, crop the chrome away. The original PDF keeps the headers; the cropped version hides them." },
+            { b: "Normalizing print margins across mixed scanners.", t: "When scans from different machines have different white margins, cropping each to the same content area gives uniform output. Pair with Resize to standardize the final paper size too." },
+            { b: "Creating a focused excerpt for embedding.", t: "Need just the chart from a research paper for your slide deck? Crop to the chart's bounding box and the resulting PDF is a single-chart asset you can drop in anywhere." },
+            { b: "Repurposing a multi-section page.", t: "A page with three article columns can be cropped to one column at a time, producing three separate single-column PDFs. Run the crop tool three times with different rectangles." },
+          ],
+        },
+      },
+      {
+        h: "The two cases where viewport-style cropping is wrong",
+        p: [
+          "Because /CropBox is reversible and the original bytes remain in the file, there are two situations where you need a different tool entirely:",
+        ],
+        list: {
+          items: [
+            { b: "Redacting sensitive content.", t: "If your goal is to hide information from anyone who receives the file, viewport cropping is unsafe. The hidden bytes are right there in the file, recoverable by anyone with a PDF editor. Use the Redact tool instead — it overwrites the content bytes with black bars and removes any underlying text from the page's content stream. For maximum certainty, follow with PDF Inspector to verify no traces remain." },
+            { b: "Reducing the file size meaningfully.", t: "Crop barely changes the file size — it adds a few bytes of /CropBox dictionary per page and leaves the page contents intact. If you want a smaller file, the original full-page content streams are still doing the work. Use Compress (lossy image re-encoding) instead." },
+          ],
+        },
+      },
+      {
+        h: "Same-crop-on-every-page — why we ship it this way",
+        p: [
+          "Our crop tool applies the same rectangle to every page in the document. That is a deliberate choice: 95% of cropping use cases want consistent margins across the whole file, and a per-page UI would be considerably more complex and slower. If your pages genuinely need different crops, the workflow is:",
+        ],
+        list: {
+          items: [
+            { b: "Run Split or Extract Pages first.", t: "Separate the pages into groups that share a crop rectangle. Each group goes into its own PDF." },
+            { b: "Crop each group with its own rectangle.", t: "Open each group's PDF and apply the crop appropriate for that group." },
+            { b: "Merge the cropped groups back together.", t: "Use the Merge tool to combine the per-group cropped PDFs in the original order. The result is a single PDF with per-page-group crops applied." },
+          ],
+        },
+      },
+      {
+        h: "Tips for crisp results",
+        p: [
+          "Small habits that make the crop step go smoothly:",
+        ],
+        list: {
+          items: [
+            { b: "Use page 1 as your visual reference, but check the rest.", t: "If pages later in the document have different margin patterns (chapter starts, figure pages, etc.) the same crop may clip them differently. Scroll through after applying to catch outliers." },
+            { b: "Round the rectangle to nice numbers.", t: "Crop rectangles get embedded as floating-point coordinates. Snapping to the nearest 1mm or 1/8 inch keeps the output looking intentional." },
+            { b: "Crop BEFORE adding page numbers or watermarks.", t: "Page numbers and watermarks added to a cropped PDF land relative to /CropBox, which is what you want. Adding them first and then cropping can clip the page numbers." },
+            { b: "Save the original.", t: "Because crop is non-destructive on the source, you do not need to keep an extra copy — but it does not hurt either. If the cropped output is for a specific deliverable, keep the original around for later re-crops with different rectangles." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, crop handles PDFs up to 100 MB with no page-count cap. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF viewer — /CropBox has been a part of the PDF specification since version 1.0 (1993).",
+          "If you need TRULY destructive cropping (the bytes outside the crop actually removed from the file), Acrobat Pro has a \"Crop and Save\" option with a \"Remove cropped content\" toggle. Our tool intentionally does not offer that path because the non-destructive default is the right behavior 95% of the time — and the irreversibility of the destructive version causes more user pain than it prevents.",
+        ],
+      },
+    ],
+  },
 };
