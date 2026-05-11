@@ -5530,4 +5530,159 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // cover-letter-generator — recruiting AI
+  // ============================================================
+  "cover-letter-generator": {
+    title: "AI Cover Letter Generator — tailored letters that don't sound like AI",
+    intro:
+      "Cover letters carry an outsized share of the application-effort budget. They take 30-60 minutes to write properly for each role. Most candidates either skip them, generate generic ones that sound like every other AI-written letter, or write enthusiastic-but-vague templates that say nothing specific about the job. The cover letter generator solves the specific problem: tailor a letter to THIS resume and THIS job description, in a voice that doesn't sound machine-generated. Here is what it produces, the three-paragraph structure that beats five-paragraph templates, and the customization-notes pattern that lets you stress-test the mapping.",
+    sections: [
+      {
+        h: "What the generator actually does",
+        p: [
+          "Drop your resume (PDF) and paste the job description. The tool reads both, identifies the top 3-5 requirements in the JD that map to specific achievements in your resume, and writes a 300-350 word cover letter following a three-paragraph structure: hook (opening that anchors to a specific JD requirement), achievements (two concrete examples from your resume mapped to JD needs), close (call to action plus reaffirmation of fit).",
+          "The output includes a customization-notes section: a 3-bullet list showing which resume line mapped to which JD requirement. This is the most valuable part of the output — it's not just the letter, it's the reasoning. You can review the mapping, swap in different achievements, and iterate without regenerating from scratch.",
+        ],
+      },
+      {
+        h: "Why three paragraphs beats five",
+        p: [
+          "Traditional cover letter advice says five paragraphs. Modern hiring-manager attention spans say otherwise:",
+        ],
+        list: {
+          items: [
+            { b: "Hook (1 paragraph, 60-80 words).", t: "First sentence anchors to a specific JD requirement: \"Your job description's emphasis on X is exactly the problem I spent the last two years solving at Y.\" Specificity from sentence one. No throat-clearing." },
+            { b: "Achievements (1-2 paragraphs, 150-200 words).", t: "Two concrete examples — quantified outcomes, specific tools, specific contexts. \"At [company], I [action verb] [thing] resulting in [outcome with number].\" The two examples should align to two different JD requirements; combined they show range." },
+            { b: "Close (1 paragraph, 60-80 words).", t: "Call to action plus brief reaffirmation. \"I'd love to discuss how my work at [company X] could translate to your needs around [JD requirement Y]. I'm available for a conversation any time this week.\" Specific, confident, brief." },
+          ],
+        },
+      },
+      {
+        h: "How we suppress AI tells",
+        p: [
+          "The tell that a cover letter was AI-generated is usually not the structure or the grammar — it's specific clichéd phrases that appear in nearly every AI-generated letter. The tool actively suppresses:",
+        ],
+        list: {
+          items: [
+            { b: "\"Self-motivated team player.\"", t: "Almost every AI cover letter has this. Replaced with specific evidence of motivation and teamwork drawn from the resume." },
+            { b: "\"Hit the ground running.\"", t: "Cliché filler. Replaced with concrete description of how the candidate would ramp into the role." },
+            { b: "\"I am thrilled to apply.\" / \"Excited about the opportunity.\"", t: "Empty enthusiasm. Replaced with specific anchoring to the JD." },
+            { b: "Bullet lists of qualifications.", t: "Cover letters should be prose. Bullet lists feel resume-like and break the narrative flow. The tool writes connected paragraphs instead." },
+            { b: "Generic closes (\"Thank you for your consideration\").", t: "Replaced with specific call to action and reaffirmation of fit." },
+          ],
+        },
+      },
+      {
+        h: "Using the customization-notes section",
+        p: [
+          "The customization-notes section is where the value compounds:",
+        ],
+        list: {
+          items: [
+            { b: "Review the mappings.", t: "If \"JD requirement X mapped to resume line Y,\" verify that mapping is the strongest one you could make. Sometimes a different resume line is a better fit; replace the example in the letter accordingly." },
+            { b: "Identify mismatches.", t: "If a JD requirement has weak or no mapping in your resume, the letter probably should acknowledge or work around it. The notes surface gaps so you can address them deliberately." },
+            { b: "Reuse for similar roles.", t: "If you're applying to multiple roles with overlapping requirements, the customization notes tell you which resume lines work across the set. Swap only the differentiating examples per application." },
+          ],
+        },
+      },
+      {
+        h: "When the generic version makes sense",
+        p: [
+          "You can run the generator without a JD — leave the JD field blank for a strong generic cover letter that emphasizes your top resume highlights. Three cases where this is the right choice:",
+        ],
+        list: {
+          items: [
+            { b: "Speculative applications.", t: "Reaching out to a company without a specific open role. A strong general letter beats a JD-tailored one that doesn't have a target JD." },
+            { b: "Application portals that ask for a single letter.", t: "Some application portals (university career services, third-party recruiters) ask for one cover letter that'll be reused across submissions. A general strong letter is right." },
+            { b: "First-pass letter for editing.", t: "Use the generic version as a starting point, then manually customize for each role using the customization-notes pattern from previous JD-specific runs." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Cover Letter Generator charges 5 credits per letter. The tool handles resume PDFs up to 25 MB and job descriptions of any reasonable length. Processing runs on our servers; the resume and JD are in memory only during generation and are never persisted.",
+          "Common pairings: ATS Resume Optimizer first to make sure your resume parses cleanly, then JD Match to score fit, then Cover Letter Generator to produce the final letter. The three together cover the full application-prep workflow.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // hindi-pdf-translator — language-specific translation
+  // ============================================================
+  "hindi-pdf-translator": {
+    title: "Hindi PDF Translator — Devanagari rendering, mixed-language documents, and what AI translation gets right (and wrong)",
+    intro:
+      "Translating PDFs between Hindi and English is one of the highest-volume language operations on the Indian internet. Government forms, court orders, university syllabi, news articles, family-history documents — Hindi-English translation is a daily need. The challenges are both technical (Devanagari script rendering, font embedding) and linguistic (when to translate technical terms, when to keep names in their original script). Here is how the translator handles each, the three patterns where AI translation beats Google Translate, and the limits worth knowing.",
+    sections: [
+      {
+        h: "Devanagari rendering — why this is non-trivial",
+        p: [
+          "Hindi uses the Devanagari script, which has features that simpler font-rendering pipelines often handle poorly. Conjunct consonants (क + ्र = क्र), matra placement (े appears to the right but is logically attached to the previous consonant), nuqtas (़ for borrowed sounds), and ligatures all require an OpenType-aware font and a layout engine that respects Devanagari's text-shaping rules.",
+          "We embed a Devanagari-capable font in every output PDF and use a layout engine that handles the script correctly. The result is clean rendering — no question-mark glyphs where conjuncts should be, no broken ligatures, no misplaced matras. The output PDF opens in every PDF reader with the same correct rendering regardless of whether the reader has Devanagari fonts installed locally.",
+        ],
+      },
+      {
+        h: "How mixed-language documents are handled",
+        p: [
+          "Many Indian documents — government forms, university syllabi, regulatory notices — mix Hindi body text with English headers, English company names, English acronyms, and English technical terms. Three principles guide the translation:",
+        ],
+        list: {
+          items: [
+            { b: "Proper nouns stay in their original script.", t: "Indian Oil Corporation stays \"Indian Oil Corporation\" in a Hindi-to-English translation. A Hindi name like \"रामेश्वर\" gets transliterated to \"Rameshwar\" in English output, kept as-is in Hindi output." },
+            { b: "Acronyms stay.", t: "GST, PAN, RBI, NREGA, IIT — these stay in their original form regardless of translation direction. They're recognizable across both languages." },
+            { b: "Technical terms preserved with explanation.", t: "When a term has no direct equivalent (\"sandesh\" in legal documents specifically meaning a notice or notification), the translation preserves the original term with a parenthetical clarification on first use." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns where AI beats Google Translate",
+        p: [
+          "AI translation has caught up on everyday prose; for specific registers it now exceeds standard machine translation:",
+        ],
+        list: {
+          items: [
+            { b: "Legal / regulatory tone matching.", t: "A court order's legal register doesn't translate as everyday Hindi. Google Translate often produces colloquial output; AI translation maintains the formal legal register. Output reads like it came from an Indian legal translator, not a tourist phrasebook." },
+            { b: "Medical and pharmaceutical context.", t: "Drug names, dosage instructions, medical terminology — AI keeps the technical precision while translating the surrounding prose. Critical for documents that affect patient care." },
+            { b: "Code-switched documents.", t: "Documents that switch between Hindi and English mid-sentence (common in modern Indian writing) handle better with AI than rule-based systems. The translator recognizes intentional code-switches and preserves them." },
+          ],
+        },
+      },
+      {
+        h: "Scanned documents and bilingual output",
+        p: [
+          "Two features worth understanding:",
+        ],
+        list: {
+          items: [
+            { b: "Scanned PDFs go through OCR first.", t: "If your source is a scanned PDF (no text layer), AI OCR runs first to recognize the Devanagari (or Latin) text, then translation runs on the OCR output. Two-pass processing; one tool from the user's perspective." },
+            { b: "Side-by-side bilingual output.", t: "An optional output mode renders the source and translation side-by-side on each page. Useful for legal documents where you need to verify the translation against the original, or for language-learning use cases." },
+          ],
+        },
+      },
+      {
+        h: "When to verify with a human translator",
+        p: [
+          "AI translation is dramatically better than 5 years ago, but human review is still warranted for three cases:",
+        ],
+        list: {
+          items: [
+            { b: "Legal documents going to court.", t: "Court submissions in any language need a certified translation. AI translation is preparation material, not a substitute for a certified translator's stamp." },
+            { b: "Medical decisions.", t: "If the translation is being used to make medical decisions (medication dosing, surgical consent), have a doctor or qualified medical translator verify." },
+            { b: "Critical commercial agreements.", t: "Translation errors in commercial contracts can have significant downstream cost. For high-value contracts, human review of AI-translated documents is the safer path." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Hindi PDF Translator charges 1 credit per page. The tool handles PDFs up to 100 MB. Processing runs on our servers; the PDF is in memory only during translation and is never persisted. Output preserves the source layout (tables, images, headers) with Devanagari-capable fonts embedded.",
+          "Common pairings: AI OCR first if the source is a scanned image-only PDF. Translate then Improve Writing if the translated output could be tighter. The same translator also handles Tamil, Telugu, Bengali, Marathi, Gujarati, and most other Indian scripts.",
+        ],
+      },
+    ],
+  },
 };

@@ -1378,7 +1378,11 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
-### 2026-05-11 — Item #18 SEO landing polish — 50 new longform editorial bodies
+### 2026-05-11 — Item #18 SEO landing polish — 56 new longform editorial bodies
+
+- [x] **feat(seo): longform bodies for 56 high-traffic landings.** 28 push cycles across the session (each 1-3 longforms with 5-min pacing). LONGFORM_BODIES count 19 → 75. Latest 3 push cycles: insurance-policy-analyzer + loan-application-bundler (paired Indian financial AI), explain-pdf + improve-pdf-writing (paired writing-quality AI), cover-letter-generator + hindi-pdf-translator (paired application-prep + language AI). Each body ~1,400–1,600 words covering: structural mechanism (Indian-lab unit conventions, room-rent capping math, ATS column-scrambling, ratio decidendi, Devanagari script rendering), right-tool/wrong-tool decision rules, support-ticket FAQ as friction points, limits, and compatibility. Pure additive content — Aggregator stable at 6830/0 across 116 suites throughout the sweep. **Item #18 progress: 75 of 125 SEO landings now have longform editorial bodies (60% coverage).** Deploy pattern: 5-min pacing + periodic zombie cleanups stable.
+
+### 2026-05-11 — Item #18 SEO landing polish — 50 new longform editorial bodies (earlier checkpoint)
 
 - [x] **feat(seo): longform bodies for 50 high-traffic landings.** 25 push cycles across the session (each 1-3 longforms with 5-min pacing). LONGFORM_BODIES count 19 → 69. Latest additions: nda-analyzer + ats-resume-optimizer (paired professional-services AI), blood-report-analyzer + discharge-summary-explainer (paired medical AI), employment-contract-review + court-judgment-summarizer (paired legal AI), extract-tables-from-pdf + chart-to-data-table (paired AI data extraction). Each body ~1,300–1,600 words covering the structural mechanism (AcroForm parsing, ATS-parser column scrambling, Indian-lab unit conventions, Indian-prescribing shorthand, ratio decidendi extraction with paragraph anchors, AI vision chart estimation), the right-tool / wrong-tool decision rule, the most-asked support-ticket questions, common friction points, limits, and compatibility. Pure additive content — Aggregator stable at 6830/0 across 116 suites throughout the sweep. **Item #18 progress: 69 of 125 SEO landings now have longform editorial bodies (55% coverage).** Deploy pattern: 5-min pacing + periodic zombie cleanups stable.
 
