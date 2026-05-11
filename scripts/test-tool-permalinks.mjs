@@ -1270,6 +1270,70 @@ if (overlayEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section S — PdfBatchProcessTool sweep batch 15 (?op=).
+// ---------------------------------------------------------------------
+//
+// Single-param shape, largest enum yet (8 BatchOpId literals).
+// watermarkText is DELIBERATELY not permalinked — it's user
+// content, and "DRAFT" in the URL would be both noise and a
+// leakage path for accidental sharing of customized watermark
+// copy.
+
+const BATCH = fs.readFileSync(
+  path.join(ROOT, "components", "tools", "PdfBatchProcessTool.tsx"),
+  "utf8",
+);
+
+assert(
+  /(params|qs)\.get\("op"\)/.test(BATCH),
+  "PdfBatchProcessTool: mount-effect must read `op` param.",
+);
+
+assert(
+  /o === "rotate-90"\s*\|\|\s*o === "rotate-180"\s*\|\|\s*o === "rotate-270"\s*\|\|\s*o === "page-numbers"\s*\|\|\s*o === "watermark"\s*\|\|\s*o === "remove-metadata"\s*\|\|\s*o === "flatten-forms"\s*\|\|\s*o === "strip-links"/.test(
+    BATCH,
+  ),
+  "PdfBatchProcessTool: op allowlist must enumerate all 8 BatchOpId " +
+    "literals. Without this, URL-injected `?op=delete-pages` would " +
+    "fall through to undefined behavior at run time.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[op\]\)/.test(
+    BATCH,
+  ),
+  "PdfBatchProcessTool: state → URL sync must live in a useEffect " +
+    "with `[op]` dep per the replaceState non-batching invariant.",
+);
+
+assert(
+  /op === "rotate-90"\s*\)\s*params\.delete\("op"\)/.test(BATCH),
+  "PdfBatchProcessTool: default op `rotate-90` must be omitted from URL.",
+);
+
+assert(
+  !/(params|qs)\.get\("watermarkText"\)/.test(BATCH),
+  "PdfBatchProcessTool: watermarkText must NOT be in the URL — it's " +
+    "user content. Sharing `?watermarkText=CONFIDENTIAL` is both " +
+    "noisy and a leakage path for accidentally-sensitive copy.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(BATCH),
+  "PdfBatchProcessTool: permalink effect must guard SSR.",
+);
+
+const batchEffectMatch = BATCH.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[op\]\)/,
+);
+if (batchEffectMatch) {
+  assert(
+    !/pushState/.test(batchEffectMatch[1]),
+    "PdfBatchProcessTool: op sync effect uses pushState — back-button hell.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 

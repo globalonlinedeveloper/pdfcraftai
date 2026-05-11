@@ -49,8 +49,45 @@ interface ResultState {
 export function PdfBatchProcessTool() {
   const tracker = useTrackToolView("pdf-batch", "Edit");
   const [files, setFiles] = useState<InputFile[]>([]);
-  const [op, setOp] = useState<BatchOpId>("rotate-90");
+  // 2026-05-11 (item #17 batch 15) — URL permalink for the picked
+  // op. Sharable so users can hand `/tool/pdf-batch?op=watermark`
+  // to a collaborator and land them on the right preset. Single
+  // param. watermarkText is NOT permalinked because it's user
+  // content (and would also clutter the URL for the common case).
+  //
+  // 8 literals: rotate-90 / rotate-180 / rotate-270 / page-numbers
+  // / watermark / remove-metadata / flatten-forms / strip-links.
+  // Default `rotate-90` omitted from URL.
+  const initialOp = (() => {
+    if (typeof window === "undefined") return "rotate-90" as BatchOpId;
+    const qs = new URLSearchParams(window.location.search);
+    const o = qs.get("op");
+    return o === "rotate-90" ||
+      o === "rotate-180" ||
+      o === "rotate-270" ||
+      o === "page-numbers" ||
+      o === "watermark" ||
+      o === "remove-metadata" ||
+      o === "flatten-forms" ||
+      o === "strip-links"
+      ? (o as BatchOpId)
+      : ("rotate-90" as BatchOpId);
+  })();
+  const [op, setOp] = useState<BatchOpId>(initialOp);
   const [watermarkText, setWatermarkText] = useState("DRAFT");
+
+  // Single useEffect writes the op param. Default omitted.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (op === "rotate-90") params.delete("op");
+    else params.set("op", op);
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [op]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
