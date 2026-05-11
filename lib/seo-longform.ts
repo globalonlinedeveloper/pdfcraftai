@@ -5349,4 +5349,185 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // explain-pdf — plain-language AI
+  // ============================================================
+  "explain-pdf": {
+    title: "Explain PDF in plain English — when simplification helps and when it loses accuracy",
+    intro:
+      "Many of the documents people most need to understand — medical reports, legal contracts, research papers, regulatory filings — are written in language deliberately optimized for technical accuracy rather than reader comprehension. The plain-English explainer rewrites the content at roughly a grade-12 reading level: short sentences, no jargon, structured into Big Idea / Details / Why It Matters. The output isn't dumbed down; it's translated. Here is how the explainer works, where it shines, and the three cases where you should reach for a different tool.",
+    sections: [
+      {
+        h: "How simplification preserves accuracy",
+        p: [
+          "The tool reads the source PDF and runs an AI rewrite pass that follows three rules: preserve every factual claim verbatim, simplify the surrounding language, and structure the output into three clear sections. Numbers, dates, names, quoted text — none of these are simplified. Only the connecting prose changes. A medical report that says \"the patient presents with hyperlipidemia\" becomes \"the patient has high cholesterol\" — the specific clinical finding is preserved (high cholesterol = hyperlipidemia), but the medical Latin is translated.",
+          "The three-section structure (Big Idea / Details / Why It Matters) is deliberate. \"Big Idea\" answers the question \"if I read only one sentence, what should it be?\" — useful for triage. \"Details\" carries the substantive content. \"Why It Matters\" surfaces the practical implications for the reader — often the most actionable section because it explicitly connects the content to what the reader should do or know.",
+        ],
+      },
+      {
+        h: "Why grade-12 reading level instead of grade-5",
+        p: [
+          "Many \"explain like I'm 5\" tools target a very low reading level. We deliberately aim higher. Two reasons:",
+        ],
+        list: {
+          items: [
+            { b: "Vocabulary that's too simple becomes imprecise.", t: "\"Heart attack\" is grade-5; \"myocardial infarction\" is medical Latin. The middle ground — \"the heart's blood supply was blocked, causing damage to the muscle\" — uses grade-12 vocabulary but is more precise than either extreme." },
+            { b: "Grade-5 output sounds patronising to adult readers.", t: "Most users want to understand the document, not be talked down to. Grade-12 retains adult dignity while still being accessible to anyone who finished high school." },
+          ],
+        },
+      },
+      {
+        h: "Five high-value use cases",
+        p: [
+          "Where the explainer earns its place:",
+        ],
+        list: {
+          items: [
+            { b: "Briefing family on medical reports.", t: "Lab results, discharge summaries, specialist consult notes. The technical content gets translated for family members who need to understand what's happening." },
+            { b: "First-pass skim of research papers.", t: "Reading a 30-page paper to decide whether it's worth a deep read. The explainer's Big Idea + Why It Matters sections are usually enough to triage." },
+            { b: "Understanding legal documents.", t: "A contract or court order in plain language for a non-lawyer party. Crucially, this is a comprehension aid — for actually acting on the document, you still need a lawyer." },
+            { b: "Technical white papers for non-experts.", t: "A product manager reading an engineering white paper, an engineer reading a marketing white paper, a journalist reading a regulatory filing. Different expertise gaps; same translation tool." },
+            { b: "Patient-side reading of insurance documents.", t: "Policy language is deliberately legal. Plain English helps the policy-holder understand what they actually bought." },
+          ],
+        },
+      },
+      {
+        h: "Three cases where you should reach for a different tool",
+        p: [
+          "Cases where the explainer is the wrong choice:",
+        ],
+        list: {
+          items: [
+            { b: "Exam preparation.", t: "If you're studying for an exam, the source's exact vocabulary matters — the test will probably use it. Use Summarize PDF instead, which preserves technical terminology with explanations alongside." },
+            { b: "Publication-grade summary.", t: "A summary going into a paper, report, or other formal deliverable should preserve register. Plain English shifts the register down; use Summarize PDF for a register-matched summary." },
+            { b: "Actionable decisions in legal / medical contexts.", t: "Plain English doesn't change the law or the medicine — it just changes the language. For decisions that have consequences (signing a contract, choosing a treatment), the plain-English summary is preparation for talking to a professional, not a substitute for it." },
+          ],
+        },
+      },
+      {
+        h: "How accuracy is preserved",
+        p: [
+          "Five specific guardrails the tool applies during simplification:",
+        ],
+        list: {
+          items: [
+            { b: "Numbers are quoted verbatim.", t: "If the source says \"₹1,23,45,678.92\" or \"5.2%\" or \"30 mg/dL,\" the explainer says the same — no rounding, no reformatting, no thousand-separator change." },
+            { b: "Dates are preserved exactly.", t: "Date formats vary; the explainer preserves the source's format rather than normalizing." },
+            { b: "Proper nouns aren't simplified.", t: "Drug names, company names, statute citations, case names — all preserved verbatim. The reader needs to be able to look these up." },
+            { b: "Direct quotes use quotation marks.", t: "If the source quotes something, the explainer reproduces the quote with attribution. Plain-English wrapping happens around quotes, not on them." },
+            { b: "Disclaimers travel.", t: "Source-document disclaimers (\"not medical advice,\" \"subject to terms and conditions,\" \"past performance does not guarantee\") get preserved in the output so the reader sees them." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Explain PDF charges 3 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during analysis and is never persisted.",
+          "Important: Not legal, medical, or financial advice. The tool is a comprehension aid. For decisions in those domains, the plain-English version is preparation for consulting a professional, not a substitute for the consultation.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // improve-pdf-writing — clarity-concision rewrite AI
+  // ============================================================
+  "improve-pdf-writing": {
+    title: "Improve PDF writing — what gets cut, what gets kept, and how to push back on AI edits",
+    intro:
+      "Most prose can be 20-30% shorter without losing meaning. Redundant qualifiers, run-on sentences, passive voice where active works better, throat-clearing intros, restated conclusions. Cutting them produces tighter, more readable output. The Improve Writing tool does the cutting automatically — but with rules about what stays untouched (your voice, your distinctive phrasings, your technical terms). Here is what the tool changes, what it deliberately leaves alone, and the workflow for reviewing the rewrite without losing the parts that worked.",
+    sections: [
+      {
+        h: "What gets cut",
+        p: [
+          "Five categories the rewriter consistently trims:",
+        ],
+        list: {
+          items: [
+            { b: "Redundant qualifiers.", t: "\"Absolutely critical\" → \"critical.\" \"Completely unique\" → \"unique.\" \"Very important\" → \"important.\" Words that don't add information but feel like they're adding emphasis are cut." },
+            { b: "Throat-clearing intros.", t: "\"In today's fast-paced world…\" \"It is important to note that…\" \"As we all know…\" These phrases delay the actual content. The rewriter starts where the substance starts." },
+            { b: "Passive voice without nuance reason.", t: "\"The report was written by the team\" → \"the team wrote the report.\" Passive voice has legitimate uses (when the actor is unknown or irrelevant), but most passive voice in business writing is unconscious filler." },
+            { b: "Run-on sentences.", t: "Sentences with three or more conjunctions get split into separate sentences. Easier to read; same content." },
+            { b: "Restated conclusions.", t: "\"In conclusion…\" followed by a restatement of the opening claim. The tool keeps the strongest version and cuts the restatement." },
+          ],
+        },
+      },
+      {
+        h: "What stays untouched",
+        p: [
+          "Five categories the rewriter deliberately preserves:",
+        ],
+        list: {
+          items: [
+            { b: "Register.", t: "Formal stays formal. Casual stays casual. Academic stays academic. The rewriter cuts within the register; it doesn't shift the register." },
+            { b: "Distinctive phrasings.", t: "Unusual word choices that are working — a metaphor, a striking adjective, a specific cadence — get preserved. The rewriter errs on the side of keeping craft." },
+            { b: "Technical terms.", t: "Industry-specific vocabulary stays. \"Subordinated debenture\" doesn't become \"loan that gets paid back after others\" — the precision matters." },
+            { b: "Facts and figures.", t: "Numbers, dates, citations, proper nouns — all preserved verbatim." },
+            { b: "Quoted text.", t: "Anything in quotes stays exactly as quoted." },
+          ],
+        },
+      },
+      {
+        h: "How much shorter is normal",
+        p: [
+          "The expected reduction varies by source quality:",
+        ],
+        list: {
+          items: [
+            { b: "Well-written news copy or scientific abstract: 5-10%.", t: "Already tight. The rewriter finds modest cuts." },
+            { b: "Business writing — proposals, white papers, reports: 20-30%.", t: "The most common reduction range. Business writing typically has more filler than the author realizes." },
+            { b: "First drafts of anything: 30-40%.", t: "Drafts haven't been edited yet. The first revision pass cuts significantly. The tool gives you that first revision in one click." },
+            { b: "Internal docs and email threads: sometimes 40-50%.", t: "Internal communication often has more throat-clearing. Compressing it for external distribution is a high-value use." },
+          ],
+        },
+      },
+      {
+        h: "Reviewing the rewrite — three habits",
+        p: [
+          "The rewrite is a draft to review, not a final to accept. Three habits that produce the best output:",
+        ],
+        list: {
+          items: [
+            { b: "Read the original and the rewrite side-by-side.", t: "The tool produces both. Skim the original; read the rewrite carefully. Spot anything the rewrite cut that you wanted to keep." },
+            { b: "Read the edit summary.", t: "The tool surfaces what kinds of changes it made (\"removed 6 throat-clearing intros,\" \"split 12 run-on sentences,\" \"replaced 8 passive constructions\"). The summary tells you whether the rewrite was conservative or aggressive." },
+            { b: "Replace anything that doesn't sound like you.", t: "If a sentence in the rewrite reads in a voice that isn't yours, replace it with your own version. The cleaner alternative is still in front of you for comparison." },
+          ],
+        },
+      },
+      {
+        h: "When to use Improve vs Paraphrase vs Rewrite",
+        p: [
+          "Three adjacent tools that solve different problems:",
+        ],
+        list: {
+          items: [
+            { b: "Improve — cut filler.", t: "Same meaning, fewer words. Use when the source is too long and the goal is tighter." },
+            { b: "Paraphrase — same length, different wording.", t: "Use when you need the same content in a different voice (for citation, for syndication, to break out of stale phrasing). Length stays the same." },
+            { b: "Rewrite — different register or tone.", t: "Use when you want to convert formal to casual, or vice versa. Substantial voice change." },
+          ],
+        },
+      },
+      {
+        h: "When to use cautiously",
+        p: [
+          "Three cases where the rewriter benefits from extra care:",
+        ],
+        list: {
+          items: [
+            { b: "Fiction or poetry.", t: "The rewriter is calibrated for non-fiction. Fiction uses deliberate redundancy, rhythm, and voice that doesn't benefit from concision. Use the tool to spot accidental redundancy, not as a final pass." },
+            { b: "Legal documents.", t: "Legal language is verbose for a reason — precision against ambiguity. Cutting words can change meaning. Use only on drafts of legal documents, not on final ones." },
+            { b: "Documents going to a sensitive audience.", t: "If the original was written in a specific tone for a specific reader, the rewriter might shift the tone in ways the writer wouldn't approve. Review carefully or skip the tool." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Improve PDF Writing charges 5 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during analysis and is never persisted. Output is the rewritten markdown / text plus the original side-by-side for comparison and the edit summary.",
+          "Common pairings: Improve → Paraphrase if you also need wording variation. Improve → Generate PDF if the output should be a polished PDF rather than markdown.",
+        ],
+      },
+    ],
+  },
 };
