@@ -5858,4 +5858,169 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // ai-content-detector — AI-text stylometric detection
+  // ============================================================
+  "ai-content-detector": {
+    title: "AI content detector for PDFs — what stylometric fingerprints actually detect and why no detector is courtroom-grade",
+    intro:
+      "AI-generated text has stylistic fingerprints — patterns that show up in LLM output dramatically more often than in human writing. Formulaic openers, hedging overuse, three-item rhetoric, em-dash patterns, polished-register uniformity. A skilled reader can spot AI text manually; a stylometric audit surfaces the same signals systematically. The friction is that none of these signals is definitive — humans sometimes write in patterns that match AI fingerprints, and careful editing can mask the fingerprints. Here is how the detector works, the eight specific patterns it looks for, and the precise reason we don't claim courtroom-grade accuracy.",
+    sections: [
+      {
+        h: "How stylometric detection differs from trained classifiers",
+        p: [
+          "Two approaches to AI-text detection exist. Trained classifiers (GPTZero, Originality.ai) feed text into a neural network trained on labeled examples of human vs AI text. The classifier outputs a probability score. Trained classifiers can hit high accuracy on text from the LLMs they were trained on, but degrade against newer models and against edited AI text. They're also opaque — you can't easily see WHY the classifier flagged something.",
+          "Our detector takes the stylometric approach: explicit pattern detection. We look for documented LLM stylistic fingerprints in the text and surface each match with its location and confidence. The advantage is transparency — you see exactly what was flagged and why. The trade-off is that an adversary who knows the patterns can edit to avoid them. We're explicit about that trade-off.",
+        ],
+      },
+      {
+        h: "Eight stylistic fingerprints the detector flags",
+        p: [
+          "Documented patterns from LLM output across major models (ChatGPT, Claude, Gemini, Llama, Mistral):",
+        ],
+        list: {
+          items: [
+            { b: "Formulaic openers.", t: "\"In today's fast-paced world,\" \"It's important to note that,\" \"In conclusion,\" \"As we navigate the complexities of....\" LLMs default to these openers heavily. Human writers occasionally use them; LLMs use them as primary opening sentences." },
+            { b: "Hedging overuse.", t: "\"It could be argued that,\" \"some might suggest,\" \"there is a case for\" — used liberally to project neutrality. Humans hedge selectively; LLMs hedge habitually." },
+            { b: "Three-item rhetoric.", t: "X / Y / Z triplets used so consistently that they become a signature. \"The benefits include speed, accuracy, and reliability.\" Three-item lists aren't AI-specific, but LLMs use them at much higher frequency than humans do." },
+            { b: "Em-dash overuse.", t: "Long em-dashes (—) used to introduce qualifications or asides. Humans use them; LLMs use them at 3-5× the typical human rate." },
+            { b: "Register-too-polished.", t: "Uniformly formal voice with no personality variation, no asides, no opinion. Reads like a textbook on every topic. Real human writing has stylistic variation across paragraphs; LLM output is suspiciously uniform." },
+            { b: "Definition-textbook style.", t: "\"X is defined as...\" \"X refers to the practice of...\" — explicit definition framing where a human would just use the term. Common in LLM-generated educational content." },
+            { b: "Transitional clichés.", t: "\"Moreover,\" \"furthermore,\" \"in addition\" as section-openers. Humans vary transitions; LLMs cycle through the same set." },
+            { b: "Unprompted safety disclaimers.", t: "Mid-essay risk warnings, \"it's important to remember,\" cautionary asides where none was needed. Trained-in LLM behavior leaking through." },
+          ],
+        },
+      },
+      {
+        h: "Counter-evidence — signals that lean human",
+        p: [
+          "The detector also surfaces signals that lean human, balancing the verdict:",
+        ],
+        list: {
+          items: [
+            { b: "Specific personal details.", t: "Names, places, dates, anecdotes that an LLM wouldn't have made up — and would have been less specific if it had." },
+            { b: "Idiomatic expressions.", t: "Slang, region-specific phrases, non-textbook word choices that LLMs use sparingly." },
+            { b: "Minor inconsistencies.", t: "Real human writing has small contradictions, opinion shifts mid-paragraph, parenthetical asides. LLM output is internally consistent to a suspicious degree." },
+            { b: "Opinion shifts.", t: "Human writers update opinions across paragraphs; LLMs hold a uniform stance." },
+            { b: "Casual asides.", t: "Side comments, brief tangents, signals that the writer is a specific person with a specific viewpoint." },
+          ],
+        },
+      },
+      {
+        h: "Why no detector is courtroom-grade",
+        p: [
+          "Three fundamental limits that no AI-text detector can overcome:",
+        ],
+        list: {
+          items: [
+            { b: "False positives are unavoidable.", t: "Some humans naturally write in clean, structured prose. Career-prose writers (journalists, lawyers, academics) often produce text that matches AI patterns. Flagging them as AI-generated is wrong." },
+            { b: "False negatives via editing.", t: "A careful human edit can mask any stylometric fingerprint. Run AI text through Improve Writing, vary sentence length, add specific examples, and the fingerprints largely disappear. The detector still works on raw AI output; it doesn't work on carefully-edited AI output." },
+            { b: "Detector evolution lags model evolution.", t: "Detection patterns are documented from previous-generation models. As new models come out, their default stylistic patterns shift. The detector adapts but with a lag." },
+          ],
+        },
+      },
+      {
+        h: "How to use the verdict responsibly",
+        p: [
+          "Three patterns for using the output:",
+        ],
+        list: {
+          items: [
+            { b: "As one input among several.", t: "Use the detector's verdict as a flag for further investigation, not as a conclusion. Pair with content-quality checks, source verification, and human reading." },
+            { b: "For self-review, not accusation.", t: "If you wrote a draft yourself and want to verify it doesn't read like AI before submitting, the detector is great for that. If you're using it to accuse someone of AI use, the inherent error rate means false accusations are guaranteed at scale." },
+            { b: "Combined with plagiarism checking.", t: "AI-text detection and plagiarism detection are different problems. Plagiarism (copying from existing text) is detected by tools like Turnitin / Copyleaks. AI generation is detected by stylometric tools. Both checks make sense in many contexts; neither replaces the other." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "AI Content Detector charges 10 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during analysis and is never persisted. Output is a per-passage verdict with confidence, flagged patterns, counter-evidence, and optional humanize-edits suggestions.",
+          "Important: This is a heuristic, not a definitive classifier. Use the output as one input, not as the verdict.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // partnership-deed-analyzer — Indian commercial-law AI
+  // ============================================================
+  "partnership-deed-analyzer": {
+    title: "Partnership Deed Analyzer — Indian partnership and LLP audit, the clauses that decide who keeps what",
+    intro:
+      "Partnership deeds are the foundational document of every Indian partnership firm and limited liability partnership (LLP). Most are signed without much review — there's a template, there's a deadline, everyone signs and gets on with the business. The friction with that pattern is that partnership deeds determine profit-sharing ratios, capital contribution rights, decision-making thresholds, exit terms, and dispute resolution. When relationships sour (and at some point they always do), the deed is what's enforceable. Here is what the analyzer audits, the seven clauses that determine the outcome of every partnership dispute, and the difference between an Indian Partnership Act 1932 firm and an LLP under the LLP Act 2008.",
+    sections: [
+      {
+        h: "What the analyzer audits",
+        p: [
+          "The tool reads the partnership deed and audits against a structured checklist: business name and address, partner details (name, address, share), capital contribution per partner, profit-sharing ratio, decision-making thresholds (majority for ordinary decisions, unanimity for fundamental decisions like dissolution or new partners), banking and signature authority, partner roles and responsibilities, exit and dissolution terms, dispute-resolution clauses, governing law and jurisdiction.",
+          "Each finding is severity-rated. Missing fundamental clauses (e.g. no profit-sharing ratio specified) are critical. Unfavorable clauses (e.g. unilateral expulsion right vested in majority partner without procedural safeguards) are high-severity. Ambiguities (vague language that could be interpreted multiple ways) are flagged for clarification.",
+        ],
+      },
+      {
+        h: "Seven clauses that determine partnership outcomes",
+        p: [
+          "Where disputes get decided:",
+        ],
+        list: {
+          items: [
+            { b: "Profit-sharing ratio.", t: "Must be specified explicitly. Without it, Indian Partnership Act 1932 defaults to equal sharing — usually not what partners actually agreed to. The analyzer flags missing or ambiguous ratios as critical." },
+            { b: "Capital contribution rights.", t: "Who contributed how much, when, and what happens when more capital is needed. Without clear capital-contribution terms, additional-capital calls become disputes." },
+            { b: "Decision-making thresholds.", t: "What requires majority vote vs unanimity. Indian default is majority; specific clauses often raise certain decisions to unanimity (adding partners, dissolving, major asset sales). The analyzer surfaces every threshold." },
+            { b: "Exit terms.", t: "What happens when a partner wants to leave or is asked to leave. Notice period, valuation method (book value vs market value), payout schedule, restrictions on the departing partner. The most-litigated set of clauses." },
+            { b: "Dispute resolution.", t: "Litigation in which court vs arbitration vs mediation. Arbitration clauses save time and cost in disputes; the analyzer flags deeds without dispute-resolution language as critical because the default (full civil court litigation) is slow and expensive." },
+            { b: "Banking and signature authority.", t: "Who can sign on behalf of the firm. Bank accounts, contracts, vendor payments. Without clear authority terms, operational decisions become disputes." },
+            { b: "Roles and responsibilities.", t: "Working partners vs sleeping partners vs salaried partners. Without explicit role differentiation, contribution-vs-compensation disagreements compound." },
+          ],
+        },
+      },
+      {
+        h: "Partnership Act 1932 firm vs LLP under LLP Act 2008",
+        p: [
+          "Two different legal structures, with significantly different implications:",
+        ],
+        list: {
+          items: [
+            { b: "Indian Partnership Act 1932 firm.", t: "Unlimited liability — partners are personally liable for firm debts. No separate legal entity (firm doesn't exist independently of partners). Easier to set up but riskier. Registration is optional but recommended for legal enforceability." },
+            { b: "Limited Liability Partnership (LLP).", t: "Limited liability — partners liable only up to their capital contribution (in most cases). Separate legal entity with its own PAN, GST registration, and bank account. Mandatory registration with the Registrar of Companies. More compliance overhead (annual filings, audits over certain turnover thresholds) but dramatically lower personal-liability risk." },
+          ],
+        },
+      },
+      {
+        h: "Common deed problems the analyzer catches",
+        p: [
+          "Five patterns that show up in real deeds:",
+        ],
+        list: {
+          items: [
+            { b: "Profit ratio assumed-equal but not stated.", t: "Partners agreed verbally on a 60-40 split but the deed says nothing. Default kicks in: equal split. Always flagged critical." },
+            { b: "No exit valuation method.", t: "What's the firm worth when a partner exits? Book value? Market value? Discounted cash flow? Without specification, this becomes a dispute. Always flagged critical." },
+            { b: "Unilateral expulsion clauses.", t: "\"The majority partner may expel any other partner at any time without cause.\" Legal but harsh; gives one partner significant leverage. Flag and consider negotiating procedural safeguards (cause requirement, notice period, valuation method)." },
+            { b: "Vague dispute-resolution.", t: "\"Disputes shall be resolved amicably between partners.\" Sounds nice; useless if amicable resolution fails. Replace with specific arbitration or mediation clause." },
+            { b: "Stamp duty inadequacy.", t: "Indian partnership deeds need state-specific stamp duty (varies by state, typically ₹500-2,000). Insufficient stamp duty makes the deed inadmissible in court. The analyzer can't verify the actual stamp duty paid but flags missing stamp-duty references for review." },
+          ],
+        },
+      },
+      {
+        h: "When to use the analyzer vs go straight to a lawyer",
+        p: [
+          "Three signals each direction:",
+        ],
+        list: {
+          items: [
+            { b: "Analyzer is sufficient.", t: "Standard small-partnership deed for a routine business. Two-partner deed for a side venture. Family-business succession deed. Where the analyzer's audit catches the standard problems, that's often the complete review needed." },
+            { b: "Talk to a lawyer.", t: "Multi-partner LLP with non-equal capital contributions. Partnerships involving IP licensing or transfer. Cross-border partnerships (one partner in India, another abroad). Joint ventures with complex profit-sharing or earn-out terms." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Partnership Deed Analyzer charges 15 credits per deed. The tool handles PDFs up to 25 MB. Processing runs on our servers; the deed is in memory only during analysis and is never persisted.",
+          "Important: Not legal advice. The tool is an audit aid. For complex deeds or those with significant capital / IP / cross-border components, consult a commercial lawyer.",
+        ],
+      },
+    ],
+  },
 };
