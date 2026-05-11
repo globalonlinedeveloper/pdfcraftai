@@ -5,7 +5,7 @@
 // 2026-05-01 Tier 2: Bates numbering for legal discovery / litigation.
 // Built on PdfSimpleOpsTool — auto-wires all 7 standardized hooks.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { BatesPosition } from "@/lib/pdf/ops/bates-numbers";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
 
@@ -24,6 +24,78 @@ export function PdfBatesNumbersTool() {
   const [startNumber, setStartNumber] = useState(1);
   const [position, setPosition] = useState<BatesPosition>("bottom-right");
   const [fontSize, setFontSize] = useState(9);
+
+  // 2026-05-11 (item #17 sweep batch 12) — URL permalink state sync.
+  // Most-complex shape yet: 5 params. prefix (string, alphanumeric
+  // only) + digits (number 4..10) + startNumber (number 1..999999)
+  // + position (6 literals) + fontSize (number 6..20). Single
+  // useEffect with 5-tuple dep per the replaceState non-batching
+  // invariant. Defaults (LAW / 6 / 1 / bottom-right / 9) all
+  // omitted from URL.
+  //
+  // The `prefix` field is the FIRST string-typed-user-input synced
+  // in the sweep. We validate it as alphanumeric + 1..10 chars to
+  // reject URL-injected garbage like `?prefix=<script>` or oversized
+  // values that would render off-page. Legal Bates prefixes are
+  // typically 3-letter codes (DEF / SMITH / TRIAL) so the bounds
+  // match real-world usage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+
+    const rawPrefix = params.get("prefix");
+    if (rawPrefix && /^[A-Za-z0-9]{1,10}$/.test(rawPrefix)) {
+      setPrefix(rawPrefix);
+    }
+
+    const rawDigits = params.get("digits");
+    if (rawDigits) {
+      const n = parseInt(rawDigits, 10);
+      if (Number.isFinite(n) && n >= 4 && n <= 10) setDigits(n);
+    }
+
+    const rawStart = params.get("startNumber");
+    if (rawStart) {
+      const n = parseInt(rawStart, 10);
+      if (Number.isFinite(n) && n >= 1 && n <= 999999) setStartNumber(n);
+    }
+
+    const rawPos = params.get("position");
+    if (
+      rawPos === "bottom-right" || rawPos === "bottom-left" ||
+      rawPos === "bottom-center" || rawPos === "top-right" ||
+      rawPos === "top-left" || rawPos === "top-center"
+    ) setPosition(rawPos);
+
+    const rawSize = params.get("fontSize");
+    if (rawSize) {
+      const n = parseInt(rawSize, 10);
+      // Bates numbers go on every page — bounds tight 6..20 to
+      // keep them readable but not intrusive.
+      if (Number.isFinite(n) && n >= 6 && n <= 20) setFontSize(n);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (prefix === "LAW") params.delete("prefix");
+    else params.set("prefix", prefix);
+    if (digits === 6) params.delete("digits");
+    else params.set("digits", String(digits));
+    if (startNumber === 1) params.delete("startNumber");
+    else params.set("startNumber", String(startNumber));
+    if (position === "bottom-right") params.delete("position");
+    else params.set("position", position);
+    if (fontSize === 9) params.delete("fontSize");
+    else params.set("fontSize", String(fontSize));
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [prefix, digits, startNumber, position, fontSize]);
 
   const previewLabel =
     prefix + String(startNumber).padStart(digits, "0");

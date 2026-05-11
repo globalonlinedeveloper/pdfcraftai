@@ -974,6 +974,115 @@ if (stampEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section P — PdfBatesNumbersTool sweep batch 12 (5-param incl. user-string).
+// ---------------------------------------------------------------------
+//
+// Sweep batch 12 — most-complex shape yet. 5 params syncing in
+// tandem, including the FIRST string-typed user-input (`prefix`).
+// User-string permalink validation needs an explicit regex
+// allowlist (alphanumeric, 1..10 chars) to reject URL-injected
+// garbage like ?prefix=<script> or oversized values that would
+// render off-page.
+
+const BATES_PATH = path.join(ROOT, "components/tools/PdfBatesNumbersTool.tsx");
+assert(fs.existsSync(BATES_PATH), `PdfBatesNumbersTool missing at ${BATES_PATH}`);
+const BATES = fs.existsSync(BATES_PATH) ? fs.readFileSync(BATES_PATH, "utf8") : "";
+
+assert(
+  /params\.get\("prefix"\)/.test(BATES) &&
+    /params\.get\("digits"\)/.test(BATES) &&
+    /params\.get\("startNumber"\)/.test(BATES) &&
+    /params\.get\("position"\)/.test(BATES) &&
+    /params\.get\("fontSize"\)/.test(BATES),
+  "PdfBatesNumbersTool: mount-effect must read all 5 params.",
+);
+
+assert(
+  /\/\^\[A-Za-z0-9\]\{1,10\}\$\//.test(BATES),
+  "PdfBatesNumbersTool: prefix must validate against `/^[A-Za-z0-9]{1,10}$/`. " +
+    "User-string permalink validation is essential to prevent URL-" +
+    "injected garbage like `?prefix=<script>` or oversized values " +
+    "rendering off-page. The 1..10 length cap matches typical legal " +
+    "Bates codes (DEF / SMITH / TRIAL).",
+);
+
+assert(
+  /Number\.isFinite\(n\)\s*&&\s*n >= 4\s*&&\s*n <= 10/.test(BATES),
+  "PdfBatesNumbersTool: digits bounds 4..10 — covers 4-digit (LAW0001) " +
+    "to 10-digit (LAW0000000001) Bates numbering schemes.",
+);
+
+assert(
+  /Number\.isFinite\(n\)\s*&&\s*n >= 1\s*&&\s*n <= 999999/.test(BATES),
+  "PdfBatesNumbersTool: startNumber bounds 1..999999 — high cap " +
+    "because some firms restart Bates per matter starting at a " +
+    "previous case's final number.",
+);
+
+assert(
+  /rawPos\s*===\s*"bottom-right"\s*\|\|\s*rawPos\s*===\s*"bottom-left"\s*\|\|\s*rawPos\s*===\s*"bottom-center"\s*\|\|\s*rawPos\s*===\s*"top-right"\s*\|\|\s*rawPos\s*===\s*"top-left"\s*\|\|\s*rawPos\s*===\s*"top-center"/.test(
+    BATES,
+  ),
+  "PdfBatesNumbersTool: position allowlist must enumerate all 6 BatesPosition literals.",
+);
+
+assert(
+  /Number\.isFinite\(n\)\s*&&\s*n >= 6\s*&&\s*n <= 20/.test(BATES),
+  "PdfBatesNumbersTool: fontSize bounds 6..20 — Bates numbers appear " +
+    "on every page; tight bounds keep them readable but unobtrusive.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[prefix,\s*digits,\s*startNumber,\s*position,\s*fontSize\]\)/.test(
+    BATES,
+  ),
+  "PdfBatesNumbersTool: state → URL sync must live in a SINGLE useEffect " +
+    "with `[prefix, digits, startNumber, position, fontSize]` 5-tuple dep " +
+    "per the replaceState non-batching invariant. Five separate effects " +
+    "would race spectacularly.",
+);
+
+assert(
+  /prefix === "LAW"\s*\)\s*params\.delete\("prefix"\)/.test(BATES),
+  "PdfBatesNumbersTool: default prefix `LAW` must be omitted from URL.",
+);
+
+assert(
+  /digits === 6\s*\)\s*params\.delete\("digits"\)/.test(BATES),
+  "PdfBatesNumbersTool: default digits `6` must be omitted from URL.",
+);
+
+assert(
+  /startNumber === 1\s*\)\s*params\.delete\("startNumber"\)/.test(BATES),
+  "PdfBatesNumbersTool: default startNumber `1` must be omitted from URL.",
+);
+
+assert(
+  /position === "bottom-right"\s*\)\s*params\.delete\("position"\)/.test(BATES),
+  "PdfBatesNumbersTool: default position `bottom-right` must be omitted from URL.",
+);
+
+assert(
+  /fontSize === 9\s*\)\s*params\.delete\("fontSize"\)/.test(BATES),
+  "PdfBatesNumbersTool: default fontSize `9` must be omitted from URL.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(BATES),
+  "PdfBatesNumbersTool: permalink effects must guard SSR.",
+);
+
+const batesEffectMatch = BATES.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[prefix,\s*digits,\s*startNumber,\s*position,\s*fontSize\]\)/,
+);
+if (batesEffectMatch) {
+  assert(
+    !/pushState/.test(batesEffectMatch[1]),
+    "PdfBatesNumbersTool: 5-param sync effect uses pushState — back-button hell.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 
