@@ -4316,4 +4316,229 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-to-html — paired with markdown-to-pdf direction
+  // ============================================================
+  "pdf-to-html": {
+    title: "PDF to HTML — self-contained single-file output and the trade-offs of heuristic conversion",
+    intro:
+      "Converting a PDF to HTML is one of those operations where the right shape of output depends entirely on what comes next. Some users want a styled wiki page; others want a self-contained file they can drop into any CMS without external dependencies; others want skeleton HTML to manually polish in a code editor. Our free heuristic converter produces option two — a single .html file with inline CSS, browser-ready, no CDN dependencies, no external stylesheets. Here is what the converter does, what it preserves, what it loses, and the three downstream pipelines where this exact shape of output earns its place.",
+    sections: [
+      {
+        h: "How the heuristic converter works",
+        p: [
+          "The tool parses the PDF with pdfjs to extract every text run along with its font size and weight. We build a font-size histogram across the document — the mode is body text; sizes ≥1.25× body become H3, ≥1.6× become H2, ≥2× become H1. Bold runs become <strong>; italic runs become <em>. Paragraphs are separated by line-spacing analysis. Pages are separated by <hr> elements.",
+          "The output is wrapped in a single .html file with inline CSS rather than a separate stylesheet. Helvetica is the default font; H1/H2/H3 styles use distinct sizes; paragraphs get standard spacing. No JavaScript, no external assets, no CDN references. Drop the file into any browser and it just works.",
+        ],
+      },
+      {
+        h: "What survives the conversion",
+        p: [
+          "Heuristic extraction preserves the content elements most users actually want:",
+        ],
+        list: {
+          items: [
+            { b: "Text and reading order.", t: "Every word in reading order, multi-column pages linearized correctly for most layouts." },
+            { b: "Heading structure.", t: "H1/H2/H3 detected from font-size hierarchy. Well-typeset documents get publication-ready heading levels." },
+            { b: "Bold and italic.", t: "<strong> and <em> tags wrap runs that were styled. Mixed-style runs combine correctly." },
+            { b: "Paragraph structure.", t: "Line-spacing analysis groups runs into paragraphs separated by visual gap." },
+            { b: "Page separation.", t: "<hr> elements mark page boundaries, so the visual flow of the source PDF is preserved in the HTML." },
+          ],
+        },
+      },
+      {
+        h: "What the heuristic doesn't handle",
+        p: [
+          "Three categories of content where the free heuristic falls short, with the right tool for each:",
+        ],
+        list: {
+          items: [
+            { b: "Tables.", t: "Tables are layout-dependent and the heuristic linearizes them row-by-row, losing column structure. For tabular content use AI · Table Extract to pull tables as CSV, then embed them in HTML separately." },
+            { b: "Images.", t: "Embedded images are not extracted into the HTML. Visually, the HTML output lacks any picture content from the source. For documents where images matter, run Extract Images separately, host them, and reference them in the HTML manually. Or use AI · Rewrite which handles image positioning end-to-end." },
+            { b: "Hyperlinks.", t: "The free converter doesn't carry forward PDF hyperlinks into HTML <a> tags. URLs that appear as visible text in the PDF still appear as text in the HTML — they're just not clickable. Manual post-processing can wrap them; or use AI conversion for hyperlink-aware output." },
+          ],
+        },
+      },
+      {
+        h: "Three downstream pipelines where this output shape works",
+        p: [
+          "Specific workflows where heuristic HTML conversion is the right intermediate:",
+        ],
+        list: {
+          items: [
+            { b: "Wiki / CMS migration.", t: "Pasting documentation into Confluence, Notion, or a custom CMS. The converted HTML is clean enough to paste; the CMS's import handles the styling. Saves manual retyping or copy-paste-then-restyle." },
+            { b: "Web publishing.", t: "Publishing an old PDF as a web page. Since the HTML is self-contained, you can drop it directly into a static site generator, GitHub Pages, or any web host without dependency setup. Search engines crawl HTML far better than PDFs — turning the PDF into HTML improves discoverability." },
+            { b: "Text-only LLM ingestion.", t: "Some LLM ingestion pipelines prefer HTML over plain text because the tag structure preserves heading hierarchy. The converter is a single-step PDF → ingestible HTML path." },
+          ],
+        },
+      },
+      {
+        h: "When to skip this tool",
+        p: [
+          "Three cases where a different format is right:",
+        ],
+        list: {
+          items: [
+            { b: "You want pure text without tags.", t: "Use PDF-to-Text. Strips all formatting; pure UTF-8 .txt output. Faster for cases where structure doesn't matter." },
+            { b: "You want markdown for a developer workflow.", t: "Use PDF-to-Markdown. Markdown is more developer-native for README files, wiki pages, and AI training data than HTML." },
+            { b: "You need pixel-perfect visual fidelity.", t: "Heuristic conversion doesn't preserve exact PDF layout. For visual fidelity, rasterize the page (PDF-to-PNG) and embed the image — content is no longer text-extractable but visual fidelity is perfect." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, PDF-to-HTML handles PDFs up to 100 MB. Parsing runs in your browser via pdfjs; nothing is uploaded. Output is a single self-contained .html with inline CSS. Opens in every browser, every WYSIWYG editor, every wiki / CMS import.",
+          "Common pairings: PDF Inspector first to verify the source has a text layer (scans return empty HTML). PDF-to-HTML → manual edit pass when downstream destination needs fine-tuned markup. AI · Rewrite when the heuristic output isn't quite enough.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // free-draw-pdf — annotation tool
+  // ============================================================
+  "free-draw-pdf": {
+    title: "Draw on a PDF — when free-form ink is the right markup, and what's actually getting saved",
+    intro:
+      "Drawing freely on a PDF — sketching arrows, circling key passages, jotting margin notes by hand — is one of those operations that feels primitive but is genuinely useful for review workflows. The challenge is that PDFs are a structured format and freehand strokes are anything but: every wiggle of a stylus or mouse needs to be captured as a path, embedded into the page, and rendered correctly across every viewer that opens the file. Here is what the draw tool actually does with your strokes, the precise difference between content-stream paths and proper /Ink annotations, and the four real-world review workflows where free-draw beats the alternatives.",
+    sections: [
+      {
+        h: "What happens to your strokes under the hood",
+        p: [
+          "As you drag the pointer (or stylus, or finger), the tool captures every position in CSS pixels, smooths the line with light Bezier interpolation, then converts the points to PDF-space coordinates using the canvas's actual rendered size. When you click Apply, every stroke becomes an SVG path drawn into the destination page's content stream via pdf-lib's drawSvgPath. The page's existing content (text, images, vectors) is untouched; the strokes are layered on top.",
+          "The output PDF reads identically in every viewer. Strokes appear at the exact same on-page positions in Acrobat, Preview, Chrome, Firefox, every mobile reader. They scale correctly when zoomed (because they are vectors, not raster). They print at full resolution. They survive merging, splitting, page extraction.",
+        ],
+      },
+      {
+        h: "Content-stream paths vs /Ink annotations",
+        p: [
+          "The technical distinction matters for one specific downstream workflow:",
+        ],
+        list: {
+          items: [
+            { b: "Content-stream paths (what this tool does).", t: "Strokes are part of the page's drawn content — like every other text run, image, or vector. They look identical to /Ink annotations visually. The advantage: works in every viewer with no compatibility caveats. The trade-off: Acrobat's annotation panel doesn't list them (they're page content, not annotations), so workflows that depend on enumerating annotations (Adobe Acrobat's review tracker, some commenting platforms) won't see them." },
+            { b: "/Ink annotations (paid Annotate ships these).", t: "Strokes are stored as proper /Ink annotation objects. Acrobat's annotation panel lists them; comment-tracking workflows enumerate them; reviewers can right-click to add replies. The trade-off: some older viewers render /Ink annotations slightly differently than the canonical pen rendering." },
+          ],
+        },
+      },
+      {
+        h: "Four real-world workflows where free-draw earns its place",
+        p: [
+          "Cases where ink markup is exactly what you want:",
+        ],
+        list: {
+          items: [
+            { b: "Quick visual review feedback.", t: "Circling a paragraph, drawing an arrow to a chart, scratching out a sentence — these communicate review feedback faster than typed comments. The reviewer's intent comes across at a glance." },
+            { b: "Annotating diagrams and charts.", t: "Pointing to specific data points, marking an X on a flaw, highlighting a region of a screenshot. Ink markup is the natural fit; typed annotations would clutter the visual." },
+            { b: "Teaching and student feedback.", t: "Grading worksheets, marking essays, annotating student work. Free-draw matches how teachers naturally work in print and translates that to digital." },
+            { b: "Field notes on technical drawings.", t: "Engineering, architecture, construction — quick markup of CAD-exported PDFs in the field. Mobile + stylus + free-draw is the standard digital-replacement for paper redlines." },
+          ],
+        },
+      },
+      {
+        h: "Tool features worth knowing",
+        p: [
+          "Specifics that determine usability:",
+        ],
+        list: {
+          items: [
+            { b: "Page-aware undo.", t: "Click Undo to remove the last stroke on the CURRENT page. Won't accidentally remove a stroke from a previous page you already moved past. Useful for multi-page review where you want to fix a stroke without rolling back work on another page." },
+            { b: "Per-stroke editing before apply.", t: "The tool shows a stroke list — you can remove individual strokes before clicking Apply. Once applied, strokes become part of the page content and can't be removed without re-rendering through a redaction tool." },
+            { b: "5 colors + adjustable stroke width.", t: "Black, red, blue, green, orange. Stroke width 1-8pt. Sufficient for the visual-feedback use case; not trying to be a full graphics tool." },
+            { b: "Touch + stylus support via Pointer Events.", t: "Works with mouse on desktop, finger on tablet, Apple Pencil on iPad, S Pen on Galaxy Tab. Pressure sensitivity isn't honored (stroke width is fixed per stroke); proper pressure-aware ink is a paid roadmap item." },
+            { b: "Mid-drawing window resize works.", t: "Strokes are stored in PDF coordinate space, not CSS pixels. Resize the window mid-session and committed strokes still align with the page content." },
+          ],
+        },
+      },
+      {
+        h: "When to reach for a different tool",
+        p: [
+          "Three cases where free-draw isn't right:",
+        ],
+        list: {
+          items: [
+            { b: "Highlighting passages.", t: "Use Highlight PDF for proper transparent-yellow highlights. Free-draw can simulate it but the result is a yellow squiggle rather than a clean highlight rectangle." },
+            { b: "Adding text comments.", t: "Use Add Text Box for typed annotations. Trying to handwrite with a mouse is painful; type instead." },
+            { b: "Removing or replacing text.", t: "Scratching out text with ink is visually OK but doesn't remove the underlying text — readers can still copy-paste the crossed-out content. Use Redact for real content removal." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, free-draw handles PDFs up to 50 MB with no page-count cap. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF reader; strokes render identically across viewers because they're standard SVG paths in the content stream.",
+          "Common pairings: Free-draw + Add Text Box for documents with both ink markup and typed comments. Free-draw → Flatten to lock in the markup. Free-draw → Compress for the smallest final marked-up file.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // add-links — making PDFs clickable
+  // ============================================================
+  "add-links": {
+    title: "Add hyperlinks to a PDF — making any region clickable and why this needs low-level annotation surgery",
+    intro:
+      "Adding a clickable link to a PDF sounds like it should be a one-click operation, and at the UI level it is — drag a rectangle, paste a URL, done. Underneath, though, this is one of the more technically delicate operations a PDF tool can perform, because hyperlinks in PDF are not part of the page content — they are sibling annotation objects that the viewer overlays for interactivity. Here is what the tool does at the structural level, the four URL schemes supported, and the patterns that distinguish a well-placed hyperlink from one that frustrates readers.",
+    sections: [
+      {
+        h: "Why this is structurally trickier than it looks",
+        p: [
+          "Most PDF modifications happen at the page-content-stream level — drawing text, vectors, images on a page. Hyperlinks are different: they live in the page's /Annots array as separate /Annot objects, not inside the content stream. Each annotation carries its own /Rect (position), /Subtype (Link, in this case), /Border (visual border around the clickable area, usually [0 0 0] for no border), and /A action subtree (what to do when clicked — typically launch a URL).",
+          "Pdf-lib has high-level helpers for drawing things into a content stream but no addLink() helper for annotations. The tool constructs the /Annot dictionary manually with the right /Subtype, /Rect (in page coordinates, converted from canvas pixels), /Border, and /A action dictionary, then registers it as a new indirect object and appends its reference to the page's /Annots array. Doable, but not one-liner doable.",
+        ],
+      },
+      {
+        h: "Four URL schemes supported",
+        p: [
+          "Each scheme behaves slightly differently in PDF readers:",
+        ],
+        list: {
+          items: [
+            { b: "https:// and http://.", t: "Standard web links. Click in any modern PDF reader opens the user's default browser. By far the most common use case." },
+            { b: "mailto:.", t: "Email links. Click opens the user's default mail client with the address pre-filled. Useful for contact pages, support links, signup forms." },
+            { b: "tel:.", t: "Phone-number links. Click on mobile readers initiates a phone call. Desktop readers may not do anything; mobile readers (iPad Acrobat, Android Adobe, etc.) treat it as a tap-to-dial link." },
+            { b: "file://.", t: "Local file references. Click attempts to open a file at the specified path on the reader's machine. Almost never the right choice — paths don't transfer across machines, and security-conscious readers block file:// links by default. Listed for completeness; avoid in shared documents." },
+          ],
+        },
+      },
+      {
+        h: "Patterns that distinguish good link placement",
+        p: [
+          "Five habits that produce well-clickable PDFs:",
+        ],
+        list: {
+          items: [
+            { b: "Make the click target slightly larger than the visible text.", t: "Visible link text might be 10pt and tight. The click rectangle should extend a few points beyond the text on every side so readers don't have to land precisely. The default region you drag is typically larger than the text anyway, which is correct." },
+            { b: "Verify the URL before clicking Apply.", t: "Typos in URLs aren't caught at apply time — the link just goes to the typo'd address. Always paste rather than type, and test on the rendered output before sharing." },
+            { b: "Use Highlight PDF to make link regions visible.", t: "Hyperlinks have no visible border by default ( /Border [0 0 0]). Readers don't know they're clickable unless the underlying text is styled distinctively. If the link region isn't already styled like a link, run Highlight PDF first with a subtle yellow over the same region." },
+            { b: "Group related links by page.", t: "Add all the links on page 1 before moving to page 2. The page navigator preserves your in-progress work, but it's easier to verify completeness when you work page-by-page rather than jumping around." },
+            { b: "Test in multiple readers.", t: "Adobe Acrobat, Preview, Chrome, Firefox all handle link clicks slightly differently. Test in at least two before distributing." },
+          ],
+        },
+      },
+      {
+        h: "Things that don't work in v1",
+        p: [
+          "Limitations worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Internal goto-page links.", t: "PDF supports internal navigation (clicking a TOC entry jumps to the destination page within the same PDF). That's a different annotation kind (/Action /GoTo rather than /Action /URI). The current tool only handles external URL links. Bookmarks Editor handles internal navigation; it's a paid roadmap item." },
+            { b: "Link borders.", t: "All links are placed with /Border [0 0 0] — no visible border. If you want a visible blue underline (web-style hyperlink), apply highlight or text styling separately." },
+            { b: "Link removal.", t: "Add Links is additive — it adds new annotations but doesn't modify existing ones. To remove all hyperlinks from a PDF, use Strip Hyperlinks (the inverse tool); both agree on the /Link annotation shape." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, Add Links handles PDFs up to 50 MB. Processing runs in your browser via pdf-lib; nothing is uploaded. Output preserves all existing annotations (additive, not replace) and adds new /Link annotations for every region you defined.",
+          "Common pairings: Add Links + Highlight PDF to make link regions visually obvious. Add Links → Flatten to lock the links and content together. Strip Hyperlinks as the inverse if you change your mind.",
+        ],
+      },
+    ],
+  },
 };
