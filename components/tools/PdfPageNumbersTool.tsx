@@ -36,6 +36,56 @@ export function PdfPageNumbersTool() {
   const [format, setFormat] = useState<NumberFormat>("1 of N");
   const [fontSize, setFontSize] = useState<number>(11);
 
+  // 2026-05-11 (item #17 sweep batch 7) — URL permalink state sync.
+  // Three-param shape: position (6 literals) + format (4 literals) +
+  // fontSize (number 4-24). Single useEffect with 3-tuple dep array
+  // per the replaceState non-batching invariant (same pattern as
+  // Generate's docType+length+tone). URLSearchParams handles the
+  // space encoding in "1 of N" / "Page 1" / "Page 1 of N" automatically.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const rawPos = params.get("position");
+    if (
+      rawPos === "bottom-center" || rawPos === "bottom-right" ||
+      rawPos === "bottom-left" || rawPos === "top-center" ||
+      rawPos === "top-right" || rawPos === "top-left"
+    ) setPosition(rawPos);
+    const rawFmt = params.get("format");
+    if (
+      rawFmt === "1" || rawFmt === "1 of N" ||
+      rawFmt === "Page 1" || rawFmt === "Page 1 of N"
+    ) setFormat(rawFmt);
+    const rawSize = params.get("fontSize");
+    if (rawSize) {
+      const n = parseInt(rawSize, 10);
+      // Bounds check: 4-24pt covers footnote → headline-sized
+      // page numbers. Out-of-bounds (negative, NaN, 9999) silently
+      // ignored — TS will accept any number into setFontSize but
+      // we don't want URL-injected absurd values.
+      if (Number.isFinite(n) && n >= 4 && n <= 24) {
+        setFontSize(n);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (position === "bottom-center") params.delete("position");
+    else params.set("position", position);
+    if (format === "1 of N") params.delete("format");
+    else params.set("format", format);
+    if (fontSize === 11) params.delete("fontSize");
+    else params.set("fontSize", String(fontSize));
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [position, format, fontSize]);
+
   const preview = useFirstPagePreview(pdfBytes);
 
   const onFiles = useCallback(

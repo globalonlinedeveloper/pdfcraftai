@@ -572,6 +572,105 @@ if (img2pdfEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section K — PdfPageNumbersTool sweep batch 7 (?position=&format=&fontSize=).
+// ---------------------------------------------------------------------
+//
+// Sweep batch 7 — PdfPageNumbersTool wires 3-param permalink with a
+// NEW shape variant: an unbounded number (fontSize). Mount-effect
+// parses with parseInt + Number.isFinite + bounds check (4-24) to
+// reject URL-injected garbage like ?fontSize=9999 or NaN. Format
+// values contain spaces ("1 of N", "Page 1 of N") — URLSearchParams
+// handles the encoding transparently.
+
+const PAGENUM_PATH = path.join(ROOT, "components/tools/PdfPageNumbersTool.tsx");
+assert(fs.existsSync(PAGENUM_PATH), `PdfPageNumbersTool missing at ${PAGENUM_PATH}`);
+const PAGENUM = fs.existsSync(PAGENUM_PATH) ? fs.readFileSync(PAGENUM_PATH, "utf8") : "";
+
+assert(
+  /params\.get\("position"\)/.test(PAGENUM) &&
+    /params\.get\("format"\)/.test(PAGENUM) &&
+    /params\.get\("fontSize"\)/.test(PAGENUM),
+  "PdfPageNumbersTool: mount-effect must read all 3 params.",
+);
+
+assert(
+  /rawPos\s*===\s*"bottom-center"\s*\|\|\s*rawPos\s*===\s*"bottom-right"\s*\|\|\s*rawPos\s*===\s*"bottom-left"\s*\|\|\s*rawPos\s*===\s*"top-center"\s*\|\|\s*rawPos\s*===\s*"top-right"\s*\|\|\s*rawPos\s*===\s*"top-left"/.test(
+    PAGENUM,
+  ),
+  "PdfPageNumbersTool: position allowlist must enumerate all 6 Position literals.",
+);
+
+assert(
+  /rawFmt\s*===\s*"1"\s*\|\|\s*rawFmt\s*===\s*"1 of N"\s*\|\|\s*rawFmt\s*===\s*"Page 1"\s*\|\|\s*rawFmt\s*===\s*"Page 1 of N"/.test(
+    PAGENUM,
+  ),
+  "PdfPageNumbersTool: format allowlist must enumerate all 4 NumberFormat " +
+    "literals — including the ones with spaces (\"1 of N\", \"Page 1 of N\"). " +
+    "URLSearchParams encodes spaces transparently; the allowlist must " +
+    "match the raw decoded values.",
+);
+
+assert(
+  /parseInt\(rawSize,\s*10\)/.test(PAGENUM),
+  "PdfPageNumbersTool: fontSize must parse via parseInt(_, 10) — " +
+    "URL values are strings, and parseInt is the standard browser-safe " +
+    "way to coerce.",
+);
+
+assert(
+  /Number\.isFinite\(n\)\s*&&\s*n >= 4\s*&&\s*n <= 24/.test(PAGENUM),
+  "PdfPageNumbersTool: fontSize must validate Number.isFinite + bounds " +
+    "(4..24). Without this, ?fontSize=NaN or ?fontSize=9999 flows " +
+    "straight into setFontSize and renders garbage.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[position,\s*format,\s*fontSize\]\)/.test(
+    PAGENUM,
+  ),
+  "PdfPageNumbersTool: state → URL sync must live in a SINGLE useEffect " +
+    "with `[position, format, fontSize]` dep array. Three separate " +
+    "effects would race per the replaceState non-batching invariant.",
+);
+
+assert(
+  /position === "bottom-center"\s*\)\s*params\.delete\("position"\)/.test(PAGENUM),
+  "PdfPageNumbersTool: default `bottom-center` must be omitted from URL.",
+);
+
+assert(
+  /format === "1 of N"\s*\)\s*params\.delete\("format"\)/.test(PAGENUM),
+  "PdfPageNumbersTool: default `1 of N` must be omitted from URL.",
+);
+
+assert(
+  /fontSize === 11\s*\)\s*params\.delete\("fontSize"\)/.test(PAGENUM),
+  "PdfPageNumbersTool: default `11` must be omitted from URL.",
+);
+
+assert(
+  /params\.set\("fontSize",\s*String\(fontSize\)\)/.test(PAGENUM),
+  "PdfPageNumbersTool: non-default fontSize must write via " +
+    "`String(fontSize)`. URLSearchParams accepts numbers but explicit " +
+    "conversion is the canonical shape.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(PAGENUM),
+  "PdfPageNumbersTool: permalink effects must guard SSR.",
+);
+
+const pagenumEffectMatch = PAGENUM.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[position,\s*format,\s*fontSize\]\)/,
+);
+if (pagenumEffectMatch) {
+  assert(
+    !/pushState/.test(pagenumEffectMatch[1]),
+    "PdfPageNumbersTool: 3-param sync effect uses pushState — back-button hell.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 
