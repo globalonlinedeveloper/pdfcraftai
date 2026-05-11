@@ -264,6 +264,27 @@ const SWEEP_FREE_TOOLS = [
   "MarkdownToPdfTool",
   "TextToPdfTool",
   "PdfOverlayTool",
+  // 2026-05-11 sweep batch 13 — niche AI tools. Two variant bases
+  // (SummarizeVariantTool + StructuredVariantTool) ship a single
+  // canonical explainer that applies across their ~38 wrapper
+  // variants (key-points, study-notes, eli5, faq, blog, flashcards,
+  // quiz, etc.). Plus 8 individual AI tool runners:
+  // BloodTest, CourtOrder, Mindmap, ResumeParser, Searchable,
+  // SemanticSearch, SignPdf (AI), Redact (AI).
+  // SignPdfTool's privacyNote uniquely calls out the visual-vs-
+  // cryptographic signature distinction inline; RedactPdfTool step
+  // 2 explicitly contrasts AI byte-level redaction vs the free
+  // tool's visual overlay.
+  "SummarizeVariantTool",
+  "StructuredVariantTool",
+  "BloodTestTool",
+  "CourtOrderTool",
+  "MindmapPdfTool",
+  "ResumeParserTool",
+  "SearchablePdfTool",
+  "SemanticSearchPdfTool",
+  "SignPdfTool",
+  "RedactPdfTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {

@@ -33,6 +33,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import {
   deriveOutputName,
   humanSize,
@@ -336,6 +337,23 @@ export function StructuredVariantTool(props: {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your study material",
+            body: `Up to 25 MB. ${props.runLabel} works on textbooks, lecture notes, study guides, research papers — any text-based PDF you want to study from.`,
+          },
+          {
+            title: "AI generates the structured set",
+            body: "We read the source end-to-end and pull out the key concepts in the right shape — quiz questions with answers + distractors, or flashcards with front/back text. Output is JSON behind the scenes for clean downstream use.",
+          },
+          {
+            title: "Study inline or export",
+            body: "Flip flashcards, take the quiz, then download as Anki CSV (flashcards) or quiz-runner JSON. Everything regenerates on demand if you want a different angle.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt={props.prompt} />
       ) : (

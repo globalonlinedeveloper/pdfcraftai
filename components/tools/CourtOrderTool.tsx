@@ -24,6 +24,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useToolTracking } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -281,6 +282,23 @@ export function CourtOrderTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your Indian court judgment PDF",
+            body: "Supreme Court / High Court / District Court orders. Works on scanned PDFs that have a text layer (run AI OCR first if yours is image-only). Up to 25 MB.",
+          },
+          {
+            title: "AI extracts the structured facts",
+            body: "Case number, parties, judges, date, citations, holding, ratio decidendi, and operative orders — all the metadata you'd otherwise copy by hand into a brief or a case-management system.",
+          },
+          {
+            title: "Export as JSON or structured summary",
+            body: "Drop the JSON into your firm's matter database, or read the AI-generated structured summary inline for fast triage. Both regenerate on demand.",
+          },
+        ]}
+        privacyNote="Zero retention. Your judgment PDF is processed in-memory on our servers — never persisted to disk, never used for training. This is not legal advice — talk to a lawyer."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt="Drop an Indian court judgment PDF" />
       ) : (

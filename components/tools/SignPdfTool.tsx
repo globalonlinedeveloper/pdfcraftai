@@ -46,6 +46,7 @@ import {
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
@@ -362,6 +363,23 @@ export function SignPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in the PDF that needs signing",
+            body: "Fillable PDF forms or flat scans both work. Up to 25 MB. We tell you which fields the PDF expects and which we'll fill from your personal info.",
+          },
+          {
+            title: "Fill personal info once + add custom fields",
+            body: "Name, initials, email, phone, date, company, title, address pre-fill across the form. Add any form-specific k/v pairs (Policy #, License #) as needed.",
+          },
+          {
+            title: "AI maps your info to the right fields and signs",
+            body: "We match your fields to the PDF's labels (even on flat scans without AcroForm metadata) and add a visual signature image. Download the filled + signed PDF ready to send.",
+          },
+        ]}
+        privacyNote="Zero retention. Your filled PDF is processed in-memory on our servers — never persisted to disk, never used for training. The visual signature is not cryptographic; pair with DocuSign / AdobeSign for legally binding e-signature."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}

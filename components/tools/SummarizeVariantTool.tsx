@@ -28,6 +28,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { track } from "@/lib/analytics";
@@ -320,6 +321,23 @@ export function SummarizeVariantTool(props: {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: `Up to 25 MB. ${props.runLabel} works on any text-based PDF — research papers, contracts, lab reports, articles, technical docs, eBooks.`,
+          },
+          {
+            title: `AI does the ${props.runLabel.toLowerCase()} pass`,
+            body: "We extract the page text end-to-end, then run the variant-specific prompt against it — same engine used across every Summarize variant on pdfcraft.ai.",
+          },
+          {
+            title: "Read it inline or copy as markdown",
+            body: "Output renders in the page with proper headings and lists. Copy the markdown for downstream use, or grab the export buttons for plain text and JSON.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt={props.prompt} />
       ) : (

@@ -12,6 +12,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import {
   deriveOutputName,
   humanSize,
@@ -287,6 +288,23 @@ export function BloodTestTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your lab report PDF",
+            body: "CBC, lipid panel, metabolic panel, thyroid, urinalysis — any standard lab report. Up to 25 MB.",
+          },
+          {
+            title: "AI extracts every test value with its reference range",
+            body: "Test name, value, unit, normal range, and the in/out-of-range flag for each parameter. Multi-panel reports are split into their component sections.",
+          },
+          {
+            title: "Spot what's out of range at a glance",
+            body: "Out-of-range values are highlighted in red so you can see what to ask your doctor about. Export as CSV or JSON for tracking trends across reports.",
+          },
+        ]}
+        privacyNote="Zero retention. Your lab report is processed in-memory on our servers — never persisted to disk, never used for training. This is not medical advice — talk to your doctor."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt="Drop a lab report PDF to extract test values" />
       ) : (

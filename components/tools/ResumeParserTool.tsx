@@ -18,6 +18,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import {
   deriveOutputName,
   humanSize,
@@ -335,6 +336,23 @@ export function ResumeParserTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in the resume PDF",
+            body: "Standard resume layouts, designer-styled CVs, two-column formats, ATS-friendly templates — we handle all of them. Up to 25 MB per file.",
+          },
+          {
+            title: "AI parses to structured JSON",
+            body: "Name, contact info, summary, work experience (with dates / titles / companies / bullets), education, skills, certifications, languages — each field separately and typed.",
+          },
+          {
+            title: "Export as JSON or hand to your ATS",
+            body: "Schema matches common ATS resume-import formats. Use for bulk-importing candidates, parsing your own CV for revisions, or feeding downstream HR pipelines.",
+          },
+        ]}
+        privacyNote="Zero retention. Your resume is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

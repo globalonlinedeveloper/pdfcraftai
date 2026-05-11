@@ -22,6 +22,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useToolTracking } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -202,6 +203,23 @@ export function SemanticSearchPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: "Any text-based PDF — research papers, contracts, technical docs, books, internal wikis. Up to 25 MB.",
+          },
+          {
+            title: "Ask the document a question in plain English",
+            body: "Unlike keyword search, semantic search finds passages that mean the same thing — \"how is liability allocated?\" surfaces the indemnification + warranty clauses even if neither uses the word \"liability\".",
+          },
+          {
+            title: "Get ranked passages with citations",
+            body: "Each match comes with the source page, surrounding context, and a relevance score. Click through to jump straight to the source page.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF and your queries are processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

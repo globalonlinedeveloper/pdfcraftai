@@ -43,6 +43,7 @@ import {
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
@@ -303,6 +304,23 @@ export function RedactPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF and pick redaction categories",
+            body: "Names, emails, phone numbers, addresses, SSNs, credit cards, dates of birth — or describe a custom category. Up to 25 MB.",
+          },
+          {
+            title: "AI finds every match and redacts the bytes",
+            body: "Unlike the free Redact tool (visual overlay only), the AI redaction removes the underlying text bytes — content cannot be recovered by copy-paste, screen reader, or OCR.",
+          },
+          {
+            title: "Download the cryptographically redacted PDF",
+            body: "Safe to share publicly — sensitive content is gone from the file's structure, not just hidden behind a black bar. Pair with PDF Inspector to verify no traces remain.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}

@@ -37,6 +37,7 @@ import { useSession, getSession } from "next-auth/react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize, deriveOutputName } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
 import { classifyAiError } from "@/lib/ai/degradation";
@@ -424,6 +425,23 @@ export function SearchablePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your scanned PDF",
+            body: "Image-only PDFs that Ctrl-F can't find anything in — typically scanned receipts, archival pages, handwritten reports. Up to 25 MB, 50 pages.",
+          },
+          {
+            title: "AI OCRs every page, page-by-page",
+            body: "We run vision OCR on each page to recognize text + position. The original page image is kept untouched — your scan looks identical to before.",
+          },
+          {
+            title: "Get a searchable PDF that looks identical",
+            body: "We add an invisible text layer behind each page image. Visually the same; functionally, Ctrl-F finds matches, copy-paste extracts text, and screen readers can read it aloud.",
+          },
+        ]}
+        privacyNote="Zero retention. Your scan is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

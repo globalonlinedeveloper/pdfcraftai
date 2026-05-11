@@ -19,6 +19,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import {
   deriveOutputName,
   humanSize,
@@ -324,6 +325,23 @@ export function MindmapPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: "Research papers, technical specs, business plans, textbooks — anything with branching ideas you want to see at a glance. Up to 25 MB.",
+          },
+          {
+            title: "AI builds the hierarchical structure",
+            body: "We extract the page text, then identify the central concept, top-level branches, sub-branches, and supporting points — exactly how you'd structure it on a whiteboard.",
+          },
+          {
+            title: "Read inline or export as Markdown / Mermaid",
+            body: "The mind map renders right in the page. Export as Markdown bullets for Obsidian, Mermaid for live re-rendering, or PNG for slides.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}
