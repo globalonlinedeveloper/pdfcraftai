@@ -43,6 +43,7 @@ import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { downloadBytes } from "@/lib/client/download";
 import { GeneratedPdfPreview } from "./GeneratedPdfPreview";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 // Keep in sync with VALID_DOC_TYPES / VALID_LENGTHS / VALID_TONES in the
 // route handler.
@@ -314,6 +315,23 @@ export function GeneratePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Describe what you want",
+            body: "Type a prompt (e.g. \"Q3 product launch brief — 1 page, 5 sections\"), pick a doc type (brief / memo / proposal / one-pager / report), length, and tone.",
+          },
+          {
+            title: "AI drafts a structured document",
+            body: "Headings, sections, bullets, and a clean layout — generated end-to-end from your prompt. The output is markdown by default so it pastes cleanly into Notion / Google Docs / GitHub.",
+          },
+          {
+            title: "Download as a polished PDF",
+            body: "Or grab the markdown source. The PDF includes a title page, page numbers, and is ready to share with your team or client.",
+          },
+        ]}
+        privacyNote="Zero retention. Your prompt is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {/* Title input (optional) */}
       <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <span

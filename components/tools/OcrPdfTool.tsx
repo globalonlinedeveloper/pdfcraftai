@@ -52,6 +52,7 @@ import {
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { classifyAiError } from "@/lib/ai/degradation";
@@ -323,6 +324,23 @@ export function OcrPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your scanned PDF",
+            body: "Image-only PDFs that aren't searchable yet — receipts, paper-scanned contracts, handwritten notes, archival photos of pages. Up to 25 MB, 50 pages.",
+          },
+          {
+            title: "AI reads every page at high accuracy",
+            body: "Vision OCR runs on each page — captures text, layout, multi-column flow, table structure, and even mixed-language passages.",
+          },
+          {
+            title: "Get a searchable PDF + plain text",
+            body: "Output is a new PDF with a hidden text layer over the original scan (so it stays visually identical but is now searchable + selectable), plus a plain-text dump for downstream pipelines.",
+          },
+        ]}
+        privacyNote="Zero retention. Your scan is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}

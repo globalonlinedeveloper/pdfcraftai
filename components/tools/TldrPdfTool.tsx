@@ -27,6 +27,7 @@ import { classifyAiError } from "@/lib/ai/degradation";
 import { useSession, getSession } from "next-auth/react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { renderMarkdown } from "@/lib/markdown-mini";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -171,6 +172,23 @@ export function TldrPdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in any PDF you'd rather not read end-to-end",
+            body: "Reports, research papers, contracts, eBooks, business plans — up to 25 MB.",
+          },
+          {
+            title: "AI compresses it to one paragraph",
+            body: "We extract the page text, then write a tight 2-4 sentence summary that captures only the load-bearing claims. No filler, no padding.",
+          },
+          {
+            title: "Decide if you need to read the whole thing",
+            body: "The TL;DR is meant to be a triage tool — read it, then either move on or jump straight to the section that matters. Need more detail? Pair with Summarize PDF for a multi-section version.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt="Drop a PDF for a one-paragraph TL;DR" />
       ) : (

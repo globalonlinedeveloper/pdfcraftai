@@ -34,6 +34,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
@@ -211,6 +212,23 @@ export function TableExtractTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF (any tables on it)",
+            body: "Bank statements, lab results, financial reports, scientific papers, scraped-from-print spreadsheets — even tables drawn without visible borders.",
+          },
+          {
+            title: "AI finds every table and reconstructs structure",
+            body: "Detects header rows, merged cells, multi-row totals, footnote anchors, and tables split across pages — then stitches them back together as one logical table.",
+          },
+          {
+            title: "Export as CSV, JSON, or Excel",
+            body: "Drop the CSV straight into your spreadsheet, or hand the JSON to a pipeline. Each table comes with the page it was found on and a confidence note.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}

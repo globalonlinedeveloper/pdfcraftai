@@ -30,6 +30,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
@@ -222,6 +223,23 @@ export function ComparePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in both versions (original + revised)",
+            body: "Up to 25 MB each. The Compare flow understands two-file inputs — Original on the left, Revised on the right.",
+          },
+          {
+            title: "AI reads both end-to-end and finds every change",
+            body: "Substantive additions, removals, and rewrites surfaced in plain English — beyond just word-level diff. Catches semantic flips (added carve-outs, changed obligations, reordered clauses) that a string diff misses.",
+          },
+          {
+            title: "Get a structured change list",
+            body: "Each change is anchored to the page it appears on with original-vs-revised text shown side-by-side. Export the change log for redline tracking, contract review notes, or a pull-request-style audit.",
+          },
+        ]}
+        privacyNote="Zero retention. Both PDFs are processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {/* Dual-slot row. On narrow screens the grid collapses to a stack. */}
       <div
         style={{

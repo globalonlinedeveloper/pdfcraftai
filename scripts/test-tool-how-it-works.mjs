@@ -231,6 +231,20 @@ const SWEEP_FREE_TOOLS = [
   "PdfDiffTool",
   "CsvToPdfTool",
   "PdfBatchProcessTool",
+  // 2026-05-11 sweep batch 11 — top-traffic AI tools. The Summarize
+  // canary from batch 1 ships ToolHowItWorks; the remaining
+  // headline AI tools were still bare. Wired in one batch:
+  // Translate, Compare, Rewrite, Generate, OCR, TableExtract, Tldr.
+  // All AI tools use the "Zero retention" / "in-memory" canonical
+  // phrase (vs free tools' "in your browser" / "never leaves your
+  // machine") per the privacy-story parity established in batch 2.
+  "TranslatePdfTool",
+  "ComparePdfTool",
+  "RewritePdfTool",
+  "GeneratePdfTool",
+  "OcrPdfTool",
+  "TableExtractTool",
+  "TldrPdfTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {

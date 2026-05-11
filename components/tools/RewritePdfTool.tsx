@@ -37,6 +37,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
 import { CreditEstimateBadge } from "@/components/upsell/CreditEstimateBadge";
 import { FeedbackChip } from "@/components/feedback/FeedbackChip";
@@ -285,6 +286,23 @@ export function RewritePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF and pick a rewrite mode",
+            body: "Simplify / formal / casual / shorter / longer — same content, different voice. Up to 25 MB per file.",
+          },
+          {
+            title: "AI rewrites while preserving meaning",
+            body: "Paragraph-by-paragraph rewrite that keeps facts, numbers, and structure intact. Headings and lists are retained where they appear in the source.",
+          },
+          {
+            title: "Download or copy the rewritten text",
+            body: "Output is markdown by default (easy to paste into Notion / Google Docs / GitHub) or download as a clean PDF with the original layout preserved.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF is processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}

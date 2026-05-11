@@ -33,6 +33,7 @@ import {
   parseBalanceFromError,
 } from "@/components/upsell/OutOfCreditsAlert";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 // 2026-05-03 plan §5 + Day 2.5 — pre-flight estimate badge.
 // Translate is per-chunk (multiplier = ceil(charCount / 10K)). We
 // approximate charCount from file.size with a conservative density
@@ -435,6 +436,23 @@ export function TranslatePdfTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF and pick a target language",
+            body: "Up to 25 MB. Common languages are one tap (Spanish / French / German / …) or type in any other — we support every major world language.",
+          },
+          {
+            title: "We translate the text + preserve the structure",
+            body: "Page-by-page extraction, then translation that keeps headings, lists, and paragraph breaks intact. Formatting cues (bold / italics / tables) are retained where possible.",
+          },
+          {
+            title: "Download the translated PDF",
+            body: "The output PDF mirrors the source layout with translated text in place. Original alongside is available if you want a side-by-side check.",
+          },
+        ]}
+        privacyNote="Zero retention. Your PDF and the translation are processed in-memory on our servers — never persisted to disk, never used for training."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={addFiles}
