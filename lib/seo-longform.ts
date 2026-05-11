@@ -3478,4 +3478,155 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // markdown-to-pdf — developer-facing rendering
+  // ============================================================
+  "markdown-to-pdf": {
+    title: "Markdown to PDF — what the renderer supports, what it doesn't, and why a small font set is the right trade-off",
+    intro:
+      "Markdown has become the lingua franca of technical writing. Every README, every internal wiki, every team's design-doc folder runs on it. Turning those markdown files into shareable PDFs is one of those operations that should be trivial but often isn't — the available tools either pull in heavy CSS engines, produce inconsistent output, or require accounts. Our free Markdown-to-PDF renderer is intentionally lean: a minimal inline parser, four standard PDF fonts, no font embedding, no server round-trip. Here is what that means for the output, the supported markdown syntax, and the two cases where the simpler approach beats the heavier ones.",
+    sections: [
+      {
+        h: "How rendering works",
+        p: [
+          "The tool runs entirely in your browser. We parse the markdown locally with a minimal inline parser that handles the common syntax (headers, paragraphs, bold, italic, code, lists, blockquotes, links, horizontal rules). Each block is then drawn via pdf-lib onto an A4 page with 1-inch margins. New pages are added automatically when content overflows.",
+          "Fonts are PDF's four standard fonts: Helvetica for body, Helvetica-Bold for headings and bold runs, Helvetica-Oblique for italic, Courier for inline and block code. These are guaranteed to be present in every PDF reader without embedding, which keeps output files small (typically under 100 KB for a 5-page document) and rendering consistent across viewers.",
+        ],
+      },
+      {
+        h: "What's supported",
+        p: [
+          "The full supported syntax list:",
+        ],
+        list: {
+          items: [
+            { b: "Headers (# / ## / ###).", t: "Three header levels at distinct sizes. Sufficient for documentation, design docs, and READMEs; H4 and deeper collapse to H3 size to prevent visual noise." },
+            { b: "Paragraphs.", t: "Lines separated by blank lines become paragraphs. Single line breaks within a paragraph are honored as hard breaks." },
+            { b: "Bold (**bold**) and italic (*italic*).", t: "Both single-character and double-character runs work as expected. Combined (**_bold-italic_**) renders correctly." },
+            { b: "Inline code (`code`) and code blocks (```).", t: "Inline code gets Courier styling inline. Fenced code blocks become indented Courier paragraphs." },
+            { b: "Lists — unordered (-) and ordered (1.).", t: "Both list types with hanging-indent layout. Nested lists work up to 3 levels of indentation." },
+            { b: "Blockquotes (>).", t: "Indented with a left border line, classic blockquote style." },
+            { b: "Horizontal rules (---).", t: "Drawn as a thin horizontal line." },
+            { b: "Links ([text](url)).", t: "Rendered as blue text. Clickable hyperlink annotations are on the v2 roadmap; for now the URL is visible in the text but not click-through." },
+          ],
+        },
+      },
+      {
+        h: "What's not supported (and what to use instead)",
+        p: [
+          "The renderer is intentionally focused. Three features we deliberately do not support, with the right tool for each:",
+        ],
+        list: {
+          items: [
+            { b: "Tables (pipe-syntax).", t: "Markdown tables are surprisingly tricky to render in PDF (column-width calculation, header repetition, line wrapping inside cells). The right tool for tabular data is CSV-to-PDF, which has proper table layout. If your markdown contains a table, extract the rows + columns to CSV first." },
+            { b: "Images (![alt](url)).", t: "Embedding remote images requires fetching them at render time, which conflicts with the no-server-round-trip design. For documents with images, use AI Generate which composes documents with embedded images, or convert to HTML first then HTML-to-PDF." },
+            { b: "HTML passthrough.", t: "Many markdown renderers allow inline HTML for cases the markdown syntax doesn't cover. We render any inline HTML literally (it appears in the output as text). For documents that need HTML features, render through a heavier pipeline." },
+          ],
+        },
+      },
+      {
+        h: "When the lean approach beats the heavy one",
+        p: [
+          "Cases where the minimal renderer is actually the right tool:",
+        ],
+        list: {
+          items: [
+            { b: "Documentation PDFs for sharing.", t: "README.md → README.pdf to email to a stakeholder who doesn't use GitHub. The output is clean, small, and readable. No formatting surprises." },
+            { b: "Meeting notes archived to PDF.", t: "Quick conversion of running notes (in markdown) to a shareable PDF. The format is the same as the source; you don't lose information." },
+            { b: "Style-guide consistent output across documents.", t: "Because the renderer uses fixed fonts and styles, every document looks the same. Useful when consistency across a series of documents matters more than per-document customization." },
+            { b: "Privacy-sensitive content.", t: "Everything runs in your browser. Markdown containing internal information stays on your machine end-to-end." },
+            { b: "Offline use.", t: "Once the page loads, the tool works without network access. Useful for air-gapped or restricted environments." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, markdown rendering handles inputs up to 5 MB of markdown source. Output is A4 with 1-inch margins; page size override is on the v2 roadmap. Auto-pagination handles documents of any length within the input cap. Output files typically run 50-200 KB depending on length.",
+          "Common pairings: Markdown-to-PDF → Add Page Numbers for final-deliverable polish. Markdown-to-PDF → Merge to combine multiple rendered docs into one bundle. For richer markdown features, use AI Rewrite with markdown-to-PDF instruction.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // text-to-pdf — paired plain-text rendering
+  // ============================================================
+  "text-to-pdf": {
+    title: "Text to PDF — when literal text is what you want and markdown is too much",
+    intro:
+      "Sometimes you have plain text that should land as plain text in a PDF — no syntax interpretation, no formatting magic, just the text as you typed it, laid out neatly with consistent line spacing and pagination. Logs, code snippets, letters, transcripts, configuration files, raw notes. Text-to-PDF is the answer when markdown's formatting rules get in the way and you just want the bytes on the page. Here is what the tool does, the four font + page-size combinations that cover almost every real workflow, and the cases where text-to-PDF is the right tool rather than markdown-to-PDF.",
+    sections: [
+      {
+        h: "Plain text vs markdown rendering",
+        p: [
+          "The difference is in what counts as content vs syntax. In markdown, * means italic, # means header, > means blockquote, ` means code. If you have text that legitimately contains those characters (e.g. a shell-script log with literal asterisks, or a math formula with literal asterisks for multiplication), markdown rendering changes the visual meaning. Text-to-PDF treats every character as content — what you typed is what appears on the page.",
+          "Line breaks are also handled differently. Markdown collapses single line breaks within a paragraph; text-to-PDF preserves them. Tabs are honored (expanded to 4 spaces for consistent column alignment in Courier). Long lines auto-wrap to fit the page width using exact font metrics, so the wrap happens at sensible word boundaries.",
+        ],
+      },
+      {
+        h: "Four font + page-size combinations",
+        p: [
+          "Most use cases land on one of four combinations:",
+        ],
+        list: {
+          items: [
+            { b: "Courier 10pt + Letter portrait.", t: "Code listings, log files, configuration dumps. Monospace font preserves column alignment in tables, ASCII art, and shell output. Letter portrait matches the printer paper in US offices." },
+            { b: "Courier 10pt + Letter landscape.", t: "Wide log lines and code listings that need more horizontal room. Landscape doubles the per-line character budget before wrapping kicks in." },
+            { b: "Helvetica 11pt + Letter portrait.", t: "Letters, formal correspondence, plain-text email bodies converted to PDF. Helvetica is professional and easy-reading at 11pt." },
+            { b: "Times 12pt + A4 portrait.", t: "Manuscripts, long-form text submissions, academic drafts that need a serif font. A4 portrait is standard for international submissions." },
+          ],
+        },
+      },
+      {
+        h: "Five workflow patterns where text-to-PDF is the right tool",
+        p: [
+          "Specific use cases:",
+        ],
+        list: {
+          items: [
+            { b: "Code or log archival.", t: "Converting shell output, stack traces, or build logs to PDF for inclusion in incident reports or audit documents." },
+            { b: "Letter writing.", t: "Composing a formal letter as plain text, then producing a PDF for printing or attaching to email. No formatting surprises." },
+            { b: "Transcript archival.", t: "Meeting transcripts, interview transcripts, podcast transcripts — long text that benefits from being a paginated PDF rather than a wall of text in a .txt file." },
+            { b: "Plain-text submissions to portals that require PDF.", t: "Some forms accept attachments only in PDF format. Convert your typed answer to PDF without adding markdown interpretation." },
+            { b: "Code-review handouts.", t: "Print a code listing as a PDF for offline review. Courier alignment and pagination make the listing readable on paper." },
+          ],
+        },
+      },
+      {
+        h: "Three quirks worth knowing",
+        p: [
+          "Patterns in the output that show up on the first pass:",
+        ],
+        list: {
+          items: [
+            { b: "Long words may clip.", t: "If a single word is wider than the line width (which happens with URLs and base64 strings), it gets clipped at the right margin. Use a wider page size or smaller font, or pre-wrap the input with a manual line break." },
+            { b: "Trailing whitespace is preserved.", t: "If your input has trailing spaces or tabs on lines, those land in the PDF too. Usually not visible (whitespace at end-of-line) but counts toward layout. Trim if you care." },
+            { b: "Tabs vs spaces.", t: "Tabs expand to 4 spaces in the output regardless of font. If your source has mixed tabs and spaces and you want consistent alignment, decide on one before converting." },
+          ],
+        },
+      },
+      {
+        h: "Markdown-to-PDF vs Text-to-PDF — decision rule",
+        p: [
+          "The simplest way to decide between the two:",
+        ],
+        list: {
+          items: [
+            { b: "If your text uses * for emphasis, # for headings, ` for code — use Markdown-to-PDF.", t: "The tool interprets those characters as syntax and produces a formatted PDF." },
+            { b: "If your text contains those characters literally — use Text-to-PDF.", t: "The tool treats every character as content and produces a literal PDF." },
+            { b: "If you're not sure — try Text-to-PDF first.", t: "Plain rendering is the safe default. You can always re-run as markdown if the output looks plain when you wanted formatted." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, text rendering handles inputs up to 5 MB of plain text. Output is byte-compatible with every PDF reader. Auto-pagination handles documents of any length within the input cap; typical output is roughly 1 page per 40 lines at default settings.",
+          "Common pairings: Text-to-PDF → Add Page Numbers for final polish. Text-to-PDF → Merge for combining multiple text documents into a bundle. For text that includes diagrams or images, render through a heavier pipeline.",
+        ],
+      },
+    ],
+  },
 };
