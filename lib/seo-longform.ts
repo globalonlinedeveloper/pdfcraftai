@@ -6192,4 +6192,183 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // paraphrase-pdf — wording rewrite AI
+  // ============================================================
+  "paraphrase-pdf": {
+    title: "Paraphrase PDF — when same content in different words is what you actually need",
+    intro:
+      "Paraphrasing is one of the most-confused operations in AI writing tools. Unlike summarization (which cuts content) or rewriting (which changes register), paraphrasing keeps the same length, same facts, same conclusions — only the wording changes. The output is dramatically less useful for some tasks and exactly right for others. Here is what paraphrasing actually does, the three workflows where it shines, and the important difference between paraphrasing and content theft.",
+    sections: [
+      {
+        h: "What paraphrasing does and doesn't change",
+        p: [
+          "Drop a PDF. The tool extracts the text, runs a paraphrase pass that preserves every claim, number, citation, and conclusion. The output has different wording but the same content and roughly the same length. Sentence structures change — passive voice may become active, complex sentences may split, vocabulary may shift to common synonyms. Paragraph organization is typically preserved.",
+          "Three things stay strictly unchanged: factual claims (numbers, dates, specific statements of fact), proper nouns (names, places, brand mentions), and technical terms where a plainer synonym would lose precision. \"Amortization\" doesn't become \"paying off over time\" because the precision matters. \"Leveraging\" does become \"using\" because the precision was fake to begin with.",
+        ],
+      },
+      {
+        h: "Three workflows where paraphrasing shines",
+        p: [
+          "Cases where same-content-different-words is the exact shape of output you want:",
+        ],
+        list: {
+          items: [
+            { b: "Citing someone else's work in your own writing.", t: "Academic and journalistic writing benefits from paraphrasing source material in your own voice rather than block-quoting everything. Paraphrasing tells the source's story in your prose; the citation still credits the original. Critical caveat: paraphrasing does NOT remove the citation requirement. Paraphrasing without attribution is plagiarism." },
+            { b: "Refreshing stale phrasing.", t: "A document you wrote that feels overworked — the same phrases repeating, the same sentence shapes. Paraphrasing breaks you out of the rut and surfaces alternative phrasings you can pick from." },
+            { b: "Content syndication with permission.", t: "When you have permission to republish content but want it to read differently from the original source (for audience-specific tone, for SEO duplicate-content-avoidance, for region-specific voice). Paraphrasing produces a republishable variant." },
+          ],
+        },
+      },
+      {
+        h: "The plagiarism distinction — important",
+        p: [
+          "Three patterns matter:",
+        ],
+        list: {
+          items: [
+            { b: "Paraphrasing without citation is still plagiarism.", t: "The \"in your own words\" rule for academic writing is about WORDING, not authorship. If the ideas came from someone else's work, you must cite them — whether you quoted directly, paraphrased, or summarized. Run-of-the-mill plagiarism detectors (Turnitin, Copyleaks) catch paraphrased copying via semantic similarity, not just exact-word matching." },
+            { b: "Paraphrasing your own previously-published work.", t: "Republishing your own content elsewhere is sometimes called \"self-plagiarism.\" Whether it's a problem depends on the venue's rules. For academic contexts, it usually requires attribution to the original publication. For commercial content, it usually doesn't — but disclosing reuse to the publisher is common professional practice." },
+            { b: "Paraphrasing to evade AI-detection.", t: "Running AI-generated text through a paraphraser does change the surface text — sometimes enough to fool AI-detection tools, sometimes not. We don't optimize the paraphraser for AI-detection evasion. The honest use case is improving prose, not gaming submission filters." },
+          ],
+        },
+      },
+      {
+        h: "Paraphrase vs Improve Writing vs Rewrite",
+        p: [
+          "Three closely-related tools that produce different output shapes:",
+        ],
+        list: {
+          items: [
+            { b: "Paraphrase — same length, different wording.", t: "Length unchanged. Voice slightly different. Facts preserved verbatim. Use when wording variation is the goal." },
+            { b: "Improve Writing — shorter length, same meaning.", t: "20-30% shorter typical. Cuts filler. Use when the source is too long and the goal is tighter." },
+            { b: "Rewrite — different register or tone.", t: "Substantial voice change. Use when converting formal to casual, or academic to conversational, or any deliberate register shift." },
+          ],
+        },
+      },
+      {
+        h: "When paraphrasing isn't the right tool",
+        p: [
+          "Three cases where you should reach for something else:",
+        ],
+        list: {
+          items: [
+            { b: "You want a summary, not a rewording.", t: "If the goal is to shorten the content, paraphrasing won't help — output is roughly the same length. Use Summarize, TL;DR, or Key Points." },
+            { b: "You're rewriting fiction.", t: "Paraphrasing strips out distinctive voice — exactly what fiction relies on. The cleaner alternative version is rarely better than the original for creative work." },
+            { b: "Technical documents where precision matters.", t: "Specifications, regulatory text, contracts, formal legal writing — these depend on exact wording. Paraphrasing introduces variant phrasings that may change meaning. Don't paraphrase contracts." },
+          ],
+        },
+      },
+      {
+        h: "Will the output sound AI-generated?",
+        p: [
+          "Modern paraphrasing models produce natural prose. Output usually reads like clean human writing. Three patterns to be aware of:",
+        ],
+        list: {
+          items: [
+            { b: "Read the output carefully.", t: "If a sentence sounds AI-fluent (too smooth, too perfect, generic phrasing), replace it with your own. The paraphraser is a starting point, not a final pass." },
+            { b: "Watch for inserted hedging.", t: "AI sometimes adds hedging language (\"it could be argued that,\" \"some might suggest\") not present in the source. Strip these if the source was assertive." },
+            { b: "Don't paraphrase repeatedly.", t: "Paraphrasing already-paraphrased text degrades quality with each pass. Pick one paraphrase result and edit from there; don't run it through again." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Paraphrase PDF charges 5 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during paraphrasing and is never persisted. Output is the paraphrased markdown / text plus the original alongside for comparison.",
+          "Common pairings: Paraphrase → Improve Writing if the paraphrased version is now too long. Paraphrase + AI Content Detector to check if the output still reads as AI. Paraphrase → Generate PDF to produce a polished final PDF from the paraphrased content.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-to-flashcards — spaced-repetition AI
+  // ============================================================
+  "pdf-to-flashcards": {
+    title: "PDF to Flashcards — spaced-repetition study material from any document",
+    intro:
+      "Flashcards remain the most-evidenced study technique for factual recall. Spaced repetition (active recall against the front of a card, with delayed review of cards you got wrong) outperforms re-reading by significant margins across every controlled study. The friction has always been creating the cards — manually pulling questions and answers from a textbook chapter takes longer than studying them. The flashcard generator collapses that step: drop the source PDF, get 10-30 Anki-compatible cards in 30 seconds. Here is what kinds of cards it generates, the difficulty mix, and why exam-targeted variants beat the generic generator for specific test contexts.",
+    sections: [
+      {
+        h: "What the generator produces",
+        p: [
+          "Drop a PDF. The tool extracts the text, identifies the key concepts, definitions, formulas, and facts that benefit from spaced repetition, and generates 10-30 question/answer pairs. Each card has three fields: question, answer, and difficulty level (easy / medium / hard). Total card count scales with document length — short articles produce 10-15 cards, full textbook chapters produce 25-30.",
+          "Card types are mixed deliberately. Roughly 40% factual recall (\"What is X?\", \"What year did Y happen?\"), 40% conceptual application (\"How does X differ from Y?\", \"Why does Z occur?\"), 20% deep analysis (\"What would happen if X changed?\", \"Compare A and B in the context of C\"). The mix mirrors the typical breakdown of exam questions across educational levels.",
+        ],
+      },
+      {
+        h: "Why difficulty levels matter",
+        p: [
+          "The three-tier difficulty labeling enables structured study:",
+        ],
+        list: {
+          items: [
+            { b: "Early-stage learning: focus on easy.", t: "When you first learn a topic, the recall cards (easy) are the right starting point. Build the factual base; the harder cards make sense once the base is solid." },
+            { b: "Pre-exam review: hit hard.", t: "A week before a test, the easy cards are likely solid. Spending review time on the hard cards (analysis, comparison, application) is where the marginal value is." },
+            { b: "Spaced-repetition tuning.", t: "Anki and similar apps adjust review intervals based on difficulty. Telling the app a card is hard means more frequent review; easy means longer intervals. The generator pre-classifies, saving manual tagging." },
+          ],
+        },
+      },
+      {
+        h: "Generic vs exam-targeted flashcards",
+        p: [
+          "Two paths for flashcard generation, depending on context:",
+        ],
+        list: {
+          items: [
+            { b: "Generic PDF-to-Flashcards (this tool).", t: "Use for general study of any document. Textbooks, lecture notes, articles. Output is broadly applicable — not tuned to any specific exam." },
+            { b: "Exam-specific paper analyzers (separate tools).", t: "For Indian competitive exams (TNPSC, UPSC, JEE, NEET, GATE), dedicated analyzers tune the question style, difficulty distribution, and topic emphasis to match the actual exam pattern. For exam-prep specifically, use the dedicated tool — output is materially better-targeted." },
+          ],
+        },
+      },
+      {
+        h: "Anki-compatible export",
+        p: [
+          "Output is JSON with fields mapping to Anki's CSV-import format. Three import paths:",
+        ],
+        list: {
+          items: [
+            { b: "Direct Python script.", t: "A 5-line Python snippet converts the JSON to Anki's CSV. Pip install anki-connect, parse the JSON, push to your Anki desk." },
+            { b: "Via online converter.", t: "Public Anki-CSV-converter tools accept the standard JSON format. Faster than writing custom code; works for one-time conversions." },
+            { b: "Manual import.", t: "Copy the JSON's question/answer pairs into Anki's manual-card-add interface. Slowest but works without any tooling." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns for getting good cards",
+        p: [
+          "Habits that improve output quality:",
+        ],
+        list: {
+          items: [
+            { b: "Pick the right source granularity.", t: "A 200-page textbook produces 30 cards — useful but high-level. Chapter-by-chapter generation produces 30 cards per chapter — much denser coverage of the same content. Run the tool on chapter-sized chunks for substantial subjects." },
+            { b: "Combine with study notes.", t: "Run PDF to Study Notes alongside flashcards. Notes for understanding the material; flashcards for retaining it. Both pull from the same source PDF with different output shapes." },
+            { b: "Review and edit before importing.", t: "Generated cards are good but not perfect. Read each before pushing to Anki. Edit the few that don't match your studying style — flashcards you use for years should match your voice." },
+          ],
+        },
+      },
+      {
+        h: "Languages and content types",
+        p: [
+          "Three limitations worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "English works best.", t: "The model's reliability is highest in English. Hindi / Tamil / other Indic-language content is best run through AI Translate first, then flashcards generated from the English version. Native Indic-language flashcard generation is on the roadmap." },
+            { b: "Factual content works better than narrative.", t: "Textbooks, lectures, technical documents — strong flashcards. Novels and essays don't produce useful flashcards because the content is interpretive rather than factual." },
+            { b: "Math and formula content surfaces as text.", t: "Mathematical formulas in flashcards appear as plain text, not rendered equations. For math-heavy study, supplement with a math-rendering layer in Anki (MathJax extension)." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Flashcards charges 10 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted.",
+          "Common pairings: Flashcards + Study Notes for complete-coverage study material. Flashcards + the related exam-specific paper analyzers for competitive-exam prep. Flashcards generated chapter-by-chapter for substantial subject coverage.",
+        ],
+      },
+    ],
+  },
 };
