@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #8 sweep batch 4: PageNumbers + Stamp + SortPages
+
+- [x] **feat(tools): inline ToolHowItWorks sweep batch 4.** Commit `3419a47` (2026-05-11). Three more free tools wired: PdfPageNumbersTool / PdfStampTool / PdfSortPagesTool. All client-side pdf-lib with "never leaves your machine" privacyNote. PdfStampTool step 3 documents "watermark sits ON TOP of existing content — not content-aware background" caveat (second-most-asked support question for that tool). **Surfaced architectural blocker:** PdfBatesNumbersTool / PdfCropTool / PdfHighlightTool / PdfFreeDrawTool etc. use shared base components (PdfSimpleOpsTool / PageEditorTool) that don't currently thread an inline explainer prop. Wiring those would require a base-component refactor that benefits ~10 tools at once — natural next breakthrough rather than another tool-at-a-time batch. CI guard SWEEP_FREE_TOOLS 5 → 8; 52 assertions total. Aggregator: 6470 passed, 0 failed across 116 suites (was 6455/116). **Deploy gotcha:** zombie cleanup. Mass-kill + restart.txt cleared. **Item #8 progress: 9 of N tools (1 AI + 8 free).**
+
 ### 2026-05-11 — Item #8 sweep batch 3: Rotate + Unlock explainers
 
 - [x] **feat(tools): inline ToolHowItWorks sweep batch 3.** Commit `764e7a5` (2026-05-11). PdfRotateTool + PdfUnlockTool now ship the inline explainer. Both client-side pdf-lib, both carry "never leaves your machine" privacyNote. PdfUnlockTool's step 2 explains the owner-vs-user-password distinction inline — the most-asked support question for that tool (owner-protected unlocks freely; user-protected needs the password but stays on-device). CI guard SWEEP_FREE_TOOLS list grows 3 → 5; 37 assertions total. Aggregator: 6455 passed, 0 failed across 116 suites (was 6445/116). Clean deploy. **Item #8 progress: 6 of N tools (1 AI + 5 free).** **No deploy gotcha.**
