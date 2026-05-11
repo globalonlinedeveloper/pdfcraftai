@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 15 — PdfBatchProcessTool permalink
+
+- [x] **feat(tools): URL permalink batch 15.** Commit `5cff300` (2026-05-11). PdfBatchProcessTool gets a single-param `?op=` permalink covering the 8-literal BatchOpId enum (rotate-90 / -180 / -270 / page-numbers / watermark / remove-metadata / flatten-forms / strip-links) — largest enum in the sweep so far. `watermarkText` is DELIBERATELY excluded (it's user content; a CI negative-assertion formalizes the rule against future regressions). CI guard +7 assertions in Section S. 158 total. Aggregator: 6789 passed, 0 failed across 116 suites. **Item #17 progress: 16 of N tools; 11 distinct state shapes verified including largest-yet enum + deliberate user-content exclusion.**
+
 ### 2026-05-11 — Item #17 sweep batches 13+14 — CSV + Overlay permalinks
 
 - [x] **feat(tools): URL permalink batches 13 + 14.** Commit `2fc9015` (CsvToPdfTool) + `9a31ccf` (PdfOverlayTool). 4-param + 3-param shapes added to the sweep. Batch 13 introduces the FIRST boolean-default-true ("asymmetric default" — URL only carries it when false) and the FIRST raw-tab character in the allowlist (URLSearchParams decodes %09 → \t transparently). Batch 14 layers on the same opacity 0..100 bounded-int pattern from PdfStampTool batch 11. CI guard +22 assertions across Sections Q + R. 151 total. Aggregator: 6782 passed, 0 failed across 116 suites. **Item #17 progress: 15 of N tools (4 AI + 11 free); 10 distinct state shapes verified including boolean-default-true and raw-tab allowlist.**
