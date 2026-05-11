@@ -3320,4 +3320,162 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-page-count — utility, very high search volume
+  // ============================================================
+  "pdf-page-count": {
+    title: "PDF page count — the one number every PDF tool needs, and why word count + page size come free",
+    intro:
+      "Knowing how many pages are in a PDF is one of the most common things people ask about a file. Print quotes are per-page. Translation quotes are per-word. Invoicing is often per-page. Reading time is derived from word count. All of these answers come from a single parse of the document, which is why our page-count tool also surfaces word count, reading time, page dimensions, and mixed-orientation warnings at the same time. Here is how the count is computed, what \"page\" really means in PDF terms, and the four adjacent metrics that come along for free.",
+    sections: [
+      {
+        h: "What \"page count\" actually means in PDF",
+        p: [
+          "A PDF's pages are organized in a tree structure called the /Pages dictionary. The top-level /Pages dictionary has a /Count field — the page count. PDF readers display this number in their status bar. The page-count tool parses the same /Pages dictionary and surfaces the same number.",
+          "The number is unambiguous: pages that are hidden in the reader's UI still count, pages with no visible content (blank pages) still count, pages at non-standard sizes still count. One physical page in the file = one count, regardless of what is on it. The PDF specification has been stable on this since version 1.0 (1993), so every PDF you have ever encountered reports its page count consistently.",
+        ],
+      },
+      {
+        h: "Why word count comes free with the page count",
+        p: [
+          "Computing word count requires extracting every page's text — which the tool already does once for the page parse. We split the extracted text on whitespace and count the resulting tokens. The result is comparable to what Microsoft Word reports for the same document text. Two-page documents typically run 400-900 words; ten-page reports run 2,000-4,000 words; the variance comes from font size and layout density.",
+          "Scanned PDFs return 0 for word count because there is no extractable text — page count is correct, but word count cannot be computed from images. Run AI · OCR first to add a searchable text layer; the page-count tool will then surface the OCR'd word count too.",
+        ],
+      },
+      {
+        h: "Four adjacent metrics that come along",
+        p: [
+          "Same single parse, four extra answers:",
+        ],
+        list: {
+          items: [
+            { b: "Page dimensions per page.", t: "Each page's width × height in points (and inches). Useful when you suspect mixed page sizes — the tool flags this explicitly." },
+            { b: "Page size classification.", t: "Letter, A4, Legal, A3, A5, Tabloid, or Custom. Helps you know at a glance whether the document will print on standard paper without resizing." },
+            { b: "Orientation per page.", t: "Portrait or landscape. Mixed-orientation documents are flagged with a warning because they often need normalization before printing or distribution." },
+            { b: "Reading time at 250 WPM.", t: "Word count divided by 250 (average adult reading speed). Reading time is a much more useful summary than word count for non-technical audiences — \"this report is 14 minutes of reading\" lands faster than \"this report is 3,500 words.\"" },
+          ],
+        },
+      },
+      {
+        h: "Five common situations where page count is the load-bearing number",
+        p: [
+          "Where this tool earns its place in workflows:",
+        ],
+        list: {
+          items: [
+            { b: "Per-page billing.", t: "Bates stamping at $X per page. Translation at $Y per page. Print at $Z per page. Every per-page invoice starts with this number." },
+            { b: "Pre-allocating timesheets.", t: "If reviewing a 200-page document takes ~5 hours and reviewing a 50-page document takes ~75 minutes, knowing the page count lets you block calendar time correctly." },
+            { b: "Submission-portal validation.", t: "Many regulatory portals (USPTO, EU regulators, court e-filing systems) cap submission size in pages. Verify before upload." },
+            { b: "Splitting decisions.", t: "Should I send this as one PDF or split it into chapters? A 500-page single PDF is awkward; five 100-page splits are easier to consume. Page count is the signal that triggers this decision." },
+            { b: "Cost estimation.", t: "When asking for a print or translation quote, page count is the first thing you need. Sending a PDF and asking \"how many pages?\" wastes a back-and-forth — open the inspector, copy the number, paste it into your request." },
+          ],
+        },
+      },
+      {
+        h: "Two patterns where the number deserves a second look",
+        p: [
+          "The cases where raw page count can mislead:",
+        ],
+        list: {
+          items: [
+            { b: "Documents with mixed orientations.", t: "A 100-page document where 80 pages are portrait and 20 are landscape will print and bind awkwardly. The page-count tool flags this; resolve before sending or printing." },
+            { b: "Documents with mixed page sizes.", t: "A 50-page document where most pages are Letter and a few are A4 may render inconsistently across viewers. Pair with Resize Pages to normalize before distributing." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, page count handles PDFs up to 100 MB with no page-count cap. Parsing runs in your browser via PDFium WebAssembly; nothing is uploaded. The tool surfaces page count, word count, reading time, per-page size/orientation, and a mixed-size warning in under a second for documents up to 100 pages and within 2-3 seconds for documents up to a few thousand pages.",
+          "For deeper introspection (font inventory, attachment list, JavaScript detection, encryption status, hyperlink count, embedded image inventory), use PDF Inspector — same single parse, much richer surface.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-inspector — deeper-introspection counterpart
+  // ============================================================
+  "pdf-inspector": {
+    title: "PDF Inspector — what's actually inside a PDF (and how to read what we surface)",
+    intro:
+      "Most PDF tools tell you a single number. PDF Inspector tells you everything we can extract from a single parse of the document: page count, file size, page dimensions per page, mixed-orientation warnings, embedded fonts, attached files, hyperlinks, JavaScript handlers, form fields, encryption status, metadata fields. The point is not to overwhelm — it is that one parse already produces this data, and surfacing it once saves you running five different tools later. Here is what each field means, why each one matters in some real workflow, and the three audit patterns that use PDF Inspector as their starting point.",
+    sections: [
+      {
+        h: "What a single parse surfaces",
+        p: [
+          "When you open a PDF in any modern reader, the reader's first job is to parse the file's structure — the page tree, the cross-reference table, the document catalog, embedded resources. That parse is fast (typically under a second for documents up to a few hundred pages) and produces a structured view of everything the PDF contains. PDF Inspector exposes that structured view directly.",
+          "The output covers six major categories: document-level metadata (size, page count, encryption), per-page properties (dimensions, orientation, content type), embedded resources (fonts, images, attachments), interactive elements (form fields, hyperlinks, annotations, JavaScript), accessibility signals (tag tree presence, language declaration), and creator metadata (author, title, subject, creation/modification dates).",
+        ],
+      },
+      {
+        h: "Six categories of surfaced data and why each matters",
+        p: [
+          "Each section of the Inspector output serves a different workflow:",
+        ],
+        list: {
+          items: [
+            { b: "Document overview.", t: "Page count, file size, version, encryption status, mixed-page-size warning. The 5-second triage before deciding what to do with the file." },
+            { b: "Page-by-page properties.", t: "Each page's width × height, orientation, rotation, and content type (text-based vs scanned). Critical for print prep and OCR decisions." },
+            { b: "Embedded fonts.", t: "Every font referenced in the document, whether it is embedded or relies on the reader having it installed. Non-embedded fonts are the #1 reason a PDF reflows on someone else's machine." },
+            { b: "Attached files.", t: "Any non-page content embedded in the PDF — XML invoice data, supplementary spreadsheets, exhibit photos. Often invisible in standard readers but indexed by our viewer." },
+            { b: "Interactive elements.", t: "Form fields, hyperlinks, annotations, named destinations, JavaScript handlers. The interactive layer most readers don't surface in one place." },
+            { b: "Accessibility signals.", t: "Tag tree presence (required for screen-reader access), language declaration, alt-text coverage on images. Helpful for compliance with WCAG, PDF/UA, Section 508." },
+          ],
+        },
+      },
+      {
+        h: "Three audit patterns that start with Inspector",
+        p: [
+          "Where Inspector earns its place in a workflow:",
+        ],
+        list: {
+          items: [
+            { b: "Pre-distribution audit.", t: "Before sending a PDF externally, run it through Inspector to verify: (a) fonts are embedded (otherwise the recipient sees different rendering); (b) metadata does not leak sensitive info; (c) JavaScript handlers do not raise red flags; (d) encryption is set correctly for the audience; (e) attached files are intended for inclusion." },
+            { b: "Forensic inspection of received PDFs.", t: "When evaluating a PDF you received — bid response, vendor contract, regulatory filing — Inspector surfaces the document's structural fingerprint: who created it, when, with what software, what version of PDF, what fonts. Useful in due-diligence and disputes." },
+            { b: "Pre-OCR / pre-conversion check.", t: "Before running OCR or PDF-to-text on a document, check whether it already has a text layer. Inspector reports text content per page; pages showing 0 extractable text are scans needing OCR." },
+          ],
+        },
+      },
+      {
+        h: "Specific signals worth understanding",
+        p: [
+          "Fields in the Inspector output that have outsized importance in specific workflows:",
+        ],
+        list: {
+          items: [
+            { b: "JavaScript handlers.", t: "Any handler is potentially executable code. Handlers that touch network, file system, or external apps are flagged high-severity. Review carefully before opening untrusted PDFs." },
+            { b: "Encryption: user-password vs owner-password.", t: "User-password (open-password) PDFs are fully encrypted. Owner-password (permissions-password) PDFs are readable but restricted. Inspector reports which kind, so you know whether you need a password to read it or whether you need our Unlock tool to remove restrictions." },
+            { b: "Mixed page sizes.", t: "A document that mixes Letter and A4 pages will render inconsistently across viewers and print awkwardly. Inspector flags this so you can normalize with Resize Pages." },
+            { b: "Embedded vs non-embedded fonts.", t: "Non-embedded fonts mean the reader has to find a matching font on the recipient's machine, and the match may differ. For print-ready documents, every font should be embedded. Inspector lists exactly which ones aren't." },
+            { b: "Mismatch between /Info dictionary and XMP stream.", t: "Both carry document metadata. When they disagree (different authors, different titles), the file was probably edited in a tool that updated only one. Inspector surfaces the mismatch as a warning." },
+          ],
+        },
+      },
+      {
+        h: "How to act on the findings",
+        p: [
+          "Inspector is a read-only tool — it does not modify the PDF. Each finding suggests a follow-up:",
+        ],
+        list: {
+          items: [
+            { b: "Non-embedded fonts → use Compress with Embed-Fonts option.", t: "Or regenerate the PDF from source with font embedding enabled." },
+            { b: "Sensitive metadata → Remove Metadata.", t: "Strip /Info and XMP fields before redistributing." },
+            { b: "Mixed page sizes → Resize Pages.", t: "Normalize to a single size for consistent printing and viewing." },
+            { b: "Hidden attachments → Extract Attachments.", t: "Pull the embedded files out and decide whether to keep or strip them." },
+            { b: "Tag-tree missing → Accessibility Checker.", t: "Run a full accessibility audit to see what's needed for compliance." },
+            { b: "JavaScript present → JS Detector.", t: "Get a per-handler view of what the code does so you can decide whether to keep or strip." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, PDF Inspector handles PDFs up to 100 MB. Parsing runs in your browser via PDFium WebAssembly; nothing is uploaded. The Inspector output is exportable as JSON for downstream automation or as a readable report for inclusion in audit documentation.",
+          "Common pairings: Inspector → any modification tool, depending on what you find. Inspector is the cross-tool decision-maker — run it first when you don't yet know what the right next operation is.",
+        ],
+      },
+    ],
+  },
 };
