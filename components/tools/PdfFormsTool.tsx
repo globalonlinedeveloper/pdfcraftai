@@ -14,6 +14,7 @@
 import type { ReactNode } from "react";
 import type { FormField } from "@/lib/pdf/ops/forms";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface ParseResult {
   fields: FormField[];
@@ -29,6 +30,25 @@ export function PdfFormsTool() {
       prompt="Drop a PDF to inspect its form fields"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Reading form fields…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your fillable PDF",
+              body: "Up to 100 MB. We parse the AcroForm dictionary locally — your form values stay in your browser.",
+            },
+            {
+              title: "We list every field",
+              body: "Name, type (text / checkbox / radio / dropdown / signature), current value, and the flag bits (required / read-only / multiline / no-export).",
+            },
+            {
+              title: "Export filled answers for your pipeline",
+              body: "Copy as JSON or download as CSV — useful for capturing form submissions, auditing required-field coverage, or feeding form data into downstream tools.",
+            },
+          ]}
+          privacyNote="Your PDF and its filled values stay in your browser. The AcroForm parser reads structural bytes only — nothing is uploaded or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractFormFields } = await import("@/lib/pdf/ops/forms");
         return extractFormFields(bytes);

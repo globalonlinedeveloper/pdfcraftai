@@ -105,6 +105,12 @@ export interface PdfReadOpsToolProps<TParsed> {
   pageCountForTracker?: (parsed: TParsed) => number;
   /** Error code label for tracker.error. Default: `${toolId}_failed`. */
   errorCode?: string;
+  /** 2026-05-11 (item #8 batch 9): optional "How it works" explainer
+   *  rendered above the dropzone. Same slot pattern that batches
+   *  5-8 used to wire PdfSimpleOpsTool / PageEditorTool /
+   *  PdfChecklistTool consumers — each PdfReadOpsTool consumer
+   *  threads its own ToolHowItWorks block via this prop. */
+  howItWorks?: ReactNode;
 }
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024;
@@ -207,6 +213,7 @@ export function PdfReadOpsTool<TParsed>(
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {props.howItWorks}
       {!file ? (
         <ToolDropzone onFiles={onFiles} prompt={props.prompt} hint={props.hint} />
       ) : (

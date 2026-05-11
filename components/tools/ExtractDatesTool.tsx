@@ -16,6 +16,7 @@ import type {
 import { generateIcs } from "@/lib/pdf/ops/dates";
 import { downloadBytes } from "@/lib/client/download";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { I } from "@/components/icons/Icons";
 
 export function ExtractDatesTool() {
@@ -33,6 +34,25 @@ export function ExtractDatesTool() {
       prompt="Drop a PDF to extract every date"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Scanning for dates…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your PDF",
+              body: "Contracts, schedules, project plans, court orders, invoices — anything with dates inside. Up to 100 MB, processed in your browser.",
+            },
+            {
+              title: "We find every date format",
+              body: "ISO, US (MM/DD/YYYY), EU (DD/MM/YYYY), long-form (May 11, 2026), partial (Q3 2026) — each anchored to the page it appears on with surrounding context.",
+            },
+            {
+              title: "Export as calendar (.ics), CSV, or JSON",
+              body: "Drop the .ics into Google Calendar or Outlook to see every date in your calendar view, or hand the CSV/JSON to your downstream workflow.",
+            },
+          ]}
+          privacyNote="Everything stays in your browser. The text scan and ICS generation run locally — nothing is uploaded or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractDates } = await import("@/lib/pdf/ops/dates");
         return extractDates(bytes);

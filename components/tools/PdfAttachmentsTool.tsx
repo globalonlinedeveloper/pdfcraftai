@@ -18,6 +18,7 @@ import { I } from "@/components/icons/Icons";
 import { humanSize } from "@/lib/client/pdf-utils";
 import type { PdfAttachment } from "@/lib/pdf/ops/attachments";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface ParseResult {
   attachments: PdfAttachment[];
@@ -32,6 +33,25 @@ export function PdfAttachmentsTool() {
       prompt="Drop a PDF to list embedded files"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Reading attachments…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your PDF",
+              body: "Invoices with XML payloads, e-archives, ZUGFeRD or FacturX e-invoices, portfolios with exhibits — anything with embedded files.",
+            },
+            {
+              title: "We list every attachment",
+              body: "Filename, MIME type, description, size and the anchor (page or document-level) for each embedded file are parsed from the PDF's name tree.",
+            },
+            {
+              title: "Audit what's inside before opening",
+              body: "Copy the inventory as JSON or download as CSV — handy for compliance, due-diligence, and pre-open security review. Pair with Extract Attachments to pull the bytes out.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. We only read the structural name tree to enumerate attachments — nothing is uploaded or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractAttachments } = await import(
           "@/lib/pdf/ops/attachments"

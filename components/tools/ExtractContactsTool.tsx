@@ -19,6 +19,7 @@ import type {
   ExtractedPhone,
 } from "@/lib/pdf/ops/contacts";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 export function ExtractContactsTool() {
   return (
@@ -28,6 +29,25 @@ export function ExtractContactsTool() {
       prompt="Drop a PDF to extract emails + phone numbers"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Scanning for contacts…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your PDF",
+              body: "Up to 100 MB. The text-extraction + regex scan runs locally in your browser — your document never leaves the page.",
+            },
+            {
+              title: "We dedupe every email and phone number",
+              body: "International phone formats, common email patterns — each match is anchored to the page it was found on so you can verify in context.",
+            },
+            {
+              title: "Copy as JSON or download CSV",
+              body: "Paste straight into your CRM, contact-import workflow, or outreach list. Each row tags whether it came from email or phone regex.",
+            },
+          ]}
+          privacyNote="Everything stays in your browser. The text-extract + regex scan run locally — nothing is uploaded, logged, or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractContacts } = await import("@/lib/pdf/ops/contacts");
         return extractContacts(bytes);

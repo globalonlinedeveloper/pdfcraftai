@@ -10,6 +10,7 @@
 import type { ReactNode } from "react";
 import type { PdfAnnotation } from "@/lib/pdf/ops/annotations";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface ParseResult {
   annotations: PdfAnnotation[];
@@ -24,6 +25,25 @@ export function PdfAnnotationsTool() {
       prompt="Drop a PDF to export its annotations"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Reading annotations…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your reviewed PDF",
+              body: "Up to 100 MB. We parse the annotation dictionary locally — no upload, no server-side OCR.",
+            },
+            {
+              title: "We pull every comment + markup",
+              body: "Highlights, sticky notes, free-text, stamps, ink — each with author, creation date, page number, and color preserved.",
+            },
+            {
+              title: "Copy as JSON or download CSV",
+              body: "Hand the structured data straight to your reviewer-tracking spreadsheet, contract redline workflow, or compliance log.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. The annotation parser reads structural bytes only — nothing is uploaded or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractAnnotations } = await import(
           "@/lib/pdf/ops/annotations"

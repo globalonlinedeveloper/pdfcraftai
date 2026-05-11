@@ -206,6 +206,18 @@ const SWEEP_FREE_TOOLS = [
   "PageCountTool",
   "ExtractImagesTool",
   "ExtractAttachmentsTool",
+  // 2026-05-11 sweep batch 9 — PdfReadOpsTool consumers.
+  // PdfReadOpsTool itself gained a `howItWorks?: ReactNode` prop
+  // (same slot-fill pattern as batches 5-8). All 6 byte-parser
+  // tools that use it now thread their own ToolHowItWorks block:
+  // PdfAnnotationsTool, PdfAttachmentsTool, PdfFontsTool,
+  // PdfFormsTool, ExtractContactsTool, ExtractDatesTool.
+  "PdfAnnotationsTool",
+  "PdfAttachmentsTool",
+  "PdfFontsTool",
+  "PdfFormsTool",
+  "ExtractContactsTool",
+  "ExtractDatesTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {

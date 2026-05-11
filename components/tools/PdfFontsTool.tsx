@@ -12,6 +12,7 @@
 import type { ReactNode } from "react";
 import type { PdfFont } from "@/lib/pdf/ops/fonts";
 import { PdfReadOpsTool } from "./PdfReadOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface ParseResult {
   fonts: PdfFont[];
@@ -27,6 +28,25 @@ export function PdfFontsTool() {
       prompt="Drop a PDF to inspect its fonts"
       hint="Up to 100 MB · runs privately in your browser"
       busyLabel="Reading fonts…"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your PDF",
+              body: "Up to 100 MB. The byte parser inspects the font dictionary locally — no upload, no PDFium engine required.",
+            },
+            {
+              title: "We dedupe every font reference",
+              body: "Font name, subtype (TrueType / Type 0 / Type 1 / CID), encoding, subset flag, and the page numbers each font is used on.",
+            },
+            {
+              title: "Spot non-embedded fonts before they break print",
+              body: "Missing embedded fonts get a callout — that's the #1 reason a PDF reflows or substitutes glyphs at the press. Export as JSON or CSV.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. The font parser reads structural bytes only — nothing is uploaded, logged, or persisted."
+        />
+      }
       parser={async (bytes) => {
         const { extractFonts } = await import("@/lib/pdf/ops/fonts");
         return extractFonts(bytes);
