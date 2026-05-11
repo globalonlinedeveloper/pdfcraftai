@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 5: PdfRasterizeTool numeric ?scale=
+
+- [x] **feat(tools): URL permalink sweep batch 5 — PdfRasterizeTool numeric ?scale=.** Commit `46c46cf` (2026-05-11). First NUMERIC variant in the #17 sweep. State is `useState<1 | 2 | 3>(2)` — numeric union type requires explicit string-compared branch dispatch (`raw === "1"` → `setScale(1)`, etc.) rather than parseInt which would widen back to `number` and lose the literal types. Write side uses `String(scale)` for the URLSearchParams.set call — TS sometimes wants the explicit conversion; the cast also future-proofs if Scale grows. Default `2` omitted from URL. CI guard +8 assertions in Section I. 49 total. Aggregator: 6350 passed, 0 failed across 116 suites (was 6342/116). **Deploy gotcha:** zombie cleanup. Mass-kill + restart.txt cleared. **Item #17 progress: 6 of N tools (4 AI + 2 free).**
+
 ### 2026-05-11 — Item #14 FULL SWEEP CLOSE: aria-live on 18 of 18 AI tools
 
 - [x] **feat(a11y): aria-live FULL SWEEP CLOSE — 18 of 18 AI tools.** Commit `77fd868` (2026-05-11). **Item #14 FULLY closed.** Final 4 inline-result tools (CourtOrder / Searchable / Structured / SummarizeVariant) wired. StructuredVariantTool has TWO result regions (flashcards + quizItems dispatch); both wired. CI guard `scripts/test-aria-live-results.mjs`: INLINE_RESULT_TOOLS_WIRED grows 5 → 9 (all formerly deferred); INLINE_RESULT_TOOLS_DEFERRED shrinks 4 → 0 (kept as deliberate empty allowlist for future tools). Sanity check that DEFERRED must be non-empty was removed — empty IS the goal state. 63 assertions in the harness (was 56). Sister to item #5 (retry-status UX, aria-busy in-flight side) — together: AT announces "busy" on click, then announces the result when it lands. Full bracketing of every AI tool run for screen reader users. Aggregator: 6342 passed, 0 failed across 116 suites (was 6335/116). Verified live at `77fd868` after clean deploy. **No deploy gotcha.** **Updated scoreboard: 14 fully closed + 2 canaries (#8, #17) + 9 untouched.**
