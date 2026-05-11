@@ -1378,6 +1378,10 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
+### 2026-05-11 — Item #17 sweep batch 11: PdfStampTool with sentinel + percent
+
+- [x] **feat(tools): URL permalink sweep batch 11 — PdfStampTool.** Commit `0615666` (2026-05-11). Introduces TWO new wrinkles to the sweep: (1) **opacity (0..100 bounded number)** — first percent-based bounded integer; bounds catch URL-injected `?opacity=200` (over-saturated) or `?opacity=-50` (would invert); (2) **fontSize empty-string sentinel** — state is `number | ""` where empty means auto-size; URL omits the param entirely, only emits numeric value when user overrides. The 0 check handles the edge where input-clear lands on 0. Wide fontSize bounds (8..400) — stamps span tiny overlay to giant diagonal banner, much wider than body-copy 4..72. `text` ("DRAFT") and `color` (hex) deliberately NOT synced — user content vs hex-string quirks. CI guard +10 assertions in Section O. 114 total. Aggregator: 6415 passed, 0 failed across 116 suites (was 6404/116). **Deploy gotcha:** zombie cleanup. Mass-kill + restart.txt cleared. **Item #17 progress: 12 of N tools (4 AI + 8 free); 7 distinct state shapes verified.**
+
 ### 2026-05-11 — Item #17 sweep batch 10: MarkdownToPdfTool 2-param
 
 - [x] **feat(tools): URL permalink sweep batch 10 — MarkdownToPdfTool.** Commit `e97870b` (2026-05-11). 2-param shape (pageSize + fontSize) — same body-copy bounds as TextToPdfTool batch 9. CI guard +9 assertions in Section N. 103 total. Aggregator: 6404 passed, 0 failed across 116 suites (was 6395/116). Verified live at `e97870b` after clean deploy. **No deploy gotcha.** **Item #17 progress: 11 of N tools (4 AI + 7 free); body-copy 4..72 bounds now stable across 2 tools.**
