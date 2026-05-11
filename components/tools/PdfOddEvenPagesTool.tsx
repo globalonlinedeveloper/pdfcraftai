@@ -7,6 +7,7 @@
 import { useState } from "react";
 import type { Parity } from "@/lib/pdf/ops/odd-even-pages";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 export function PdfOddEvenPagesTool() {
   const [parity, setParity] = useState<Parity>("odd");
@@ -20,6 +21,28 @@ export function PdfOddEvenPagesTool() {
       actionLabel={() => `Extract ${parity}-numbered pages`}
       successCta="Extract from another PDF"
       errorCode="odd_even_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Pick odd or even",
+              body:
+                "Odd pages (1, 3, 5…) typically hold the recto / front. Even pages (2, 4, 6…) hold the verso / back. Useful when a duplex scanner produced two separate PDFs or when you need to split fronts and backs.",
+            },
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The tool walks every page and keeps only those matching the chosen parity.",
+            },
+            {
+              title: "Extract and download",
+              body:
+                "pdf-lib copies matching pages into a fresh PDF preserving order. Common follow-up: extract odd from File A + extract even from File B, then merge to interleave them.",
+            },
+          ]}
+          privacyNote="Page extraction runs entirely in your browser via pdf-lib — files never leave your machine."
+        />
+      }
       configPanel={
         <div
           className="card"

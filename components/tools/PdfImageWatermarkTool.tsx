@@ -31,6 +31,7 @@ import {
 } from "./PageEditorTool";
 import { humanSize } from "@/lib/client/pdf-utils";
 import type { ImagePosition } from "@/lib/pdf/ops/image-watermark";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface PickedImage {
   fileName: string;
@@ -89,6 +90,28 @@ export function PdfImageWatermarkTool() {
       busyLabel="Stamping watermark…"
       successCta="Watermark another PDF"
       errorCode="image_watermark_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The first-page preview renders so you can position the image watermark visually.",
+            },
+            {
+              title: "Upload a logo and place it",
+              body:
+                "PNG or JPEG. Click anywhere on the page preview to set the anchor — the image stamps at that exact spot on every page. Tune opacity and scale before applying. Reset clears the click to use the 3x3 preset grid fallback instead.",
+            },
+            {
+              title: "Apply and download",
+              body:
+                "pdf-lib embeds the image once and draws it at the chosen anchor on every page. Single-page placement = doc-wide watermark — the canonical corporate-logo or copyright-mark use case.",
+            },
+          ]}
+          privacyNote="Watermarking runs entirely in your browser via pdf-lib — files and logos never leave your machine."
+        />
+      }
       initialState={INITIAL_STATE}
       multiPage={false}
       applyLabel={(state) =>

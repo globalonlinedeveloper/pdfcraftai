@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 export function PdfGrayscaleTool() {
   const [scale, setScale] = useState<1 | 2 | 3>(2);
@@ -22,6 +23,28 @@ export function PdfGrayscaleTool() {
       actionLabel={() => `Convert to grayscale (${scale}× quality)`}
       successCta="Convert another PDF"
       errorCode="grayscale_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Pick render scale + quality",
+              body:
+                "Higher scale = sharper output but larger file. Quality controls JPEG compression on rasterized pages. Defaults work for most documents.",
+            },
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. Color pages render to grayscale in your browser via PDFium; the result is a fresh PDF with grayscale-only images.",
+            },
+            {
+              title: "Convert and download",
+              body:
+                "Useful for print preview (most office printers are mono), accessibility checking (verify color isn't the only signal), or shrinking color-heavy PDFs.",
+            },
+          ]}
+          privacyNote="Grayscale conversion runs entirely in your browser via PDFium — files never leave your machine."
+        />
+      }
       configPanel={
         <div
           className="card"

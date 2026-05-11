@@ -10,6 +10,7 @@
 import { useState } from "react";
 import type { BookletPaperSize } from "@/lib/pdf/ops/booklet";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 const PAPERS: Array<{ v: BookletPaperSize; label: string }> = [
   { v: "letter", label: "Letter" },
@@ -31,6 +32,28 @@ export function PdfBookletTool() {
       actionLabel={() => `Build ${paper.toUpperCase()} booklet`}
       successCta="Build another booklet"
       errorCode="booklet_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Pick paper + fold settings",
+              body:
+                "Choose the output paper size (Letter / A4 / Legal / A3). Toggle fold lines if you want printed crease guides for hand-folding.",
+            },
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. Page count is automatically padded to a multiple of 4 so the booklet folds cleanly.",
+            },
+            {
+              title: "Build and download",
+              body:
+                "pdf-lib imposes the pages in printer-spread order: 2 source pages per output page, arranged so that printing double-sided and folding produces a proper booklet.",
+            },
+          ]}
+          privacyNote="Booklet imposition runs entirely in your browser via pdf-lib — files never leave your machine."
+        />
+      }
       configPanel={
         <div
           className="card"

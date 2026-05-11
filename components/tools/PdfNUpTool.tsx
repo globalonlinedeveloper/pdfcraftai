@@ -15,6 +15,7 @@
 import { useState } from "react";
 import type { NUpLayout } from "@/lib/pdf/ops/n-up";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 export function PdfNUpTool() {
   const [layout, setLayout] = useState<NUpLayout>("2");
@@ -30,6 +31,28 @@ export function PdfNUpTool() {
       actionLabel={() => `Build ${layout}-up PDF`}
       successCta="N-up another PDF"
       errorCode="n_up_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Pick a layout",
+              body:
+                "2-up (book pages, 1 sheet for 2), 4-up (handouts, 1 sheet for 4), 6-up or 9-up (contact sheets / overviews). Each layout halves or quarters your sheet count.",
+            },
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The tool aspect-fits each source page into a tile on the output sheet — content scales down, no cropping.",
+            },
+            {
+              title: "Build and download",
+              body:
+                "pdf-lib composes new pages with the source pages embedded as tiles. Common uses: print 4 slides per page from a deck, fit a long doc onto fewer sheets, or batch-print to save paper.",
+            },
+          ]}
+          privacyNote="N-up imposition runs entirely in your browser via pdf-lib — files never leave your machine."
+        />
+      }
       configPanel={
         <div
           className="card"

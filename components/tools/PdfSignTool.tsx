@@ -25,6 +25,7 @@ import {
   type PageEditorResult,
 } from "./PageEditorTool";
 import { humanSize } from "@/lib/client/pdf-utils";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface PickedImage {
   fileName: string;
@@ -60,6 +61,28 @@ export function PdfSignTool() {
       busyLabel="Placing signature…"
       successCta="Sign another PDF"
       errorCode="sign_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The page renders as a visual surface where you'll place your signature.",
+            },
+            {
+              title: "Create your signature",
+              body:
+                "Three modes: Draw with mouse/trackpad/touchscreen, Type with a cursive font, or Upload a PNG/JPG of an existing signature. Click anywhere on the page to drop the signature at that point; drag to reposition; tune the size.",
+            },
+            {
+              title: "Apply and download",
+              body:
+                "pdf-lib embeds the signature as a PNG and draws it at every placement point. CAVEAT: this is visual-signature placement (Adobe \"Fill & Sign\" equivalent), NOT a cryptographic digital signature with CA-backed cert — fine for everyday contracts, not for legally binding e-signature where you need certificate trust (use DocuSign/Adobe Sign there).",
+            },
+          ]}
+          privacyNote="Free Sign runs entirely in your browser via pdf-lib — files and signatures never leave your machine. For AI-assisted form-fill on the same surface (pre-fills name/initials/date fields automatically), /tool/ai-sign is the credit-gated upgrade."
+        />
+      }
       initialState={INITIAL_STATE}
       multiPage={true}
       // "Real edit" = signature has been placed (posPx set). Picking an

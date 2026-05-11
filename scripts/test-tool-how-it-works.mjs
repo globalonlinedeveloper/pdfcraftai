@@ -184,6 +184,16 @@ const SWEEP_FREE_TOOLS = [
   "PdfAddLinksTool",
   "PdfAddTextBoxTool",
   "PdfRedactTool",
+  // 2026-05-11 sweep batch 7 — remaining 6 shared-base tools
+  // (Booklet / Grayscale / NUp / OddEvenPages → PdfSimpleOpsTool;
+  // ImageWatermark / SignFree → PageEditorTool). All shared-base
+  // consumers now wired through the howItWorks prop.
+  "PdfBookletTool",
+  "PdfGrayscaleTool",
+  "PdfNUpTool",
+  "PdfOddEvenPagesTool",
+  "PdfImageWatermarkTool",
+  "PdfSignTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {
