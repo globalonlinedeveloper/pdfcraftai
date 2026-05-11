@@ -24,6 +24,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useTrackToolView } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -152,6 +153,23 @@ export function PageCountTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: "Up to 100 MB. PDFium parses the page tree locally in your browser — your document never leaves the page.",
+          },
+          {
+            title: "We count the pages",
+            body: "Same engine Chrome uses internally — accurate even for PDFs with non-linear page trees or splittable booklets.",
+          },
+          {
+            title: "Copy the number, or jump to the full Inspector",
+            body: "Tap to copy the count. Need page sizes / word count / reading time too? Use PDF Inspector for the full breakdown.",
+          },
+        ]}
+        privacyNote="Your PDF never leaves your browser. PDFium runs locally in WebAssembly — nothing is uploaded or persisted."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

@@ -21,6 +21,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
@@ -226,6 +227,23 @@ export function PdfInspectorTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in any PDF",
+            body: "Up to 100 MB. PDFium runs in a WebAssembly sandbox in your browser — your file never leaves the page.",
+          },
+          {
+            title: "We measure every page",
+            body: "Page count, file size, per-page width × height, mixed-orientation flag, word count and reading time — all from a single pass through the document.",
+          },
+          {
+            title: "Copy out the numbers you need",
+            body: "Tap any stat to copy it, or export the full report as JSON. Plain-English page-size labels (Letter, A4, Legal…) included.",
+          },
+        ]}
+        privacyNote="Your PDF never leaves your browser. PDFium runs locally in WebAssembly — nothing is uploaded or persisted."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

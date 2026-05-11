@@ -12,6 +12,7 @@
 // render checklist + headline + copy/CSV/JSON export, repeat).
 
 import { useState, useCallback } from "react";
+import type React from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
 import { humanSize } from "@/lib/client/pdf-utils";
@@ -66,6 +67,14 @@ interface ChecklistToolProps {
   dropPrompt: string;
   /** Tool-specific parser. Must not throw. */
   parse: (bytes: Uint8Array) => Promise<ChecklistResult>;
+  /** 2026-05-11 (item #8 batch 8): optional "How it works" explainer
+   *  rendered above the dropzone. Each wrapper passes its own
+   *  3-step + privacyNote ToolHowItWorks block. Added here so all
+   *  four audit tools (PDF/A, PDF/X, accessibility, JS detector)
+   *  get the explainer in one base-component refactor — same
+   *  pattern that unblocked the 11 shared-base wirings in batches
+   *  5–7 (PdfSimpleOpsTool + PageEditorTool). */
+  howItWorks?: React.ReactNode;
 }
 
 export function PdfChecklistTool({
@@ -75,6 +84,7 @@ export function PdfChecklistTool({
   busyLabel,
   dropPrompt,
   parse,
+  howItWorks,
 }: ChecklistToolProps) {
   const tracker = useTrackToolView(toolId, group);
   const [file, setFile] = useState<File | null>(null);
@@ -186,6 +196,7 @@ export function PdfChecklistTool({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {howItWorks}
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}
@@ -473,6 +484,8 @@ function statusGlyph(status: ChecklistItem["status"]): string {
 
 // ----- Per-tool wrappers --------------------------------------------
 
+import { ToolHowItWorks } from "./ToolHowItWorks";
+
 export function PdfACheckTool() {
   return (
     <PdfChecklistTool
@@ -481,6 +494,25 @@ export function PdfACheckTool() {
       actionLabel="Check PDF/A compliance"
       busyLabel="Checking PDF/A compliance…"
       dropPrompt="Drop a PDF to check PDF/A compliance"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your PDF",
+              body: "Up to 100 MB. The audit runs locally on the structural metadata — your document never leaves the page.",
+            },
+            {
+              title: "We check every required marker",
+              body: "OutputIntent, XMP metadata, embedded fonts, transparency flags, compliance level — the full PDF/A-1/2/3 checklist.",
+            },
+            {
+              title: "Get a per-check verdict",
+              body: "Pass / fail / warning for each item with a plain-English detail line, plus a JSON export you can hand to engineering.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. The parser reads structural bytes only — nothing is uploaded, logged, or persisted."
+        />
+      }
       parse={async (bytes) => {
         const { checkPdfA } = await import("@/lib/pdf/ops/pdfa-check");
         const r = checkPdfA(bytes);
@@ -525,6 +557,25 @@ export function PdfXCheckTool() {
       actionLabel="Check PDF/X compliance"
       busyLabel="Checking PDF/X compliance…"
       dropPrompt="Drop a PDF to check PDF/X compliance"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in your print-ready PDF",
+              body: "Up to 100 MB. We inspect the file in your browser — no upload, no server-side preflight.",
+            },
+            {
+              title: "We verify every PDF/X requirement",
+              body: "Trim/bleed boxes, output intent profile, color-space embedding, transparency, trapping, font subsetting — the full press-ready checklist.",
+            },
+            {
+              title: "Catch issues before the press does",
+              body: "Each check shows pass / fail / warning with a plain-English explanation, so you can fix problems before your printer rejects the job.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. We only read the structural bytes needed to verify PDF/X markers."
+        />
+      }
       parse={async (bytes) => {
         const { checkPdfX } = await import("@/lib/pdf/ops/pdfx-check");
         const r = checkPdfX(bytes);
@@ -569,6 +620,25 @@ export function AccessibilityCheckerTool() {
       actionLabel="Audit accessibility"
       busyLabel="Auditing accessibility…"
       dropPrompt="Drop a PDF to audit accessibility"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in any PDF",
+              body: "Up to 100 MB. The audit runs in your browser — your document never leaves the page.",
+            },
+            {
+              title: "We score the structural accessibility checks",
+              body: "Tag tree, reading order, alt text, language, title metadata, document structure — the must-fix items that block screen readers.",
+            },
+            {
+              title: "Get a 0–100 score with severity ratings",
+              body: "Every check is labelled must-fix / should-fix / nice-to-have so you know what to remediate first for WCAG / PDF/UA conformance.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser. We only read the structural metadata needed for the accessibility audit."
+        />
+      }
       parse={async (bytes) => {
         const { auditAccessibility } = await import("@/lib/pdf/ops/accessibility");
         const r = auditAccessibility(bytes);
@@ -610,6 +680,25 @@ export function PdfJsDetectorTool() {
       actionLabel="Scan for JavaScript"
       busyLabel="Scanning for JavaScript…"
       dropPrompt="Drop a PDF to scan for JavaScript"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop in the PDF you want to inspect",
+              body: "Up to 100 MB. The scan is read-only and happens entirely in your browser — no upload, no execution.",
+            },
+            {
+              title: "We list every JavaScript handler",
+              body: "Document-open, page-actions, form-field validators, link-actions, named scripts — every place a PDF can run JS, surfaced explicitly.",
+            },
+            {
+              title: "Spot the risky ones at a glance",
+              body: "Handlers that touch network, file system, or external apps are flagged high-severity so you can review them before opening the file.",
+            },
+          ]}
+          privacyNote="Your PDF never leaves your browser, and nothing inside it is executed — we only parse the structural bytes to find handler entries."
+        />
+      }
       parse={async (bytes) => {
         const { detectJavaScript } = await import("@/lib/pdf/ops/javascript");
         const r = detectJavaScript(bytes);

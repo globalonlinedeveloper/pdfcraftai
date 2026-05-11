@@ -14,6 +14,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
 import { useTrackToolView } from "./useToolTracking";
@@ -164,6 +165,23 @@ export function ExtractImagesTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: "Up to 100 MB. PDFium runs in a WebAssembly sandbox in your browser — your PDF never leaves the page.",
+          },
+          {
+            title: "We pull every embedded image",
+            body: "Page-by-page traversal extracts each picture in its native format (JPEG / PNG / etc.) with its original resolution preserved.",
+          },
+          {
+            title: "Download individually or as a ZIP",
+            body: "Pick the images you want, or grab the whole set bundled into one .zip — filenames carry the page number so the order is obvious.",
+          },
+        ]}
+        privacyNote="Your PDF never leaves your browser. PDFium runs locally in WebAssembly — nothing is uploaded, logged, or persisted."
+      />
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

@@ -21,6 +21,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
 import { useToolTracking } from "./useToolTracking";
@@ -127,6 +128,23 @@ export function ExtractAttachmentsTool() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ToolHowItWorks
+        steps={[
+          {
+            title: "Drop in your PDF",
+            body: "Any PDF that has embedded files — invoices with XML, contracts with exhibits, portfolios, ZUGFeRD e-invoices, anything with attachments.",
+          },
+          {
+            title: "We list every embedded file",
+            body: "Each attachment surfaces with name, MIME type, size, and the page or annotation it's anchored to — so you can see exactly what's inside.",
+          },
+          {
+            title: "Save them one-by-one or as a ZIP",
+            body: "Pull a single attachment out, or bundle the whole set into one .zip with stable filenames. Original bytes preserved, no re-encoding.",
+          },
+        ]}
+        privacyNote="Your PDF never leaves your browser. Attachment extraction happens locally — nothing is uploaded or persisted."
+      />
       {!file ? (
         <ToolDropzone onFiles={onFiles} disabled={busy} prompt="Drop a PDF to extract its embedded files" />
       ) : (

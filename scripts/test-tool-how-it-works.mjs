@@ -194,6 +194,18 @@ const SWEEP_FREE_TOOLS = [
   "PdfOddEvenPagesTool",
   "PdfImageWatermarkTool",
   "PdfSignTool",
+  // 2026-05-11 sweep batch 8 — direct-ToolDropzone tools.
+  // PdfChecklistTool gained a `howItWorks` prop (same shape as the
+  // shared-base refactor in batches 5-7) so all 4 audit wrappers
+  // (PDF/A check, PDF/X check, accessibility, JS detector) wire
+  // it via their own ToolHowItWorks. PdfInspectorTool / PageCountTool /
+  // ExtractImagesTool / ExtractAttachmentsTool mount ToolHowItWorks
+  // directly above their own ToolDropzone.
+  "PdfChecklistTool",
+  "PdfInspectorTool",
+  "PageCountTool",
+  "ExtractImagesTool",
+  "ExtractAttachmentsTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {
