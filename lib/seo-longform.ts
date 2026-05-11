@@ -2193,4 +2193,162 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // flatten-pdf — high-value, AcroForm baking explained
+  // ============================================================
+  "flatten-pdf": {
+    title: "Flatten PDF — what \"baking in\" actually means and when to do it",
+    intro:
+      "Flattening a PDF is one of those operations that sounds technical but solves a very practical problem: stopping recipients from accidentally (or intentionally) editing your form values, annotations, or signatures. Done at the right time, it turns a working document into a final deliverable that behaves like a printed page. Done at the wrong time, it permanently destroys the editability you might still need. Here is what flattening does under the hood, when it is exactly the right move, and the three cases where doing it now is a mistake.",
+    sections: [
+      {
+        h: "What gets baked in (and what doesn't)",
+        p: [
+          "When you flatten a PDF, the tool walks every page and converts live interactive elements into static page content. The PDF's AcroForm dictionary is processed: each form field's current value is rendered as text inside the page's content stream, then the field's interactive entry is removed. Annotations (highlights, sticky notes, text boxes, ink markup) are similarly merged into the page contents and their interactive references dropped. Visual signatures become embedded images at the position they were placed.",
+          "The output behaves like a printed page. Form fields are no longer fillable — they look exactly like they did when you flattened, and they cannot be re-edited. Highlight overlays are permanent. Comments either become visible text or are dropped. The PDF file itself is structurally simpler — fewer dictionaries, no interactive layer.",
+        ],
+      },
+      {
+        h: "When flattening is the right move",
+        p: [
+          "Five canonical use cases:",
+        ],
+        list: {
+          items: [
+            { b: "Final delivery of a filled form.", t: "You filled out a vendor onboarding form, a registration form, a contract. Flatten before sending so the recipient cannot modify your answers." },
+            { b: "Locking in markup from a review pass.", t: "You added comments, highlights, and tracked changes to a draft. Flatten when you want those comments to persist visually but be unchangeable." },
+            { b: "Printing a form that needs to be archived.", t: "Flattening makes the document behave like a printed page — useful for paper-trail compliance where the digital file should match what would appear on paper." },
+            { b: "Closing out a signed document.", t: "After everyone has signed a document with visual signatures, flatten to prevent further field changes. Pair with cryptographic signing if you need legal-grade non-repudiation." },
+            { b: "Preparing a PDF for systems that don't handle forms.", t: "Older archival systems sometimes choke on PDFs with AcroForm dictionaries. Flatten first to produce a structurally simpler file." },
+          ],
+        },
+      },
+      {
+        h: "Three cases where flattening now is wrong",
+        p: [
+          "Flattening is permanent. Once a form field is baked into the page, there is no \"unflatten\" operation. Three situations where waiting is the right move:",
+        ],
+        list: {
+          items: [
+            { b: "The form values are still in draft.", t: "If anyone — including you, on a different day — might still want to change the values, do not flatten yet. Keep the working AcroForm copy and only flatten the final-final version." },
+            { b: "You need cryptographic signatures to remain valid.", t: "Cryptographic signatures are bound to the exact byte layout of the file at signing time. Flattening rewrites the byte layout, which invalidates the signature chain. If you need a cryptographically-signed deliverable, sign AFTER flattening, not before." },
+            { b: "Form data extraction is still in the workflow.", t: "If a downstream system reads form-field values directly from the PDF (a common pattern in invoice processing, expense reports, and intake forms), keep the form fields live. Flattened PDFs require OCR + regex extraction, which is far more expensive than reading AcroForm dictionaries directly." },
+          ],
+        },
+      },
+      {
+        h: "Cryptographic signatures and flattening — the precise rule",
+        p: [
+          "This trips up enough users that it deserves its own section. A PDF can carry two kinds of \"signature\":",
+        ],
+        list: {
+          items: [
+            { b: "Visual signature (an image of a handwriting).", t: "A drawn or photographed signature placed on the page like any other image. Has no cryptographic verification. Survives flattening unchanged — it was already visual content; flattening just converts it from an annotation reference to part of the page contents." },
+            { b: "Cryptographic signature (a digital signature with a certificate).", t: "A signed hash of the file's bytes, anchored to a verifiable identity. Flattening rewrites the file bytes, so the hash no longer matches. The signature appears as a visual stamp in viewers, but the verification badge says \"signature invalid — file modified.\"" },
+          ],
+        },
+      },
+      {
+        h: "What you keep, what you lose",
+        p: [
+          "After flattening, the file is smaller, simpler, and less interactive. Concretely:",
+        ],
+        list: {
+          items: [
+            { b: "Kept: visual appearance.", t: "The PDF looks exactly the same as before flattening. Every form value, every annotation, every signature is visible at the same position with the same styling." },
+            { b: "Kept: searchability.", t: "Form values written as text are still selectable, searchable, and screen-reader-accessible after flattening." },
+            { b: "Lost: AcroForm dictionary.", t: "Cannot be re-edited via PDF readers." },
+            { b: "Lost: interactive annotations.", t: "Highlights, comments, sticky notes are no longer hover-able or removable." },
+            { b: "Lost: cryptographic signature validity (if any).", t: "Sign after flattening to preserve validity." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, flatten handles PDFs up to 100 MB with no page-count cap. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF viewer since Acrobat 5.",
+          "Common pairings: Sign-then-flatten for documents that need both signature and lockdown. Page-numbers-then-flatten when you want the page numbers permanently rendered. Compress-after-flatten produces the smallest final-state file by combining structural simplification (flatten) with bitmap re-encoding (compress).",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // fill-pdf-form — common free-tool target
+  // ============================================================
+  "fill-pdf-form": {
+    title: "Fill PDF forms in your browser — what we support, what catches people out, and how to lock the result",
+    intro:
+      "Filling a PDF form sounds like one of those tasks that should be obvious — click the field, type a value, save. The friction is in the gap between fillable PDFs (which have a real AcroForm dictionary) and flat PDFs (which look like forms but have no fillable fields). The first kind works perfectly with any free fill tool. The second kind requires either OCR-based field detection (paid) or accepting that you are typing on top of the page rather than into structured fields. Here is how to tell which kind you have, what our free fill tool supports, and the workflow for locking in the result.",
+    sections: [
+      {
+        h: "How to tell if your PDF is fillable",
+        p: [
+          "The most reliable check: open the PDF in your browser. If a field highlights as you tab through the document, or if a click on a likely field shows a text cursor, it is fillable. If clicking around just does nothing, it is flat. Our PDF Form Fields inspector also surfaces the AcroForm inventory of any uploaded PDF — names, types, default values, and whether each field is required. That five-second check saves an hour of \"why doesn't this work?\".",
+          "The technical underlying detail: fillable PDFs carry an AcroForm dictionary that lists every interactive field with its position, type (text / checkbox / radio / dropdown / signature), and current value. Flat PDFs do not have this dictionary; the form looks like a form because the lines and labels are drawn on the page, but there are no clickable regions.",
+        ],
+      },
+      {
+        h: "What our free fill tool supports",
+        p: [
+          "Every standard AcroForm field type works without configuration:",
+        ],
+        list: {
+          items: [
+            { b: "Text fields (single and multi-line).", t: "Type your value; it is written into the field. Multi-line fields wrap automatically based on the field's bounding box." },
+            { b: "Checkboxes.", t: "Click to toggle. Some PDFs use uncommon checked-state values (Yes / Y / On instead of the default checked-mark); we detect and use whatever the field expects." },
+            { b: "Radio groups.", t: "Click any option to select it; the others in the group automatically deselect. Works for both circle and square radio styles." },
+            { b: "Dropdowns.", t: "The dropdown opens with every available option from the AcroForm definition. Pick one, or type to filter if the field supports inline editing." },
+            { b: "Signature fields.", t: "We do not support placing a cryptographic signature in the free tool — that needs a certificate and a private key. Visual signature placement (an image of a handwritten signature) is supported via the AI · Sign tool." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns that catch people out",
+        p: [
+          "Friction points from support tickets and analytics:",
+        ],
+        list: {
+          items: [
+            { b: "Required fields and validation.", t: "Some PDFs mark fields as required or run JavaScript validation on submit. The free fill tool warns you about required fields that are empty before allowing download, but it does not run custom JavaScript validation (most PDFs do not have any). If a downstream system rejects your filled form for validation reasons, those are usually about content (an SSN format, a date range), not about the fill mechanism." },
+            { b: "Field appearance does not update until save.", t: "Some PDFs use field appearance streams that cache the rendered text. After typing a value, you may see the field flash with both the old and new text briefly. Save the filled PDF and re-open it; the rendered appearance will be correct." },
+            { b: "Calculated fields don't auto-update in the free tool.", t: "Some forms have calculated fields (total = quantity × price). Our free fill tool does not execute the calculation scripts. If your form depends on auto-calculations, fill the values manually, or use AI · Fill PDF Form which does execute the calculation scripts." },
+          ],
+        },
+      },
+      {
+        h: "Locking the result — when to flatten",
+        p: [
+          "After filling, you have two options:",
+        ],
+        list: {
+          items: [
+            { b: "Save as a filled form (editable).", t: "The default. Anyone who opens the file can still see and modify the values. Good when the recipient needs to add their own values (e.g. you fill in your part of a multi-party form, send to next party)." },
+            { b: "Save as flattened (final, uneditable).", t: "Click Options → Flatten before download. The values are baked into the page; the form cannot be re-edited. Good for final submissions — bank applications, government forms, visa applications, anything where the recipient should not be able to modify your filled values." },
+          ],
+        },
+      },
+      {
+        h: "When to upgrade to AI Fill",
+        p: [
+          "Cases where the free tool isn't sufficient and AI · Fill PDF Form is the right next step:",
+        ],
+        list: {
+          items: [
+            { b: "Flat PDFs (no AcroForm dictionary).", t: "AI · Fill detects field positions visually using OCR + LLM, then types your provided personal info into the right places. The free tool cannot help with flat PDFs because there are no fields to fill." },
+            { b: "Repeated filling with the same personal info.", t: "AI · Fill remembers your name/email/phone/address/SSN once and fills any new form automatically. Faster than retyping for users who fill many forms (insurance brokers, real-estate agents, immigration applicants)." },
+            { b: "Forms with computed fields or conditional logic.", t: "AI · Fill executes the form's calculation scripts and respects conditional show/hide logic. The free tool does not." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, form-fill handles PDFs up to 100 MB with no field-count cap. Processing runs in your browser via pdf-lib; the file never leaves your machine, and the values you type do not leave your machine either. Output is byte-compatible with every PDF reader; filled values render correctly in Acrobat, Preview, Chrome, Firefox, and every other modern viewer.",
+          "Common pairings: Flatten → Sign for final cryptographic-signature workflows (sign after flatten to keep the cert valid). Fill → Compress for the smallest final-deliverable file size.",
+        ],
+      },
+    ],
+  },
 };
