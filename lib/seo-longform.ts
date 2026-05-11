@@ -2986,4 +2986,168 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // stamp-pdf — business stamps, paired with add-logo
+  // ============================================================
+  "stamp-pdf": {
+    title: "Add a stamp to a PDF — when DRAFT, CONFIDENTIAL, or APPROVED need to be on every page",
+    intro:
+      "Business stamps — DRAFT, CONFIDENTIAL, APPROVED, REJECTED, PAID, VOID — predate computers and are still in heavy use because they communicate document status at a glance. The digital version of rubber-stamping a PDF takes about ten seconds; getting it to look intentional rather than amateur takes knowing about three settings most users do not think about. Here is what the stamp tool does, the twelve preset stamps with the use cases each fits, and the differences between stamping (a visual layer) and redaction (content removal).",
+    sections: [
+      {
+        h: "How stamping works",
+        p: [
+          "The stamp tool draws colored text onto each page's content stream — typically with a colored border and rotated for the classic angled rubber-stamp look. The drawing happens via pdf-lib at vector quality: the stamp text and border are crisp at any zoom level. The original page content is untouched; the stamp sits on top.",
+          "Because the stamp is part of the page content rather than an annotation, recipients cannot delete it through the normal annotation-removal flow in Acrobat. A determined recipient with PDF editor software can still remove it (the original page content is intact underneath the stamp), but the casual recipient sees the stamp as part of the document. For irreversible stamping where the underlying content really needs to go, use Redact instead.",
+        ],
+      },
+      {
+        h: "Twelve preset stamps and their use cases",
+        p: [
+          "The tool ships twelve presets covering the most common workflows:",
+        ],
+        list: {
+          items: [
+            { b: "DRAFT.", t: "The most common stamp. Use on circulated working copies that are not yet final, to signal that changes are still expected." },
+            { b: "CONFIDENTIAL.", t: "Reminder that the document should not be redistributed outside the intended audience. Common on internal reports, partner agreements, board materials." },
+            { b: "APPROVED / REJECTED.", t: "Review-workflow signals. Use after a sign-off step to mark a document's status." },
+            { b: "PAID / RECEIVED.", t: "Invoice and shipping workflow signals. PAID indicates payment processed; RECEIVED indicates physical or digital receipt of goods." },
+            { b: "REVIEWED.", t: "Sign-off that a document has been read and acknowledged. Common in compliance workflows." },
+            { b: "COPY / ORIGINAL.", t: "Differentiator stamps for cases where you need to mark which physical (or digital) version is the original of record." },
+            { b: "VOID.", t: "Cancellation marker. Use on documents that have been replaced or invalidated — keeping them in the record for audit purposes but signaling they should not be acted on." },
+            { b: "FINAL / URGENT.", t: "Workflow signals — FINAL marks a document as locked, URGENT signals immediate attention required." },
+            { b: "Custom (up to 30 chars).", t: "Type your own. For workflow-specific signals (\"CLIENT REVIEW\", \"BOARD PACK\", \"FOR DISTRIBUTION\"). The 30-char cap keeps the stamp readable at preset sizes." },
+          ],
+        },
+      },
+      {
+        h: "Three settings that distinguish good stamps from amateur ones",
+        p: [
+          "The defaults work most of the time. Adjusting one or two of these settings for context lifts the result:",
+        ],
+        list: {
+          items: [
+            { b: "Rotation angle.", t: "0° (horizontal) reads as official-document style. -30° to -45° (left-tilted) reads as classic rubber-stamp. +30° to +45° (right-tilted) is unusual; default left-tilt of -15° is the most universally-recognized rubber-stamp angle." },
+            { b: "Opacity.", t: "100% is dense and dominant. 60-80% reads as a stamp that does not obscure the underlying content. For a CONFIDENTIAL stamp on a readable document, 70% is the canonical pick." },
+            { b: "Position vs page content.", t: "A stamp dead-center on a page with text in the center collides with the text. Pick a corner position (top-right is most common for DRAFT, top-center for CONFIDENTIAL, diagonal-center for VOID) based on what's already on the page." },
+          ],
+        },
+      },
+      {
+        h: "Stamp vs Redact — when to use each",
+        p: [
+          "These two operations look similar visually but solve different problems:",
+        ],
+        list: {
+          items: [
+            { b: "Stamp — visual annotation, content intact.", t: "Use when the underlying content should still be readable. A CONFIDENTIAL stamp does not hide the document's content; it signals how to treat it." },
+            { b: "Redact — content removed, visual block.", t: "Use when the underlying content needs to actually go away. Redact bytes-out the text; the recipient cannot recover it by copy-paste or by removing an overlay." },
+          ],
+        },
+      },
+      {
+        h: "When to also flatten after stamping",
+        p: [
+          "Stamping draws the text into the page content stream. That alone is harder to remove than an annotation. But four cases benefit from also flattening:",
+        ],
+        list: {
+          items: [
+            { b: "Documents going to recipients with PDF editors.", t: "If the recipient has Acrobat Pro or similar, they can still remove the stamp via the editor's content-edit mode. Flattening makes that harder (though not impossible)." },
+            { b: "Pre-signing.", t: "Stamp first (DRAFT, etc.), then flatten to lock it in, then sign cryptographically. The signature anchors the stamped state." },
+            { b: "Archival.", t: "Stamped + flattened PDFs behave more consistently across years of viewer-software updates than annotation-style stamps." },
+            { b: "Re-distribution-risk documents.", t: "If the document might get re-shared further than originally intended, flatten lifts the friction of stamp-removal." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, stamping handles PDFs up to 50 MB. Encrypted PDFs need to be unlocked first. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF reader.",
+          "Common pairings: Stamp → Flatten for irreversible stamping. Stamp → Sign for stamped-and-signed deliverables. Stamp + Add Logo for branded stamped documents (logo in one corner, stamp in another).",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // booklet-pdf — print-imposition, complements n-up
+  // ============================================================
+  "booklet-pdf": {
+    title: "Booklet PDF — saddle-stitch imposition and why page order matters",
+    intro:
+      "Booklet imposition is one of those operations that looks like simple math but has surprising depth. To turn a 16-page document into a 4-sheet folded booklet, you cannot just print it 2-up — the page order has to be specifically rearranged so that when the sheets are stacked, folded in half, and stapled along the fold, every page lands in reading order. Get this wrong and the booklet is unreadable. Here is how the math works, the four configurations that cover almost every real booklet, and the three patterns that catch first-time bookleters.",
+    sections: [
+      {
+        h: "How booklet imposition actually works",
+        p: [
+          "Think about taking a stack of paper and folding it in half. The bottom sheet's outside has pages 1 and the last page (reading order, after binding). The bottom sheet's inside has page 2 and the second-to-last page. Working in toward the middle, every sheet has a specific pair of pages on each side, and the order is anything but sequential.",
+          "Booklet imposition rearranges your source pages into this saddle-stitch order, with each output sheet showing two source pages per side (front and back). When you print the imposed PDF double-sided on a standard duplex printer, then stack, fold, and staple, the result is a folded booklet that reads sequentially from front to back.",
+          "The page count rounds up to a multiple of 4 because that is the natural unit for saddle-stitch (4 source pages per output sheet — 2 per side). The tool inserts blank pages at the end automatically when needed. A 17-page source becomes a 5-sheet booklet with 3 blank pages at the end; a 50-page source becomes a 13-sheet booklet with 2 blanks.",
+        ],
+      },
+      {
+        h: "Four configurations that cover every real booklet",
+        p: [
+          "Most users overcomplicate this. Four configurations cover virtually every real workflow:",
+        ],
+        list: {
+          items: [
+            { b: "Letter source → Letter output.", t: "Two Letter source pages tile onto one Letter sheet by treating the output as landscape. The most common pick for US documents." },
+            { b: "A4 source → A4 output.", t: "Two A4 source pages on one A4 landscape sheet. The European-default equivalent." },
+            { b: "Letter source → Legal output.", t: "Two Letter source pages on one Legal landscape sheet. Slight margin gain — useful when source content runs to the edge." },
+            { b: "Half-size booklets.", t: "Letter or A4 source on Letter or A4 PORTRAIT output (4 source pages per sheet via 2×2 grid). Produces a quarter-folded booklet — smaller and denser. Less common but useful for pocket guides." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns first-time bookleters miss",
+        p: [
+          "Friction points worth knowing before you click apply:",
+        ],
+        list: {
+          items: [
+            { b: "Print duplex with flip-on-long-edge.", t: "Most printers default to flip-on-short-edge for duplex, which is wrong for booklets. The result is every other page upside-down. Set the printer to flip on the LONG edge so the back side has the same orientation as the front." },
+            { b: "Print order matters for the staple step.", t: "Print the imposed PDF in normal page order (1, 2, 3, ...). After printing, stack the sheets in order, fold the stack in half, and staple along the fold. The page order in the imposed PDF is already rearranged for this — do not try to manually reverse anything." },
+            { b: "Blank trailing pages are intentional.", t: "If your source has 17 pages, the booklet output has 20 (3 blank trailing pages). Do not delete them — the math depends on the page count being a multiple of 4." },
+          ],
+        },
+      },
+      {
+        h: "When the fold-line guide helps",
+        p: [
+          "The tool offers an optional faint fold-line guide on each output sheet. Whether to enable it depends on the production:",
+        ],
+        list: {
+          items: [
+            { b: "Hand-folding small runs.", t: "Yes — the guide helps you fold consistently across many sheets." },
+            { b: "Sending to a print shop.", t: "Usually no — pros fold by their own jigs and the guide can show up as a faint line on the final product." },
+            { b: "Educational use (showing how booklets work).", t: "Yes — the guide makes the imposition visible and pedagogically clear." },
+          ],
+        },
+      },
+      {
+        h: "When the booklet tool is the right move",
+        p: [
+          "Specific situations where booklet imposition is the right answer:",
+        ],
+        list: {
+          items: [
+            { b: "Printed event programs.", t: "Concert programs, wedding programs, conference handouts — the booklet form factor is the standard." },
+            { b: "Small-run books and zines.", t: "Self-published books, art zines, instructional manuals at the 8-80 page range work great as saddle-stitch booklets." },
+            { b: "Manuals and quickstarts.", t: "Product manuals, employee onboarding handbooks, software quickstart guides. Booklet form is portable and familiar." },
+            { b: "Sermons, lecture notes, conference talks.", t: "Speech-or-talk supplementary materials that the audience holds during the event." },
+            { b: "Newsletters.", t: "Quarterly or monthly newsletters at 8-16 pages. Booklet form is more polished than stapled flat sheets." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, booklet imposition handles PDFs up to 100 MB with no page-count cap. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF reader and prints cleanly on every duplex printer that supports flip-on-long-edge.",
+          "Common pairings: Booklet + Add Page Numbers BEFORE booklet imposition (the page numbers go on the source pages, not the imposed sheets). Booklet + Bookmarks if your source has a bookmark tree, the bookmarks survive into the imposed output. Booklet → Compress for the smallest final-ready file.",
+        ],
+      },
+    ],
+  },
 };
