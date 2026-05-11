@@ -1477,4 +1477,164 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // extract-pdf-pages — head term, paired with delete-pdf-pages
+  // ============================================================
+  "extract-pdf-pages": {
+    title: "Extract PDF pages — keep exactly the pages you need, in the order you want",
+    intro:
+      "Extracting pages from a PDF sounds simple, and on the surface it is — pick the pages, get a smaller PDF. The friction is in what \"pick the pages\" actually means: a range syntax that supports comma-separated single pages and dash-separated ranges, with order preserved exactly as you typed it. Pair that with the fact that extract and split look identical at first glance and you have one of the most-confused operations in any PDF toolbox. Here is what extract does, when it is the right tool, and how to spec the pages you actually want.",
+    sections: [
+      {
+        h: "What extract pages does that split doesn't",
+        p: [
+          "Extract and Split look related but produce different shapes of output. Split takes one PDF and produces several — one output file per range you specify. Extract takes one PDF and produces one new file — a combined output with only the pages you wanted, glued together. If you want pages 1-3 plus pages 8-10 as a single 6-page deliverable, you want Extract. If you want pages 1-3 and pages 8-10 as two separate files, you want Split.",
+          "The other practical difference: Extract honors the order you list. Type \"5, 1, 3\" and you get pages 5, 1, 3 in that exact order — useful for reordering small selections without going through the visual sort tool. Split, by contrast, always emits files in document order regardless of how you typed the ranges.",
+        ],
+      },
+      {
+        h: "How to spec the pages you want",
+        p: [
+          "The range syntax is short enough to learn in a minute, expressive enough to cover every reasonable selection. Each comma-separated chunk is either a single page or a dash-separated range. Order is preserved as typed.",
+        ],
+        list: {
+          items: [
+            { b: "1-5", t: "Pages 1, 2, 3, 4, 5 in order. A simple range." },
+            { b: "1, 3, 5", t: "Pages 1, 3, 5 — every other page from the top, by hand." },
+            { b: "1-3, 8-10", t: "Pages 1, 2, 3, 8, 9, 10 — two ranges combined." },
+            { b: "5, 1, 3", t: "Pages 5, 1, 3 — out-of-order on purpose. Output has those pages in that exact order." },
+            { b: "1-3, 7", t: "Mix range with single — 1, 2, 3, 7." },
+            { b: "1-N", t: "Whole document. (N is the last page; the form accepts the literal letter N as shorthand.)" },
+          ],
+        },
+      },
+      {
+        h: "Common real-world uses",
+        p: [
+          "Extract earns its keep in scenarios where you need to slice content but produce a single coherent deliverable:",
+        ],
+        list: {
+          items: [
+            { b: "Send just the relevant pages of a contract.", t: "Extract the signature page + amendment clauses; share the 4-page extract instead of the 80-page master." },
+            { b: "Build a study deck from a textbook.", t: "Extract pages 12-18 + 47-52 + 110-115 into one 18-page PDF you can annotate without dragging around the whole book." },
+            { b: "Re-order a deck for a different audience.", t: "Pull slides 3, 8, 1, 6, 12 in that order to build a 5-slide talk track from a 30-slide master deck." },
+            { b: "Isolate the page you actually need.", t: "Extract just page 47 of a 500-page report — open Extract, type \"47\", download. Faster than scrolling and screenshotting." },
+            { b: "Build a cover letter + relevant resume sections.", t: "Extract your cover letter page, plus the resume's relevant experience block, into one 2-page submission." },
+          ],
+        },
+      },
+      {
+        h: "Things that will catch you out",
+        p: [
+          "The friction points new users hit most often:",
+        ],
+        list: {
+          items: [
+            { b: "Page numbers in the PDF vs the document's printed page numbers.", t: "Extract uses physical page positions, not printed page numbers. If your document has a 5-page front matter (Roman i-v) before the body (1, 2, 3…), \"extract pages 1-3\" gives you the front matter, not the chapter you wanted. Add the front-matter offset (i.e. extract \"6-8\" for the first three numbered pages)." },
+            { b: "Trailing commas and spaces.", t: "Most PDF tools choke on trailing whitespace or commas. Ours doesn't, but it is worth typing the range cleanly so the next tool you use doesn't break." },
+            { b: "Overlapping ranges.", t: "If you type \"1-5, 3-7\" you get pages 1, 2, 3, 4, 5, 3, 4, 5, 6, 7. The same pages appear twice. Usually a typo — review the spec before clicking apply." },
+            { b: "Out-of-range page numbers.", t: "Asking for page 200 in a 50-page document produces an error. We show the document's page count near the input so you can sanity-check the spec." },
+          ],
+        },
+      },
+      {
+        h: "Why extract preserves quality",
+        p: [
+          "Like rotate, extract is a structural rather than rendering operation. We parse the input's page tree, copy the page objects you selected to a new PDF, and rebuild the cross-reference table. Page contents are transplanted byte-for-byte: text stays selectable, vector graphics stay sharp, embedded fonts come with their pages, scanned images keep their resolution. The output file is the natural size for the page count you extracted — typically a fraction of the input, scaled by the fraction of pages kept.",
+          "Annotations, hyperlinks, and form fields on extracted pages survive the extract. Hyperlinks that pointed to a different page of the original PDF are remapped: if the original page 5 linked to page 12, and you extracted only page 5, that link now points to nothing (the target is no longer in the file). Hyperlinks to external URLs survive unchanged. Bookmarks are pruned to match the new page set.",
+        ],
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, extract handles PDFs up to 100 MB with no page-count cap. Processing runs entirely in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF viewer since Acrobat 5. The extracted PDF is structurally a fresh, independent file — no link to the original, no embedded reference. You can rename it, share it, or pass it through further processing with no concerns about the source.",
+          "Common next steps: pair with Merge to combine extracts from multiple source PDFs into one bundle, or with Page Numbers to add fresh numbering to the extracted set (the original page numbers no longer correspond to the page positions in the new file).",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // delete-pdf-pages — paired with extract-pdf-pages
+  // ============================================================
+  "delete-pdf-pages": {
+    title: "Delete PDF pages — remove what you don't need, keep everything else exactly where it was",
+    intro:
+      "Delete pages is the inverse of extract: instead of specifying what to keep, you specify what to drop. For long documents with a few stray pages — a misplaced cover, a duplicate scan, a draft section that did not make the final cut — the delete operation is the cleanest way to produce a tighter PDF without re-typing the whole keeper list. Here is how it works, when to reach for it instead of extract, and the safety net that keeps you from accidentally emptying the document.",
+    sections: [
+      {
+        h: "Delete vs extract — when to use each",
+        p: [
+          "Both tools end at the same place — a smaller PDF containing only the pages you wanted. The difference is which list is easier to type:",
+        ],
+        list: {
+          items: [
+            { b: "Use Delete when the drop list is short.", t: "A 50-page document where you want to remove pages 12 and 37. Typing \"12, 37\" is one second; typing the equivalent extract spec (\"1-11, 13-36, 38-50\") is annoying and error-prone." },
+            { b: "Use Extract when the keep list is short.", t: "A 50-page document where you want pages 5, 7, and 22. Typing \"5, 7, 22\" is straightforward; typing the delete equivalent would mean enumerating 47 page numbers." },
+            { b: "Use Extract when order matters.", t: "Delete preserves the original page order with the deleted pages removed. If you need to reorder pages, use Extract — it honors the order you type." },
+          ],
+        },
+      },
+      {
+        h: "How to spec the pages to delete",
+        p: [
+          "Same range syntax as extract. Comma-separated chunks; each chunk is a single page or a dash-separated range.",
+        ],
+        list: {
+          items: [
+            { b: "3", t: "Delete just page 3." },
+            { b: "3, 5", t: "Delete pages 3 and 5." },
+            { b: "3, 5-7", t: "Delete pages 3, 5, 6, 7." },
+            { b: "3, 5-7, 12", t: "Delete pages 3, 5, 6, 7, 12." },
+            { b: "1", t: "Drop the front matter / cover page. Common cleanup pass after a Word-to-PDF export that includes a blank first page." },
+            { b: "N", t: "Drop the last page (where N is the page count). The form accepts the literal letter N as shorthand." },
+          ],
+        },
+      },
+      {
+        h: "The safety net — we won't let you empty the document",
+        p: [
+          "If your delete spec would remove every page in the PDF, we stop and show an error. There is no useful version of a 0-page PDF; the operation would just fail anyway when you tried to open the output. The safety net catches the most common cause of this — a delete spec like \"1-N\" that is meant for some other tool — before it ruins your file.",
+          "You can delete N-1 pages out of N (leaving just one page) without any objection. The minimum keeper count is 1.",
+        ],
+      },
+      {
+        h: "What you can safely delete and what you can't undo",
+        p: [
+          "The delete operation produces a new file; your original is untouched on your machine. Keep both files until you have verified the output, then move the original to an archive folder or trash if you no longer need it.",
+        ],
+        list: {
+          items: [
+            { b: "Deleted pages remove everything on those pages.", t: "Text, images, annotations, hyperlinks, form fields, embedded resources — all gone from the output. If you wanted to keep an annotation on a deleted page, copy it out before deleting." },
+            { b: "Cross-references on remaining pages update.", t: "A bookmark that pointed to deleted page 5 is pruned. A hyperlink from page 8 that pointed to (now-deleted) page 5 becomes a no-op (the target is gone). External URL hyperlinks survive untouched." },
+            { b: "Page numbering does not auto-renumber.", t: "If you delete page 3 of a document with printed page numbers, the printed numbers on the remaining pages stay as they were — page 4 still says \"4\" in its content. Use the Page Numbers tool to renumber the output if needed." },
+            { b: "Form fields on remaining pages still work.", t: "Delete only removes the pages you specified; everything else is byte-preserved." },
+          ],
+        },
+      },
+      {
+        h: "Common real-world uses",
+        p: [
+          "Where Delete shows up most often in support tickets and analytics:",
+        ],
+        list: {
+          items: [
+            { b: "Remove cover/separator pages from a scanner output.", t: "Document scanners often insert a separator page between batches. Drop those pages with a single delete pass before the file goes downstream." },
+            { b: "Strip a draft section from a circulated report.", t: "Pages 18-22 are the methodology appendix that the executive audience does not need. Delete them; share the slimmer version." },
+            { b: "Remove duplicate pages from a re-scanned document.", t: "If your feeder picked up the same page twice, drop the duplicate. Pair with PDF Inspector first to spot which pages are the duplicates." },
+            { b: "Cut blank pages.", t: "Many scanners or printer-to-PDF flows leave a blank trailing page. Delete the last page in one click." },
+            { b: "Redact a confidential section.", t: "If you are sharing a document but a particular section should not go with it, deleting those pages is the cleanest approach — far stronger than a black bar. The pages are gone from the file's structure entirely, not just hidden visually." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, delete handles PDFs up to 100 MB with no page-count cap. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every reader. The deleted-page version is structurally a fresh PDF — you can pass it through any of our other tools (merge, compress, OCR, watermark) without worrying about state carried from the original.",
+          "Common next steps: pair with Page Numbers to renumber after delete, or with Bookmarks to clean up the outline if the deleted pages had bookmark targets.",
+        ],
+      },
+    ],
+  },
 };
