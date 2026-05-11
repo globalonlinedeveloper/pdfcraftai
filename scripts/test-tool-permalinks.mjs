@@ -425,6 +425,73 @@ if (compressEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section I — PdfRasterizeTool sweep batch 5 (numeric ?scale=).
+// ---------------------------------------------------------------------
+//
+// Sweep batch 5 — PdfRasterizeTool wires `?scale=<1|2|3>` — the
+// first NUMERIC variant in the sweep. State is a numeric union
+// type (1 | 2 | 3) so the URL parser must dispatch on string-
+// compared digits (the URL value is always string-typed) and
+// setScale receives the numeric literal. The String() conversion
+// on write keeps types crisp on the way out.
+
+const RASTERIZE_PATH = path.join(ROOT, "components/tools/PdfRasterizeTool.tsx");
+assert(fs.existsSync(RASTERIZE_PATH), `PdfRasterizeTool missing at ${RASTERIZE_PATH}`);
+const RASTERIZE = fs.existsSync(RASTERIZE_PATH) ? fs.readFileSync(RASTERIZE_PATH, "utf8") : "";
+
+assert(
+  /params\.get\("scale"\)/.test(RASTERIZE),
+  "PdfRasterizeTool: mount-effect must call `params.get(\"scale\")`.",
+);
+
+assert(
+  /raw === "1"\s*\)\s*setScale\(1\);?\s*else if\s*\(\s*raw === "2"\s*\)\s*setScale\(2\);?\s*else if\s*\(\s*raw === "3"\s*\)\s*setScale\(3\)/.test(
+    RASTERIZE,
+  ),
+  "PdfRasterizeTool: URL parser must dispatch via string-compared " +
+    "digits (\"1\"/\"2\"/\"3\") to numeric setScale(1/2/3). The numeric " +
+    "literal types require explicit branching — `parseInt(raw, 10)` " +
+    "would widen back to `number` and lose the 1|2|3 union.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[scale\]\)/.test(
+    RASTERIZE,
+  ),
+  "PdfRasterizeTool: state → URL sync must live in `useEffect(..., [scale])`.",
+);
+
+assert(
+  /scale === 2\s*\)\s*\{\s*params\.delete\("scale"\)/.test(RASTERIZE),
+  "PdfRasterizeTool: default value `2` must be omitted from URL.",
+);
+
+assert(
+  /params\.set\("scale",\s*String\(scale\)\)/.test(RASTERIZE),
+  "PdfRasterizeTool: non-default value must be written via `String(scale)`. " +
+    "URLSearchParams accepts numbers but TS sometimes wants the explicit " +
+    "conversion; the cast also future-proofs against the type widening " +
+    "if Scale ever grows.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(RASTERIZE),
+  "PdfRasterizeTool: permalink effects must guard SSR with `typeof " +
+    "window === \"undefined\"`.",
+);
+
+const rasterEffectMatch = RASTERIZE.match(
+  /useEffect\(\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[scale\]\)/,
+);
+if (rasterEffectMatch) {
+  assert(
+    !/pushState/.test(rasterEffectMatch[1]),
+    "PdfRasterizeTool: scale-sync effect uses pushState — back-button " +
+      "hell. Use replaceState.",
+  );
+}
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 

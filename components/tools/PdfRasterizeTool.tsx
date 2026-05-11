@@ -85,6 +85,38 @@ export function PdfRasterizeTool({ toolId, format }: PdfRasterizeToolProps) {
     total: 0,
   });
 
+  // 2026-05-11 (item #17 sweep batch 5) — URL permalink state sync.
+  // Numeric variant — first sweep target with a non-string-literal
+  // type (1 | 2 | 3 union). URL parser parses + range-checks before
+  // dispatching to setScale. Default (2) omitted from URL.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("scale");
+    // Numeric type but read as string from URL — parseInt + bounds
+    // check. The 1/2/3 literals are radix-10 single digits so we
+    // don't need parseFloat or any fancy validation.
+    if (raw === "1") setScale(1);
+    else if (raw === "2") setScale(2);
+    else if (raw === "3") setScale(3);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (scale === 2) {
+      params.delete("scale");
+    } else {
+      params.set("scale", String(scale));
+    }
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [scale]);
+
   // Revoke object URLs on cleanup or reset to prevent memory leaks.
   useEffect(() => {
     return () => {
