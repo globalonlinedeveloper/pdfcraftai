@@ -51,7 +51,30 @@ export function PdfFormFillTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
-  const [flatten, setFlatten] = useState(false);
+  // 2026-05-11 (item #17 batch 17) — URL permalink for the flatten
+  // toggle. First default-FALSE boolean in the sweep (vs CsvToPdf's
+  // default-TRUE hasHeader from batch 13). Pattern mirrors but
+  // inverts: URL only carries `flatten=true`, absence means false.
+  // `values` (user-typed personal info) is DELIBERATELY excluded —
+  // it's PII, not config.
+  const initialFlatten = (() => {
+    if (typeof window === "undefined") return false;
+    const qs = new URLSearchParams(window.location.search);
+    return qs.get("flatten") === "true";
+  })();
+  const [flatten, setFlatten] = useState(initialFlatten);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (flatten === false) params.delete("flatten");
+    else params.set("flatten", "true");
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [flatten]);
   const [dragOver, setDragOver] = useState(false);
   const errorRef = useScrollErrorIntoView(error);
 

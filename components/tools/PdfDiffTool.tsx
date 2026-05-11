@@ -7,7 +7,7 @@
 // op is read-only on inputs and produces a freshly composed
 // "diff visualization" PDF.
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { I } from "@/components/icons/Icons";
 import { humanSize, MAX_FILE_SIZE_BYTES, isPdfFile } from "@/lib/client/pdf-utils";
 import { downloadBytes } from "@/lib/client/download";
@@ -37,7 +37,31 @@ export function PdfDiffTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
-  const [threshold, setThreshold] = useState(16);
+  // 2026-05-11 (item #17 batch 17) — URL permalink for the
+  // sensitivity threshold. Single-param bounded number 1..256
+  // covering the meaningful diff-sensitivity range. Lets teams
+  // share `/tool/pdf-diff?threshold=8` (more sensitive) or 32
+  // (less sensitive) so reviewers land on the same setting.
+  const initialThreshold = (() => {
+    if (typeof window === "undefined") return 16;
+    const qs = new URLSearchParams(window.location.search);
+    const t = qs.get("threshold");
+    const n = t ? parseInt(t, 10) : NaN;
+    return Number.isFinite(n) && n >= 1 && n <= 256 ? n : 16;
+  })();
+  const [threshold, setThreshold] = useState(initialThreshold);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (threshold === 16) params.delete("threshold");
+    else params.set("threshold", String(threshold));
+    const qs = params.toString();
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [threshold]);
   const aInputRef = useRef<HTMLInputElement>(null);
   const bInputRef = useRef<HTMLInputElement>(null);
   const [dragOverA, setDragOverA] = useState(false);

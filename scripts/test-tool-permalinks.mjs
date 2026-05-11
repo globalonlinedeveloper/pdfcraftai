@@ -1435,6 +1435,112 @@ if (splitEffectMatch) {
 }
 
 // ---------------------------------------------------------------------
+// Section U — PdfFormFillTool sweep batch 17 (?flatten=).
+// ---------------------------------------------------------------------
+//
+// FIRST default-FALSE boolean in the sweep (inverts the
+// CsvToPdf hasHeader default-TRUE pattern from batch 13). URL
+// only carries `flatten=true`, absence means false. `values`
+// (user-typed personal info) is excluded by negative assertion
+// — PII must never end up in URLs.
+
+const FORMFILL = fs.readFileSync(
+  path.join(ROOT, "components", "tools", "PdfFormFillTool.tsx"),
+  "utf8",
+);
+
+assert(
+  /(params|qs)\.get\("flatten"\)/.test(FORMFILL),
+  "PdfFormFillTool: mount-effect must read `flatten` param.",
+);
+
+assert(
+  /qs\.get\("flatten"\)\s*===\s*"true"/.test(FORMFILL),
+  "PdfFormFillTool: flatten read must check `=== \"true\"` literal — " +
+    "default-FALSE means only the string \"true\" flips it. Mirror-" +
+    "inverse of CsvToPdfTool's default-TRUE hasHeader pattern from " +
+    "batch 13.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[flatten\]\)/.test(
+    FORMFILL,
+  ),
+  "PdfFormFillTool: state → URL sync must live in a useEffect with " +
+    "`[flatten]` dep.",
+);
+
+assert(
+  /flatten === false\s*\)\s*params\.delete\("flatten"\)/.test(FORMFILL),
+  "PdfFormFillTool: default flatten `false` must be omitted from URL.",
+);
+
+assert(
+  /params\.set\("flatten",\s*"true"\)/.test(FORMFILL),
+  "PdfFormFillTool: write side must set literal `\"true\"` (not the " +
+    "boolean) to keep round-trip-stable with the read side.",
+);
+
+assert(
+  !/(params|qs)\.get\("values"\)/.test(FORMFILL),
+  "PdfFormFillTool: `values` (user-typed personal info) MUST NOT be " +
+    "in the URL. PII in URL parameters is a hard-block — leaks to " +
+    "server logs, browser history, referrer headers, and any analytics " +
+    "platform that scrapes URLs.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(FORMFILL),
+  "PdfFormFillTool: permalink effect must guard SSR.",
+);
+
+// ---------------------------------------------------------------------
+// Section V — PdfDiffTool sweep batch 17 (?threshold=).
+// ---------------------------------------------------------------------
+//
+// Single bounded-number param. Lets teams share a specific
+// diff-sensitivity setting (`?threshold=8` for tighter, `?threshold=32`
+// for looser). Bounds 1..256 chosen to cover the meaningful
+// pixel-difference range without letting users type values that
+// produce garbage (e.g. -50 inverts the comparison).
+
+const DIFF = fs.readFileSync(
+  path.join(ROOT, "components", "tools", "PdfDiffTool.tsx"),
+  "utf8",
+);
+
+assert(
+  /(params|qs)\.get\("threshold"\)/.test(DIFF),
+  "PdfDiffTool: mount-effect must read `threshold` param.",
+);
+
+assert(
+  /Number\.isFinite\(n\)\s*&&\s*n >= 1\s*&&\s*n <= 256/.test(DIFF),
+  "PdfDiffTool: threshold bounds 1..256 — covers meaningful pixel-" +
+    "difference sensitivity. Without bounds, `?threshold=NaN` would " +
+    "render every pixel as a diff and `?threshold=-50` would invert " +
+    "the comparison.",
+);
+
+assert(
+  /useEffect\(\(\)\s*=>\s*\{[\s\S]*?history\.replaceState[\s\S]*?\},\s*\[threshold\]\)/.test(
+    DIFF,
+  ),
+  "PdfDiffTool: state → URL sync must live in a useEffect with " +
+    "`[threshold]` dep.",
+);
+
+assert(
+  /threshold === 16\s*\)\s*params\.delete\("threshold"\)/.test(DIFF),
+  "PdfDiffTool: default threshold `16` must be omitted from URL.",
+);
+
+assert(
+  /typeof window === "undefined"/.test(DIFF),
+  "PdfDiffTool: permalink effect must guard SSR.",
+);
+
+// ---------------------------------------------------------------------
 // Output
 // ---------------------------------------------------------------------
 
