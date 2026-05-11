@@ -173,6 +173,10 @@ const SWEEP_FREE_TOOLS = [
   "PdfPageNumbersTool",
   "PdfStampTool",
   "PdfSortPagesTool",
+  // 2026-05-11 sweep batch 5 — base-component refactor (PdfSimpleOpsTool
+  // + PageEditorTool now thread a `howItWorks` prop) unblocked these.
+  "PdfBatesNumbersTool",
+  "PdfHighlightTool",
 ];
 
 for (const name of SWEEP_FREE_TOOLS) {

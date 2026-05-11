@@ -62,6 +62,18 @@ interface SimpleOpToolProps {
   toolId: string;
   toolGroup: ToolGroup;
   dropPrompt: string;
+  /**
+   * Optional ToolHowItWorks-style explainer rendered ABOVE the
+   * dropzone, before any file is loaded. Item #8 (improvement
+   * analysis) — gives the user context on "what does this tool do?"
+   * without bouncing them to /help. Mount via:
+   *   howItWorks={<ToolHowItWorks steps={[...]} privacyNote="..." />}
+   *
+   * Distinct from `explainer` below: that prop renders AFTER drop,
+   * as a small confirmation card. howItWorks is the pre-drop "is
+   * this the right tool?" surface.
+   */
+  howItWorks?: React.ReactNode;
   /** Optional explainer card shown above the action button. */
   explainer?: React.ReactNode;
   busyLabel: string;
@@ -202,6 +214,11 @@ export function PdfSimpleOpsTool(props: SimpleOpToolProps) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Item #8 (improvement analysis) — pre-drop explainer slot.
+          Renders unconditionally above the dropzone; consumers pass
+          a <ToolHowItWorks> element here. Distinct from `explainer`
+          below which fires after drop as a smaller confirmation. */}
+      {props.howItWorks}
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

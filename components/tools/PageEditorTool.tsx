@@ -114,6 +114,14 @@ interface PageEditorBaseProps<TState> {
   toolGroup: ToolGroup;
   dropPrompt: string;
   dropHint?: string;
+  /**
+   * Optional ToolHowItWorks-style explainer rendered ABOVE the
+   * dropzone, before any file is loaded. Item #8 (improvement
+   * analysis) — gives the user context on "what does this tool do?"
+   * without bouncing them to /help. Mount via:
+   *   howItWorks={<ToolHowItWorks steps={[...]} privacyNote="..." />}
+   */
+  howItWorks?: React.ReactNode;
   /** PDFium render scale for the page preview. Default 1.5. */
   renderScale?: number;
   /** Spinner label during apply. */
@@ -539,6 +547,10 @@ export function PageEditorTool<TState>(props: PageEditorToolProps<TState>) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Item #8 — pre-drop explainer slot. Renders unconditionally
+          above the dropzone; consumers pass a <ToolHowItWorks>
+          element here. */}
+      {props.howItWorks}
       {!file ? (
         <ToolDropzone
           onFiles={onFiles}

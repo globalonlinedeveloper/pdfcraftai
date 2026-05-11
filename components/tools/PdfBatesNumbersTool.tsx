@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import type { BatesPosition } from "@/lib/pdf/ops/bates-numbers";
 import { PdfSimpleOpsTool } from "./PdfSimpleOpsTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 const POSITIONS: Array<{ v: BatesPosition; label: string }> = [
   { v: "bottom-right", label: "Bottom right" },
@@ -109,6 +110,28 @@ export function PdfBatesNumbersTool() {
       actionLabel={() => `Stamp Bates labels (${previewLabel}…)`}
       successCta="Stamp another PDF"
       errorCode="bates_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Pick prefix + starting number",
+              body:
+                "Legal Bates codes are typically 3-letter case codes (DEF, SMITH, TRIAL). Digit width sets the zero-padding (6 digits = LAW000001). Start number is where this batch begins — useful when picking up from a previous production.",
+            },
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The preview label updates live so you can sanity-check the format before applying.",
+            },
+            {
+              title: "Stamp every page and download",
+              body:
+                "pdf-lib draws the Bates label at the chosen position on every page. Each page increments by one. Output is a normal PDF with embedded text — searchable, copyable, ready for production.",
+            },
+          ]}
+          privacyNote="Bates numbering runs entirely in your browser via pdf-lib — files never leave your machine. Critical for legal work."
+        />
+      }
       configPanel={
         <div
           className="card"

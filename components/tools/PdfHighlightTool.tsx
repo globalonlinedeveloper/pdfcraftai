@@ -21,6 +21,7 @@ import {
   type PageEditorConfigProps,
   type PageEditorResult,
 } from "./PageEditorTool";
+import { ToolHowItWorks } from "./ToolHowItWorks";
 
 interface PixelRect {
   x: number;
@@ -62,6 +63,28 @@ export function PdfHighlightTool() {
       busyLabel="Applying highlights…"
       successCta="Highlight another PDF"
       errorCode="highlight_failed"
+      howItWorks={
+        <ToolHowItWorks
+          steps={[
+            {
+              title: "Drop a PDF",
+              body:
+                "Up to 100 MB. The first page renders as a visual editor surface where you'll draw highlight regions.",
+            },
+            {
+              title: "Drag to draw highlight regions",
+              body:
+                "Click and drag on the page to mark areas. Pick a color from the palette. Each highlight gets a delete chip — drag corners to resize, X to remove. Navigate pages to highlight across the document.",
+            },
+            {
+              title: "Apply and download",
+              body:
+                "pdf-lib draws semi-transparent colored rectangles on the chosen pages. Highlights are visual overlays — text underneath is untouched and remains searchable.",
+            },
+          ]}
+          privacyNote="Highlighting runs entirely in your browser via pdf-lib — files never leave your machine."
+        />
+      }
       initialState={INITIAL_STATE}
       multiPage={true}
       hasEdits={(s) => realRects(s.rects).length > 0}
