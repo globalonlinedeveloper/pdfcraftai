@@ -4160,4 +4160,160 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-javascript-detector — security review
+  // ============================================================
+  "pdf-javascript-detector": {
+    title: "PDF JavaScript detector — what's running inside the PDF and why most documents shouldn't have any",
+    intro:
+      "Most PDFs are static documents — text, images, vectors, sometimes form fields. A subset can also carry JavaScript: actual executable code that runs when the document is opened, when a form is submitted, when a link is clicked, when a button is pressed. Legitimate uses exist — form validation, dynamic field calculations, copy-protection schemes — but JavaScript inside a PDF is also a major vector for phishing, exfiltration, and tracker-pixel-style telemetry. Here is how PDFs can run code, the four trigger points the detector surfaces, and the patterns that distinguish benign automation from malicious payloads.",
+    sections: [
+      {
+        h: "How JavaScript ends up inside a PDF",
+        p: [
+          "The PDF spec includes a JavaScript runtime — a subset of JavaScript intended for in-document interactivity. Code can be attached at four levels of granularity: at the document level (runs on open), at the page level (runs when a specific page is shown), at the field level (runs on field events like input or validation), and at the annotation level (runs when a link is clicked, a button is pressed, or a checkbox is toggled). The /Names tree, /OpenAction entry, every form field's /A (action) and /AA (additional action) dictionaries, and every annotation's /A and /AA dictionaries all carry potential script bindings.",
+          "The detector walks every one of these locations and surfaces every script binding it finds, along with the trigger (when the script fires) and the source code. Readers that don't run JavaScript (Chrome built-in PDF viewer, Firefox built-in, Edge built-in) ignore the scripts entirely — those readers are the safest for unknown PDFs. Acrobat, Foxit, Nitro each have their own JS engines that DO execute scripts.",
+        ],
+      },
+      {
+        h: "Four trigger points the detector surfaces",
+        p: [
+          "Each trigger has different risk implications:",
+        ],
+        list: {
+          items: [
+            { b: "Document open (/OpenAction).", t: "Runs as soon as the PDF is opened. Highest-risk trigger — a malicious page-load script can phone home, log open events, or fire credential-phishing prompts. Modern Acrobat prompts on JavaScript at open; users frequently click through without reading the prompt." },
+            { b: "Page load.", t: "Runs when a specific page is shown. Lower-frequency than open-action but still automatic. Used legitimately for context-specific form validation; used maliciously for paging-based tracking." },
+            { b: "Form submit and field events.", t: "Runs on form interaction. Most common legitimate use: client-side validation (\"this field requires a 5-digit zip code\") or calculated fields (\"total = quantity × price\"). Most common malicious use: data exfiltration via submitForm to an attacker-controlled URL." },
+            { b: "Annotation actions (link click, button press, checkbox toggle).", t: "Runs on explicit user action. The user clicked something; the script fires. Acrobat usually does NOT prompt for these even though they're scripts. Pre-flight inspection is essential because the script is hidden behind a normal-looking UI element." },
+          ],
+        },
+      },
+      {
+        h: "Distinguishing benign from malicious",
+        p: [
+          "Reading scripts requires judgment. Three patterns that signal real risk:",
+        ],
+        list: {
+          items: [
+            { b: "External URLs in any non-link-click trigger.", t: "Page-load or document-open scripts containing http:// or https:// strings are red flags. Legitimate validation scripts don't need to hit a server. Tracking pixels embedded as JavaScript do." },
+            { b: "submitForm to a domain different from the document's source.", t: "If you received the PDF from contoso.com and the submitForm sends to evil.example.org, that's exfiltration. Acrobat doesn't prompt for this." },
+            { b: "Eval, unescape, or string-concatenation that builds the actual script at runtime.", t: "Obfuscation. Legitimate scripts have no reason to construct themselves at runtime; this pattern is almost exclusively malicious." },
+          ],
+        },
+      },
+      {
+        h: "When to strip vs when to keep",
+        p: [
+          "Three decision categories:",
+        ],
+        list: {
+          items: [
+            { b: "Strip immediately.", t: "PDFs from unknown senders, PDFs flagged by security scanning, any of the three malicious-pattern signals above. Run Strip JavaScript (paid) or open in Acrobat Pro and use Sanitize Document." },
+            { b: "Keep and document.", t: "Legitimate forms with client-side validation. Internal documents from trusted creators where the JavaScript performs known automation. In these cases, the detector output goes into the compliance file alongside the document for future audit." },
+            { b: "Strip but archive the original.", t: "Documents being put into long-term archival storage. PDF/A forbids JavaScript; you have to strip. But if the original needs to be preserved for some reason, archive both versions." },
+          ],
+        },
+      },
+      {
+        h: "What readers do with JavaScript",
+        p: [
+          "Reader-specific behavior matters for risk assessment:",
+        ],
+        list: {
+          items: [
+            { b: "Adobe Acrobat (since v11).", t: "Prompts before executing JavaScript at document-open. Does NOT prompt for field / annotation triggers. Settings can disable JS entirely." },
+            { b: "Foxit, Nitro.", t: "Each has its own JS engine with similar prompt-on-open behavior but different defaults. Worth checking your organization's reader policy." },
+            { b: "Chrome / Edge / Firefox built-in PDF viewers.", t: "Do not execute PDF JavaScript at all. Safest for unknown PDFs — open in browser first, run through the detector to inventory the JS, then decide whether to open in Acrobat." },
+            { b: "macOS Preview.", t: "Limited JS support; many scripts simply don't fire. Reasonable middle-ground for casual PDF viewing." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, the JavaScript detector handles PDFs up to 100 MB. Parsing runs in your browser via byte-level parsing; nothing is uploaded — important for forensic and threat-hunting workflows where the file itself IS the suspicious artifact. Output lists every script with trigger, source code, and host element. Exportable for inclusion in security reviews.",
+          "Common pairings: JS Detector → Strip JavaScript to remove findings. JS Detector → PDF Inspector for full structural audit of suspicious PDFs. JS Detector findings → flag the PDF for organizational quarantine before sharing further.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-letterhead-overlay — full-page template composition
+  // ============================================================
+  "pdf-letterhead-overlay": {
+    title: "PDF letterhead overlay — composing a corporate template across every page of a document",
+    intro:
+      "Letterhead, watermarks, and full-page disclaimer stamps live in a different category from logo placement or text watermarks. Logos and text-stamps are individual elements; a letterhead is a full-page template — logo plus contact info plus possibly a footer block plus possibly background graphics, all laid out as a complete page in its own right. The right way to apply that template across an existing document is to overlay one PDF on top of another, page by page. Here is what the overlay tool does, the two layer-order choices that determine whether your content is in front or behind the template, and the four real-world scenarios where this is the operation you actually want.",
+    sections: [
+      {
+        h: "How PDF overlay works",
+        p: [
+          "Two PDFs go in: a base PDF (the document) and an overlay PDF (the template — usually one page). The tool composites the overlay onto every page of the base PDF using pdf-lib's drawPage call. The composition is at the page-content-stream level: the overlay's vector content, text, and images are layered into each base page, preserving everything as real PDF objects rather than rasterizing.",
+          "The output is lossless. Text on the base remains selectable. Vector graphics stay sharp. Annotations and form fields are preserved. The only addition is the overlay layer, which sits either above or below the base's content depending on your layer-order choice.",
+        ],
+      },
+      {
+        h: "Two layer-order choices — what each is for",
+        p: [
+          "The single most important choice in overlay composition:",
+        ],
+        list: {
+          items: [
+            { b: "Overlay above content (watermarks, stamps).", t: "Use when the overlay is a stamp or watermark that you want visible ON TOP of the base content. The base text shows through any transparent parts of the overlay (or is dimmed underneath solid parts). Typical for DRAFT watermarks, CONFIDENTIAL stamps, signature blocks." },
+            { b: "Overlay below content (letterhead, background).", t: "Use when the overlay is a template that should sit BEHIND the base content — corporate letterhead with logo and contact block, a subtle background graphic, a page-decorative border. The base content draws over the overlay. Letterhead use case is the canonical one: logo and company info in the header area, body text from the base PDF drawn on top." },
+          ],
+        },
+      },
+      {
+        h: "Four real-world scenarios",
+        p: [
+          "Specific use cases where overlay is the right operation:",
+        ],
+        list: {
+          items: [
+            { b: "Corporate letterhead application.", t: "Add your company letterhead (with logo, address, phone, email, and branded design) to every page of a contract, invoice, or report. Choose 'overlay below' so the body text stays in front. The letterhead designer creates a 1-page PDF; you apply it across whatever documents need branding." },
+            { b: "Page-level disclaimer footers.", t: "Regulatory disclaimers that must appear on every page of certain documents (financial disclosures, medical reports, legal opinions). Create the disclaimer as a 1-page overlay; apply across the whole document." },
+            { b: "DRAFT or REVIEW watermarks across long documents.", t: "Full-page watermarks that span the page (large diagonal DRAFT text). Add Text Box or Stamp PDF can do this for short strings; PDF Overlay is the right tool when the watermark is more elaborate (text + logo + date all positioned together)." },
+            { b: "Branded certificate frames.", t: "Issuing certificates from a generated PDF — the data goes in the base, the decorative frame and brand goes in the overlay. Each certificate is composed at delivery time without re-rendering the design." },
+          ],
+        },
+      },
+      {
+        h: "Three details that matter",
+        p: [
+          "Specifics that catch users on first use:",
+        ],
+        list: {
+          items: [
+            { b: "Use a 1-page overlay PDF.", t: "If the overlay is multi-page, only page 1 is used as the template. The other pages are ignored. The 1-page overlay applies to EVERY page of the base — same template repeated." },
+            { b: "Match page sizes upstream.", t: "If your base is Letter and your overlay is A4, the overlay scales to fit each base page, which causes slight aspect-ratio adjustments. For pixel-perfect alignment, generate the overlay at the same page size as the base." },
+            { b: "Mind transparency.", t: "Overlays often use transparency for the parts that should let content show through. PDF supports transparency natively, but some viewers render it slightly differently. Test in the destination viewer if the audience uses something unusual." },
+          ],
+        },
+      },
+      {
+        h: "Overlay vs Logo vs Stamp — decision rule",
+        p: [
+          "Three adjacent operations; the right one depends on what you're applying:",
+        ],
+        list: {
+          items: [
+            { b: "Logo (image watermark).", t: "Adding a single image to every page. Position, scale, opacity controls. Use when the brand element is one image." },
+            { b: "Stamp (text overlay).", t: "Adding short text (DRAFT, CONFIDENTIAL, custom up to 30 chars) to every page. Use when the visual element is text-based." },
+            { b: "Overlay (full-page template).", t: "Adding a full-page PDF template to every page. Use when the visual element is a complete page-layout with text + images + decoration." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "On the free web tool, overlay handles base PDFs up to 100 MB and overlay PDFs up to 25 MB. Processing runs in your browser via pdf-lib; nothing is uploaded. Output is byte-compatible with every PDF reader. Base text remains selectable in 'overlay below' mode (the most common pick for letterhead use cases).",
+          "Common pairings: Overlay → Flatten if the recipient should not be able to remove the overlay. Overlay → Compress for the smallest branded final file. Overlay multiple documents in a batch when applying the same letterhead across many files.",
+        ],
+      },
+    ],
+  },
 };

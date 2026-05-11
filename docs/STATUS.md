@@ -1378,9 +1378,9 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 
 ## Done
 
-### 2026-05-11 — Item #18 SEO landing polish — 32 new longform editorial bodies
+### 2026-05-11 — Item #18 SEO landing polish — 39 new longform editorial bodies
 
-- [x] **feat(seo): longform bodies for 32 high-traffic landings.** 17 push cycles across the session (each 1-2 longforms with 5-min pacing). LONGFORM_BODIES count 19 → 51. Latest additions: pdf-page-count + pdf-inspector (utility pair), markdown-to-pdf + text-to-pdf (paired text-rendering), grayscale-pdf + csv-to-pdf (print-prep + tabular). Each body ~1,100–1,600 words covering the structural mechanism, the right-tool / wrong-tool decision rule, support-ticket FAQ as friction-points, limits, and compatibility. Pure additive content — Aggregator stable at 6830/0 across 116 suites throughout the sweep. **Item #18 progress: 51 of 125 SEO landings now have longform editorial bodies (41% coverage).** Deploy pattern: 5-min pacing + periodic zombie cleanups stable.
+- [x] **feat(seo): longform bodies for 39 high-traffic landings.** 20 push cycles across the session (each 1-3 longforms with 5-min pacing). LONGFORM_BODIES count 19 → 58. Latest additions: pdf-page-count + pdf-inspector (utility pair), markdown-to-pdf + text-to-pdf (paired text-rendering), grayscale-pdf + csv-to-pdf (print-prep + tabular), search-in-pdf + pdf-form-fields (utility/inspector), pdf-fonts-inspector + pdf-attachments-viewer + extract-pdf-attachments (print-prep + embedded-file audit triple), pdf-javascript-detector + pdf-letterhead-overlay (security + branding). Each body ~1,100–1,600 words covering: structural mechanism (Rec. 601 luminance math, RFC-4180 CSV parsing, /Pages dictionary, AcroForm /Fields tree, /FontFile* embed marker, /EmbeddedFiles name tree, JS trigger points), right-tool/wrong-tool decision rules, support-ticket FAQ as friction-points, limits, and compatibility. Pure additive content — Aggregator stable at 6830/0 across 116 suites throughout the sweep. **Item #18 progress: 58 of 125 SEO landings now have longform editorial bodies (46% coverage).** Deploy pattern: 5-min pacing + periodic zombie cleanups stable.
 
 ### 2026-05-11 — Item #18 SEO landing polish — 26 new longform editorial bodies (earlier)
 
