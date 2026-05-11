@@ -6535,4 +6535,166 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // analyze-pdf-tone — content-style audit AI
+  // ============================================================
+  "analyze-pdf-tone": {
+    title: "Analyse PDF Tone & Style — measuring voice, audience, and register without changing them",
+    intro:
+      "Most writing tools that talk about \"tone\" either prescribe one (\"write more formally\") or change it (\"rewrite this in a casual voice\"). The tone analyzer does neither — it measures. Voice classification, audience inference, sentence-length distribution, jargon density, formality score, emphasis style. Knowing these numbers about a document is useful in its own right, separate from any rewriting decision. Here is what the analyzer measures, why separating measurement from rewriting produces cleaner output, and the four workflows where the report is the goal rather than a step toward editing.",
+    sections: [
+      {
+        h: "Why separate measurement from rewriting",
+        p: [
+          "Combined \"analyze and rewrite\" tools tend to produce confused output. The model is being asked to do two different things — measure existing voice, then transform it — and the transformation often loses the diagnostic precision of the measurement. By separating the two operations, the analyzer can describe what's actually there without bias from an editing intent, and rewriting (when you decide it's needed) happens as a separate, controllable step.",
+          "The two-tool workflow gives you finer control: analyze first to understand what the document is doing. Decide whether to rewrite or accept. If rewriting, specify the target register precisely (informed by what you saw the source actually does). The output is more deliberate than a combined \"make this better\" prompt.",
+        ],
+      },
+      {
+        h: "Six categories the analyzer reports",
+        p: [
+          "Each report includes:",
+        ],
+        list: {
+          items: [
+            { b: "Voice classification.", t: "Authoritative / collaborative / didactic / persuasive / academic / conversational / etc. A single label characterizing the document's overall stance toward the reader." },
+            { b: "Inferred audience.", t: "Who is the document written for? Executives / engineers / general public / specialists in a specific field. Inferred from vocabulary level, assumed background knowledge, and structural choices." },
+            { b: "Sentence-length distribution.", t: "Average sentence length, longest, shortest, variance. Tight prose has consistent moderate length; AI-generated text often has suspiciously uniform length; long-form journalism varies widely on purpose." },
+            { b: "Jargon density.", t: "What fraction of words are domain-specific terms. High density signals expert audience; low density signals general audience. Neither is bad — but the audience and the density should match." },
+            { b: "Formality score.", t: "How formal the voice is, 0-100 scale. Contractions, passive voice, paragraph structure, vocabulary choices all contribute. Useful for matching tone across multiple documents." },
+            { b: "Emphasis style.", t: "How the document signals importance — bold, italics, bullet lists, callouts, capitalization. The distribution tells you whether the document is heavy on visual emphasis or relies on prose structure." },
+          ],
+        },
+      },
+      {
+        h: "Four workflows where the report is the goal",
+        p: [
+          "Cases where measurement is itself the output:",
+        ],
+        list: {
+          items: [
+            { b: "Brand-voice audits.", t: "An organization publishing many documents wants to know if they consistently match a target voice. Run the analyzer on a sample; observe whether voice and formality scores cluster as expected. Outliers warrant review." },
+            { b: "Audience-fit verification.", t: "A document written for executives shouldn't have high jargon density. The analyzer's audience-inference catches mismatches before publication." },
+            { b: "Tone-shift detection.", t: "Multi-author documents sometimes have register drift — Section 1-3 are formal-authoritative; Section 4 shifts casual because a different author wrote it. The analyzer surfaces register shifts so they can be smoothed before publication." },
+            { b: "Pre-translation diagnostics.", t: "Before translating a document, knowing its register helps the translator preserve voice. The analyzer's output gives the translator a target to match in the destination language." },
+          ],
+        },
+      },
+      {
+        h: "How to interpret the numbers",
+        p: [
+          "Three patterns for reading the report:",
+        ],
+        list: {
+          items: [
+            { b: "Compare against a reference document.", t: "A single document's tone numbers are interpretable; multiple documents' numbers are comparable. Run the analyzer on a known-good reference and use its scores as the target." },
+            { b: "Look for unexpected variance.", t: "Internal consistency is usually a goal. A document with high sentence-length variance might be intentionally varied (good narrative writing) or accidentally inconsistent (different authors, different revision passes). The number flags the pattern; you decide what it means." },
+            { b: "Treat the audience inference as a hypothesis.", t: "The analyzer's audience inference is based on signals in the text. It can be wrong, especially for cross-audience documents. Use it as a starting point, not a verdict." },
+          ],
+        },
+      },
+      {
+        h: "What the analyzer doesn't do",
+        p: [
+          "Three limits worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Doesn't catch every brand-voice attribute.", t: "Brand voice has many dimensions (specific vocabulary, prohibited phrases, formatting conventions) that go beyond what the analyzer measures. For brand-voice enforcement, supplement with a brand-style-guide check." },
+            { b: "Doesn't compare against any external corpus.", t: "Scores are relative to general English-language norms. To compare against an industry standard or a competitor's writing, run the analyzer on that reference and compare." },
+            { b: "Doesn't detect subtle rhetoric.", t: "Logical fallacies, implicit bias, what's NOT said — none of these surface in tone analysis. Pair with critical-reading review for content audit." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Analyse PDF Tone & Style charges 3 credits per document. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during analysis and is never persisted.",
+          "Common pairings: Tone Analyzer + AI Rewrite when you want to actually shift register based on the analyzer's findings. Tone Analyzer + Inclusive Language Audit for a full pre-publication voice + content audit.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // inclusive-language-audit — bias-detection AI
+  // ============================================================
+  "inclusive-language-audit": {
+    title: "Inclusive Language Audit — what lexical bias-scanning catches and what it can't",
+    intro:
+      "Language carries cultural assumptions. Gendered defaults, outdated technical terminology, ability-based metaphors, region-coded stereotypes — these appear in writing more often than most authors realize. The inclusive language audit scans a PDF for the patterns that have well-documented inclusive alternatives, surfaces each with a suggested fix, and lets you decide what to apply. Here is what the auditor catches, what it explicitly doesn't catch, the four document types where the audit adds the most value, and the responsible way to use the output.",
+    sections: [
+      {
+        h: "How lexical scanning works",
+        p: [
+          "The tool reads the PDF's text content, then runs a multi-category pattern detection: gendered defaults (\"he\" used as generic, \"chairman\" for a gender-neutral role), outdated technical terminology (master/slave naming, blacklist/whitelist, sanity-check), ability-based metaphors (\"crazy,\" \"lame,\" \"blind to\"), region-coded language, age-related bias (\"young and energetic\"), and culture-specific stereotyping.",
+          "Each flagged passage is surfaced with: the exact quote, the page it's on, the category of bias, severity (high / medium / low), and a suggested replacement. The output is a structured fix-list table, not a rewrite. You review each item and decide whether to apply, edit, or skip.",
+        ],
+      },
+      {
+        h: "Six categories the auditor catches",
+        p: [
+          "The patterns where lexical scanning is reliable:",
+        ],
+        list: {
+          items: [
+            { b: "Gendered defaults.", t: "\"He\" or \"she\" used as generic; role nouns with gender baked in (chairman → chair, fireman → firefighter, mailman → mail carrier)." },
+            { b: "Outdated technical terminology.", t: "Master/slave (databases, deployments) → primary/replica; blacklist/whitelist → blocklist/allowlist; sanity-check → smoke-test or quick-check; dummy variable → placeholder variable." },
+            { b: "Ability-based metaphors.", t: "\"Crazy\" / \"insane\" / \"lame\" / \"blind to\" used metaphorically. Replacements vary by context — \"crazy\" used about an idea becomes \"unconventional\" or \"surprising,\" used about a person is usually inappropriate." },
+            { b: "Age-related bias.", t: "\"Young and energetic,\" \"digital natives,\" \"old-school\" — used in job descriptions, performance reviews, marketing copy. Catches both pro-young and pro-old framing." },
+            { b: "Region-coded stereotyping.", t: "Specific to the document's apparent context. For Indian-English content, caste-coded language; regional stereotypes (\"south Indian Brahmin,\" \"Punjabi loud\"). For US-English, similar regional / racial stereotypes." },
+            { b: "Marriage-status assumptions.", t: "\"Family-friendly\" with implicit nuclear-family assumption; \"spouse and children\" as default; \"Mrs. / Miss\" distinction where Ms. is more inclusive." },
+          ],
+        },
+      },
+      {
+        h: "What the auditor explicitly doesn't catch",
+        p: [
+          "Three categories of bias the lexical scan cannot detect:",
+        ],
+        list: {
+          items: [
+            { b: "Rhetorical framing.", t: "What's centered as the default, what's framed as the exception, what's mentioned in passing vs emphasized. These are structural choices, not lexical ones, and lexical scanning misses them. Human review of framing is essential for high-stakes documents." },
+            { b: "What's excluded.", t: "Bias by omission — perspectives, examples, populations not represented. The auditor sees what's there, not what's missing. For comprehensive bias review, supplement with diversity-of-source audit." },
+            { b: "Subtle implication.", t: "Implications that emerge from word choice + context — \"surprisingly articulate\" as a compliment for a specific group carries implications the words alone don't surface. Lexical scan flags the obvious; subtle implications require human review." },
+          ],
+        },
+      },
+      {
+        h: "Four document types where the audit adds most value",
+        p: [
+          "Specific contexts where lexical bias matters most:",
+        ],
+        list: {
+          items: [
+            { b: "Job descriptions.", t: "JDs influence who applies. Gendered defaults, age-coded language, and exclusionary phrasing materially affect applicant diversity. Auditing before posting is a standard recruiting-team practice." },
+            { b: "Marketing copy.", t: "Public-facing marketing shapes brand perception. Bias-coded language is a real reputational risk; the audit is a pre-publication safety check." },
+            { b: "Course materials and training docs.", t: "Educational content gets reused; embedded bias propagates. Auditing course materials is part of curriculum design at many institutions." },
+            { b: "Internal HR documents.", t: "Performance reviews, promotion criteria, policies. Bias in these documents affects employment decisions and creates legal exposure. The audit surfaces obvious lexical patterns that should be revised." },
+          ],
+        },
+      },
+      {
+        h: "How to use the output responsibly",
+        p: [
+          "Three habits for working with the audit output:",
+        ],
+        list: {
+          items: [
+            { b: "Don't accept every suggestion automatically.", t: "Some flags are false positives. Historical quote that uses \"chairman\" because that's what it said. Technical context where the deprecated term is unavoidable. Treat the output as items to consider, not rules to apply." },
+            { b: "Document your decisions.", t: "When you DO apply a suggestion, record it. When you don't, note why. The audit-trail makes the editing rationale clear for future reviewers and reduces re-litigation." },
+            { b: "Pair with human review.", t: "Lexical scanning catches the obvious. The non-obvious cases (framing, omission, implication) need a human reviewer who knows the context. The audit is a starting point, not a complete review." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Inclusive Language Audit charges 3 credits per document. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during scanning and is never persisted. Output is a structured fix-list table.",
+          "Common pairings: Inclusive Language Audit + AI Tone Analyzer for full pre-publication voice + content review. Inclusive Language Audit + Improve Writing as a combined revision pass. For Indian-language content, run AI Translate first; the audit currently scans English text only.",
+        ],
+      },
+    ],
+  },
 };
