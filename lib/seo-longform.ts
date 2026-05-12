@@ -8298,4 +8298,186 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-to-social-thread — multi-platform social AI
+  // ============================================================
+  "pdf-to-social-thread": {
+    title: "PDF to social thread — LinkedIn and X-ready numbered threads without the cringe",
+    intro:
+      "Threads on LinkedIn and X have become a primary distribution channel for long-form content. The pattern is reliable: a hook post promises an idea, numbered follow-up posts deliver it, a close summarizes. But most AI-generated threads land badly — emoji-stuffed, hashtag-cluttered, written in an artificially-punchy voice that signals \"this is AI-generated\" before the third post. PDF to Social Thread is calibrated against the common cringe failure modes. Here is what it produces, the patterns it deliberately suppresses, and the three workflows where machine-generated thread drafts beat human-written ones.",
+    sections: [
+      {
+        h: "What the generator produces",
+        p: [
+          "Drop a source PDF — whitepaper, report, research paper, case study. The generator restructures the content into a numbered thread of 5-10 posts. Each post is roughly 240 characters — under X's historical character cap and well under LinkedIn's. The structure follows the canonical thread shape: opening post is a specific hook (a claim, a number, a question pulled from the source — not a generic tease), middle posts are one-idea-per-post, closing post offers the takeaway and CTA.",
+          "Output is Markdown with each post numbered. Copy each post into LinkedIn or X individually, or paste the whole Markdown into a thread scheduler (Buffer, Hypefury, Typefully). Each post stands alone enough to be retweeted / reshared independently — important for thread distribution dynamics.",
+        ],
+      },
+      {
+        h: "What the generator deliberately suppresses",
+        p: [
+          "Three categories the generator filters out because they signal AI-generated content:",
+        ],
+        list: {
+          items: [
+            { b: "Emojis.", t: "AI-generated threads are infamous for opening with 🚨 or 🧵 or 📊. The generator suppresses these entirely. If your audience expects emojis, add them yourself; the absence is intentional for the baseline." },
+            { b: "Hashtags.", t: "Same reasoning. Mid-2010s thread style stuffed hashtags into every post; modern B2B thread style largely doesn't. The generator follows current convention." },
+            { b: "Click-bait hooks.", t: "\"You won't believe what we found in this report.\" \"This one fact will change everything.\" Generic-tease hooks underperform specific-content hooks. The generator forces specificity — the hook is a claim or number FROM the source, not a tease about what the source contains." },
+            { b: "Artificially-punchy voice.", t: "The generator targets \"direct first-person-neutral\" tone — assertive but not breathless. Adapts to the source's actual register rather than imposing a forced-energetic voice." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where machine-generated drafts beat human-written",
+        p: [
+          "Cases where the time savings compound:",
+        ],
+        list: {
+          items: [
+            { b: "Source-PDF promotion.", t: "Published a whitepaper or report. Need to drive engagement on social. The thread converts the source into a digestible promotional vehicle in 30 seconds. Manual conversion takes 30-60 minutes." },
+            { b: "Long-form-to-thread distribution.", t: "Took the time to write a long-form blog post or paper. Generate the thread version to extend its reach into social. The thread surfaces the post's content to readers who would never click through to the long-form." },
+            { b: "Editorial calendar fill.", t: "Building a content calendar for a B2B brand. Each long-form piece generates a thread; the threads fill the social calendar for the week. The two-tool workflow (long-form → thread) scales social presence proportionally to long-form output." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns for great post-generation editing",
+        p: [
+          "The generator produces a competent baseline. Three habits that lift the output:",
+        ],
+        list: {
+          items: [
+            { b: "Edit the hook hardest.", t: "The opening post is the single most important part of the thread — it decides who keeps reading. The generator's hook is decent but generic. Replace with audience-specific framing that connects to your followers' situation." },
+            { b: "Add proof points and specifics.", t: "Where the thread says \"we found\" or \"research shows,\" add the specific number, source, or example from your data. AI-generated content reads generic unless you personalize." },
+            { b: "Trim the close.", t: "The CTA at the end is often longer than it needs to be. Cut to a single sentence with a specific next step (link to the source, sign-up form, follow request). Avoid generic \"thanks for reading\" closes." },
+          ],
+        },
+      },
+      {
+        h: "Distribution dynamics worth knowing",
+        p: [
+          "Three patterns that affect thread reach:",
+        ],
+        list: {
+          items: [
+            { b: "Each post should stand alone.", t: "Posts get retweeted / reshared as individual posts, not as threads. If a mid-thread post requires having read the opener to understand, it won't gain independent traction. The generator favors self-contained posts; verify in review." },
+            { b: "First post drives thread distribution.", t: "Algorithmic distribution often promotes the opening post; subsequent posts ride along but with declining reach. Time spent on the opener has the highest leverage." },
+            { b: "Engagement on the thread compounds reach.", t: "Replies, especially from the original poster, get the thread re-surfaced. Plan to engage in the comments after posting." },
+          ],
+        },
+      },
+      {
+        h: "Thread vs Blog Post vs Newsletter",
+        p: [
+          "Three adjacent generators for different distribution shapes:",
+        ],
+        list: {
+          items: [
+            { b: "Social Thread — numbered platform-native posts.", t: "5-10 posts at ~240 chars each. LinkedIn / X. Optimized for scrolling consumption." },
+            { b: "Blog Post — web article.", t: "Hook + sections + close. 800-1500 words. SEO + reader-on-website consumption." },
+            { b: "Newsletter — email digest.", t: "Subject + preheader + sections + sign-off. 300-800 words. Inbox + ESP consumption." },
+            { b: "Run all three.", t: "Coordinated multi-channel distribution from one source PDF. Each channel reaches a different audience segment; together they multiply reach without proportional content-creation time." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Social Thread charges 5 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted. Output is Markdown with numbered posts.",
+          "Common pairings: Social Thread + Blog Post + Newsletter for full multi-channel distribution. Thread → manual edit pass for audience-specific framing. Thread → Hypefury / Buffer / Typefully scheduling for cross-platform delivery.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-to-video-script — video-shape AI
+  // ============================================================
+  "pdf-to-video-script": {
+    title: "PDF to Video Script — talking-head scripts calibrated for YouTube retention curves",
+    intro:
+      "Video has become the dominant content medium for educational and explainer content. The friction has always been the script: writing a 5-8 minute talking-head script takes hours; the hook has to grab attention in 5-10 seconds; segments have to maintain engagement against YouTube's well-documented retention drop-off; the close has to drive specific action. PDF to Video Script handles all of that. Here is what the generator produces, why it targets specific retention-curve patterns, and the three workflows where machine-generated video scripts beat working from a manually-drafted outline.",
+    sections: [
+      {
+        h: "What the generator produces",
+        p: [
+          "Drop a source PDF — research paper, product spec, talk transcript, educational material, policy doc. The generator restructures the content into a talking-head video script with four structural elements: HOOK (5-10 second attention-grab calibrated for the first-second drop-off), SEGMENTS (90-second blocks matching the canonical YouTube retention-curve dwell time), STAGE CUES (\"[show the chart]\", \"[cut to graphic of X]\" bracket markers for B-roll and visual overlays), CLOSING CTA (a specific next action — subscribe / link in description / specific URL).",
+          "Output is Markdown with the four elements explicitly labeled. Total length targets a 5-8 minute video — roughly 750-1200 words spoken at average pace. Stage cues are bracket-format so they're easy to spot when recording (read past them; they're cues for editing, not lines to deliver).",
+        ],
+      },
+      {
+        h: "Why YouTube retention curves matter",
+        p: [
+          "YouTube's algorithm promotes videos that retain viewers. Three retention patterns the script targets:",
+        ],
+        list: {
+          items: [
+            { b: "First-second drop-off.", t: "Most viewers decide whether to keep watching in the first 5-10 seconds. The HOOK section is calibrated for this — content-anchored, specific, immediately interesting. \"Today I'll explain X\" is weak; \"Most people are wrong about X — here's why\" is stronger." },
+            { b: "Mid-video segment fatigue.", t: "Viewer attention drops at consistent intervals (~90 seconds in most retention data). The 90-second SEGMENTS structure introduces a re-engagement beat at each interval — a hard transition, a surprising claim, a visual change cued for the editor." },
+            { b: "End-of-video drop-off.", t: "Viewers who reach the end of a video are the highest-intent audience. The CLOSING CTA targets them specifically with the next-action ask. \"If you found this useful, here's where to go next.\"" },
+          ],
+        },
+      },
+      {
+        h: "Stage cues and B-roll",
+        p: [
+          "The bracket-format cues are designed for editor handoff. Three things they communicate:",
+        ],
+        list: {
+          items: [
+            { b: "Where visual emphasis should appear.", t: "\"[show the Q3 revenue chart]\" tells the editor to cut to that specific visual at that moment. The script writer doesn't need to detail the visual — just where the cut happens." },
+            { b: "What kind of visual fits.", t: "\"[cut to graphic of X]\" leaves graphic style to the editor but specifies the subject. \"[show me holding the report]\" is a different kind of cue — physical staging. The bracket content tells the editor which decision to make." },
+            { b: "Where pacing should slow or speed.", t: "Stage cues often correspond to pauses (\"[pause for emphasis after this claim]\") or transitions (\"[hard cut to next segment]\"). Recording with the cues in front lets the talent deliver the pacing the editor needs." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where machine-generated beats outline-based",
+        p: [
+          "Specific cases:",
+        ],
+        list: {
+          items: [
+            { b: "Source-PDF explainer video.", t: "Published a research paper, whitepaper, or technical doc. Want a video explaining it. The script converts the source into a recordable script in 60 seconds. Manual scripting from an outline takes hours." },
+            { b: "Educational-content batch production.", t: "Producing videos for a curriculum or course. Each lesson PDF generates a script. The two-tool workflow (write the lesson PDF, generate the script) scales video production proportional to lesson output." },
+            { b: "Thought-leadership video pipeline.", t: "Long-form content (research, analysis, opinion pieces) gets converted into video commentary. Script generation accelerates the conversion; the creator's voice comes through via the editing pass." },
+          ],
+        },
+      },
+      {
+        h: "What to edit before recording",
+        p: [
+          "Three habits for going from generated script to recorded video:",
+        ],
+        list: {
+          items: [
+            { b: "Read aloud first.", t: "Spoken language reads differently from written. Sentences that look fine on the page sometimes feel awkward when spoken. Read the whole script aloud once before recording; mark words you stumble on; rewrite those." },
+            { b: "Personalize the hook.", t: "The generator's hook is competent but generic. Add a specific connection to your audience's situation, a personal anecdote, or a strong opening line that reflects your voice." },
+            { b: "Trim if it runs long.", t: "Average speaking pace is ~150 words per minute. A 1200-word script is ~8 minutes spoken. If you're a slower speaker, trim 10-15% to land in your target time." },
+          ],
+        },
+      },
+      {
+        h: "Format and length",
+        p: [
+          "Three length contexts:",
+        ],
+        list: {
+          items: [
+            { b: "5-8 minute video (default).", t: "Most educational and explainer videos. The 90-second segment structure produces 4-5 segments. Most-common length for YouTube videos that maintain retention well." },
+            { b: "30-60 second short (Reels / TikTok).", t: "The default output is too long. Take the HOOK + the first SEGMENT only; trim heavily. Explicit short-form generation is on the roadmap." },
+            { b: "15-30 minute long-form.", t: "The default output is too short. Generate from a longer source; expand each segment to multiple 90-second blocks. Or supplement with manual extensions on key concepts." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Video Script charges 3 credits per script. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted. Output is Markdown with HOOK / SEGMENTS (timestamped) / STAGE CUES / CTA labeling.",
+          "Common pairings: Video Script + Blog Post for video + companion-article distribution. Video Script + Social Thread for short-form clip teasers. Video Script + Mind Map when planning a multi-video series — the mind map shows the topic structure, individual video scripts cover each branch.",
+        ],
+      },
+    ],
+  },
 };
