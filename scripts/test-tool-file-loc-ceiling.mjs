@@ -36,7 +36,11 @@ const CEILINGS = {
   "components/tools/SignPdfTool.tsx": 1038,
   "components/tools/PdfSplitTool.tsx": 1005,
   "components/tools/PageGridTool.tsx": 884,
-  "components/tools/PdfAddLinksTool.tsx": 885,
+  // 2026-05-12 — PdfAddLinksTool 885 → 881 after formatBytes
+  // extraction (commit pending). First real ceiling reduction from
+  // a T2-4 extraction. Only-shrinkage discipline: subsequent
+  // extractions lower this further.
+  "components/tools/PdfAddLinksTool.tsx": 881,
 };
 
 let pass = 0, fail = 0;

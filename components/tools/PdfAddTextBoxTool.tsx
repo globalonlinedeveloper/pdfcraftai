@@ -8,6 +8,7 @@
 // across two concrete tools.
 
 import { useRef } from "react";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -95,7 +96,7 @@ export function PdfAddTextBoxTool() {
           outputBytes: r.bytes,
           outputFileName: `${baseName || "document"}-text.pdf`,
           successHeadline: `Added text to ${r.pageCount} page${r.pageCount === 1 ? "" : "s"}`,
-          successDetail: `Output: ${formatSize(r.bytes.length)}`,
+          successDetail: `Output: ${formatBytes(r.bytes.length)}`,
         };
         return result;
       }}
@@ -301,8 +302,3 @@ function TextEditorOverlay({
   );
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}

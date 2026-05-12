@@ -17,6 +17,7 @@
 
 import { useRef, useState } from "react";
 import { I } from "@/components/icons/Icons";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -138,7 +139,7 @@ export function PdfAddLinksTool() {
           outputBytes: currentBytes,
           outputFileName: `${baseName || "document"}-linked.pdf`,
           successHeadline: headline,
-          successDetail: `Output: ${formatSize(currentBytes.length)} · ${lastPageCount} page${lastPageCount === 1 ? "" : "s"} total${detailPages}`,
+          successDetail: `Output: ${formatBytes(currentBytes.length)} · ${lastPageCount} page${lastPageCount === 1 ? "" : "s"} total${detailPages}`,
         };
         return result;
       }}
@@ -878,8 +879,3 @@ function LinksEditorOverlay({
   );
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}

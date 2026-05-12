@@ -26,6 +26,7 @@
 
 import { useRef, useState } from "react";
 import { I } from "@/components/icons/Icons";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -172,7 +173,7 @@ export function PdfFreeDrawTool() {
           outputBytes: currentBytes,
           outputFileName: `${baseName || "document"}-drawing.pdf`,
           successHeadline: headline,
-          successDetail: `${totalSegments} line segments · ${formatSize(currentBytes.length)}`,
+          successDetail: `${totalSegments} line segments · ${formatBytes(currentBytes.length)}`,
         };
         return result;
       }}
@@ -766,11 +767,6 @@ function hitTestStrokes(
   return -1;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 /**
  * Build a smooth SVG path string for a stroke using the

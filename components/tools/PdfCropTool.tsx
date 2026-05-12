@@ -14,6 +14,7 @@
 // pre-refactor version — same data flow, same op call.
 
 import { useState, useRef } from "react";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -99,7 +100,7 @@ export function PdfCropTool() {
           outputBytes: r.bytes,
           outputFileName: `${baseName || "document"}-cropped.pdf`,
           successHeadline: `Cropped ${r.pageCount} page${r.pageCount === 1 ? "" : "s"}`,
-          successDetail: `Output: ${formatSize(r.bytes.length)} · crop ${Math.round(cropPt.width)}×${Math.round(cropPt.height)} pt`,
+          successDetail: `Output: ${formatBytes(r.bytes.length)} · crop ${Math.round(cropPt.width)}×${Math.round(cropPt.height)} pt`,
         };
         return result;
       }}
@@ -287,8 +288,3 @@ function CropOverlay({
   );
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}

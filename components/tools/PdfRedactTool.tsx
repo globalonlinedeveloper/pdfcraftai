@@ -13,6 +13,7 @@
 
 import { useState, useRef } from "react";
 import { I } from "@/components/icons/Icons";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -139,7 +140,7 @@ export function PdfRedactTool() {
           outputBytes: currentBytes,
           outputFileName: `${baseName || "document"}-redacted.pdf`,
           successHeadline: headline,
-          successDetail: `Output: ${formatSize(currentBytes.length)}. Visual cover only — see FAQ on full destruction.`,
+          successDetail: `Output: ${formatBytes(currentBytes.length)}. Visual cover only — see FAQ on full destruction.`,
         };
         return result;
       }}
@@ -707,8 +708,3 @@ function RedactEditorOverlay({
   );
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}

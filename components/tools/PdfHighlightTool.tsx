@@ -15,6 +15,7 @@
 
 import { useState, useRef } from "react";
 import { I } from "@/components/icons/Icons";
+import { formatBytes } from "@/lib/client/format-bytes";
 import {
   PageEditorTool,
   type PageEditorEditorProps,
@@ -155,7 +156,7 @@ export function PdfHighlightTool() {
           outputBytes: currentBytes,
           outputFileName: `${baseName || "document"}-highlighted.pdf`,
           successHeadline: headline,
-          successDetail: `Output: ${formatSize(currentBytes.length)} · ${lastPageCount} page${lastPageCount === 1 ? "" : "s"} total${detailPages}`,
+          successDetail: `Output: ${formatBytes(currentBytes.length)} · ${lastPageCount} page${lastPageCount === 1 ? "" : "s"} total${detailPages}`,
         };
         return result;
       }}
@@ -749,8 +750,3 @@ function HighlightEditorOverlay({
   );
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
