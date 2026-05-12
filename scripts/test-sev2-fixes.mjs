@@ -25,6 +25,12 @@ const OG_PAGES = [
   "app/help/page.tsx",
   "app/blog/page.tsx",
   "app/pricing/page.tsx",
+  // 2026-05-12 — added after the prod-E2E suite caught /security
+  // also lacking og:image. The original audit listed 8 pages; the
+  // real number was 9. This is exactly the kind of gap the on-
+  // demand suite is for: it found a SEV-2 miss the static-parse
+  // audit didn't.
+  "app/security/page.tsx",
 ];
 for (const path of OG_PAGES) {
   const src = readFileSync(path, "utf8");

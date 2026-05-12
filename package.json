@@ -12,6 +12,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:fixtures": "node tests/fixtures/generate.mjs",
+    "test:prod-e2e": "playwright test --config=playwright.prod.config.ts",
+    "test:prod-e2e:ui": "playwright test --config=playwright.prod.config.ts --ui",
     "test:ops": "tsx scripts/test-pdf-ops.ts",
     "smoke": "node scripts/smoke-live.mjs",
     "db:generate": "drizzle-kit generate",
