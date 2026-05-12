@@ -7947,4 +7947,167 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // extract-pdf-citations — academic-research workflow
+  // ============================================================
+  "extract-pdf-citations": {
+    title: "Extract PDF citations — BibTeX-ready references for LaTeX, Zotero, Mendeley",
+    intro:
+      "Academic and technical papers reference dozens to hundreds of prior works. Extracting those references manually — copying each one, parsing it into structured fields, formatting as BibTeX or RIS — is exactly the kind of work that compounds badly across many papers. The citation extractor automates it: drop a PDF, get a BibTeX block ready to paste into your .bib file plus a human-readable reference list. Here is how reference-list detection works, the accuracy ranges by source type, and the workflow for cross-checking BibTeX entries before they go into your bibliography.",
+    sections: [
+      {
+        h: "How citation extraction works",
+        p: [
+          "The tool reads the PDF, identifies the reference-list section by heading patterns (\"References,\" \"Bibliography,\" \"Works Cited\"), and parses each entry. For each citation, the parser identifies author names, publication year, title, journal/conference, volume/issue, page numbers, and DOI / URL if present. The extracted fields populate a BibTeX entry with the appropriate entry type (@article for journals, @book for monographs, @inproceedings for conference papers, @misc when structure is unclear).",
+          "Output is both a BibTeX block and a human-readable reference list. The BibTeX is ready to paste into a .bib file. The readable list is for cross-checking — verifying that the parser captured each entry's fields correctly before the bibliography goes into a submission.",
+        ],
+      },
+      {
+        h: "Accuracy by source type",
+        p: [
+          "Three reliability bands worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Standard journal articles with DOIs — very high accuracy.", t: "Most modern academic papers cite journal articles with embedded DOIs. The parser captures these reliably — author / year / title / journal / volume / pages / DOI all populated. Verify before submission but expect high accuracy." },
+            { b: "Books and book chapters — medium accuracy.", t: "Books have author / year / title / publisher fields rather than journal / volume / pages. The parser handles this but occasionally swaps fields when the citation format is non-standard. Verify book entries specifically." },
+            { b: "Preprints, technical reports, web sources — variable accuracy.", t: "Non-standard citation formats parse less reliably. The parser falls back to @misc when structure is unclear. Verify each before submission; sometimes the BibTeX needs manual adjustment." },
+          ],
+        },
+      },
+      {
+        h: "Three common error spots to verify",
+        p: [
+          "Where to focus the cross-check:",
+        ],
+        list: {
+          items: [
+            { b: "Author-order swaps.", t: "Citations in some styles list first-author-last-name first, in others first-author-first-name first. The parser usually gets this right but occasionally swaps for unusual formats. Verify against the original citation." },
+            { b: "Journal-name abbreviations.", t: "Some citations use full journal names (\"Journal of the American Medical Association\"); others use abbreviations (\"JAMA\"). BibTeX style standards vary by publisher. The parser captures what the source uses; expand or abbreviate per your target style." },
+            { b: "Special characters in titles.", t: "Math symbols, Greek letters, em-dashes, special quotation marks — these sometimes get garbled in extraction. Specifically check title fields for any character that should be \\LaTeX-encoded but came out as Unicode (or vice versa)." },
+          ],
+        },
+      },
+      {
+        h: "Style conversion downstream",
+        p: [
+          "The extractor outputs BibTeX. Three conversion paths to other formats:",
+        ],
+        list: {
+          items: [
+            { b: "Zotero / Mendeley import.", t: "Both reference managers import BibTeX natively. Once in the manager, export to APA / MLA / Chicago / RIS / any other supported format. Zotero is the most flexible." },
+            { b: "Pandoc CLI.", t: "Pandoc reads BibTeX and outputs many citation formats. Useful for one-off conversions without setting up a reference manager." },
+            { b: "Direct BibTeX use.", t: "For LaTeX submissions, BibTeX is the final format. Paste into your .bib file; cite via \\cite{key} in the .tex; let BibTeX style files handle the formatting at compile time." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where extraction earns its place",
+        p: [
+          "Cases where the time savings compound:",
+        ],
+        list: {
+          items: [
+            { b: "Literature review compilation.", t: "Building a literature review means collecting citations from many source papers. Extract from each source; the BibTeX entries accumulate in your reference manager. The structural work that takes hours manually takes minutes via extraction." },
+            { b: "Verifying your own paper's references.", t: "Before submitting a paper, run the extractor on your draft. Cross-check against your reference manager. Catches dropped entries (in the text but not in the bibliography) and orphan entries (in the bibliography but not cited)." },
+            { b: "Building a domain-specific knowledge base.", t: "Long-term research projects benefit from accumulating a domain-specific BibTeX library. Extract from every paper you read; the library grows organically over time." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Extract PDF Citations charges 3 credits per document — flat rate regardless of reference count. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during extraction and is never persisted. Output is BibTeX + human-readable reference list with page citations.",
+          "Common pairings: Citations + Entity Extraction for the named-entity + reference picture of a research document. Citations → Zotero import for downstream style conversion. Citations + AI Summarize when building literature-review summaries.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-to-newsletter — email-shaped content AI
+  // ============================================================
+  "pdf-to-newsletter": {
+    title: "PDF to Email Newsletter — restructuring documents for email-shaped consumption",
+    intro:
+      "Email newsletters succeed or fail on three signals: subject line drives the open, preheader extends the hook, scannable structure keeps the reader through the close. None of these come from a source document automatically — research reports and release notes are organized for sequential reading, not for email skimming. PDF to Newsletter restructures the source into email-shape: subject + preheader + 3-5 sections + sign-off, dropping cleanly into Mailchimp, Substack, Beehiiv, or any ESP. Here is what the generator produces, the four newsletter contexts where it pays off, and what stays for human polish.",
+    sections: [
+      {
+        h: "What gets restructured for email",
+        p: [
+          "Email is a different medium from web or print. Readers skim subject lines in their inbox view, decide whether to open in 1-2 seconds, scan the email body in 30-60 seconds, and click through or close. The generator restructures the source PDF accordingly:",
+        ],
+        list: {
+          items: [
+            { b: "Subject line (60-character optimized).", t: "A specific, content-anchored subject. Not click-bait; not generic. \"Q3 revenue grew 22%, here's what drove it\" rather than \"Q3 Update.\" The 60-char limit fits most email clients' inbox preview." },
+            { b: "Preheader (1-2 sentence preview).", t: "The first sentence(s) of the email body, but designed to extend the subject's hook. Many email clients show this in the inbox preview alongside the subject. The two together should make the open decision." },
+            { b: "3-5 sections with descriptive headers.", t: "Email-friendly section count. Each header is descriptive (\"Where the growth came from\") rather than generic (\"Section 2\"). Sections break the wall-of-text scan failure mode." },
+            { b: "Sign-off.", t: "A closing that gives the reader a clear next action (read the full report, register for a webinar, reply with feedback). Newsletter readers expect this convention; generic \"Best, [Team]\" closes feel incomplete." },
+          ],
+        },
+      },
+      {
+        h: "Four newsletter contexts where it pays off",
+        p: [
+          "Cases where source-to-newsletter automation saves real time:",
+        ],
+        list: {
+          items: [
+            { b: "Research-report newsletter.", t: "Subscribe-able newsletters that publish research summaries to a list. The full report stays on the website; the newsletter is the digest that drives clicks back. Generator handles the digestion." },
+            { b: "Internal status updates.", t: "Engineering / product / company-wide updates that go out via email. Source might be a longer status document; the email version is the executive summary plus links to detail." },
+            { b: "Course / cohort communications.", t: "Educators sending weekly newsletters to a class or cohort. The source might be the lecture notes or assignment doc; the newsletter is the weekly recap with assignments highlighted." },
+            { b: "Investor / customer updates.", t: "Quarterly investor letters, customer-update newsletters. Source: the full investor letter or customer-success report. Email version: the punchy digest with the headline numbers and the link to detail." },
+          ],
+        },
+      },
+      {
+        h: "What stays for human polish",
+        p: [
+          "Three categories the generator deliberately leaves for the editor:",
+        ],
+        list: {
+          items: [
+            { b: "Tone polish.", t: "Generator output is competent but generic. Newsletter readers respond to specific voice — a distinctive sender's voice that they signed up to hear from. Edit the output to inject your voice; don't ship raw AI output if the audience knows your style." },
+            { b: "Images and embeds.", t: "Text-only output. The generator notes where images would help (\"[chart showing Q3 revenue]\") but doesn't insert them. Add actual images in the ESP — usually from your CMS or design library." },
+            { b: "Subject-line A/B testing.", t: "The generator produces one subject line. For aggressive open-rate optimization, generate variants and A/B test in your ESP. The generated baseline is a competent default; iteration finds the winners." },
+          ],
+        },
+      },
+      {
+        h: "Length and cap reasoning",
+        p: [
+          "The output is capped at 300-800 words. Three reasons for the cap:",
+        ],
+        list: {
+          items: [
+            { b: "Email-engagement data.", t: "Newsletters longer than ~800 words show steep open-vs-read drop-off in industry data. Readers who open a long newsletter scroll past most of it. The cap respects this reality." },
+            { b: "Source-detail link convention.", t: "Newsletters are digests, not replacements. The expected pattern is: digest in the email, full content via click-through to website. The cap forces the digest-structure rather than dumping the whole source." },
+            { b: "ESP rendering limits.", t: "Some email clients (especially mobile) truncate longer emails. The cap stays well within rendering limits across major clients." },
+          ],
+        },
+      },
+      {
+        h: "Newsletter vs Blog Post vs Social Thread",
+        p: [
+          "Three adjacent generators for different distribution channels:",
+        ],
+        list: {
+          items: [
+            { b: "Newsletter — email-shaped digest.", t: "Subject + preheader + 3-5 sections + sign-off. 300-800 words. Optimized for inbox consumption." },
+            { b: "Blog Post — web-shaped article.", t: "Hook + 3-5 sections + close. 800-1500 words. Optimized for browser reading + SEO." },
+            { b: "Social Thread — multi-post numbered.", t: "5-10 numbered posts at ~240 chars each. Optimized for LinkedIn / X scrolling." },
+            { b: "Same source, different shapes.", t: "Run all three on the same source to produce coordinated multi-channel distribution from a single deliverable." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Newsletter charges 3 credits per document. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted. Output is Markdown with explicit Subject / Preheader / Sections / Sign-off blocks ready for ESP paste.",
+          "Common pairings: Newsletter + Blog Post + Social Thread for coordinated multi-channel distribution from one source. Newsletter → ESP-specific image addition + brand voice polish before sending.",
+        ],
+      },
+    ],
+  },
 };
