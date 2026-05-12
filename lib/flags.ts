@@ -98,6 +98,29 @@ export const FEATURE_FLAGS = {
    */
   PDF_A_CONVERT: "pdf_a_convert",
   /**
+   * Edit Text in PDFs (PENDING §5c, 2026-05-12 foundation only).
+   *
+   * No user-facing tool ships in this commit — intentionally. The
+   * engineering work is multi-week (Apache PDFBox sidecar OR deeper
+   * PDFium write-engine integration); shipping an SEO landing OR a
+   * /tool/edit-pdf-text catalog entry without the underlying engine
+   * would recreate the compress-pdf bait-and-switch problem that
+   * T1-1 fixed (commit 19e52a4).
+   *
+   * Flag exists so that when the engine work begins, the staging
+   * discipline matches PDF_COMPRESS + PDF_A_CONVERT: foundation
+   * route ships flag-off, UI lands behind the flag, founder flips
+   * the env var to start the rollout. No catalog entry, no SEO
+   * landing, no marketing copy until then.
+   *
+   * Default state: FEATURE_EDIT_PDF_TEXT_OVERRIDE unset → off →
+   * any handler calling isFeatureEnabled with this flag is a no-op.
+   * Once the engine ships, callers wrap the route at the handler
+   * level (returns 503 / "coming soon" when off) — same shape as
+   * the /api/tools/compress and /api/tools/pdf-a route handlers.
+   */
+  EDIT_PDF_TEXT: "edit_pdf_text",
+  /**
    * Homepage hero CTA variant (PENDING §6d, 2026-05-12). First real
    * use of the deterministic-percent rollout path of isFeatureEnabled
    * — every prior flag callsite (PDF_COMPRESS, PDF_A_CONVERT) used

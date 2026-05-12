@@ -1230,6 +1230,25 @@ const SUITES = [
     name: "product-wireups",
     file: "test-product-wireups.mjs",
   },
+  // 2026-05-12 — T2-4 LOC ceiling on the 5 largest tool files.
+  // Locks current line counts as a no-worsening ceiling. Caught
+  // +285 LOC of silent growth on first measurement vs the
+  // TOOL_IMPROVEMENT_PLAN documented numbers. Forces any growth to
+  // be paired with extraction. 6 assertions (5 per-file + 1 total).
+  {
+    name: "tool-file-loc-ceiling",
+    file: "test-tool-file-loc-ceiling.mjs",
+  },
+  // 2026-05-12 — pins three multi-week foundations: §5c
+  // EDIT_PDF_TEXT flag (foundation only, no user surface), T2-4
+  // LOC ceiling presence, §5f mobile-floor Playwright spec
+  // existence + 13-editor coverage. 29 assertions across the three.
+  // These are floor pins — the real engineering work for each is
+  // explicitly out of scope of a single session.
+  {
+    name: "multi-week-foundations",
+    file: "test-multi-week-foundations.mjs",
+  },
   // 2026-05-04 (PENDING_WORK_ANALYSIS.md §4c) — contact form
   // persistence + admin viewer. Migration 0021 added the
   // contact_submissions table; the route now persists every
