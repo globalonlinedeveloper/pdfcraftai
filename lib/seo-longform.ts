@@ -8846,4 +8846,183 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // salary-slip-analyzer — Indian payroll AI
+  // ============================================================
+  "salary-slip-analyzer": {
+    title: "Salary Slip Analyzer — Indian payslip parsed into structured JSON for YoY comparison",
+    intro:
+      "Indian salary slips are dense and idiosyncratic. Every employer uses slightly different component names — \"Special Allowance\" at one company is \"Performance Pay\" at another; \"HRA\" sometimes splits into multiple sub-components; deduction names vary by state and PSU vs private context. Manually comparing payslips across years or across employers means decoding each one fresh. The salary slip analyzer parses the slip into structured JSON while preserving the original component names verbatim, enabling accurate year-over-year and employer-to-employer comparison. Here is what gets extracted, why component-name preservation beats normalization, and how PII is handled in the output.",
+    sections: [
+      {
+        h: "What the analyzer extracts",
+        p: [
+          "Drop a monthly salary slip PDF — any major Indian employer (IT services, finance, manufacturing, government, PSU). The analyzer extracts five structured groups:",
+        ],
+        list: {
+          items: [
+            { b: "Employer info.", t: "Company name, address (if shown), PAN / TAN if visible. Useful for matching slips to employer records." },
+            { b: "Employee info.", t: "Name, employee ID, PAN (masked), UAN (truncated), department, designation. PII automatically masked in output." },
+            { b: "Period.", t: "Pay period dates, payment date, working days, days worked, leaves taken. Useful for verifying salary calculations against attendance." },
+            { b: "Earnings (per-component).", t: "Basic, HRA, Special Allowance, LTA, conveyance, medical, bonus, performance-pay, statutory bonus, and any employer-specific components. Each line item preserved with its original name." },
+            { b: "Deductions (per-component).", t: "EPF (employee + employer share separately), PT (Professional Tax — varies by state), TDS, ESI if applicable, voluntary deductions (loan EMIs, insurance premiums, food/transport deductions). Each preserved separately." },
+            { b: "Totals + YTD.", t: "Gross / Net for the slip period, plus year-to-date earnings, deductions, and tax-related totals where shown." },
+          ],
+        },
+      },
+      {
+        h: "Why component-name preservation matters",
+        p: [
+          "The single most important design choice in the analyzer is verbatim component-name preservation. Three reasons it matters:",
+        ],
+        list: {
+          items: [
+            { b: "YoY comparison accuracy.", t: "If your slip shows \"Special Allowance\" for 3 years and you change employer, the new employer might call the same thing \"Performance Pay\" or \"Variable Pay.\" Normalizing both to \"Allowance\" loses the granularity needed to compare apples to apples. Verbatim preservation lets you map the components manually with full visibility." },
+            { b: "Tax-treatment differences.", t: "Different earnings components have different tax treatments — HRA has rent-deduction allowance, LTA has trip-frequency rules, Special Allowance is fully taxable. Normalizing flattens these distinctions and breaks downstream tax calculations." },
+            { b: "Negotiation context.", t: "When negotiating a raise or new offer, knowing how your existing employer structures your comp (Basic vs HRA vs Special) affects what to ask for. Normalized output to \"Allowance\" loses the structural information." },
+          ],
+        },
+      },
+      {
+        h: "PII masking — what gets shown and what gets hidden",
+        p: [
+          "Indian salary slips contain personally-identifiable information. The analyzer masks PII in the output by default:",
+        ],
+        list: {
+          items: [
+            { b: "PAN masked as XXXXX1234X.", t: "First 5 characters masked, last 5 visible. Sufficient for matching across documents but not enough to enable identity theft." },
+            { b: "UAN truncated to last 4 digits.", t: "Universal Account Number for EPF. Last 4 digits shown for verification; first 8 masked." },
+            { b: "Aadhaar — if present — masked similarly.", t: "Last 4 digits only. (Aadhaar rarely appears on salary slips but some PSUs include it.)" },
+            { b: "Source PDF — 60-minute auto-delete.", t: "Uploaded PDFs are deleted from our servers within 60 minutes. The structured JSON contains masked PII; the source PDF with un-masked PII doesn't persist." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where structured analysis pays off",
+        p: [
+          "Specific use cases:",
+        ],
+        list: {
+          items: [
+            { b: "Multi-month / multi-year comparison.", t: "Track your comp evolution over time. Parse slips from the last 12-24 months; observe how component structure has shifted. Useful for verifying expected raises landed, identifying changes in HRA or PT, spotting unexpected deductions." },
+            { b: "Employer-to-employer offer comparison.", t: "When considering a new role, compare offer letters component-by-component against your current slip's structure. Same total comp can have different post-tax outcomes depending on Basic vs HRA vs Special split." },
+            { b: "Tax planning / ITR preparation.", t: "Slip-level earnings totals are inputs to FY-end ITR filing. The structured JSON makes it easy to sum across slips for accurate annual earnings figures." },
+          ],
+        },
+      },
+      {
+        h: "What this tool doesn't do",
+        p: [
+          "Three deliberate non-features:",
+        ],
+        list: {
+          items: [
+            { b: "Doesn't compute taxable income for the year.", t: "Single-slip taxable income is sometimes shown; FY-end taxable income usually requires Form 16. Use ITR Analyzer for FY-end taxable-income computation; this tool covers monthly slips." },
+            { b: "Doesn't advise on tax planning.", t: "The structured JSON is data; tax-planning recommendations need a chartered accountant or a dedicated tax-planning tool. The output is your input to those conversations, not a substitute." },
+            { b: "Doesn't auto-detect mistakes.", t: "If the slip has an error (missed component, wrong deduction), the analyzer surfaces what the slip shows, not what should be there. Verification against payroll-team confirmation or against your offer letter is still needed." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Salary Slip Analyzer charges 10 credits per slip. The tool handles PDFs up to 25 MB. Processing runs on our servers; the slip is in memory only during analysis. Source PDFs delete within 60 minutes; structured output JSON returned with masked PII.",
+          "Common pairings: Salary Slip + Multi-Bank Statement Analyzer for full month-by-month financial picture. Salary Slip parsed for multiple months + Excel for visual YoY trends. Salary Slip → ITR Analyzer at FY-end for tax-return-prep workflow.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // tamil-pdf-translator — Tamil-script translation AI
+  // ============================================================
+  "tamil-pdf-translator": {
+    title: "Tamil PDF Translator — handling Noto Sans Tamil ligatures, TN government forms, and legal-register translation",
+    intro:
+      "Tamil PDF translation is one of the highest-volume language operations specifically for Indian users. Tamil Nadu government forms, court judgments, rental agreements, university materials, religious texts — Tamil-English translation is daily work in many Indian contexts. The technical challenges include rendering Tamil's complex ligature system correctly in the output PDF, handling TN-specific legal register, and managing code-mixed Tamil-English content gracefully. Here is how the translator handles each, the three patterns where AI translation beats Google Translate for Tamil specifically, and the workflow for scanned government forms.",
+    sections: [
+      {
+        h: "Tamil-script rendering — what makes this hard",
+        p: [
+          "Tamil uses the Tamil script with several features that simpler font-rendering pipelines often handle poorly:",
+        ],
+        list: {
+          items: [
+            { b: "Ligatures — க்ஷ, ஶ்ரீ, etc.", t: "Tamil combines consonants with virama (்) to form conjunct consonants. These ligatures need an OpenType-aware font and proper text-shaping. Without correct shaping, you get separate characters with visible virama marks rather than the combined ligature." },
+            { b: "Grantha consonants — ஶ, ஷ, ஜ, ஹ, ஸ.", t: "Grantha is a separate set of consonants borrowed from Sanskrit for Sanskrit-origin words. Modern Tamil education varies on whether to teach them; older texts and religious materials use them heavily. Output must render them correctly." },
+            { b: "Combining vowels — matras.", t: "Vowel signs that attach to consonants (க + ா = கா). Many appear visually before or above the consonant but are logically attached to it. Proper rendering requires the layout engine to handle the visual order vs logical order correctly." },
+          ],
+        },
+        // Our solution:
+      },
+      {
+        h: "How the translator handles Tamil rendering",
+        p: [
+          "The output PDF embeds Noto Sans Tamil, a font specifically designed by Google for cross-platform Tamil rendering with full OpenType support for ligatures and matras. We use a layout engine that respects Tamil text-shaping rules. The result is clean rendering: no question-mark glyphs where ligatures should be, no broken matras, correct visual order of combining marks.",
+          "The output PDF renders identically on every PDF reader regardless of whether the reader's machine has Tamil fonts installed locally. Critical for sharing Tamil PDFs with users on different operating systems — Windows users without Tamil fonts installed routinely see Tamil PDFs as boxes; embedded-font output works for them too.",
+        ],
+      },
+      {
+        h: "TN government forms and how they're handled",
+        p: [
+          "Tamil Nadu state has many government interfaces in Tamil. The translator supports the most common categories:",
+        ],
+        list: {
+          items: [
+            { b: "TANGEDCO electricity bills.", t: "Tamil Nadu Generation and Distribution Corporation bills. Common Tamil layout with English numerals. Translation preserves bill amounts and dates verbatim; renders the Tamil descriptions in English." },
+            { b: "Patta documents.", t: "Land records issued by TN revenue department. Specialized vocabulary; translator preserves legal terminology (survey number, sub-division, classification) precisely." },
+            { b: "Encumbrance Certificates (EC).", t: "Property-history documents from the registrar. The translator handles the standardized format and preserves transaction descriptions for legal verification." },
+            { b: "Rental agreements.", t: "Tamil rental agreements use specific legal terms (வாடகை மூலதனம், ஒப்பந்த விவகாரம்). The translator preserves the legal register; commercial rental agreements come out with correct English legal equivalents." },
+            { b: "TNPSC papers.", t: "Tamil Nadu Public Service Commission exam papers in Tamil. Translation helps non-Tamil candidates understand TN-region-specific civics questions; useful for revision." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns where AI beats Google Translate for Tamil",
+        p: [
+          "Where targeted AI translation outperforms generic machine translation:",
+        ],
+        list: {
+          items: [
+            { b: "Legal register matching.", t: "Tamil legal documents use a specialized register (neethimandram, vaadhi, pratividhi). Google Translate often produces colloquial output. AI translation matches the formal legal register correctly because the prompt anchors to source-document tone." },
+            { b: "Code-mixed Tamil-English.", t: "Modern Tamil writing routinely mixes English words (technology, automobile, signature) into Tamil sentences. The translator recognizes when an English word is being used in Tamil context and preserves it correctly rather than over-translating." },
+            { b: "Religious / classical Tamil.", t: "Older religious texts and classical Tamil use vocabulary that modern colloquial Tamil has dropped. AI translation handles these with reasonable accuracy; Google Translate's colloquial bias often misses the formality." },
+          ],
+        },
+      },
+      {
+        h: "Scanned-form workflow",
+        p: [
+          "Many TN government documents are scans of paper forms. Two-pass workflow:",
+        ],
+        list: {
+          items: [
+            { b: "AI OCR first.", t: "Run AI OCR on the scanned PDF to add a text layer in Tamil. Tamil OCR is accurate for typed forms; less accurate for handwritten content." },
+            { b: "Translate the OCR'd PDF.", t: "Once the PDF has a Tamil text layer, run the translator. Output is searchable English PDF with the original Tamil form's layout preserved." },
+          ],
+        },
+      },
+      {
+        h: "When to verify with a Tamil-speaking human",
+        p: [
+          "Three high-stakes cases:",
+        ],
+        list: {
+          items: [
+            { b: "Court submissions.", t: "Tamil court submissions need certified translation. AI translation is preparation material; a certified translator's stamp is required for legal admissibility." },
+            { b: "Property document verification.", t: "Translations of pattas, sale deeds, ECs affecting property transactions should be verified by a Tamil-reading lawyer. AI translation surfaces the content for review; the legal advice depends on the original Tamil." },
+            { b: "Family documents in archaic Tamil.", t: "Older family or religious documents use vocabulary that modern Tamil dictionaries may miss. AI is reasonable but a Tamil-literate family member or scholar provides the cultural context." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Tamil PDF Translator charges 1 credit per page. The tool handles PDFs up to 100 MB. Processing runs on our servers; the document is in memory only during translation. Output preserves source layout with Noto Sans Tamil embedded for cross-platform rendering.",
+          "Common pairings: AI OCR first for scanned forms (TANGEDCO bills, pattas, ECs). Translate then Improve Writing if the translated output reads stilted. Tamil + Hindi translators share the same prompt-tuning infrastructure; same accuracy bands apply.",
+        ],
+      },
+    ],
+  },
 };
