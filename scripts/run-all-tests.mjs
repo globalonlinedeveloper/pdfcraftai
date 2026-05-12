@@ -1177,6 +1177,18 @@ const SUITES = [
     name: "alternatives-jsonld",
     file: "test-alternatives-jsonld.mjs",
   },
+  // 2026-05-12 — Service + Organization JSON-LD on /enterprise
+  // (B2B sales-qualified-lead landing). Different schema shape from
+  // tools/compare/alternatives because the page sells a consultative
+  // service engagement, not a software application. Service.hasOffer-
+  // Catalog enumerates the 6 features list as Offer items. 14
+  // assertions (A: constants, B: Service shape + provider +
+  // audience, C: OfferCatalog derived from FEATURES — anti-drift,
+  // D: breadcrumb, E: rendering hygiene).
+  {
+    name: "enterprise-jsonld",
+    file: "test-enterprise-jsonld.mjs",
+  },
   // 2026-05-04 (PENDING_WORK_ANALYSIS.md §4c) — contact form
   // persistence + admin viewer. Migration 0021 added the
   // contact_submissions table; the route now persists every

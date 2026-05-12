@@ -63,9 +63,81 @@ const FEATURES: Array<{ icon: keyof typeof I; title: string; body: string }> = [
   },
 ];
 
+// 2026-05-12 — Service + Organization + BreadcrumbList JSON-LD.
+// /enterprise is a sales-qualified-lead landing; the right schema
+// shape is Service (the offering itself) + Organization (the company
+// providing it). Service.hasOfferCatalog enumerates the FEATURES
+// list above as discrete Offer items so Google can render them in
+// a richer result panel.
+//
+// Why Service over SoftwareApplication: the page sells a B2B service
+// engagement (custom quote, talk-to-sales) rather than a downloadable
+// app. SoftwareApplication is the right schema for individual tool
+// pages (handled separately by the SeoLandingPage component); Service
+// is the right one for the consultative sales surface.
+const SITE = "https://pdfcraftai.com";
+const SERVICE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `${SITE}/enterprise#service`,
+  name: "pdfcraftai Enterprise — PDF tools for teams of 5+",
+  description:
+    "Shared credit pool, SSO via Google Workspace, admin console + audit log, GST + EU VAT invoicing, volume pricing. Custom-quoted for teams; self-serve team plan rolls out once we cross ~10 paying teams.",
+  url: `${SITE}/enterprise`,
+  serviceType: "Enterprise PDF tooling",
+  areaServed: { "@type": "Place", name: "Worldwide" },
+  audience: { "@type": "Audience", audienceType: "Business" },
+  provider: {
+    "@type": "Organization",
+    name: "pdfcraftai",
+    url: SITE,
+    logo: { "@type": "ImageObject", url: `${SITE}/icon.svg` },
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Enterprise feature catalog",
+    itemListElement: FEATURES.map((f, idx) => ({
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: f.title,
+        description: f.body,
+      },
+      position: idx + 1,
+    })),
+  },
+};
+
+const BREADCRUMB_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Enterprise",
+      item: `${SITE}/enterprise`,
+    },
+  ],
+};
+
 export default function EnterprisePage() {
   return (
     <main>
+      {/* Service + Breadcrumb JSON-LD — see comments above. */}
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_JSONLD) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(BREADCRUMB_JSONLD),
+        }}
+      />
       <MarketingHero
         eyebrow="ENTERPRISE & TEAMS"
         title="PDF tools for teams of 5+"
