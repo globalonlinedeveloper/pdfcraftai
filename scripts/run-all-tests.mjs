@@ -1249,6 +1249,17 @@ const SUITES = [
     name: "multi-week-foundations",
     file: "test-multi-week-foundations.mjs",
   },
+  // 2026-05-12 — pins for the comprehensive SEV-1 audit fix batch:
+  // .env.example completeness (15 required env vars + no stale
+  // Paddle), author title dedupe, "How do I cancel" help article,
+  // help search SSR fallback (<form action>), List-Unsubscribe
+  // headers (Gmail/Yahoo Feb-2024 rules), sitemap redirect-source
+  // exclusion, canonical { error, detail } error shape on 3
+  // standardised routes. 35 assertions across 7 sections.
+  {
+    name: "sev1-fixes",
+    file: "test-sev1-fixes.mjs",
+  },
   // 2026-05-04 (PENDING_WORK_ANALYSIS.md §4c) — contact form
   // persistence + admin viewer. Migration 0021 added the
   // contact_submissions table; the route now persists every

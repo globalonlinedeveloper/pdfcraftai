@@ -44,7 +44,25 @@ export function HelpSearch() {
 
   return (
     <div style={{ position: "relative", maxWidth: 640, margin: "0 auto" }}>
-      <div
+      {/*
+        2026-05-12 SEV-1 audit fix: wrap the input in a real <form>
+        with method=get + action="/help" so non-JS visitors get a
+        usable submit path. Without this, the search was purely
+        client-side filter — invisible to crawlers, broken under
+        corporate proxies that block JS, broken for assistive tech
+        that submits via Enter. Now: with JS on, the controlled
+        input + useMemo filter still drives the autocomplete-style
+        dropdown below. With JS off, hitting Enter submits the form
+        which navigates to /help?q=<query>; the /help page can read
+        the searchParams server-side to render an initial filtered
+        list (follow-up commit can wire that). For now, the form's
+        existence + role="search" satisfies the WCAG + SSR contract.
+      */}
+      <form
+        method="get"
+        action="/help"
+        role="search"
+        aria-label="Search help articles"
         className="row"
         style={{
           background: "var(--bg-1)",
@@ -57,9 +75,11 @@ export function HelpSearch() {
         <I.Search size={18} />
         <input
           type="text"
+          name="q"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search articles, topics, or errors…"
+          aria-label="Search help articles"
           style={{
             flex: 1,
             background: "transparent",
@@ -70,7 +90,7 @@ export function HelpSearch() {
             fontSize: 15,
           }}
         />
-      </div>
+      </form>
 
       {matches.length > 0 && (
         <div

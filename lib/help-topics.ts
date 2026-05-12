@@ -192,7 +192,27 @@ export const HELP_TOPICS: HelpTopic[] = [
         body: [
           "Any unused credits can be refunded within 14 days of purchase. Open Settings → Billing → Purchases, click the receipt you want to refund, then Request refund. The refund returns to your original payment method within 5–10 business days.",
           "Used credits aren't refundable, but if a tool failed (say, OCR returned garbage on a clean scan) you can flag the run from Settings → Billing → Usage and we will credit them back manually within one business day.",
-          "Subscriptions can be canceled any time from Settings → Billing. Cancellation stops the next renewal — you keep access through the end of the current billing period.",
+          "Subscriptions can be cancelled any time from Settings → Billing. See the 'How do I cancel my subscription' article below for the step-by-step.",
+        ],
+      },
+      {
+        // 2026-05-12 SEV-1 audit fix: "How do I cancel my
+        // subscription" was missing from the help center despite
+        // being one of the most common compliance + retention
+        // queries. Razorpay merchant onboarding + GSC sitelinks
+        // both look for this article. Covers cancellation,
+        // downgrade, and full account deletion.
+        slug: "cancel-subscription",
+        title: "How do I cancel my subscription",
+        summary:
+          "Cancel anytime from Settings → Billing. Step-by-step plus what happens to your data after.",
+        body: [
+          "Open Settings → Billing → Subscription. Click 'Cancel subscription'. Confirm in the dialog. That's it — your subscription stops at the end of the current billing period and you'll keep access until then. We don't ask for a reason and don't try to retain you on the cancellation flow.",
+          "Cancellation does NOT delete your account or your unused credits. Anything you've already paid for stays in your wallet and never expires. The only thing that stops is the next monthly auto-charge.",
+          "If you want to downgrade instead of cancel (e.g. drop from a yearly plan to a credit pack), open Settings → Billing → Plan and pick 'Switch plan'. The remaining yearly value is converted to credits at the equivalent retail rate.",
+          "Want to delete your account entirely (not just cancel)? Open Settings → Account → Danger zone → Delete account. This is irreversible: it permanently removes your profile, uploaded files, generated outputs, and any unused credits. We process the deletion request within 24 hours per our DPDP / GDPR data-deletion commitments.",
+          "Per our refund policy, unused credits remain refundable for 14 days from each purchase — so cancelling at any point doesn't forfeit pending refunds. The cancellation and refund windows are independent.",
+          "Stuck or hit an error during cancellation? Email support@pdfcraftai.com with your account email — we'll cancel manually within one business day.",
         ],
       },
       {
