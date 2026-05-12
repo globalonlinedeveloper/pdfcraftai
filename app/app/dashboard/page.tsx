@@ -163,11 +163,26 @@ export default async function DashboardPage() {
               No files yet
             </p>
             <p className="muted" style={{ fontSize: 13, marginTop: 4, marginBottom: 14 }}>
-              Upload your first PDF to see it here.
+              Upload your first PDF, or pick a tool to get started.
             </p>
-            <Link href="/app/files" className="btn btn-primary btn-sm">
-              Upload a PDF
-            </Link>
+            {/* 2026-05-12 — twin CTAs. Primary path stays "Upload a
+                PDF" → /app/files because the most common new-user
+                action is dragging a file in. Secondary "Pick a tool"
+                → /app/welcome serves the path where the user hasn't
+                seen the curated tool grid yet (e.g. Google OAuth
+                users who skipped /verify-email's redirect to
+                /app/welcome on first sign-in). Without this link,
+                OAuth-onboarded users have no surface that suggests
+                /app/welcome exists — the page would only ever be
+                seen by credentials-flow users on a single visit. */}
+            <div className="row" style={{ gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/app/files" className="btn btn-primary btn-sm">
+                Upload a PDF
+              </Link>
+              <Link href="/app/welcome" className="btn btn-outline btn-sm">
+                Pick a tool →
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>

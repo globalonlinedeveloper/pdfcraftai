@@ -22,11 +22,13 @@ const PAGE_PATH = "app/app/welcome/page.tsx";
 const MARK_PATH = "app/app/welcome/MarkWelcomeSeen.tsx";
 const CONSTANTS_PATH = "app/app/welcome/constants.ts";
 const VERIFY_PATH = "app/verify-email/CodeEntryForm.tsx";
+const DASHBOARD_PATH = "app/app/dashboard/page.tsx";
 
 const PAGE = readFileSync(PAGE_PATH, "utf8");
 const MARK = readFileSync(MARK_PATH, "utf8");
 const CONSTANTS = readFileSync(CONSTANTS_PATH, "utf8");
 const VERIFY = readFileSync(VERIFY_PATH, "utf8");
+const DASHBOARD = readFileSync(DASHBOARD_PATH, "utf8");
 
 let pass = 0;
 let fail = 0;
@@ -173,6 +175,22 @@ check(
 check(
   "E3: no-session redirects to /login with callbackUrl=/app/welcome",
   /redirect\("\/login\?callbackUrl=\/app\/welcome"\)/.test(PAGE)
+);
+
+// ─── Section F: dashboard re-engagement link ───
+// Google OAuth users skip /verify-email and land directly on
+// /app/dashboard, so they never trigger the post-verify redirect to
+// /app/welcome. Without a dashboard CTA pointing at /app/welcome,
+// OAuth-onboarded users have no surface that suggests the curated
+// tool page exists. F1/F2 lock in the "Pick a tool" secondary CTA
+// in the dashboard's "No files yet" empty state.
+check(
+  "F1: dashboard empty state links to /app/welcome",
+  /href="\/app\/welcome"/.test(DASHBOARD)
+);
+check(
+  "F2: dashboard empty state has 'Pick a tool' label on the link",
+  /Pick a tool/.test(DASHBOARD)
 );
 
 // ─── Report ───
