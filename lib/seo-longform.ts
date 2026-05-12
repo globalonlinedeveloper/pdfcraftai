@@ -9183,4 +9183,187 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-to-ics-calendar — date-to-calendar extractor
+  // ============================================================
+  "pdf-to-ics-calendar": {
+    title: "PDF to ICS Calendar — extracting every date and making it importable",
+    intro:
+      "Schedules, syllabi, contracts, and project timelines are full of dates that matter — class meetings, payment due dates, deliverable deadlines, deposition windows. Reading these into a calendar app manually means typing each date individually. The PDF-to-ICS converter extracts every date from a PDF and produces a single .ics file you can import into Google Calendar, Apple Calendar, Outlook, or any standards-compliant calendar app. Here is how date detection works, the day-first vs month-first disambiguation that matters for global users, and the three workflows where extracting dates as calendar entries beats manual entry.",
+    sections: [
+      {
+        h: "How date extraction works",
+        p: [
+          "The tool reads the PDF's text content, then runs a date-recognition pass that matches dates in several common formats. Each match becomes a candidate for the calendar export. Around each detected date, the tool grabs surrounding context (the sentence or phrase the date appears in) to use as the event's SUMMARY in the .ics output.",
+          "Supported formats: ISO (2026-04-24), slash-separated (24/04/2026 or 04/24/2026), named months (24 April 2026, April 24 2026, 24 Apr 2026), and abbreviated forms (24/Apr/2026). Each date becomes an all-day VEVENT in the .ics file. The output is a single .ics with all events; import it once and every date populates your calendar at the right day.",
+        ],
+      },
+      {
+        h: "Day-first vs month-first disambiguation",
+        p: [
+          "\"04/05/2026\" is ambiguous. Indian and European readers see 4 May; US readers see April 5. The tool handles this explicitly:",
+        ],
+        list: {
+          items: [
+            { b: "Day-first default for Indian users.", t: "The default interpretation is DD/MM/YYYY, matching Indian and European convention. \"04/05/2026\" becomes 4 May." },
+            { b: "Toggle for US-format documents.", t: "Switch to MM/DD/YYYY when the source is a US-origin document where 04/05/2026 means April 5. The toggle applies to all ambiguous dates in the file." },
+            { b: "ISO and named-month dates are unambiguous.", t: "\"2026-04-24\" and \"24 April 2026\" are unambiguous regardless of the toggle. The toggle only affects pure-slash-numeric dates." },
+            { b: "Sanity-check after import.", t: "After importing the .ics, scan the first few events in your calendar to verify dates landed on the intended days. Wrong-direction interpretation is easy to spot once the dates are visible in the calendar grid." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where extraction beats manual entry",
+        p: [
+          "Cases where converting PDF dates to calendar entries earns its place:",
+        ],
+        list: {
+          items: [
+            { b: "Academic syllabus → semester schedule.", t: "A course syllabus PDF has 15-30 dates: class meetings, assignment due dates, midterm, final exam. Extracting all of them at once vs typing each into the calendar saves real time at the start of every term." },
+            { b: "Contract → key date tracking.", t: "Contracts have payment milestones, renewal dates, notice periods, expiration dates. Extracting them surfaces every date that affects the relationship; you can review the full set rather than only the ones you remember." },
+            { b: "Project plan → deliverable tracking.", t: "Project plans embed deadlines for each phase, deliverable, review cycle. Extract once; have every milestone in your calendar; track changes by re-running on revised plans." },
+          ],
+        },
+      },
+      {
+        h: "What the tool can't do (and what to use instead)",
+        p: [
+          "Three patterns beyond literal date matching:",
+        ],
+        list: {
+          items: [
+            { b: "Contextual dates.", t: "\"Next Tuesday,\" \"the first Monday of March,\" \"two weeks after closing\" are dates only by context. Regex matching doesn't resolve these. For contextual-date extraction, use the paid AI variant which can reason about the document's reference date and produce concrete dates." },
+            { b: "Time-of-day annotations.", t: "Each date becomes an all-day VEVENT in v1. Time-anchored events (\"3pm on April 24\") still extract the date but not the time. Manual editing of the .ics or use of a paid AI variant covers this." },
+            { b: "Recurring events.", t: "A date list that's actually a recurring schedule (\"every Monday from May to August\") gets extracted as individual dates, not as a recurring event. Calendar apps accept the per-event approach but the .ics doesn't compress to an RRULE-based recurring event." },
+          ],
+        },
+      },
+      {
+        h: "Import paths by calendar app",
+        p: [
+          "Three common import flows:",
+        ],
+        list: {
+          items: [
+            { b: "Google Calendar.", t: "Settings → Import & Export → Import. Select the .ics file and the target calendar. Events appear within seconds." },
+            { b: "Apple Calendar.", t: "Drag the .ics file onto the Calendar app icon, or File → Import. Choose the destination calendar." },
+            { b: "Outlook / Outlook 365.", t: "File → Open & Export → Import/Export. Select \"Import an iCalendar (.ics) file.\" Choose import-as-new-items or merge-with-existing." },
+            { b: "Other (Fastmail, Proton Calendar, Thunderbird).", t: "All standards-compliant — each has its own File → Import flow. The .ics format is universal." },
+          ],
+        },
+      },
+      {
+        h: "Cleaning up after import",
+        p: [
+          "Three habits after importing:",
+        ],
+        list: {
+          items: [
+            { b: "Review the first few events.", t: "Verify dates landed on the expected days (catches day-first vs month-first errors). Adjust the toggle and re-export if needed." },
+            { b: "Add reminder times.", t: "All-day VEVENTs don't trigger time-based reminders. After import, set 1-day or 1-hour reminders on the critical events." },
+            { b: "Delete duplicates.", t: "If the source document has the same date mentioned multiple times (e.g. \"due 24 April\" in two different sections), the output has the date twice. Calendar apps treat them as separate events; dedupe manually if needed." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "Free. 100% client-side. The tool handles PDFs up to 100 MB. Text extraction via pdfjs; date regex matching in your browser; .ics generation in your browser. Nothing uploaded.",
+          "Common pairings: PDF-to-ICS + Extract Action Items for a full extract-of-deadlines + extract-of-actions from a project doc. PDF-to-ICS + AI Translate first if the source is in a non-English language. PDF-to-ICS + manual review for the most important dates.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // strip-links — surgical link removal
+  // ============================================================
+  "strip-links": {
+    title: "Remove hyperlinks from a PDF — surgical removal that preserves everything else",
+    intro:
+      "Stripping hyperlinks from a PDF sounds straightforward — remove the clickable parts. Done wrong, it removes too much (entire annotations including comments and highlights) or too little (visible blue underlined text without removing the actual click target). The strip-links tool does it surgically: only /Link annotations are touched; everything else stays exactly as it was. Here is what \"surgical\" means in PDF terms, the five workflows where stripping is the right move, and the difference between this and Flatten PDF.",
+    sections: [
+      {
+        h: "What strip-links actually removes",
+        p: [
+          "PDF annotations come in many types. Each page has an /Annots array listing every interactive element on that page. Possible annotation types include /Link (clickable URL or page jump), /Highlight (highlighted text), /Text (sticky note), /Stamp (rubber-stamp marker), /Ink (drawn stroke), /Widget (form-field interactive box), and many more.",
+          "Strip-links walks each page's /Annots array and removes only entries with subtype /Link. Every other annotation type is left untouched. Highlights stay, sticky notes stay, form fields stay, comments stay. The page contents — text, vectors, images, scanned bytes — are also untouched. Only the click targets disappear.",
+        ],
+      },
+      {
+        h: "The visible-text question",
+        p: [
+          "An important nuance: the styled appearance of a hyperlink (blue text, underline) is typically part of the page's content stream, NOT part of the /Link annotation. Stripping the /Link annotation removes the click target but leaves the visible styling intact. The text still looks like a hyperlink; it just doesn't do anything when clicked.",
+          "Three patterns for handling this:",
+        ],
+        list: {
+          items: [
+            { b: "Accept the visual leftover.", t: "Most contexts where you strip links don't care that the visual styling remains. The recipient sees colored text but nothing happens on click — usually fine." },
+            { b: "Edit the styling away.", t: "If the visual styling needs to go too, run our Edit PDF (paid AI) after stripping. It can detect and recolor the previously-linked text." },
+            { b: "Convert to a PDF where text is rasterized.", t: "If the document is being archived as a snapshot anyway, run Compress with the rasterize-text option. The styling becomes part of the page image; recipients can't tell anything was ever a link." },
+          ],
+        },
+      },
+      {
+        h: "Five workflows where stripping is right",
+        p: [
+          "Specific cases:",
+        ],
+        list: {
+          items: [
+            { b: "Sharing internal docs externally.", t: "Internal docs often link to private resources (GitHub repos, Confluence pages, partner-only portals). External recipients can't reach those URLs anyway, and clicking them produces error pages. Strip the links before sharing." },
+            { b: "Printing without blue-link clutter.", t: "Printed PDFs with hyperlinks look messier than printed PDFs without. The blue/underlined styling is appropriate for screens; on paper it's just visual noise. Strip then print." },
+            { b: "Preventing accidental navigation in presentations.", t: "Showing a PDF on a projector during a presentation. Accidentally clicking a link opens the browser and disrupts the talk. Strip before presenting." },
+            { b: "Meeting submission requirements.", t: "Some submission portals (court filings, regulatory bodies, certain academic publishers) require PDFs without active hyperlinks. Strip to meet the requirement." },
+            { b: "Compliance / legal-hold contexts.", t: "Documents under legal hold should be inert — no active hyperlinks that might be tracked or modified. Strip as part of the hold-preservation workflow." },
+          ],
+        },
+      },
+      {
+        h: "Strip Links vs Flatten PDF",
+        p: [
+          "Two related tools with different scopes:",
+        ],
+        list: {
+          items: [
+            { b: "Strip Links — surgical, only /Link.", t: "Removes only the /Link annotations. Other annotations (highlights, comments, form fields, drawn strokes) stay editable. Use when you want to remove ONLY the clickability without touching anything else." },
+            { b: "Flatten PDF — wholesale, all annotations.", t: "Removes or bakes-in ALL annotations including form fields, highlights, and comments. Use when you want a fully-locked, no-interactivity output." },
+          ],
+        },
+      },
+      {
+        h: "What about internal page-jumps",
+        p: [
+          "PDFs can have two kinds of /Link annotations: external URLs (https://example.com) and internal page-jumps (table-of-contents entries, footnote references). Strip Links removes both by default. Three patterns:",
+        ],
+        list: {
+          items: [
+            { b: "Default behavior — strip both.", t: "Most users stripping links want to remove all click targets; both external and internal go away." },
+            { b: "If TOC navigation matters.", t: "If your PDF has a table-of-contents and you want the TOC links to remain functional, use Flatten + preserve-bookmarks instead. Bookmarks (which appear in the side panel of PDF readers) are a different feature from /Link annotations and survive Flatten." },
+            { b: "Keep internal, strip external.", t: "Currently requires manual /Annot editing in Acrobat Pro. A selective-strip variant is on the roadmap." },
+          ],
+        },
+      },
+      {
+        h: "Verification after stripping",
+        p: [
+          "Two checks worth running on the output:",
+        ],
+        list: {
+          items: [
+            { b: "Use Links Inspector.", t: "Run the PDF Links Inspector on the output to verify zero /Link annotations remain. The inspector is the audit complement to the strip tool." },
+            { b: "Try clicking link-styled text in a reader.", t: "Open the stripped PDF in a reader; click any text that still looks like a hyperlink. Nothing should happen. Confirms the strip succeeded." },
+          ],
+        },
+      },
+      {
+        h: "Limits and compatibility",
+        p: [
+          "Free. 100% client-side. The tool handles PDFs up to 50 MB. Strip runs in your browser via pdf-lib; nothing is uploaded. Output is the stripped PDF — visually identical to the input, just without clickability.",
+          "Common pairings: Strip Links + Remove Metadata for a thoroughly-cleaned external-share document. Strip Links + Compress for the smallest distribution-ready file. Strip Links → Links Inspector to verify the strip succeeded.",
+        ],
+      },
+    ],
+  },
 };
