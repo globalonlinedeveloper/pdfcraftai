@@ -9366,4 +9366,193 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // syllabus-to-study-plan — exam-prep AI
+  // ============================================================
+  "syllabus-to-study-plan": {
+    title: "Syllabus to Study Plan — week-by-week schedules with practice checkpoints for Indian competitive exams",
+    intro:
+      "A syllabus is a list of topics; a study plan is a week-by-week schedule that sequences those topics, allocates hours, and embeds practice checkpoints. The gap between the two is where most exam-prep falls apart — students plan loosely, fall behind early, then cram. The syllabus-to-study-plan tool produces the structured schedule directly from the syllabus PDF. Here is what gets sequenced, why exam-specific topic weighting matters more than equal-weight scheduling, and the three checkpoint patterns that distinguish active prep from passive review.",
+    sections: [
+      {
+        h: "What the planner produces",
+        p: [
+          "Drop a syllabus PDF — TNPSC, UPSC, JEE, NEET, NCERT, university course, coaching institute. The planner extracts the topics, weights them by exam-specific importance where applicable, then sequences them into a 12-week default schedule (auto-adjusted to 6 weeks for boot camps or full-year for substantial syllabi).",
+          "Output is a structured plan: topic map of the syllabus, week-by-week table (Week N | Topics covered | Hours allocated | Practice Checkpoint), and a final-week revision strategy. The plan assumes ~8 hours/week of study; scale up or down proportionally if your schedule allows different time.",
+        ],
+      },
+      {
+        h: "Why exam-specific weighting beats equal-weight",
+        p: [
+          "Equal-weight scheduling — \"spend the same time on every topic\" — wastes effort. Real exams weight some topics heavier than others; high-yield topics deserve more preparation time. The planner has weighting data for major Indian competitive exams:",
+        ],
+        list: {
+          items: [
+            { b: "TNPSC.", t: "Tamil Nadu civics + history + geography weighted heavier than general English. The planner allocates more weeks to TN-specific content." },
+            { b: "UPSC.", t: "GS papers + optional subject covered with exam-paper-weighting data. Currency-of-affairs material (last 12 months) flagged for ongoing daily prep." },
+            { b: "JEE.", t: "Physics + Math weighted vs Chemistry per typical paper distribution. Within Physics, mechanics + electromagnetism heavier than modern physics." },
+            { b: "NEET.", t: "Biology dominant (Botany + Zoology) with Physics + Chemistry per typical NEET split." },
+            { b: "SSC / Banking / GATE.", t: "Each exam has its own well-documented topic-weighting; the planner reflects it." },
+          ],
+        },
+      },
+      {
+        h: "Three practice-checkpoint patterns",
+        p: [
+          "What distinguishes a planner from a calendar is the checkpoint at each week. Three patterns:",
+        ],
+        list: {
+          items: [
+            { b: "Concrete tasks, not 'review your notes.'", t: "\"Review your notes\" is passive and easy to fake-complete. A concrete task — \"take previous-year question paper 2023 Section A under timed conditions\" — anchors the week's study in retrieval practice." },
+            { b: "Increasing-difficulty mock testing.", t: "Early weeks: chapter-end exercises and concept-check questions. Middle weeks: topic-level mock tests. Late weeks: full-paper mocks under exam conditions. Difficulty ramps with content coverage." },
+            { b: "Spaced retrieval across weeks.", t: "Week 4's checkpoint includes a quick recall test on Week 1 + Week 2 material. Forces revisiting earlier topics rather than letting them fade. Spaced retrieval is the single best-evidenced retention technique." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where structured plans pay off",
+        p: [
+          "Cases where the planner replaces ad-hoc scheduling:",
+        ],
+        list: {
+          items: [
+            { b: "Competitive-exam preparation.", t: "Standardized timelines (TNPSC quarterly, UPSC year-long, JEE/NEET 12-24 month cycles). The planner respects the exam's pattern; you focus on execution." },
+            { b: "Self-paced semester courses.", t: "University students dropped into a 12-week semester with a syllabus and minimal scaffolding. The planner produces the week-by-week sequence the professor implied but didn't write down." },
+            { b: "Coaching-institute supplementary planning.", t: "Coaching institutes give you the topics; you produce the personal weekly schedule. The planner customizes the institute's coverage to your available study hours." },
+          ],
+        },
+      },
+      {
+        h: "Adapting the plan to your reality",
+        p: [
+          "Three patterns for using the plan effectively:",
+        ],
+        list: {
+          items: [
+            { b: "Adjust hours, not topic order.", t: "The default 8 hrs/week is a starting assumption. Scale up if you have more time (drop the schedule from 12 to 8 weeks), down if you have less (extend to 16 weeks). The topic priority order is the load-bearing decision — don't reshuffle that." },
+            { b: "Don't skip checkpoints when behind.", t: "When you fall behind (everyone does at some point), the instinct is to skip the practice checkpoint to \"catch up\" on content. Wrong move — the checkpoint is the retention mechanism. Slow the content pace; keep the checkpoints." },
+            { b: "Re-run the planner if scope changes.", t: "If the syllabus is revised, if you switch exam target, if your time budget changes substantially — regenerate the plan rather than manually adjusting. The planner re-sequences with the new constraints; manual adjustment is error-prone." },
+          ],
+        },
+      },
+      {
+        h: "Pairing with other study tools",
+        p: [
+          "The plan is the scaffold. Three companion tools complete the prep workflow:",
+        ],
+        list: {
+          items: [
+            { b: "Study Notes for each topic.", t: "As you start each week's topic, generate revision-grade notes from the textbook chapter. Notes + plan together cover content + structure." },
+            { b: "Flashcards for retention.", t: "Per-topic flashcards for daily review. Combine with a spaced-repetition app (Anki) to retain across weeks." },
+            { b: "Quiz for assessment.", t: "End-of-week or end-of-topic MCQ generation to test recognition. Surfaces what topics need re-study." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Syllabus to Study Plan charges 20 credits per plan. Higher than other AI tools because the sequencing + exam-weighting reasoning is compute-intensive. The tool handles PDFs up to 25 MB.",
+          "Common pairings: Plan + Study Notes + Flashcards + Quiz for the full prep stack. Plan + Mind Map for the structural-overview-first study pattern. Re-run the plan with updated scope when life changes intervene.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // rewrite-pdf-tone — register-shift AI
+  // ============================================================
+  "rewrite-pdf-tone": {
+    title: "Rewrite PDF in Different Tone — register shifting while preserving every fact",
+    intro:
+      "Tone matters for audience. A research paper's formal academic voice doesn't work for a blog post; a marketing one-pager's persuasive voice doesn't work for a regulatory submission. The Rewrite Tone tool shifts the register without changing what the document says. Five preset tones cover the common needs; every fact and number is preserved verbatim. Here is what each tone produces, why register-shift is different from Improve Writing, and the three patterns for using the rewrite responsibly.",
+    sections: [
+      {
+        h: "How rewrite-tone differs from related tools",
+        p: [
+          "Rewrite-tone is one of three adjacent AI tools, each with a different transformation:",
+        ],
+        list: {
+          items: [
+            { b: "Rewrite Tone — register shift.", t: "Same meaning, different voice. Formal → casual, academic → conversational. Substantial voice change. Use when the content is right but the audience needs a different register." },
+            { b: "Improve Writing — clarity tighten.", t: "Same voice, fewer words. Cut filler. Use when prose is too long but the register is fine." },
+            { b: "Paraphrase — same length, different wording.", t: "Same meaning, same length, different sentence-level word choices. Use when you need a wording variant (citation, syndication, fresh phrasing)." },
+          ],
+        },
+      },
+      {
+        h: "Five preset tones",
+        p: [
+          "Each preset targets a specific audience and use case:",
+        ],
+        list: {
+          items: [
+            { b: "Formal.", t: "Legal, corporate, regulatory, board-pack register. Long sentences acceptable, third-person, no contractions, complete sentences, professional vocabulary. Use for: contract drafts, audit reports, regulatory submissions, executive memos." },
+            { b: "Casual.", t: "Blog, social, friendly internal comm register. Short sentences, second-person address (\"you\"), contractions, conversational vocabulary. Use for: blog posts, newsletters, friendly customer communication, internal team updates." },
+            { b: "Academic.", t: "Peer-review style. Passive voice acceptable, hedged claims, citation-friendly language, technical vocabulary preserved. Use for: research papers, thesis sections, academic submissions, scholarly correspondence." },
+            { b: "Simple.", t: "5th-grade reading level. Short sentences, common vocabulary, technical terms explained inline on first use. Use for: customer-facing help articles, public-information pages, audience with mixed reading levels." },
+            { b: "Persuasive.", t: "Sales / marketing register. Active voice, benefit-first framing, concrete examples, call-to-action conclusions. Use for: sales decks, marketing one-pagers, pitch materials, fundraising prose." },
+          ],
+        },
+      },
+      {
+        h: "What stays preserved across tones",
+        p: [
+          "Three categories the rewrite explicitly preserves:",
+        ],
+        list: {
+          items: [
+            { b: "Every fact and number.", t: "Numerical values, dates, names, citations — all verbatim regardless of target tone. Simple mode doesn't simplify by lying; persuasive mode doesn't inflate claims. The voice shifts; the underlying truth doesn't." },
+            { b: "Technical terms (with caveats).", t: "Technical vocabulary survives in Formal / Academic / Persuasive modes. In Simple mode, technical terms get an explanation in parentheses on first use rather than being dropped. If a term can't be simplified without losing meaning, it stays untranslated." },
+            { b: "Direct quotes.", t: "Anything in quotation marks travels verbatim. The rewrite doesn't paraphrase quoted material." },
+          ],
+        },
+      },
+      {
+        h: "Three patterns for responsible rewriting",
+        p: [
+          "Habits for using the rewrite without losing fidelity:",
+        ],
+        list: {
+          items: [
+            { b: "Don't rewrite high-stakes content uncritically.", t: "Legal documents, medical content, financial communications need professional review at the destination register. The rewrite is a starting point; verify the register shift didn't introduce ambiguity in sensitive contexts." },
+            { b: "Run the rewrite, then improve.", t: "Two-pass workflow: Rewrite Tone (change voice) → Improve Writing (tighten the rewritten output). The rewrite often adds words for tone; improve removes them after. The combination produces tighter register-correct output than either tool alone." },
+            { b: "Check the output against the original.", t: "Tone shifts can introduce subtle meaning shifts. Read the output and the original side-by-side for at least the first few paragraphs. If anything important changed semantically, edit back." },
+          ],
+        },
+      },
+      {
+        h: "Custom tones — what to do when the presets don't fit",
+        p: [
+          "Two paths for custom register requirements:",
+        ],
+        list: {
+          items: [
+            { b: "Use AI Generate with a custom prompt.", t: "If you need \"in the voice of a 1990s news anchor\" or \"the register of a friendly grandmother explaining technology,\" AI Generate accepts custom voice specifications. More flexibility than the 5 presets." },
+            { b: "Use Improve Writing with extra prompt detail.", t: "Improve Writing accepts general instructions about how to tighten. Adding \"keep the voice formal but cut wordiness\" produces output with both clarity and register intent." },
+          ],
+        },
+      },
+      {
+        h: "Indian-language content",
+        p: [
+          "Three patterns for non-English source documents:",
+        ],
+        list: {
+          items: [
+            { b: "Translate first.", t: "For Indian-language content, run AI Translate to English first, then Rewrite Tone on the English. Better accuracy than direct tone-shift on Indian-language input." },
+            { b: "Tone-shift then translate back.", t: "If the destination is Indian-language at a specific tone, run Rewrite Tone on the English version, then Translate to the destination language. The tone shift on English is more reliable than direct tone control in Indian languages." },
+            { b: "Indian languages directly are roadmapped.", t: "Direct tone-shift in Hindi, Tamil, and other major Indian languages is on the roadmap. Currently the translate-then-rewrite workaround is the path." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Rewrite PDF in Different Tone charges 5 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during rewriting and is never persisted.",
+          "Common pairings: Rewrite Tone → Improve Writing (tone then tighten). Rewrite Tone + AI Detector to verify the output doesn't read as AI before publishing. Rewrite Tone + Generate PDF if the destination should be a polished PDF rather than markdown.",
+        ],
+      },
+    ],
+  },
 };
