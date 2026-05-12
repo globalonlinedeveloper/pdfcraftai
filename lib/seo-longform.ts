@@ -8110,4 +8110,192 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // pdf-to-study-notes — revision-pack AI
+  // ============================================================
+  "pdf-to-study-notes": {
+    title: "PDF to Study Notes — revision packs with self-check questions for active recall",
+    intro:
+      "Study notes are different from summaries. A summary tells you what the source said; study notes are designed for active learning — concept-by-concept structure, explicit takeaways at each step, and self-check questions for recall testing. The combination matches how the educational research says learners actually retain material: structured exposure followed by retrieval practice. Here is what the generator produces, the four-section structure that maps to revision workflows, and how the self-check questions enable active recall without an answer key.",
+    sections: [
+      {
+        h: "Four-section output structure",
+        p: [
+          "Drop a PDF — textbook chapter, lecture slides, research paper, training material. The generator produces a structured note pack with four sections:",
+        ],
+        list: {
+          items: [
+            { b: "Overview.", t: "2-3 paragraph orientation: what the source covers, why it matters, what the reader should expect to learn. The opening frame for revision — read this first to anchor the rest." },
+            { b: "Key Concepts.", t: "Bulleted list of the foundational ideas the source introduces. Each concept named explicitly so the reader has a checklist of what's worth knowing. Useful both as a pre-read overview and as a post-read completeness check." },
+            { b: "Detailed Notes (concept-by-concept).", t: "The bulk of the output. Each concept gets a focused section with definition, key claims, examples, and a \"Remember:\" takeaway at the end. The takeaways are explicit retrievable claims for revision." },
+            { b: "Self-Check Questions.", t: "4-6 short-answer questions for active-recall testing. No answer key — the point is to test yourself, then re-read the corresponding section to verify. Forces engagement with the material rather than passive re-reading." },
+          ],
+        },
+      },
+      {
+        h: "Why active recall beats passive re-reading",
+        p: [
+          "Three patterns from educational research worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Retrieval practice strengthens retention.", t: "Testing yourself on material — even without correctness feedback — significantly improves long-term retention compared to re-reading. The Self-Check Questions section operationalizes this." },
+            { b: "Spaced retrieval beats massed practice.", t: "Quizzing yourself over multiple sessions retains better than cramming. Study notes structured for retrieval (vs notes structured as paragraph summaries) enable this naturally — the self-check questions are reusable across sessions." },
+            { b: "Production beats recognition.", t: "Generating an answer (from a question) retains better than recognizing the right answer (from multiple choice). Self-check questions are short-answer (production) by design; quiz format (recognition) is a separate tool for a different use." },
+          ],
+        },
+      },
+      {
+        h: "Study Notes vs adjacent tools",
+        p: [
+          "Four adjacent AI tools, each with different study uses:",
+        ],
+        list: {
+          items: [
+            { b: "Study Notes (this tool, 8 credits).", t: "Long structured output for revision. Use when preparing comprehensive material from a chapter or paper." },
+            { b: "Key Points (3 credits).", t: "Bullet list with citations. Use when you want the substantive claims surfaced but not the surrounding pedagogical structure." },
+            { b: "Flashcards (10 credits).", t: "10-30 Q/A pairs for spaced-repetition apps. Use alongside Study Notes for retrieval-practice across sessions." },
+            { b: "Quiz (10 credits).", t: "6-12 MCQs with answer key + explanations. Use for self-assessment or classroom delivery." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where study notes earn their place",
+        p: [
+          "Specific use cases:",
+        ],
+        list: {
+          items: [
+            { b: "Exam preparation.", t: "Generate study notes for each chapter / topic in your syllabus. The structured format gives you a single document per topic that you can return to across multiple revision sessions." },
+            { b: "Teacher / tutor revision packs.", t: "Build student-facing revision material from a textbook or lecture. The notes structure mirrors what most curriculum designers ask for — concept-by-concept with takeaways and self-check." },
+            { b: "Self-learning long-form content.", t: "Reading a long textbook or paper end-to-end is hard to retain. Generate study notes per chapter; use the notes as your working scaffold while reading; revisit the self-check questions weeks later." },
+          ],
+        },
+      },
+      {
+        h: "How accuracy is preserved",
+        p: [
+          "Three guardrails:",
+        ],
+        list: {
+          items: [
+            { b: "Source-grounded.", t: "Every claim in the notes traces to a claim in the source. The model is explicitly constrained against inventing facts. Page citations in the notes link to the source pages where the claim came from." },
+            { b: "Analogies allowed, only for clarity.", t: "The notes use analogies and examples to explain abstract concepts (\"think of a function like a recipe that takes inputs and produces outputs\"). Analogies are flagged as analogies; they don't change the underlying factual claims." },
+            { b: "No invented dates / numbers / names.", t: "If the source provides specific dates, numbers, or names, the notes preserve them verbatim. If the source doesn't, the notes don't invent placeholders." },
+          ],
+        },
+      },
+      {
+        h: "What this tool doesn't do",
+        p: [
+          "Three deliberate non-features:",
+        ],
+        list: {
+          items: [
+            { b: "No answer key on self-check.", t: "The questions are intentionally without answer keys — answering forces you to go back to the relevant Detailed Notes section, which is itself a productive retrieval-practice step." },
+            { b: "No spaced-repetition scheduling.", t: "For SRS scheduling, pair with Flashcards (which outputs Anki-compatible JSON) and run from a real SRS app. The Study Notes are the conceptual scaffold; Flashcards are the spaced-recall engine." },
+            { b: "No curriculum-specific adaptation in v1.", t: "The notes are generic-academic. Vertical curriculum-specific variants (NCERT class-wise, IB syllabus-aligned, AP curriculum) are on the roadmap." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Study Notes charges 8 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted. Output is structured Markdown with the four-section layout.",
+          "Common pairings: Study Notes + Flashcards for revision + spaced retrieval. Study Notes + Mind Map for hierarchical overview alongside detailed concept notes. Study Notes + Quiz for the full study + assessment cycle.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // pdf-to-quiz — MCQ assessment AI
+  // ============================================================
+  "pdf-to-quiz": {
+    title: "PDF to Quiz — multiple-choice questions with answer keys and why distractor quality matters",
+    intro:
+      "Multiple-choice questions are the most-used assessment format in education and training. They're scalable, gradable in seconds, and (when designed well) test real understanding rather than memorization. The challenge is that bad MCQs — questions with obvious right answers or trivially-wrong distractors — fail at exactly the testing they're supposed to do. PDF to Quiz generates 6-12 questions with carefully-designed distractors plus explanations for each answer. Here is what the generator produces, the difficulty mix that beats single-level quizzes, and the three workflows where machine-generated quizzes save real teaching time.",
+    sections: [
+      {
+        h: "What the generator produces",
+        p: [
+          "Drop a source PDF — textbook chapter, training material, product documentation, lecture notes. The generator extracts the key concepts and produces 6-12 multiple-choice questions. Each question has four answer options: one correct, three plausible distractors. Every question carries a brief explanation of why the correct answer is right (and, where useful, why specific distractors are wrong).",
+          "Output is structured for both self-assessment use (in-tool quiz interface with answer reveal) and for LMS integration (JSON export). The JSON format includes question text, four options, correct-option marker, explanation, and difficulty level — fields that most learning management systems map cleanly to their question banks.",
+        ],
+      },
+      {
+        h: "Why distractor design matters",
+        p: [
+          "An MCQ is only as good as its wrong answers. Three patterns that distinguish good distractors from bad:",
+        ],
+        list: {
+          items: [
+            { b: "Plausible but wrong.", t: "Good distractors are wrong but in a way that's tempting to someone who hasn't fully grasped the concept. \"Common misunderstandings\" make excellent distractors. The generator favors these over trivially-wrong options." },
+            { b: "Similar length and structure.", t: "If three options are short and one is long (or three are technical and one is colloquial), the long/colloquial one stands out as either the obvious answer or the obvious wrong answer. The generator keeps options structurally similar so the test is about content, not pattern recognition." },
+            { b: "Same conceptual domain.", t: "Distractors should come from the same conceptual category as the correct answer. Asking \"what year did X happen?\" with one date option and three colors doesn't test understanding. The generator picks distractors that share the answer's domain." },
+          ],
+        },
+      },
+      {
+        h: "Difficulty mix that beats single-level",
+        p: [
+          "The generator produces a mix of difficulties: roughly 40% easy / 40% medium / 20% hard. Three reasons this matters more than \"all hard\" or \"all easy\":",
+        ],
+        list: {
+          items: [
+            { b: "Easy questions verify baseline.", t: "Test-takers who can't answer the easy questions don't have the foundation for harder ones. Easy questions surface foundational gaps quickly." },
+            { b: "Medium questions test application.", t: "The bulk of the quiz tests whether the test-taker can apply concepts in moderately-varied contexts — the most useful skill check." },
+            { b: "Hard questions reward depth.", t: "Hard questions distinguish students who have deep understanding from those who have surface comprehension. The 20% allocation keeps them as challenge questions without making the quiz inappropriately hard overall." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where quizzes save teaching time",
+        p: [
+          "Cases where the time-savings justify the generation:",
+        ],
+        list: {
+          items: [
+            { b: "Classroom assessment.", t: "Teachers building quizzes for after-class assessment. Generating 12 questions from a chapter takes 30 seconds; writing them manually takes 30 minutes. Multiply across many chapters across many classes; the savings compound." },
+            { b: "Employee training assessment.", t: "Compliance training, product training, onboarding modules — all benefit from assessment quizzes. Generate from the training PDF; deploy via LMS." },
+            { b: "Self-assessment for learners.", t: "Students preparing for exams can generate practice quizzes from their textbook. Active testing reveals weak areas more efficiently than re-reading." },
+          ],
+        },
+      },
+      {
+        h: "Quiz vs Flashcards — different testing modes",
+        p: [
+          "Two AI tools for two different testing approaches:",
+        ],
+        list: {
+          items: [
+            { b: "Quiz — recognition testing.", t: "MCQ format. Test-taker recognizes the correct answer among options. Less retention-strengthening than recall but faster to grade and easier to scale to large groups." },
+            { b: "Flashcards — recall testing.", t: "Open Q/A pairs. Test-taker produces the answer from memory before flipping the card. Stronger retention benefit per item but slower and not directly gradable." },
+            { b: "Use both.", t: "Generate flashcards for self-study (recall-based practice) and quizzes for assessment (recognition-based grading). The two together cover the full testing spectrum." },
+          ],
+        },
+      },
+      {
+        h: "Where the generator falls short",
+        p: [
+          "Three edge cases worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Highly nuanced concepts produce ambiguous distractors.", t: "When the source content involves subtle distinctions (legal definitions where one word changes meaning, fine-grained scientific classifications), the generator sometimes produces distractors that are debatably correct. Always sanity-check before high-stakes use." },
+            { b: "Math-heavy content.", t: "Mathematical formulas in the quiz render as plain text rather than typeset equations. For math-heavy testing, supplement with LaTeX rendering in the destination system." },
+            { b: "Source-PDF biases propagate.", t: "If the source has factual errors, the quiz tests those errors as correct. Verify source accuracy before generating quizzes from it." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "PDF to Quiz charges 10 credits per document. The tool handles PDFs up to 25 MB. Processing runs on our servers; the document is in memory only during generation and is never persisted. Output is the structured MCQ list (in-tool interactive view plus JSON download for LMS).",
+          "Common pairings: Quiz + Study Notes for the full study-then-assess workflow. Quiz + Flashcards for both recognition and recall testing. SCORM / xAPI / QTI export are on the roadmap; for now JSON is the universal interchange.",
+        ],
+      },
+    ],
+  },
 };
