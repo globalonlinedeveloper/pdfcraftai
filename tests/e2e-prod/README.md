@@ -21,10 +21,10 @@ fuller as you flip switches.
 | Phase | What it tests | Activation |
 |---|---|---|
 | **1 — Anonymous smoke** | Homepage, /tools, /compare, /pricing, legal pages, JSON-LD, sitemap, robots, /api/health, PDFium WASM MIME, security headers, auth redirects | **ACTIVE** — runs by default. 53 assertions. |
-| **3a — Free tool execution** | Drop sample.pdf into 12 single-input client-side tools (page-count, pdf-inspector, pdf-to-text, pdf-to-jpg, pdf-to-png, pdf-to-markdown, split, page-numbers, remove-metadata, pdf-search, extract-images, rotate) + Merge (multi-input). Verify the dropzone exits empty state and the file is accepted — checks the floor, not per-tool success UI (which differs by tool). | **ACTIVE** — runs by default. 13 tests. Uses `public/sample.pdf` (checked in). |
-| **2 — Authenticated flows** | Login flow, /app/dashboard, /app/welcome, /app/settings, /app/billing, session cookie attributes, admin no-leak for non-admin authed users | **SKIPPED** until `PROD_E2E_TEST_EMAIL` + `PROD_E2E_TEST_PASSWORD` are set. See unlock steps below. |
-| **3b — AI tool execution** | Drop sample.pdf into ai-summarize + ai-key-points. Verify text output. Checks credit balance decreased. | **SKIPPED** until Phase 2 + `PROD_E2E_AI_BUDGET_OK=yes` are set. Each run spends real credits on the test account. |
-| **4 — Payment flows** | Razorpay checkout opens for Starter pack. Full checkout-with-test-card path is scaffolded but commented `test.skip` pending founder review. | **SKIPPED** until Phase 2 + `PROD_E2E_RAZORPAY_TEST_KEY` + `PROD_E2E_PAYMENTS_OK=yes` are set. |
+| **3a — Free tool execution** | Drop sample.pdf into 12 single-input client-side tools + Merge. 13 tests. Verifies the dropzone exits empty state and the file is accepted — checks the floor, not per-tool success UI (which differs by tool). | **ACTIVE** — runs by default. Uses `public/sample.pdf` (checked in). |
+| **2 — Authenticated flows** | Login flow, /app/dashboard, /app/welcome, /app/settings, /app/billing, session cookie attributes (NextAuth v5 `authjs.session-token`), admin no-leak for non-admin authed users. 6 tests. | **ACTIVE locally** when `PROD_E2E_TEST_EMAIL` + `PROD_E2E_TEST_PASSWORD` are set. In CI, **runs on weekly Sunday cron** (Phase 2/3b included automatically). |
+| **3b — AI tool execution** | Exercises 9 backing AI endpoints through representative tools: `/api/ai/summarize` (5 variants), `/api/ai/rewrite`, `/api/ai/translate`, `/api/ai/table`, `/api/ai/ocr`, `/api/ai/generate`, `/api/ai/compare`, `/api/ai/chat`. Each test waits for the real POST response (status < 400) — NOT page text. 12 tests total. ~65 credits/run. | **ACTIVE locally** when Phase 2 + `PROD_E2E_AI_BUDGET_OK=yes` are set. In CI, runs on weekly Sunday cron. |
+| **4 — Payment flows** | Razorpay checkout opens for Starter pack. Full checkout-with-test-card path is scaffolded but commented `test.skip` pending founder review. | **SKIPPED** until Phase 2 + `PROD_E2E_RAZORPAY_TEST_KEY` + `PROD_E2E_PAYMENTS_OK=yes` are set. Manual via `gh workflow run prod-e2e.yml -f phases=payments`. |
 
 ## Phase 2 unlock — authenticated flows
 
@@ -116,12 +116,30 @@ PROD_E2E_URL=https://staging.pdfcraftai.com \
 ## CI
 
 GitHub Actions workflow at `.github/workflows/prod-e2e.yml`. Triggers:
-- **Scheduled:** every day at 06:00 UTC (11:30 IST) — Phase 1 + 3a only
-- **Manual:** `gh workflow run prod-e2e.yml` — runs every active phase
-- **Failure:** scheduled-run failures auto-open a GitHub issue tagged
-  `prod-e2e-failure`
+
+| Trigger | Cron | Phases | Notes |
+|---|---|---|---|
+| Daily Mon-Sat 06:00 UTC | `0 6 * * 1-6` | 1 + 3a | Safe surface — no DB writes, no credit spend |
+| Weekly Sunday 06:00 UTC | `0 6 * * 0` | 1 + 3a + 2 + 3b | Adds authed + AI surfaces. ~65 credits/run ≈ $0.40/mo |
+| `gh workflow run` | manual | input `phases`: `smoke` / `full` / `payments` | Operator picks the scope |
+
+The workflow's "Determine phase scope" step reads `github.event.schedule` and conditionally injects the Phase 2/3b/4 secrets into the test step's `env:` block. Phases without their required secrets cleanly skip rather than failing.
+
+Scheduled-run failures auto-open a GitHub issue tagged `prod-e2e-failure` (one per failed run, with weekly vs. daily disambiguated in the title).
 
 Reports uploaded as artifacts on every run; retention 14 days.
+
+### Required GH secrets
+
+| Secret | Required for | How to set |
+|---|---|---|
+| `PROD_E2E_TEST_EMAIL` | Phase 2 + 3b + 4 | `gh secret set PROD_E2E_TEST_EMAIL --body "..."` |
+| `PROD_E2E_TEST_PASSWORD` | Phase 2 + 3b + 4 | `gh secret set PROD_E2E_TEST_PASSWORD --body "..."` |
+| `PROD_E2E_AI_BUDGET_OK` | Phase 3b | `gh secret set PROD_E2E_AI_BUDGET_OK --body "yes"` |
+| `PROD_E2E_RAZORPAY_TEST_KEY` | Phase 4 | `gh secret set PROD_E2E_RAZORPAY_TEST_KEY --body "rzp_test_..."` |
+| `PROD_E2E_PAYMENTS_OK` | Phase 4 | `gh secret set PROD_E2E_PAYMENTS_OK --body "yes"` |
+
+After setting Phase 2 + 3b secrets, the next weekly Sunday run automatically expands from 66 to 78+ tests. No workflow edit needed.
 
 ## Safety summary by phase
 

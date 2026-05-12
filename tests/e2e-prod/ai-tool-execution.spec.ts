@@ -30,17 +30,20 @@
 //     /api/ai/rewrite         → ai-rewrite         (3 cr)
 //     /api/ai/translate       → ai-translate       (~3 cr for 3 pages)
 //     /api/ai/table           → ai-table           (3 cr)
-//     /api/ai/ocr             → ai-ocr             (2 cr/page) — non-AI-flavored AI op
+//     /api/ai/ocr             → ai-ocr             (~6 cr for 3 pages)
+//     /api/ai/generate        → ai-generate        (20 cr) — text → PDF
+//     /api/ai/compare         → ai-compare         (15 cr) — diff 2 PDFs
+//     /api/ai/chat            → ai-chat            (1 cr/turn)
 //
-//   Total per full run: ~27 credits.
+//   Total per full run: ~65 credits across 12 tests.
 //
-//   The remaining ~44 AI tools either (a) share one of the routes
-//   above, (b) need extra input (chat needs a question, redact
-//   needs patterns, sign needs a signature image, generate needs
-//   a text prompt), or (c) are AI tools we ship without a route
-//   probe being meaningful (e.g. extract-tables vs. chart-to-data
-//   both call /api/ai/table). Adding more tools here is cheap if
-//   a regression on a specific surface shows up.
+//   The remaining ~41 AI tools all share one of the routes above
+//   so a route-level regression catches them. Still NOT covered:
+//     - ai-redact: needs target patterns to redact (no sensible
+//       default for sample.pdf)
+//     - ai-sign:   needs a signature image fixture
+//   Both would need per-tool fixture work; lower value than the
+//   route surfaces already covered.
 //
 // Safety:
 //   - Test account is dedicated; credits spent here don't affect
@@ -237,6 +240,72 @@ test.describe("AI tool execution", () => {
     const [status] = await Promise.all([
       waitForAiApiCall(page, /\/api\/ai\/ocr/),
       page.getByRole("button", { name: /ocr|^Run$|recognize/i }).first().click(),
+    ]);
+    expect(status).toBeLessThan(400);
+  });
+
+  test("ai-generate: /api/ai/generate called + 2xx response", async ({ page }) => {
+    // Generate is the lone AI tool that produces a PDF from a
+    // text prompt (no input PDF). 20 credits/doc — the most
+    // expensive single op in the suite, but the only way to
+    // exercise /api/ai/generate.
+    await page.goto("/tool/ai-generate");
+    // Fill the title + the prompt textarea. Selectors match the
+    // visible placeholders pinned in components/tools/GeneratePdfTool.tsx
+    // ("e.g., Q3 Product Launch Brief" + the long instruction).
+    await page.getByPlaceholder(/Q3 Product Launch Brief/i).fill("E2E smoke test");
+    await page.getByPlaceholder(/Describe what you want us to write/i).fill(
+      "Write a one-paragraph description of pdfcraftai. Keep it under 80 words.",
+    );
+    const [status] = await Promise.all([
+      waitForAiApiCall(page, /\/api\/ai\/generate/),
+      page.getByRole("button", { name: /^Generate PDF$/ }).first().click(),
+    ]);
+    expect(status).toBeLessThan(400);
+  });
+
+  test("ai-compare: /api/ai/compare called + 2xx response", async ({ page }) => {
+    // Compare needs TWO PDFs. The page uses two ToolDropzones
+    // (ORIGINAL + REVISED). After a file lands in one slot, that
+    // slot's `input[type="file"]` is REMOVED from the DOM (the
+    // dropzone is replaced by a file chip). So we always fill the
+    // FIRST remaining file input — twice. Same sample.pdf in both
+    // slots; the comparison still runs and returns a valid diff
+    // ("no differences" most likely), which is a green signal for
+    // the route plumbing. 15 credits/diff.
+    await page.goto("/tool/ai-compare");
+    await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+    // Wait for the original-slot dropzone to flip to a file chip —
+    // signaled by the disappearance of the "Drop the original" prompt.
+    await expect(page.locator("text=/Drop the original/i")).toBeHidden({ timeout: 10_000 });
+    await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+    const [status] = await Promise.all([
+      waitForAiApiCall(page, /\/api\/ai\/compare/),
+      page.getByRole("button", { name: /^Compare$/ }).first().click(),
+    ]);
+    expect(status).toBeLessThan(400);
+  });
+
+  test("ai-chat: /api/ai/chat called + 2xx response", async ({ page }) => {
+    // Chat lives at /app/chat (not /tool/ai-chat). Flow: navigate
+    // to the chat index, click "New chat" to create a session,
+    // wait for redirect to /app/chat/<id>, type a question, click
+    // Send, wait for /api/ai/chat response. 1 credit/turn — the
+    // cheapest AI op.
+    await page.goto("/app/chat");
+    // The new-chat form is rendered server-side; clicking submits
+    // a server action that redirects to /app/chat/<id>. Wait for
+    // that navigation to land before typing.
+    await Promise.all([
+      page.waitForURL(/\/app\/chat\/[A-Za-z0-9-]{8,}/, { timeout: 20_000 }),
+      page.getByRole("button", { name: /^New chat$/ }).first().click(),
+    ]);
+    // The chat input is a textarea with a known placeholder.
+    const input = page.getByPlaceholder(/Ask a question/i);
+    await input.fill("Say hello in one sentence.");
+    const [status] = await Promise.all([
+      waitForAiApiCall(page, /\/api\/ai\/chat/),
+      page.getByRole("button", { name: /^Send$/ }).first().click(),
     ]);
     expect(status).toBeLessThan(400);
   });

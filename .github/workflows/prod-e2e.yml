@@ -1,44 +1,70 @@
 # .github/workflows/prod-e2e.yml
 #
-# 2026-05-12 — on-demand production E2E suite. Triggers:
+# 2026-05-12 — on-demand production E2E suite. Phases:
 #
-#   - Manual: `gh workflow run prod-e2e.yml` from a maintainer's
-#     machine, or via the "Actions" tab in the GitHub UI. Use this
-#     before/after a significant deploy.
+#   1   — Anonymous smoke (53 tests, no DB writes, no credit spend)
+#   3a  — Free tool execution (13 tests, no DB writes, no credit spend)
+#   2   — Authenticated flows (6 tests, login + dashboard probes)
+#   3b  — AI tool execution (12 tests, ~65 credits/run)
+#   4   — Payment flows (1 test active, full checkout deferred)
 #
-#   - Scheduled: every day at 06:00 UTC (11:30 IST). Catches
-#     overnight regressions (deploys to prod don't go through this
-#     workflow, so a bad deploy at 23:00 IST gets caught here at
-#     11:30 IST — before peak Indian traffic).
+# Two cadences:
 #
-# What it does:
-#   - Checks out the repo at HEAD
-#   - Installs Node + Playwright (browsers only — chromium)
-#   - Runs `npm run test:prod-e2e` against https://pdfcraftai.com
-#   - Uploads the Playwright HTML report as an artifact on failure
-#   - Opens a GitHub issue on scheduled-run failure (so the
-#     founder sees it without watching the Actions tab)
+#   Daily 06:00 UTC (11:30 IST) — Phase 1 + 3a only. Always-safe
+#     surface (no DB writes, no credit spend, no money moved).
+#     Catches overnight regressions before peak Indian traffic.
 #
-# What it does NOT do:
-#   - Deploy code. This is purely an observer.
-#   - Mutate anything in production. Suite is read-only (GET only).
-#   - Run on every push. The static-parse aggregator (npm test)
-#     already gates pushes; this runs on a separate cadence.
+#   Weekly Sunday 06:00 UTC — Phase 1 + 3a + 2 + 3b. Adds the
+#     authenticated + AI surfaces. ~65 credits / week ≈ $0.40/mo
+#     on the test account. Each AI run writes ai_usage + ledger
+#     rows (visible in /admin/margin as test-account spend).
+#
+#   Manual via `gh workflow run` — operator picks via the `phases`
+#     input. Options:
+#       smoke    → Phase 1 + 3a (same as daily)
+#       full     → Phase 1 + 3a + 2 + 3b (same as weekly)
+#       payments → Adds Phase 4 on top of full (requires extra
+#                  secrets — see tests/e2e-prod/README.md).
+#
+# Secrets pulled from GitHub Actions repo secrets:
+#   PROD_E2E_TEST_EMAIL          — Phase 2 + 3b + 4
+#   PROD_E2E_TEST_PASSWORD       —
+#   PROD_E2E_AI_BUDGET_OK        — Phase 3b only ("yes" to enable)
+#   PROD_E2E_RAZORPAY_TEST_KEY   — Phase 4 only
+#   PROD_E2E_PAYMENTS_OK         — Phase 4 only ("yes" to enable)
+#
+# If a phase's secret isn't set, that phase's tests SKIP (not fail).
+# So this workflow stays green-by-default until the operator
+# explicitly enables the next phase.
 
 name: prod-e2e
 
 on:
   workflow_dispatch:
     inputs:
+      phases:
+        description: "Which phases to run"
+        required: false
+        default: "smoke"
+        type: choice
+        options:
+          - smoke    # 1 + 3a (safe; daily cadence)
+          - full     # + 2 + 3b (authed + AI; weekly cadence)
+          - payments # + 4 (Razorpay test-mode checkout)
       url:
-        description: "URL to test against (default: https://pdfcraftai.com)"
+        description: "URL to test against"
         required: false
         default: "https://pdfcraftai.com"
 
   schedule:
-    # Every day at 06:00 UTC = 11:30 IST. Catches overnight
-    # regressions before peak Indian traffic.
-    - cron: "0 6 * * *"
+    # Daily Mon-Sat at 06:00 UTC — Phase 1 + 3a only (safe).
+    # Sunday is omitted to avoid a duplicate run alongside the
+    # weekly entry below (GitHub fires each matching cron line
+    # separately — if both `0 6 * * *` and `0 6 * * 0` were listed,
+    # Sunday at 06:00 would get TWO runs).
+    - cron: "0 6 * * 1-6"
+    # Weekly Sunday at 06:00 UTC — Phase 1 + 3a + 2 + 3b (authed + AI).
+    - cron: "0 6 * * 0"
 
 jobs:
   test:
@@ -63,9 +89,33 @@ jobs:
         # job under 90s of setup. Phase 1 suite is chromium-only.
         run: npx playwright install --with-deps chromium
 
+      - name: Determine phase scope
+        id: scope
+        run: |
+          # workflow_dispatch.inputs.phases wins if present.
+          # Else: weekly Sunday cron → "full", daily cron → "smoke".
+          if [ -n "${{ github.event.inputs.phases }}" ]; then
+            phases="${{ github.event.inputs.phases }}"
+          elif [ "${{ github.event.schedule }}" = "0 6 * * 0" ]; then
+            phases="full"
+          else
+            phases="smoke"
+          fi
+          echo "phases=$phases" >> "$GITHUB_OUTPUT"
+          echo "Running phases: $phases"
+
       - name: Run prod-E2E suite
         env:
           PROD_E2E_URL: ${{ github.event.inputs.url || 'https://pdfcraftai.com' }}
+          # Phase 2 + 3b + 4 secrets — only injected when the
+          # scope includes them. Empty values make the relevant
+          # describe blocks `test.skip` cleanly.
+          PROD_E2E_TEST_EMAIL: ${{ (steps.scope.outputs.phases == 'full' || steps.scope.outputs.phases == 'payments') && secrets.PROD_E2E_TEST_EMAIL || '' }}
+          PROD_E2E_TEST_PASSWORD: ${{ (steps.scope.outputs.phases == 'full' || steps.scope.outputs.phases == 'payments') && secrets.PROD_E2E_TEST_PASSWORD || '' }}
+          PROD_E2E_AI_BUDGET_OK: ${{ (steps.scope.outputs.phases == 'full' || steps.scope.outputs.phases == 'payments') && secrets.PROD_E2E_AI_BUDGET_OK || '' }}
+          # Phase 4 secrets — only when scope == 'payments'.
+          PROD_E2E_RAZORPAY_TEST_KEY: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_RAZORPAY_TEST_KEY || '' }}
+          PROD_E2E_PAYMENTS_OK: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_PAYMENTS_OK || '' }}
         run: npm run test:prod-e2e
 
       - name: Upload Playwright report
@@ -85,12 +135,14 @@ jobs:
         with:
           script: |
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const schedule = "${{ github.event.schedule }}";
+            const isWeekly = schedule === "0 6 * * 0";
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `prod-E2E failed on scheduled run ${new Date().toISOString().slice(0, 10)}`,
+              title: `prod-E2E failed on ${isWeekly ? 'weekly' : 'daily'} run ${new Date().toISOString().slice(0, 10)}`,
               body:
-                `The daily prod-E2E suite failed.\n\n` +
+                `The ${isWeekly ? 'weekly (Phase 1 + 3a + 2 + 3b)' : 'daily (Phase 1 + 3a)'} prod-E2E suite failed.\n\n` +
                 `Run: ${run}\n\n` +
                 `Check the Playwright report artifact for the failing assertions.\n` +
                 `If this is a known transient (Cloudflare cache miss, etc.), close this issue.\n` +

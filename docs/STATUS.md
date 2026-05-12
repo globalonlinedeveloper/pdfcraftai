@@ -3,10 +3,26 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-12 (prod-E2E Phases 2/3/4 scaffolding — closes the "we need to test everything" ask).
-**Live commit:** `aa135a3` (Phase 3a free-tool execution active + Phase 2 auth + Phase 3b AI + Phase 4 payments skip-gated behind env secrets). prod-E2E suite now: **66 active assertions + 11 skip-gated**, 1.4 min runtime. Earlier closeouts: 2026-05-06 (Phase F-4 multi-seat surface, `9f0f196`); 2026-05-12 (SEV-0/SEV-1/SEV-2 audit batches `b9a25c5..21aca12` + on-demand Phase 1 prod-E2E suite `cc213c0`).
+**Last updated:** 2026-05-12 (prod-E2E Phase 2 + 3b ACTIVATED, weekly cron wired, AI coverage expanded to 9 routes).
+**Live commit:** Latest pushed run includes Phases 1+3a daily + 2+3b weekly via GitHub Actions cron. Suite shape: **78 active tests + 1 skip-gated (Phase 4)**. Daily runtime 2.2 min (Phases 1+3a, ~85 tests including auth surfaces if secrets injected). Weekly Sunday runtime ~10 min adding ~65 credits spend. Earlier closeouts: 2026-05-12 (`aa135a3` Phase 2/3/4 scaffolding, `a3e719c` Phase 2/3b activation), 2026-05-06 (`9f0f196` Phase F-4 multi-seat surface).
 
-### 2026-05-12 — prod-E2E suite Phases 2/3/4 (`aa135a3`)
+### 2026-05-12 (PM) — Phase 2 + 3b ACTIVATED + weekly cron + AI coverage expanded
+
+**Founder provided the test account** (`durgapoja6408@gmail.com` / password in `.claude/secrets.env`) + authorized 1000 credits for AI E2E testing. Activated:
+
+- **Phase 2 auth (6/6 passing)** — fixed NextAuth v5 cookie-name lookup (`authjs.session-token` vs. v4's `next-auth.session-token`).
+- **Phase 3b AI (12/12 passing) — caught a false-positive factory.** First version of the AI tests matched on UI text containing /pdf|sample|toolkit/i — text that's in EVERY tool page's marketing copy. Tests passed 11/11 while zero ai_usage rows were written and zero credits debited. Fixed by replacing UI-text matching with Playwright's `waitForResponse()` on `/api/ai/*` POSTs + asserting `status < 400`. Confirmed: 68 credits debited + 21 ai_usage rows after a single run hit the live ledger. **9 backing AI routes covered** through representative tools: `/api/ai/summarize` (5 variants), `/api/ai/rewrite`, `/api/ai/translate`, `/api/ai/table`, `/api/ai/ocr`, `/api/ai/generate`, `/api/ai/compare`, `/api/ai/chat`.
+- **DB plumbing discovered + documented.** Two-table credit system: `credit_ledger` (immutable audit log) + `credits.balance` (live balance read by app). Both must be updated; per-op bonus cap (`checkPerOpBonusCap`) returns 402 for free-trial users — bypassed by tagging the test grant `reason='purchase_e2e_test'` (paid-probe regex matches `purchase%`). Worth pinning here because the next operator to top up a test account will hit the same trap.
+- **Weekly cron wired.** Daily Mon-Sat at 06:00 UTC runs Phase 1 + 3a (safe surface). Weekly Sunday at 06:00 UTC adds Phase 2 + 3b. `workflow_dispatch` input lets the operator pick `smoke` / `full` / `payments` for manual runs. Daily cron now `0 6 * * 1-6` (Mon-Sat) to avoid duplicate fires on Sunday with the weekly entry.
+- **Tool-ID drift caught.** Spec had `ai-extract-tables` / `ocr-pdf` — actual IDs are `ai-table` / `ai-ocr`. `lib/tools.ts` is the source of truth.
+
+**Commits:**
+- `aa135a3` — Phase 2/3/4 scaffolding (skip-gated)
+- `a587c18` — STATUS pin for scaffolding ship
+- `a3e719c` — Phase 2 + 3b activation + AI-suite hardening (waitForResponse pattern)
+- this — chat/generate/compare coverage + weekly cron + README/STATUS refresh
+
+### 2026-05-12 (AM) — prod-E2E suite Phases 2/3/4 scaffolding (`aa135a3`)
 
 The user pushed back on phase-by-phase deferral ("why you deferred? we need complete end 2 end testing? We need to test everything") so the remaining phases are now scaffolded with skip-gates that activate via env secrets — every npm run is green-by-default and the suite goes fuller as each secret lands.
 
