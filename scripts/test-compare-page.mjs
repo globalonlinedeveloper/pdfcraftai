@@ -157,6 +157,50 @@ check(
   /Didn't find it\?/.test(PAGE)
 );
 
+// ─── Section G: schema.org structured data ───
+// FAQPage + BreadcrumbList JSON-LD. The FAQPage shape unlocks
+// expandable answer cards in Google search results when the page
+// ranks for a matching long-tail query. BreadcrumbList helps Google
+// place the page in sitelinks rather than treating it as a leaf.
+check(
+  "G1: FAQ_JSONLD constant declared",
+  /const FAQ_JSONLD\s*=/.test(PAGE)
+);
+check(
+  "G2: FAQ JSON-LD uses @type FAQPage",
+  /"@type":\s*"FAQPage"/.test(PAGE)
+);
+check(
+  "G3: FAQ mainEntity maps over INTENTS",
+  /mainEntity:\s*INTENTS\.map/.test(PAGE)
+);
+check(
+  "G4: every question is a Question with acceptedAnswer",
+  /"@type":\s*"Question"/.test(PAGE) &&
+    /"@type":\s*"Answer"/.test(PAGE)
+);
+check(
+  "G5: BREADCRUMB_JSONLD constant declared",
+  /const BREADCRUMB_JSONLD\s*=/.test(PAGE)
+);
+check(
+  "G6: breadcrumb uses @type BreadcrumbList",
+  /"@type":\s*"BreadcrumbList"/.test(PAGE)
+);
+check(
+  "G7: breadcrumb has Home + Find your tool items",
+  /name: "Home"[\s\S]*name:\s*"Find your tool"/.test(PAGE)
+);
+check(
+  "G8: both JSON-LD blocks rendered via application/ld+json script tags",
+  (PAGE.match(/type="application\/ld\+json"/g) || []).length >= 2
+);
+check(
+  "G9: JSON.stringify wraps the schema objects (not inline JSON)",
+  /JSON\.stringify\(FAQ_JSONLD\)/.test(PAGE) &&
+    /JSON\.stringify\(BREADCRUMB_JSONLD\)/.test(PAGE)
+);
+
 // ─── Section F: discovery surface — footer link ───
 // Without this, /compare is only reachable via direct URL, sitemap,
 // or the same-day blog post. Adding to the footer Product column

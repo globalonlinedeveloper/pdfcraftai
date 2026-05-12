@@ -348,9 +348,72 @@ const INTENTS: Intent[] = [
   },
 ];
 
+// 2026-05-12 — schema.org FAQPage JSON-LD. Each intent group is a
+// natural-language question with one or more candidate tools as the
+// answer. Google's structured-data spec accepts this exact shape
+// (`@type: "FAQPage"` → `mainEntity: [{ @type: "Question", name,
+// acceptedAnswer: { @type: "Answer", text }}, ...]`) and surfaces
+// the questions as expandable answer cards in search results when
+// the page ranks for a matching long-tail query.
+//
+// Answer text concatenates the candidate blurbs into a single
+// human-readable paragraph. Search engines prefer plain prose to
+// HTML lists in FAQ answers — the snippet renderer flattens markup
+// anyway, and the spec explicitly warns against marketing copy or
+// links in the answer text. Keeping it tool-name + description-only.
+const SITE = "https://pdfcraftai.com";
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": `${SITE}/compare#faq`,
+  mainEntity: INTENTS.map((intent) => ({
+    "@type": "Question",
+    name: intent.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: intent.candidates
+        .map((c) => `${c.title}: ${c.blurb}`)
+        .join(" "),
+    },
+  })),
+};
+
+// BreadcrumbList — Home → Find your tool. Mirrors the pattern from
+// /blog/[slug] and /alternatives/[competitor]. Helps Google place
+// the page in its sitelinks rather than treating it as a standalone
+// leaf.
+const BREADCRUMB_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Find your tool",
+      item: `${SITE}/compare`,
+    },
+  ],
+};
+
 export default function ComparePage() {
   return (
     <main>
+      {/* FAQPage structured data — unlocks expandable answer cards
+          in Google search results when the page ranks for a matching
+          long-tail query like "how to combine multiple pdfs". */}
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(BREADCRUMB_JSONLD),
+        }}
+      />
       <section style={{ paddingTop: 80 }}>
         <div className="container-x" style={{ padding: "0 28px" }}>
           <div className="eyebrow" style={{ marginBottom: 8 }}>
