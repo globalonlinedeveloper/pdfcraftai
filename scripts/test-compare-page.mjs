@@ -20,9 +20,11 @@ import { readFileSync } from "node:fs";
 
 const PAGE_PATH = "app/compare/page.tsx";
 const SITEMAP_PATH = "app/sitemap.ts";
+const FOOTER_PATH = "components/nav/Footer.tsx";
 
 const PAGE = readFileSync(PAGE_PATH, "utf8");
 const SITEMAP = readFileSync(SITEMAP_PATH, "utf8");
+const FOOTER = readFileSync(FOOTER_PATH, "utf8");
 
 let pass = 0;
 let fail = 0;
@@ -153,6 +155,33 @@ check(
 check(
   "E2: 'Didn't find it' fallback copy present",
   /Didn't find it\?/.test(PAGE)
+);
+
+// ─── Section F: discovery surface — footer link ───
+// Without this, /compare is only reachable via direct URL, sitemap,
+// or the same-day blog post. Adding to the footer Product column
+// surfaces it to organic browsers. Pinned here so a future Footer
+// refactor that drops the entry fails CI loudly.
+check(
+  "F1: footer Product column lists /compare ('Find your tool')",
+  /\["Find your tool",\s*"\/compare"\]/.test(FOOTER)
+);
+check(
+  "F2: footer entry is in the Product column (not Company / AI / Legal)",
+  // Anchor on the Product title + the /compare link inside the same
+  // block. Naïve `indexOf` is enough — the columns are flat literal
+  // arrays in source order, no template indirection.
+  (() => {
+    const productIdx = FOOTER.indexOf('title: "Product"');
+    const aiIdx = FOOTER.indexOf('title: "AI"');
+    const compareIdx = FOOTER.indexOf('"/compare"');
+    return (
+      productIdx > -1 &&
+      aiIdx > -1 &&
+      compareIdx > productIdx &&
+      compareIdx < aiIdx
+    );
+  })()
 );
 
 // ─── Report ───

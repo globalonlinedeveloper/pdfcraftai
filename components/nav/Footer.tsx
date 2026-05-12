@@ -7,6 +7,14 @@ const COLS: Col[] = [
     title: "Product",
     links: [
       ["Tools", "/tools"],
+      // 2026-05-12 — TOOL_IMPROVEMENT_PLAN T2-6 follow-up. /compare
+      // is a verb-led intent router that helps confused visitors find
+      // the right tool (12 intent groups: combine, split, shrink,
+      // understand, sign, ...). Sits second in the Product column
+      // because catalog-browsers ("Tools") and decision-makers
+      // ("Find your tool") are the two primary discovery flows;
+      // bulk/pricing/api/changelog come after.
+      ["Find your tool", "/compare"],
       ["Use cases", "/use-cases"],
       ["Bulk", "/bulk"],
       ["Pricing", "/pricing"],
