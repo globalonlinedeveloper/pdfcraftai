@@ -1136,13 +1136,26 @@ const SUITES = [
   // split, convert-from-pdf, convert-to-pdf, shrink, understand,
   // fill-sign, security, translate, redact, compare, annotate)
   // routing to the right tool with explicit free-vs-AI badges where
-  // both options exist. SEO-indexable + linked from sitemap. 32
-  // assertions across 5 sections (A: 12 intents + hero, B: candidate
+  // both options exist. SEO-indexable + linked from sitemap. 34
+  // assertions across 6 sections (A: 12 intents + hero, B: candidate
   // href validity + kind badges, C: SEO meta + canonical, D: sitemap
-  // priority + frequency, E: back-out CTA to /tools).
+  // priority + frequency, E: back-out CTA to /tools, F: footer
+  // discovery link 'Find your tool' pin).
   {
     name: "compare-page",
     file: "test-compare-page.mjs",
+  },
+  // 2026-05-12 (TOOL_IMPROVEMENT_PLAN T2-2 scoped) — pins the tool-ID
+  // conventions in lib/tools.ts so future drift fails CI. Rules: all
+  // IDs lowercase kebab, unique, AI tools have ai- prefix, free tools
+  // don't, group is in the 6-group enum, group <-> free pairing
+  // matches, names are unique. 9 assertions. Caught one existing
+  // display-name collision on first run ("Compare PDFs" used for
+  // both pdf-diff free visual + ai-compare AI content) — renamed
+  // pdf-diff to "Visual Diff" in the same commit.
+  {
+    name: "tool-id-conventions",
+    file: "test-tool-id-conventions.mjs",
   },
   // 2026-05-04 (PENDING_WORK_ANALYSIS.md §4c) — contact form
   // persistence + admin viewer. Migration 0021 added the

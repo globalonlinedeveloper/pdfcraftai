@@ -98,7 +98,15 @@ export const TOOLS: readonly Tool[] = [
   // policy (gs fails honestly on un-PDF/A-able content rather than
   // silently producing files that LIE about conformance).
   { id: "pdf-a-convert", name: "Convert to PDF/A", desc: "Convert any PDF to PDF/A-2b for archival storage. Embeds all fonts, declares sRGB output intent, ensures long-term renderability. Pairs with PDF/A Compliance Check — run check first to see if conversion is needed; run convert to make it conformant.", icon: "Shield", free: true, cost: "free", group: "Organize" },
-  { id: "pdf-diff", name: "Compare PDFs", desc: "Pixel-level visual diff between two PDFs — output a comparison PDF with red highlighting on regions that differ + per-page diff percentage. Pairs with AI Compare for content-level diffs.", icon: "Search", free: true, cost: "free", group: "Organize" },
+  // 2026-05-12 — renamed from "Compare PDFs" to "Visual Diff" to
+  // eliminate display-name collision with ai-compare ("Compare PDFs"
+  // for AI content diff). Caught by test-tool-id-conventions.mjs §G1.
+  // The two tools had the same catalog label but very different
+  // costs (free in-browser vs 15 credits per diff) and outputs
+  // (pixel-level visual vs redline content). Users browsing the
+  // catalog couldn't distinguish them. New name is honest about
+  // what the tool actually does — pixel-level visual diff.
+  { id: "pdf-diff", name: "Visual Diff", desc: "Pixel-level visual diff between two PDFs — output a comparison PDF with red highlighting on regions that differ + per-page diff percentage. Pairs with AI Compare for content-level diffs.", icon: "Search", free: true, cost: "free", group: "Organize" },
 
   // Build 2 Wave 3 (2026-04-27): Search + Extract Images. Both
   // PDFium-backed read-only ops.
