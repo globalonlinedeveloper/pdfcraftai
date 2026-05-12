@@ -8480,4 +8480,193 @@ export const LONGFORM_BODIES: Partial<Record<SeoPageSlug, SeoLongform>> = {
       },
     ],
   },
+
+  // ============================================================
+  // resume-parser — recruiter-side AI
+  // ============================================================
+  "resume-parser": {
+    title: "Resume Parser — bulk PDF resumes to structured data for recruiters",
+    intro:
+      "On the candidate side, resumes are PDFs because PDFs look good and travel reliably across systems. On the recruiter side, that same PDF is a problem — every resume has the same fields (name, contact, experience, skills, education) but in different layouts, fonts, and column structures, making manual data entry slow and error-prone. The resume parser turns that PDF stack into structured CSV or JSON ready for ATS ingestion. Here is what gets extracted, the four field-recognition challenges specific to Indian resumes, and the privacy considerations for handling candidate data.",
+    sections: [
+      {
+        h: "What gets extracted",
+        p: [
+          "Drop a resume PDF. The parser identifies and extracts four structured field groups:",
+        ],
+        list: {
+          items: [
+            { b: "Personal info.", t: "Name, email, phone, location, optional LinkedIn / GitHub / portfolio URLs. Recognised regardless of layout — top-of-page header, side-column block, or inline contact line." },
+            { b: "Experience.", t: "Per-company entry: company name, role, dates (parsed to ISO), achievement bullets. Multiple companies preserved in order. Most-recent-first convention honored." },
+            { b: "Education.", t: "Per-institution entry: institute name, degree, dates, GPA / class if listed. Standard Indian conventions (B.Tech / M.Tech / MBA / B.Com etc.) recognized." },
+            { b: "Skills.", t: "Skills section content parsed into a categorized list (technical / soft / language / certification). Free-form skills written in prose elsewhere in the resume sometimes also surface." },
+          ],
+        },
+      },
+      {
+        h: "Four Indian-resume recognition challenges",
+        p: [
+          "Indian resumes have specific patterns the parser handles:",
+        ],
+        list: {
+          items: [
+            { b: "Indian phone-number formats.", t: "+91 prefix, 10-digit mobile, sometimes with dashes or spaces. STD codes for landlines (e.g. 022 for Mumbai, 080 for Bangalore). The parser recognizes all standard variations." },
+            { b: "Indian education-system terminology.", t: "Class X, Class XII, percentage notation (\"81%\"), CGPA / SGPA, ICAI / CA / CFA professional designations, AICTE / UGC accreditation references. Standard Indian academic conventions preserved without normalization." },
+            { b: "Multi-column or sidebar layouts.", t: "Many modern Indian resume templates use a sidebar for contact + skills + education with the main column for experience. The parser handles multi-column layouts; some ATS-targeted resumes deliberately use single-column for parseability. Either works." },
+            { b: "Date format variations.", t: "Mar 2019, March 2019, 03/2019, Mar'19, 2019-Present, 03/2019 - Present — all common in Indian resumes. The parser normalizes to ISO (YYYY-MM) internally; output preserves original format if you want it." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where bulk parsing pays off",
+        p: [
+          "Cases where automation saves real recruiting time:",
+        ],
+        list: {
+          items: [
+            { b: "JD-to-shortlist pipeline.", t: "Receive 50 resumes for a single JD. Parse all 50 to JSON; load to a spreadsheet; filter by required-skill columns; surface the top-10 candidates. The parsing + filtering takes minutes; manual screening takes hours." },
+            { b: "ATS ingestion.", t: "Your ATS expects structured data. Parsing resumes into CSV that maps to the ATS's import format converts inbound resumes into ATS records automatically. Most major ATS (Workday, Greenhouse, Lever, Naukri's recruiter side, iCIMS) accept structured CSV import." },
+            { b: "Candidate-database building.", t: "Building a long-term candidate database for future searches. Parse each resume that comes in; accumulate in the database. When a future role opens, query the database against the role's requirements." },
+          ],
+        },
+      },
+      {
+        h: "Limitations worth knowing",
+        p: [
+          "Three patterns where parsing accuracy degrades:",
+        ],
+        list: {
+          items: [
+            { b: "Scanned resumes without OCR.", t: "If the resume is a scanned image without a text layer, the parser can't extract fields. Run AI · OCR first to add a text layer, then re-parse." },
+            { b: "Design-heavy creative resumes.", t: "Resumes with elaborate visual design (sidebars with charts, custom typography, ASCII-art separators) sometimes parse with field misattribution. Most candidates submitting to professional roles use cleaner formats; design-heavy ones are mostly from designer / creative-industry roles where the visual is itself a portfolio sample." },
+            { b: "Multi-page resumes with non-sequential content.", t: "Most resumes are 1-2 pages; some senior-role resumes run 3-4 pages with publications, references, etc. The parser handles multi-page but accuracy is highest on the standard 1-2 page format." },
+          ],
+        },
+      },
+      {
+        h: "Privacy of candidate data",
+        p: [
+          "Three habits when handling parsed resume data:",
+        ],
+        list: {
+          items: [
+            { b: "60-minute default retention.", t: "Uploaded PDFs are deleted within 60 minutes of processing. The structured JSON / CSV is generated and downloaded; the PDF doesn't persist on our servers. Important for compliance with candidate-data-protection norms." },
+            { b: "Pro tier for longer retention.", t: "Recruiters who need 30-day history (to track applications across a sourcing campaign) should use the Pro tier, which has an audit log of who accessed which candidate's data when. Important for GDPR / DPDP Act compliance." },
+            { b: "PII handling downstream.", t: "Once you've parsed the resume and have the structured data, the destination system (ATS / database / spreadsheet) inherits the data-protection obligations. PAN / Aadhaar / similar government IDs in resumes should be redacted before bulk distribution; use AI Redact for that." },
+          ],
+        },
+      },
+      {
+        h: "Resume Parser vs ATS Resume Optimizer vs JD Match",
+        p: [
+          "Three adjacent tools used at different points in the recruiting funnel:",
+        ],
+        list: {
+          items: [
+            { b: "Resume Parser (this tool — recruiter side).", t: "Convert inbound resumes to structured data for ingestion. Recruiter-facing." },
+            { b: "ATS Resume Optimizer (candidate side).", t: "Audit a candidate's resume for ATS parseability + keyword coverage before submitting. Candidate-facing." },
+            { b: "JD Match (both sides).", t: "Score a resume against a JD. Recruiter uses for shortlisting; candidate uses for tuning before applying." },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Resume Parser charges 5 credits per resume. Single-resume processing in v1; bulk-upload (multiple files at once or zip) is on the roadmap. The tool handles PDFs up to 25 MB. Output is CSV or JSON.",
+          "Common pairings: Resume Parser + JD Match for the parse + score recruiting workflow. Resume Parser → ATS CSV import for system ingestion. Resume Parser + AI Redact for candidate-PII handling on distributed data.",
+        ],
+      },
+    ],
+  },
+
+  // ============================================================
+  // resume-job-match — fit-scoring AI
+  // ============================================================
+  "resume-job-match": {
+    title: "Resume ↔ Job Description Matcher — fit scoring with per-requirement alignment and ATS keyword audit",
+    intro:
+      "\"Should I apply for this role?\" is the question every candidate asks at every job opening. The Resume-JD matcher answers it with a fit score 0-100, a requirement-by-requirement alignment table, and an explicit list of missing keywords that ATS systems will use to filter at the application stage. The score is a ballpark; the per-requirement table is what's actually actionable. Here is how the score is computed, the three score ranges that translate to decision recommendations, and the workflow patterns that make this useful even when the score isn't conclusive.",
+    sections: [
+      {
+        h: "How fit scoring works",
+        p: [
+          "The matcher reads both inputs: your resume PDF and the JD text you paste. It identifies the JD's explicit requirements (years of experience, specific tools, certifications, domain experience), implicit skills (skills the JD implies are needed but doesn't list explicitly), seniority signals (title alignment, scope of responsibility), and domain keywords (industry-specific terminology). Then it scores your resume against each dimension.",
+          "The final score is a weighted combination: 50% explicit requirements (the JD's stated must-haves), 25% inferred skills (what the JD implies you need), 15% seniority/title alignment (match between your past titles and the target role's level), 10% domain keywords (industry-specific terminology overlap).",
+        ],
+      },
+      {
+        h: "Three score ranges and what they mean",
+        p: [
+          "The score-to-decision mapping:",
+        ],
+        list: {
+          items: [
+            { b: "80-100 — strong fit, apply.", t: "Most explicit requirements met; the resume shows the relevant experience. Apply with confidence. Tune the cover letter to match the JD's specific concerns; the bulk of the alignment work is done." },
+            { b: "65-80 — partial fit, apply with tailoring.", t: "Some explicit requirements met but gaps exist. Worth applying with a tailored cover letter that explicitly addresses the gaps. The cover letter does the work the resume can't — explaining transferable experience or willingness to grow into specific gaps." },
+            { b: "Below 65 — significant gap, reconsider.", t: "Substantial gaps in either requirements, seniority, or domain. Sometimes worth applying anyway (mid-career pivot, networking-driven opening) but the base rate of success is low. Consider whether the gaps close easily (add a line to the resume) or require real experience (skip and target roles where the fit is stronger)." },
+          ],
+        },
+      },
+      {
+        h: "The per-requirement table is what's actually actionable",
+        p: [
+          "The score is a number; the table is the work. Three things the per-requirement table surfaces:",
+        ],
+        list: {
+          items: [
+            { b: "Met requirements with evidence.", t: "Each JD requirement matched to specific resume content. \"5+ years Python experience required\" → \"Resume shows 6 years across companies X and Y.\" Confirms the strength so the cover letter can reinforce it rather than re-state it." },
+            { b: "Partially-met requirements.", t: "JD requires X, resume shows X-adjacent. \"5+ years Python\" → \"Resume shows 3 years Python + 4 years Ruby.\" The cover letter has an opportunity to bridge — explain how Ruby experience transfers, mention recent Python upskilling, etc." },
+            { b: "Unmet requirements.", t: "JD requires X, resume shows nothing matching. Hard gaps. The cover letter has to either acknowledge or work around. Some gaps are dealbreakers; others are negotiable. The table makes the gaps explicit so you can decide." },
+          ],
+        },
+      },
+      {
+        h: "Missing ATS keywords — the filter that blocks you before recruiter review",
+        p: [
+          "Most large companies filter applications through an ATS before any human review. ATS filters search for specific keywords from the JD. Missing keywords = filtered out before recruiter sees the resume.",
+          "The matcher surfaces JD-critical terms (tools, certifications, acronyms, domain terms) and flags which ones are absent from the resume. Three patterns:",
+        ],
+        list: {
+          items: [
+            { b: "Add keywords you ALREADY HAVE experience with.", t: "If the JD mentions \"AWS\" and your resume says \"deployed services on Amazon Web Services,\" you have the experience but ATS is looking for the exact term. Add \"AWS\" explicitly." },
+            { b: "Don't add keywords you don't have experience with.", t: "Stuffing keywords with no underlying experience trips ATS keyword-density flags AND fails at recruiter review. Honest tuning only." },
+            { b: "Match terminology to the JD exactly.", t: "If the JD says \"Postgres\" and your resume says \"PostgreSQL,\" ATS may not match them. Match the JD's spelling unless your resume serves many different roles with different conventions." },
+          ],
+        },
+      },
+      {
+        h: "Three workflows where the matcher earns its place",
+        p: [
+          "Specific use cases:",
+        ],
+        list: {
+          items: [
+            { b: "Pre-application decision.", t: "Decide whether a specific role is worth applying to before investing time in a tailored cover letter. Score above 65: yes. Below: probably not." },
+            { b: "Cover-letter tailoring.", t: "Once you've decided to apply, the per-requirement table tells you what the cover letter needs to address. Specifically the partially-met and unmet rows — those are what the cover letter is for." },
+            { b: "Resume tuning for a specific role.", t: "Where the resume has experience that matches the JD but doesn't surface it explicitly, tune the resume's bullet points to use the JD's terminology. Run the matcher again to confirm the tuning improved the score." },
+          ],
+        },
+      },
+      {
+        h: "What the score isn't",
+        p: [
+          "Three limits worth knowing:",
+        ],
+        list: {
+          items: [
+            { b: "Not a hiring decision.", t: "An 85 doesn't guarantee an interview; a 60 doesn't guarantee rejection. Hiring includes factors the matcher can't see (referral connections, hiring-manager preference, company-specific signals)." },
+            { b: "Not a substitute for understanding the role.", t: "The matcher reads the JD literally. If the JD has hidden expectations not stated in writing (common in less-explicit job descriptions), the score reflects the explicit JD only. Talk to recruiters or current employees for the implicit picture." },
+            { b: "Not predictive of your performance in the role.", t: "Fit-to-JD ≠ fit-to-actual-job. The JD is the recruiter's compressed best-guess of what's needed; the actual role has more nuance. The score predicts \"likely to pass screening,\" not \"likely to succeed.\"" },
+          ],
+        },
+      },
+      {
+        h: "Limits and pricing",
+        p: [
+          "Resume ↔ JD Matcher charges 5 credits per match. The tool handles resume PDFs up to 25 MB and JD text of any reasonable length. Processing runs on our servers; the resume and JD are in memory only during analysis and are never persisted by default. Pro tier offers 30-day history for tracking multiple JDs.",
+          "Common pairings: ATS Resume Optimizer first (verify resume parseability), then JD Match (verify role fit), then Cover Letter Generator (produce the tailored letter). The three together cover the full pre-application workflow.",
+        ],
+      },
+    ],
+  },
 };
