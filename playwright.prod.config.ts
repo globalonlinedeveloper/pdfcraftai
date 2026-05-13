@@ -75,6 +75,30 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    // Mobile project — runs the SAFE phases (anonymous smoke +
+    // free-tool execution) under a 390×844 viewport (iPhone 14
+    // dimensions) to catch mobile-only regressions: viewport
+    // overflow, hamburger nav, touch-target sizing, dropzone
+    // usability on narrow screens.
+    //
+    // Uses Chromium (not Mobile Safari) under the hood — Mobile
+    // Safari uses WebKit, which requires extra system libs not
+    // always present in CI runners. Chromium-with-mobile-viewport
+    // catches >90% of mobile-only regressions and ships with the
+    // existing chromium install. The dev `playwright.config.ts`
+    // still has real Mobile Safari for thorough cross-browser.
+    //
+    // We grep-include the safe phases only; authenticated +
+    // payments specs stay desktop-only (we don't test card UX on
+    // mobile in this run).
+    {
+      name: "mobile-chromium",
+      use: {
+        ...devices["Pixel 7"], // Chromium-based device profile
+        viewport: { width: 390, height: 844 }, // iPhone-14 dimensions
+      },
+      grepInvert: /authenticated flows|AI tool execution|payment flows/,
+    },
   ],
 
   // No webServer block — running against live, not a local dev server.

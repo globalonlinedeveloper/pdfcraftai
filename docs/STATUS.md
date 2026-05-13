@@ -3,8 +3,24 @@
 _Single source of truth for what's done, what's pending, and who owns each item._
 _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new work._
 
-**Last updated:** 2026-05-12 (PHASE 4 also ACTIVATED — all 4 phases live against prod).
-**Live commit:** prod-E2E suite shape: **87 active tests + 1 skip-gated** (only the deferred "complete checkout with test card" remains). Daily Mon-Sat cron runs Phase 1+3a; Sunday weekly cron adds Phase 2+3b+4. Per CLAUDE.md §3, production currently runs `rzp_test_*` Razorpay keys (verified via /proc env 2026-05-12), so Phase 4 needs only the `PROD_E2E_PAYMENTS_OK=yes` ack — no separate test-key injection. Earlier closeouts: 2026-05-12 (`aa135a3` scaffolding, `a3e719c` Phase 2/3b, `65dac13` AI coverage + weekly cron), 2026-05-06 (`9f0f196` Phase F-4 multi-seat surface).
+**Last updated:** 2026-05-12 (E2E expanded to 14 AI tests + mobile project + redact/sign bug FIXED in prod).
+**Live commit:** prod-E2E suite shape: **155 active tests + 1 skip-gated** (88 desktop + 66 mobile + 1 deferred Phase 4 happy-path). 4.6 min full run. Earlier closeouts: 2026-05-12 (`aa135a3` scaffolding, `a3e719c` Phase 2/3b activation, `65dac13` AI coverage + weekly cron, `26416c3` Phase 4 activation, `dff77f5` redact/sign pdfjs-detach fix), 2026-05-06 (`9f0f196` Phase F-4 multi-seat surface).
+
+### 2026-05-12 (Evening) — redact/sign pdfjs bug fixed + mobile project + ai-redact/ai-sign tests live (155 tests)
+
+**While building Phase 3b expansion** (ai-redact + ai-sign), prod E2E caught a real production bug: `/api/ai/redact` returned 400 "pdf_extract_failed: No PDF header found at offset=0" when given `sample.pdf` — even though pdf-lib in the same route handler loaded the same bytes successfully and sample.pdf has a valid `%PDF-1.7` header at byte 0.
+
+**Root cause:** pdfjs-dist's `getDocument({data: bytes})` can detach the Uint8Array under the hood (it can pass to a worker). Passing the same buffer to pdf-lib upstream then pdfjs in sequence is brittle — the second call sees zeroed bytes.
+
+**Fix (commit `dff77f5`):** defensive `new Uint8Array(bytes)` copy before pdfjs's getDocument call. Applied to both `lib/ai/redact.ts:487` and `lib/ai/sign.ts:589` (both use the same `extractPositionedText` helper with the same pattern). Verified live post-deploy: ai-redact returns 2xx, ai-sign reaches the AI provider stage (returns 502 on prose-only sample.pdf — accepted as it cleared all pre-spend gates).
+
+**Mobile viewport project added** to `playwright.prod.config.ts`. Runs the 66 SAFE tests (Phase 1 + 3a, no DB writes / no credit spend) under a 390×844 viewport (iPhone-14 dimensions, Chromium-based to avoid WebKit's extra system-lib requirements). `grepInvert` skips authenticated + payments specs to avoid mobile card-input UX assumptions. Catches viewport overflow, hamburger nav, touch-target sizing, dropzone usability on narrow screens — all green on first run.
+
+**Founder playbooks shipped:**
+- `scripts/setup-prod-e2e-secrets.sh` — one-shot `gh secret set` for `PROD_E2E_TEST_*` + `PROD_E2E_AI_BUDGET_OK` + `PROD_E2E_PAYMENTS_OK`. Run once, weekly Sunday cron picks them up automatically.
+- `docs/RAZORPAY_LIVE_SWAP.md` — when prod swaps `rzp_test_*` → `rzp_live_*`, this is the 10-min playbook + the 3 options for keeping Phase 4 E2E working (recommended: provision a Razorpay sub-account for E2E).
+
+**Suite shape now:** 155 passed + 1 skipped (deferred full-card-fill). 14 AI tests cover all 9 backing `/api/ai/*` route surfaces (now including redact + sign). 4.6 min full run with mobile project.
 
 ### 2026-05-12 (PM late) — Phase 4 ACTIVATED + Razorpay test-mode finding
 
