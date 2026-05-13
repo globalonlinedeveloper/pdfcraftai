@@ -106,13 +106,79 @@ test.describe("payment flows", () => {
     ).toBeAttached({ timeout: 15_000 });
   });
 
-  // Full happy-path test (fill test card → complete → assert
-  // credits delivered) is intentionally a follow-up commit. It
-  // requires the operator picking which Razorpay test card to
-  // use (success vs auth-fail vs international). Founder decision.
-  test.skip("Starter pack: complete checkout with test card", () => {
-    // TODO: fill test card 4111 1111 1111 1111 / 12/30 / 123,
-    // submit, assert success redirect, assert credit balance
-    // increased on /app/dashboard.
-  });
+  // ── DEFERRED (2026-05-12): "complete checkout with test card"
+  //
+  // I attempted to wire the full happy-path test:
+  //   /pricing → Buy pack → Razorpay iframe → contact modal →
+  //   card form → Pay → webhook → credits delivered → balance up
+  //
+  // The iframe-driven flow has too many failure modes to be
+  // worth automating in CI:
+  //
+  //   1. CONTACT-DETAILS MODAL.
+  //      Razorpay's checkout in IN-mode opens a "Contact details"
+  //      modal BEFORE showing the payment-method picker. Need to
+  //      type a 10-digit mobile number.
+  //
+  //   2. MOBILE VALIDATOR BLOCKLIST.
+  //      The validator rejects obvious test patterns:
+  //        9999999999, 9876543210 → "Please enter a valid mobile number"
+  //      Some non-sequential numbers (8123456709) get accepted.
+  //      The pattern isn't publicly documented; it's brittle to
+  //      Razorpay tightening it.
+  //
+  //   3. CARD FORM IN NESTED IFRAMES (PCI).
+  //      The card-number / expiry / CVV fields are in nested
+  //      cross-origin iframes for PCI compliance. Inner iframe
+  //      content is sometimes in shadow DOM. Playwright handles
+  //      this with frameLocator, but the selectors aren't stable
+  //      across Razorpay SDK versions.
+  //
+  //   4. 3DS CHALLENGE WINDOW.
+  //      Some test-mode flows pop a 3DS challenge popup that
+  //      needs to be dismissed. Inconsistent across Razorpay's
+  //      test cards.
+  //
+  //   5. REDIRECT + ASYNC WEBHOOK.
+  //      After "Pay", Razorpay calls back to the merchant's
+  //      handler() JS callback OR redirects, then a webhook
+  //      fires async to /api/webhooks/razorpay. Need to poll for
+  //      balance increase up to ~30-60s.
+  //
+  // RECOMMENDED ALTERNATIVE: webhook simulation.
+  //   Instead of driving Razorpay's UI, POST a synthetic
+  //   `payment.captured` event directly to
+  //   /api/webhooks/razorpay with a valid HMAC over the body
+  //   using RAZORPAY_WEBHOOK_SECRET. This tests the code we
+  //   actually own (signature verify + credit grant) without
+  //   any Razorpay UX coupling.
+  //
+  //   Blocker: the webhook secret lives only in prod env. To
+  //   run this from a Playwright test, either:
+  //     (a) inject RAZORPAY_WEBHOOK_SECRET into the test runner's
+  //         env via the same SSH-read pattern we used for
+  //         debugging, OR
+  //     (b) add a small E2E-only seam in the webhook handler
+  //         that accepts a hard-coded test signature when
+  //         the body originates from the test-account user_id.
+  //         Lower-surface-area than option (a) but adds a
+  //         constant to verify in audits.
+  //
+  //   Both options need founder review before shipping. Until
+  //   then, route-level coverage (the "Razorpay checkout opens"
+  //   test above) is the actively-running Phase 4 surface.
+  //
+  // FOUNDER WORK NEEDED:
+  //   - Decide on webhook simulation approach (a) vs (b) above
+  //   - Or decide it's acceptable to leave full-card path
+  //     uncovered in CI and test manually each release
+  test.fixme(
+    "Starter pack: complete checkout with test card",
+    async () => {
+      // Intentionally empty. Full implementation tried + reverted
+      // (commit 26416c3 series); the iframe approach is too brittle
+      // for CI. See the comment block above this test for the
+      // recommended webhook-simulation alternative.
+    },
+  );
 });

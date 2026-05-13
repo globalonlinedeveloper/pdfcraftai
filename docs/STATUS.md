@@ -6,6 +6,21 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 **Last updated:** 2026-05-12 (E2E expanded to 14 AI tests + mobile project + redact/sign bug FIXED in prod).
 **Live commit:** prod-E2E suite shape: **155 active tests + 1 skip-gated** (88 desktop + 66 mobile + 1 deferred Phase 4 happy-path). 4.6 min full run. Earlier closeouts: 2026-05-12 (`aa135a3` scaffolding, `a3e719c` Phase 2/3b activation, `65dac13` AI coverage + weekly cron, `26416c3` Phase 4 activation, `dff77f5` redact/sign pdfjs-detach fix), 2026-05-06 (`9f0f196` Phase F-4 multi-seat surface).
 
+### 2026-05-12 (Night) — Phase 4 full-card happy-path attempted + deferred with rationale
+
+User asked to proceed with the full-card-fill happy-path. **Attempted iteratively** against the live prod Razorpay test-mode iframe. Got past the contact-details modal (which requires a 10-digit mobile number — Razorpay's validator rejects obvious test patterns like `9876543210`/`9999999999` but accepts `8123456709`). Got past the payment method picker. Hit the timeout while interacting with the nested card-form iframes.
+
+**Decision: deferred as `test.fixme`** rather than ship a flaky test. The spec header documents the 5 failure modes encountered:
+1. Contact-details modal that gates the payment-method picker
+2. Mobile validator with a fake-pattern blocklist
+3. Card form in nested cross-origin iframes for PCI
+4. Possible 3DS challenge popup
+5. Redirect + async webhook timing
+
+**Recommended alternative documented in the spec:** webhook simulation. POST a synthetic `payment.captured` event directly to `/api/webhooks/razorpay` with a valid HMAC over the body using `RAZORPAY_WEBHOOK_SECRET`. Tests the code we own (signature verify + credit grant) without Razorpay UX coupling. Blocker: webhook secret lives only in prod env; founder must decide whether to (a) inject it into test runner env or (b) add an E2E-only seam in the webhook handler.
+
+**Suite shape unchanged:** 155 passed + 1 fixme. Phase 4 still actively exercises the create-order POST + iframe-attach surface; the fixme test is visible in the Playwright report as "needs follow-up" rather than disappearing into the skip column.
+
 ### 2026-05-12 (Evening) — redact/sign pdfjs bug fixed + mobile project + ai-redact/ai-sign tests live (155 tests)
 
 **While building Phase 3b expansion** (ai-redact + ai-sign), prod E2E caught a real production bug: `/api/ai/redact` returned 400 "pdf_extract_failed: No PDF header found at offset=0" when given `sample.pdf` — even though pdf-lib in the same route handler loaded the same bytes successfully and sample.pdf has a valid `%PDF-1.7` header at byte 0.
