@@ -52,7 +52,7 @@ export default async function AdminDeployPage() {
   // is a single page load. `detectSchemaDrift` never throws.
   const drift = await detectSchemaDrift();
 
-  const githubRepo = "durgapoja6408-creator/pdfcraftai";
+  const githubRepo = "globalonlinedeveloper/pdfcraftai";
   const commitShort = snap.commitSha ? snap.commitSha.slice(0, 7) : null;
   const commitLink = snap.commitSha
     ? `https://github.com/${githubRepo}/commit/${snap.commitSha}`

@@ -96,7 +96,7 @@ Researcher emails about an SQL injection in /admin endpoint; no evidence of expl
 - All payments: `payments` (status, amount, refund history).
 - All admin auth events: NextAuth's `accounts` + `sessions` tables.
 - HTTP error logs: Hostinger nodejs/stderr.log + nodejs/stdout.log.
-- Pre-deploy git history: GitHub repo `durgapoja6408-creator/pdfcraftai`.
+- Pre-deploy git history: GitHub repo `globalonlinedeveloper/pdfcraftai`.
 
 ## What we do NOT have logged
 

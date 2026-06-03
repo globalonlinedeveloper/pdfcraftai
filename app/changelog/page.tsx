@@ -85,7 +85,7 @@ export default function ChangelogPage() {
         title="What we shipped, sorted newest first."
         subtitle="Small team, frequent releases. The boring fixes get a line too."
         primaryCta={{ href: "/register", label: "Try the latest" }}
-        secondaryCta={{ href: "https://github.com/durgapoja6408-creator/pdfcraftai", label: "Source on GitHub" }}
+        secondaryCta={{ href: "https://github.com/globalonlinedeveloper/pdfcraftai", label: "Source on GitHub" }}
       />
 
       <section style={{ padding: "40px 28px 80px", borderTop: "1px solid var(--border)" }}>

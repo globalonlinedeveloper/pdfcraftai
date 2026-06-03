@@ -10,7 +10,8 @@
 - **Stack:** Next.js 14 (app router), NextAuth v5, Drizzle (MySQL)
 - **Host:** Hostinger (managed Node.js Web App, `hpanel.hostinger.com/websites/pdfcraftai.com`)
 - **CDN/Proxy:** Cloudflare (full proxy; confirmed via `cf-ray`, `server: cloudflare`)
-- **GitHub repo:** `durgapoja6408-creator/pdfcraftai` (main branch deploys automatically)
+- **GitHub repo:** `globalonlinedeveloper/pdfcraftai` (main branch deploys automatically)
+- **GitHub migration (2026-06-03):** repo transferred `durgapoja6408-creator` → `globalonlinedeveloper` (user's personal account); old path 301-redirects; Hostinger reconnected. **PENDING security cutover:** remove `durgapoja6408-creator` as a collaborator (it still has push access), revoke its PAT, and mint a fresh repo-scoped PAT under `globalonlinedeveloper` → update `.claude/secrets.env`.
 
 ## 2. Deployment flow — DO NOT edit via Hostinger file manager
 
@@ -23,10 +24,10 @@
 ### (a) GitHub Personal Access Token (classic)
 - **Name:** `cowork-pdfcraftai-deploy` (assumed — CLAUDE.md previously said May 19, 2026; API reports expiration 2026-07-18 18:10:48 UTC, so the token in `.claude/secrets.env` has been rotated at least once)
 - **Expires:** 2026-07-18 (verified via `github-authentication-token-expiration` response header, 2026-04-20)
-- **Owner login:** `durgapoja6408-creator` (id 277461726)
+- **Owner login:** `globalonlinedeveloper` (repo transferred here from `durgapoja6408-creator` on 2026-06-03; old path 301-redirects)
 - **Scopes:** `repo`, `workflow`, `read:network_configurations`
 - **Where stored on user's side:** GitHub → Settings → Developer Settings → Tokens (classic)
-- **How you use it:** After the user pastes it into chat or into `.claude/secrets.env` (see section 4), use it to `git clone https://<PAT>@github.com/durgapoja6408-creator/pdfcraftai.git`, commit, and `git push`.
+- **How you use it:** After the user pastes it into chat or into `.claude/secrets.env` (see section 4), use it to `git clone https://<PAT>@github.com/globalonlinedeveloper/pdfcraftai.git`, commit, and `git push`.
 
 ### (b) Hostinger SSH key
 - **Name on Hostinger:** `cowork-apr2026-v2` (original `cowork-apr2026` was rotated on 2026-04-19 because its private half was lost)
@@ -48,7 +49,7 @@
 | GA4 Measurement ID | `G-2Y8PS0S93F` |
 | GA4 Stream ID | `14383455005` |
 | Microsoft Clarity Project ID | `wcsbv536zv` |
-| GitHub repo | `durgapoja6408-creator/pdfcraftai` |
+| GitHub repo | `globalonlinedeveloper/pdfcraftai` |
 <!-- Paddle Seller ID 320957 retired as a payment rail on 2026-05-01 (commit 92f965a). Razorpay is the sole payment processor; international gateway TBD. -->
 
 
@@ -60,7 +61,7 @@
 When the user pastes credentials, save them to `.claude/secrets.env` (already gitignored). Format:
 
 ```bash
-# GitHub PAT for pushing to durgapoja6408-creator/pdfcraftai
+# GitHub PAT for pushing to globalonlinedeveloper/pdfcraftai
 GITHUB_PAT=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Hostinger SSH (use as -i flag; private key body, NOT path)

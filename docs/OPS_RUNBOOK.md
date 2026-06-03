@@ -145,7 +145,7 @@ Working theory documented in STATUS.md + NEXT_SESSION.md: zombie cascades correl
 | Source clone | `~/domains/pdfcraftai.com/public_html/.builds/last-source` |
 | Runtime stdout | `~/domains/pdfcraftai.com/nodejs/console.log` |
 | Restart trigger | `touch ~/domains/pdfcraftai.com/nodejs/tmp/restart.txt` |
-| GitHub repo | `https://github.com/durgapoja6408-creator/pdfcraftai` |
+| GitHub repo | `https://github.com/globalonlinedeveloper/pdfcraftai` |
 | hPanel | `https://hpanel.hostinger.com/websites/pdfcraftai.com` |
 
 See `CLAUDE.md` §1–§5 for the canonical credential + deployment-flow reference.
