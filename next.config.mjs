@@ -330,6 +330,15 @@ const nextConfig = {
       // is an extra round-trip for the user). Pointed directly at
       // the final destination so /tools/<slug> → /tool/<id> in one
       // hop.
+      // 2026-06-03 — retire the premature public API surface. /api was a
+      // marketing/reference page for a developer API with no key-authed
+      // endpoints yet. Redirect the EXACT /api path only (308) to the
+      // product; the 42 backend route handlers under /api/* (health, ai,
+      // webhooks, …) are UNAFFECTED — Next source matching is exact, not
+      // prefix. /app/api-keys (auth-gated mgmt UI) 307s so it's trivially
+      // restorable if a real API ships later.
+      { source: "/api", destination: "/tools", permanent: true },
+      { source: "/app/api-keys", destination: "/app/dashboard", permanent: false },
       { source: "/tools/merge-pdf", destination: "/tool/merge", permanent: true },
       { source: "/tools/split-pdf", destination: "/tool/split", permanent: true },
       { source: "/tools/compress-pdf", destination: "/tools", permanent: true },
