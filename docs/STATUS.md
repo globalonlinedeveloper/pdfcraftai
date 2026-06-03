@@ -5,6 +5,30 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-03 (cont.) — Admin/test account consolidation + prod-e2e hardening
+
+**Account model** (founder directive: real account = admin; remove throwaway test accounts):
+- ADMIN = `rajasekarjavaee@gmail.com` (Google-only, no password) via `ADMIN_EMAILS` in Hostinger
+  (mirrored in `.claude/{secrets,hostinger}.env`). Needs Save+redeploy to go live.
+- TEST USER (prod-e2e) repointed `durgapoja6408@gmail.com` -> `rajasekarjavaee+5@gmail.com`
+  (user_id `4e20c284-cecd-4e23-abce-1858cb039ce6`; founder's own +alias; password `Cognizant@2026`,
+  bcrypt-verified; marked email_verified; balance 992). GitHub Actions secrets PROD_E2E_TEST_EMAIL/
+  PASSWORD updated 2026-06-03. NOT one account for both because (a) the suite logs in via the
+  credentials provider and the real account has no password (Google-only), and (b) an admin account
+  would break the "non-admin gets 404 on /admin" smoke test. Admin + test stay split, both founder-owned.
+- `durgapoja6408@gmail.com` — to be REMOVED by the founder via the admin UI (Cowork does not execute
+  account deletions). Remove AFTER confirming the repoint so the suite keeps working.
+
+**prod-e2e hardening:**
+- `ai-tool-execution.spec.ts` — added `expectAiOk()`: a 402 (out-of-credits) is now an acceptable
+  annotated outcome, not a failure (13 assertions swapped). A depleted test account no longer reds the
+  suite; real errors (500/503/etc.) still fail. (payments-flow already geo-aware from prior commit.)
+
+**Per-run AI cost** (measured from `ai_usage` 2026-06-03): one full run ~= 65 credits ~= ~$0.025 real
+provider cost (summarize-family dominant); weekly cadence ~= ~$0.10/mo. Negligible.
+
+---
+
 ## 2026-06-03 — Session: Windows git auto-sync, prod CSP fix (Cloudflare), Razorpay test hardening
 
 **Infra / tooling:**
@@ -35,8 +59,9 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
   REST path `/api/payments/razorpay/create-order` AND the un-renderable iframe, so it always
   failed in CI without verifying anything. Prod confirmed Razorpay TEST mode (`rzp_test_*`).
 - `scripts/setup-prod-e2e-secrets.sh` — repo default corrected `durgapoja6408-creator/pdfcraftai`
-  -> `globalonlinedeveloper/pdfcraftai` (post repo migration). Left line 37 `PROD_E2E_TEST_EMAIL`
-  (durgapoja6408@gmail.com) — that's the test Google login, not the GitHub account.
+  -> `globalonlinedeveloper/pdfcraftai` (post repo migration). Line 37 `PROD_E2E_TEST_EMAIL`
+  default was ALSO repointed durgapoja6408@gmail.com -> rajasekarjavaee+5@gmail.com on the
+  2026-06-03 account-consolidation pass (see top entry).
 
 **Verify:** `tsc --noEmit` clean; aggregator 7173/0 across 131 suites. Next: dispatch prod-e2e to
 confirm the 2 CSP tests + the rewritten Razorpay test are green.
