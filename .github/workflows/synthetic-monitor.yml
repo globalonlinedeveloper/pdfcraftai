@@ -7,10 +7,10 @@
 #   deploys. Local dev has no signal that the site is down — we only
 #   find out when a user complains or the next push triggers another
 #   cascade. This workflow runs from GitHub Actions infra (independent
-#   of Hostinger) every 5 minutes, hits /api/health + 4 representative
+#   of Hostinger) every 15 minutes, hits /api/health + 4 representative
 #   pages, and posts to Slack on failure.
 #
-# What's checked every 5 minutes:
+# What's checked every 15 minutes:
 #   1. /api/health           → expects 200 + `"ok":true` in body
 #   2. /                     → expects 200
 #   3. /tools                → expects 200
@@ -22,7 +22,7 @@
 # Failure mode:
 #   - Any non-2xx (or 5xx for /admin/deploy) → workflow fails
 #   - Failed runs post to Slack via SLACK_WEBHOOK_URL secret
-#   - GitHub Actions auto-retries via the schedule on next 5-min tick,
+#   - GitHub Actions auto-retries via the schedule on next 15-min tick,
 #     so transient blips don't page; sustained downtime does
 #
 # Setup needed (user action, one-time):
@@ -43,18 +43,23 @@ name: Synthetic monitor
 
 on:
   schedule:
-    # Every 5 minutes. GitHub Actions cron has a max precision of
-    # 5min and may be delayed by 5-15min during platform load.
-    - cron: "*/5 * * * *"
+    # Every 15 minutes (2026-06-03: reduced from */5). GitHub Actions cron
+    # is throttled/skipped under platform load and is unreliable for tight-
+    # interval uptime monitoring, so */15 cuts run volume + throttling
+    # pressure while still catching sustained outages. For fast, reliable
+    # liveness use a purpose-built monitor (Cloudflare Worker cron trigger
+    # or UptimeRobot) against /api/health — this Actions check is a
+    # lightweight stopgap, not a real monitoring system.
+    - cron: "*/15 * * * *"
   # Allow manual trigger for ad-hoc checks (e.g., post-deploy verify).
   workflow_dispatch:
 
 # 2026-04-30: skip overlapping runs during prod 503 cascades. Without
-# this, every 5min during a 30min cascade fires 6+ identical Slack
+# this, every 15min during a 30min cascade fires 2+ identical Slack
 # alerts. `cancel-in-progress: false` keeps the in-flight run going
 # rather than killing it (we want the most-recent diagnostic, not the
 # newest scheduled trigger). The schedule auto-recovers — once the
-# in-flight run completes, the next 5-min tick can fire normally.
+# in-flight run completes, the next 15-min tick can fire normally.
 concurrency:
   group: synthetic-monitor
   cancel-in-progress: false
