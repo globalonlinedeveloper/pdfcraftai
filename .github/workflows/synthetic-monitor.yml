@@ -15,8 +15,9 @@
 #   2. /                     → expects 200
 #   3. /tools                → expects 200
 #   4. /tool/merge           → expects 200 (representative tool runner)
-#   5. /admin/deploy         → expects 200 OR 401 (auth-gated, both are
-#                              fine — what we DON'T want is 5xx)
+#   5. /admin/deploy         → expects 200/401/307/404 (gated by
+#                              requireAdmin(), which 404s anon requests by
+#                              design — what we DON'T want is 5xx/000)
 #
 # Failure mode:
 #   - Any non-2xx (or 5xx for /admin/deploy) → workflow fails
@@ -114,7 +115,12 @@ jobs:
           check "homepage"          https://pdfcraftai.com/                    "200"
           check "/tools index"      https://pdfcraftai.com/tools               "200"
           check "/tool/merge"       https://pdfcraftai.com/tool/merge          "200"
-          check "/admin/deploy"     https://pdfcraftai.com/admin/deploy        "200|401|307"
+          # /admin/* is gated by requireAdmin() which calls notFound()
+          # (404) for anonymous/non-admin requests BY DESIGN (never 401/307,
+          # to avoid disclosing the admin surface — see lib/admin/guard.ts).
+          # 404 is therefore the healthy anon response here; only 5xx/000
+          # (down) should fail this check.
+          check "/admin/deploy"     https://pdfcraftai.com/admin/deploy        "200|401|307|404"
 
           echo -e "Synthetic monitor results at $(date -u +%FT%TZ):$report"
           if [ "$fail" -ne 0 ]; then
