@@ -122,6 +122,14 @@ jobs:
           # No separate test-key env needed; prod's RAZORPAY_KEY_ID
           # is already `rzp_test_*` today.
           PROD_E2E_PAYMENTS_OK: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_PAYMENTS_OK || '' }}
+          # Phase 5 (admin) + signup — injected on the 'payments' (everything) scope.
+          # Admin spec is READ-ONLY; signup CREATES a throwaway account per run
+          # (remove PROD_E2E_SIGNUP_OK secret to stop that). Both need test.env
+          # live (Turnstile TEST keys) for signup; admin needs ADMIN_EMAILS live.
+          PROD_E2E_ADMIN_EMAIL: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_ADMIN_EMAIL || '' }}
+          PROD_E2E_ADMIN_PASSWORD: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_ADMIN_PASSWORD || '' }}
+          PROD_E2E_ADMIN_OK: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_ADMIN_OK || '' }}
+          PROD_E2E_SIGNUP_OK: ${{ steps.scope.outputs.phases == 'payments' && secrets.PROD_E2E_SIGNUP_OK || '' }}
         run: npm run test:prod-e2e
 
       - name: Upload Playwright report

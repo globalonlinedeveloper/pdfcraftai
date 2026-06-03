@@ -5,6 +5,27 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-03 (cont.) — Gated-flow testing ENABLED (env swap + admin/signup specs)
+
+- **LIVE/TEST env swap:** `.claude/test.env` (test mode) vs `.claude/hostinger.env` (live) — both 34 keys;
+  import either + redeploy to switch. test.env flips Turnstile->TEST keys + caps(9999/9999/$100) + geo seam.
+  VERIFIED live in the prod runtime worker 2026-06-03 (founder imported test.env + redeployed). REVERT to
+  hostinger.env after the window.
+- **Email Address Obfuscation OFF** (Cloudflare Scrape Shield) — fixes the `/extract-emails-from-pdf` React
+  #425 hydration error (CF rewrote the example emails + injected a decoder that mutated the DOM post-hydration).
+  Must stay off; documented in CLAUDE.md §5.
+- **Admin test account = `rajasekarjavaee+5@gmail.com`** (credentials, normalizes to the admin email -> admin;
+  no account creation needed). CI secrets `PROD_E2E_ADMIN_EMAIL/PASSWORD/OK` added. New `admin-flow.spec.ts`
+  (READ-ONLY: logs in as admin, asserts /admin, /admin/margin, /admin/credits load 200 — the positive side of
+  the SEV-0 admin gate).
+- **`signup-flow.spec.ts`** — registers a fresh `playwright.e2e.<ts>@example.com` account (Turnstile TEST keys
+  auto-pass), asserts /app landing. Gated `PROD_E2E_SIGNUP_OK`; creates a throwaway account/run (cleanup query
+  in the spec).
+- **prod-e2e workflow:** `payments` phase now injects the admin+signup gates -> one `payments` run exercises the
+  WHOLE site (smoke + free + auth + AI + payments + admin + signup).
+
+---
+
 ## 2026-06-03 (cont.) — Full-coverage testing scaffold (crawl + gated-flow knobs)
 
 To enable "test everything, nothing gated" without leaving prod weakened:
