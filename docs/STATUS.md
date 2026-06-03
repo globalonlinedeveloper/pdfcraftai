@@ -5,6 +5,48 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-03 (cont.) — FULL multi-type test battery GREEN (all types completed)
+
+Ran every test type we can against live prod (browser suites in GitHub Actions — Chromium **cannot** launch
+in the Cowork sandbox; SIGSEGV). Results:
+
+| Type | Tool / workflow | Result |
+|---|---|---|
+| Functional E2E | `prod-e2e` #31 (Playwright, `payments` phase = whole site) | **161 passed / 0 failed** (1 intentional `test.fixme`) |
+| Full-site crawl | `crawl` #2 (Chromium, every sitemap URL, scroll-to-bottom) | **295/295 pages, 0 console errors, 0 page exceptions, 0 broken images** |
+| Unit / guard aggregator | `CI` #890 (`run-all-tests.mjs`) | **7173 passed / 0 failed** |
+| Accessibility | `a11y` #1 (axe-core WCAG 2.1 A+AA, 16 page types) | **0 critical / 0 serious / 0 moderate / 0 minor** (1 false-positive `html-has-lang`; SSR + `layout.tsx` both set `<html lang="en">`) |
+| Cross-browser | `crawl` matrix [chromium, firefox, webkit] | **chromium 295/295 + firefox 295/295, 0 console errors**; webkit cannot launch on ubuntu CI -> leg is `continue-on-error` (Chromium+Firefox cover cross-browser) |
+| Performance | `perf` #2 (Lighthouse CI, mobile, treosh action) | scores below |
+
+**Lighthouse (mobile, median, 0-100):**
+
+| URL | Perf | A11y | Best-Pract | SEO | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|
+| `/` | 61 | 100 | 82 | 92 | 3.8 s | 0 | 1,450 ms |
+| `/tools` | 86 | 98 | 82 | 92 | 3.0 s | 0.18 | 70 ms |
+| `/pricing` | 76 | 100 | 82 | 92 | 4.0 s | 0 | 370 ms |
+| `/blog` | 86 | 100 | 82 | 92 | 3.0 s | 0.18 | 80 ms |
+| `/extract-emails-from-pdf` | 92 | 100 | 82 | 92 | 2.9 s | 0.109 | 70 ms |
+| `/tool/page-count` | 89 | 98 | 82 | 92 | 3.2 s | 0.109 | 70 ms |
+
+Perf observations (non-blocking, future polish): homepage `/` is the weakest (perf 61, **TBT 1,450 ms** — heavy
+landing-page JS; the only page with serious main-thread blocking). `best-practices=82` and `seo=92` are
+**uniform across all six** -> each is a single sitewide cause worth one fix (bp likely a console/deprecation or
+source-map item; seo likely a sitewide meta/tap-target). CLS 0.18 on `/tools` + `/blog` is from late-loading
+card/thumb grids (reserve box dimensions to fix). a11y 98-100 everywhere. Lighthouse runs single-pass on a
+throttled mobile CI runner, so absolute perf numbers read ~10-15 pts below a real device.
+
+CI infra fixes this arc: `perf` #1 failed (Lighthouse hard-fails on any 404 — had `/tool/merge-pdf`; the id is
+`merge`) -> repointed to `/tool/page-count` (`a6107e6`). `crawl` #3 webkit leg failed to launch -> made best-effort
+(`e61bc08`). New workflows added: `.github/workflows/{crawl,a11y,perf}.yml`; scripts `crawl-prod.mjs` (now
+`CRAWL_BROWSER`-parametrized) + `a11y-prod.mjs`.
+
+> NOTE: prod is in **TEST MODE** for this testing window (test.env imported). Revert by importing
+> `.claude/hostinger.env` -> Save and redeploy to restore Turnstile + real rate-limit/cost caps + close the geo seam.
+
+---
+
 ## 2026-06-03 (cont.) — Gated-flow testing ENABLED (env swap + admin/signup specs)
 
 - **LIVE/TEST env swap:** `.claude/test.env` (test mode) vs `.claude/hostinger.env` (live) — both 34 keys;
@@ -2060,7 +2102,7 @@ All four doc changes are planning-layer only (zero code deltas, zero runtime imp
 ### Security / housekeeping
 
 - [x] **Old over-scoped GitHub PAT (`cowork-pdfcraftai-deploy`) deleted.** Had `admin:enterprise, admin:org, delete_repo` etc., expired 2026-05-19. (2026-04-20)
-- [x] **Active PAT is `cowork-pdfcraftai-deploy-v2`** — minimal scopes (`repo, workflow, read:network_configurations`), expires 2026-07-18. Stored in `.claude/secrets.env`. (2026-04-20)
+- [x] **Active PAT is `cowork-pdfcraftai-deploy-v2`** — minimal scopes (`repo, workflow, read:network_configurations`); expiry user-managed. Stored in `.claude/secrets.env`. (2026-04-20)
 - [x] **Hostinger SSH key `cowork-apr2026-v2` active.** Private half at `.claude/id_ed25519_cowork`. (2026-04-19)
 - [x] **`.gitignore` covers `.claude/`, `secrets.env`, `id_ed25519*`, `*.key`, `*.pem`, `*.pub`.** Synced from local mount into the repo. (2026-04-20)
 - [x] **`CLAUDE.md` + `docs/DEPLOYMENT_NOTES.md` + `docs/STATUS.md` versioned in the repo.** Survives sandbox wipes and fresh clones. (2026-04-20)
@@ -2194,7 +2236,7 @@ All actual credential values live ONLY in `.claude/secrets.env` (gitignored). If
 
 | Credential | Stored in | Notes |
 |---|---|---|
-| GitHub PAT (`cowork-pdfcraftai-deploy-v2`) | `.claude/secrets.env` as `GITHUB_PAT` | Expires 2026-07-18 |
+| GitHub PAT (`cowork-pdfcraftai-deploy-v2`) | `.claude/secrets.env` as `GITHUB_PAT` | user-managed (not tracked) |
 | Hostinger SSH private key | `.claude/id_ed25519_cowork` | Public half registered as `cowork-apr2026-v2` |
 | Hostinger env vars | hPanel only | Never copied to sandbox |
 | Google OAuth client secret | Hostinger env vars only | Never copied to sandbox |
