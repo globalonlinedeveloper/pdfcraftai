@@ -217,34 +217,27 @@ test.describe("free tool execution (all)", () => {
 
 // ---- AI tools --------------------------------------------------------
 
-// Auth state shared across all AI tests — log in ONCE per worker, persist
-// cookies, reuse. Eliminates 53 per-test logins (the source of parallel-
-// login flakiness + runtime blowup observed earlier).
-const AUTH_FILE = resolve(process.cwd(), "tests", "e2e-prod", ".auth-state.json");
+// Per-test login with a 2-attempt retry. Under a healthy prod each login
+// is a few seconds; the retry absorbs the occasional redirect lag seen
+// under parallel load. (A storageState/setup-project approach was tried
+// and reverted — the in-file beforeAll variant races the use() fixture.)
+async function login(page: Page) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.goto("/login");
+    await page.locator('input[type="email"]').fill(EMAIL!);
+    await page.locator('input[type="password"]').fill(PASSWORD!);
+    await page.getByRole("button", { name: /sign in|log in/i }).click();
+    try { await page.waitForURL(/\/app\//, { timeout: 25_000 }); return; }
+    catch { if (attempt === 1) throw new Error("login did not reach /app/ after 2 attempts"); }
+  }
+}
 
 test.describe("AI tool execution (all)", () => {
   test.describe.configure({ retries: 1 });
   test.skip(!EMAIL || !PASSWORD, "AI: PROD_E2E_TEST_EMAIL/PASSWORD unset");
   test.skip(!AI_OK, "AI: PROD_E2E_AI_BUDGET_OK!=yes (each run spends credits)");
 
-  test.beforeAll(async ({ browser }) => {
-    const ctx = await browser.newContext();
-    const page = await ctx.newPage();
-    let ok = false;
-    for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-      await page.goto("/login");
-      await page.locator('input[type="email"]').fill(EMAIL!);
-      await page.locator('input[type="password"]').fill(PASSWORD!);
-      await page.getByRole("button", { name: /sign in|log in/i }).click();
-      try { await page.waitForURL(/\/app\//, { timeout: 25_000 }); ok = true; } catch { /* retry */ }
-    }
-    await ctx.storageState({ path: AUTH_FILE });
-    await ctx.close();
-    if (!ok) throw new Error("login did not reach /app/ after 3 attempts");
-  });
-
-  // Every test in this describe starts already authenticated.
-  test.use({ storageState: AUTH_FILE });
+  test.beforeEach(async ({ page }) => { await login(page); });
 
   for (const tool of AI) {
     test(`ai:${tool.id} — ${tool.name}`, async ({ page }) => {
