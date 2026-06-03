@@ -30,7 +30,7 @@
 
 set -euo pipefail
 
-REPO="${REPO:-durgapoja6408-creator/pdfcraftai}"
+REPO="${REPO:-globalonlinedeveloper/pdfcraftai}"
 
 # Defaults match the test account documented in
 # tests/e2e-prod/README.md. Override via env if rotating credentials.

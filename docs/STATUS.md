@@ -5,6 +5,42 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-03 — Session: Windows git auto-sync, prod CSP fix (Cloudflare), Razorpay test hardening
+
+**Infra / tooling:**
+- WINDOWS GIT RESTORED + AUTO-SYNC. The Windows workspace folder's `.git` was unusable via the
+  FUSE mount (lock-file ops blocked), so it was re-initialized Windows-side tracking `origin/main`
+  (HEAD `eb6e657`). New PULL-ONLY auto-sync: Task Scheduler **`pdfcraftai-Auto-Sync`** runs
+  `.claude/autosync-pull.ps1` every 15 min (`git fetch` + `merge --ff-only`, logs to
+  `.claude/autosync.log`). Replaced the broken `ATS-Auto-Sync` task (every-5-min, malformed
+  action, failing every run). Model: Cowork pushes -> GitHub -> Windows auto-pulls.
+- PROD CSP FIXED (the long-standing "live CSP is only `upgrade-insecure-requests`" gap). Root cause:
+  Hostinger LiteSpeed collapses the multi-directive CSP to its last directive (confirmed at the
+  origin IP, so not Cloudflare); the Passenger `.htaccess` has no CSP and is regenerated on deploy.
+  FIX: Cloudflare **Response Header Transform Rule "Full CSP header (all responses)"** does
+  Set-static-overwrite of `Content-Security-Policy` with the full policy at the edge. Verified live
+  (~1044-char header incl. `challenges.cloudflare.com`; homepage console clean, zero CSP violations).
+  Closes the smoke.spec CSP/Turnstile failures AND enforces the intended policy in prod for the first
+  time. **DRIFT: CSP now lives in BOTH `next.config.mjs` and the Cloudflare rule — keep in sync.**
+  (See CLAUDE.md gotcha for the full detail + account/zone IDs.)
+
+**Pushed (this commit):**
+- `tests/e2e-prod/payments-flow.spec.ts` — rewrote "Razorpay checkout opens" ->
+  "order created + Razorpay checkout SDK loads": hard-asserts the `createCheckoutAction` SERVER
+  ACTION responds <400 AND `checkout.razorpay.com` SDK is requested (proves the real test-mode
+  order-creation path); the hosted iframe is now soft/observational (headless CI cannot render
+  Razorpay's cross-origin iframe — that was the SOLE cause of the failing payment test). The old
+  test waited on a non-existent REST path `/api/payments/razorpay/create-order` so it never
+  actually verified the API. Prod confirmed Razorpay TEST mode (`rzp_test_*`).
+- `scripts/setup-prod-e2e-secrets.sh` — repo default corrected `durgapoja6408-creator/pdfcraftai`
+  -> `globalonlinedeveloper/pdfcraftai` (post repo migration). Left line 37 `PROD_E2E_TEST_EMAIL`
+  (durgapoja6408@gmail.com) — that's the test Google login, not the GitHub account.
+
+**Verify:** `tsc --noEmit` clean; aggregator 7173/0 across 131 suites. Next: dispatch prod-e2e to
+confirm the 2 CSP tests + the rewritten Razorpay test are green.
+
+---
+
 ## 2026-06-02 — Full audit + hardening pass (commit `8f4b71c`, DEPLOYED, health green)
 
 Comprehensive security / payments / SEO / a11y audit + fixes. Prod deploy verified
