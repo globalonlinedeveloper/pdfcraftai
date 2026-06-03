@@ -16,6 +16,10 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # WebKit frequently can't launch headless on ubuntu CI runners (browser
+    # dies on launch); keep it best-effort so it never reds the workflow while
+    # Chromium + Firefox give reliable cross-engine coverage.
+    continue-on-error: ${{ matrix.browser == 'webkit' }}
     strategy:
       fail-fast: false
       matrix:
