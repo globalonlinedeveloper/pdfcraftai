@@ -55,7 +55,10 @@ const INPUT_OVERRIDE: Record<string, string> = {
   "extract-images": IMAGEPDF, "pdf-attachments": IMAGEPDF,
   "ai-sign": FORM, "ai-redact": FORM,
 };
-const EDITOR_IDS = new Set(["add-links", "add-text-box", "crop-pdf", "delete-pages", "extract-pages", "sort-pages"]);
+const EDITOR_IDS = new Set(["add-links", "add-text-box", "crop-pdf", "delete-pages", "extract-pages", "sort-pages", "free-draw-pdf", "highlight-pdf", "sign-pdf-free", "redact-free"]);
+// Bespoke download-centric tools (own components, not the shared role=status base):
+// their output IS the produced download, surfaced via a Download/Apply control.
+const DOWNLOAD_TOOLS = new Set(["rotate", "split", "odd-even-pages", "pdf-overlay", "compress-pdf"]);
 
 // ---- generic drivers (mirror all-tools-execution.spec.ts) -----------------
 async function uploadByAccept(page: Page, primaryOverride?: string): Promise<number> {
@@ -183,8 +186,9 @@ function buildVariants(groups: OptGroup[]): Array<{ g: OptGroup | null; v: strin
   return out;
 }
 
-async function freeVerdict(page: Page, baseline: number, downloadedRef: { v: boolean }): Promise<{ ok: boolean; reason: string }> {
-  const deadline = Date.now() + 35_000; // server-side compress can be slow
+async function freeVerdict(page: Page, baseline: number, downloadedRef: { v: boolean }, allowSecondaryClick = false): Promise<{ ok: boolean; reason: string }> {
+  const deadline = Date.now() + 40_000; // server-side compress can be slow
+  let clickedSecondary = false;
   const LOADING = /^(loading|processing|reading|parsing|working|compress|generating|please wait|scanning)/i;
   while (Date.now() < deadline) {
     if (downloadedRef.v) return { ok: true, reason: "download" };
@@ -198,6 +202,16 @@ async function freeVerdict(page: Page, baseline: number, downloadedRef: { v: boo
       if ((await st.getAttribute("aria-busy")) === "true") continue;
       const t = ((await st.textContent().catch(() => "")) || "").trim();
       if (t.length > 12 && !LOADING.test(t)) return { ok: true, reason: `status card: ${t.slice(0, 40)}` };
+    }
+    // For known download-centric tools only: click their Download/Apply once
+    // (their output is the produced file). Gated so inspectors aren't affected.
+    if (allowSecondaryClick && !clickedSecondary) {
+      const dl = page.locator('button:visible:has-text("Download"), button:visible:has-text("Apply"), button:visible:has-text("Generate"), a[download]:visible');
+      for (let i = 0; i < (await dl.count()); i++) {
+        const b = dl.nth(i);
+        if (await b.isEnabled().catch(() => false)) { try { await b.click({ timeout: 3000 }); clickedSecondary = true; } catch { /* */ } break; }
+      }
+      if (downloadedRef.v) return { ok: true, reason: "download (secondary)" };
     }
     // A produced-output control is present (download/export/save) = output ready.
     const ctrl = page.locator('a[download]:visible, button:visible:has-text("Download"), button:visible:has-text("Save"), button:visible:has-text("Export"), button:visible:has-text("CSV"), button:visible:has-text("JSON")');
@@ -250,7 +264,7 @@ test.describe("free option matrix", () => {
         if (variant.g && variant.v != null) await setOption(page, variant.g, variant.v);
         const baseline = ((await page.locator("main").first().textContent().catch(() => "")) || "").length;
         await clickPrimaryAction(page);
-        const v = await freeVerdict(page, baseline, downloadedRef);
+        const v = await freeVerdict(page, baseline, downloadedRef, DOWNLOAD_TOOLS.has(tool.id));
         record({ tool: tool.id, free: true, group: variant.g ? `${variant.g.kind}:${variant.g.id}` : "(none)", value: variant.v, ok: v.ok, reason: v.reason });
         if (!v.ok) anyFail = `${variant.g?.id || "(none)"}=${variant.v}: ${v.reason}`;
       }
