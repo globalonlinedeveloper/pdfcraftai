@@ -24,6 +24,7 @@
 
 "use client";
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState } from "react";
 import { I } from "@/components/icons/Icons";
 
@@ -76,7 +77,7 @@ export function AiOutputActions({ contentMd, kind, sourceName, generatedAtIso }:
       // Modern API; permissions are user-gesture-scoped so this
       // works without a permission prompt in every browser the
       // app supports (Chrome/Safari/Firefox latest).
-      await navigator.clipboard.writeText(contentMd);
+      await copyText(contentMd);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch (err) {

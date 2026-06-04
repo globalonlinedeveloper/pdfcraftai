@@ -266,8 +266,8 @@ assert(
 
 // Copy-to-clipboard for the freshly minted key
 assert(
-  /navigator\.clipboard\.writeText/.test(managerSrc),
-  "G9: ApiKeyManager copies raw key via navigator.clipboard (UX for one-time reveal)",
+  /copyText\s*\(/.test(managerSrc),
+  "G9: ApiKeyManager copies raw key via the shared copyText() helper (one-time reveal UX)",
 );
 
 // "Have you copied it?" confirmation before dismissing the reveal —

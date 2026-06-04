@@ -20,6 +20,7 @@
 
 "use client";
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -517,7 +518,7 @@ function TableCsvRow({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(table.csv);
+      await copyText(table.csv);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

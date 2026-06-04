@@ -633,8 +633,8 @@ if (fs.existsSync(REFER_BUTTONS)) {
     "G14: ReferralCopyButtons is a client component",
   );
   assert(
-    /navigator\.clipboard\.writeText/.test(buttonsSrc),
-    "G15: copy buttons use navigator.clipboard (modern, secure-context API)",
+    /copyText\s*\(/.test(buttonsSrc),
+    "G15: copy buttons use the shared copyText() helper (Clipboard API + execCommand fallback)",
   );
   // Two buttons — code and full URL. Some users want one, some the
   // other; both pin in one regex so a refactor that drops either

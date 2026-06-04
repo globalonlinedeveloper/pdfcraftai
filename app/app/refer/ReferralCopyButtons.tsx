@@ -6,6 +6,7 @@
 // it needs to be — it does the auth check + DB code lookup +
 // idempotent insert).
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback } from "react";
 
 interface Props {
@@ -18,10 +19,10 @@ export function ReferralCopyButtons({ code, url }: Props) {
 
   const copy = useCallback(async (kind: "code" | "url", text: string) => {
     try {
-      // navigator.clipboard.writeText requires a secure context (HTTPS)
+      // copyText() handles the secure-context requirement + execCommand fallback
       // which production always satisfies. In local dev http://localhost
       // also counts as secure per the spec.
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(kind);
       setTimeout(() => setCopied(null), 1800);
     } catch {

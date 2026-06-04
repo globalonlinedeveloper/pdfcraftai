@@ -17,6 +17,7 @@
 // inspector calls the same parse, just renders all the fields
 // instead of one.
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
@@ -205,7 +206,7 @@ export function PdfInspectorTool() {
     if (m.modDate) metaLines.push(`Modified: ${m.modDate}`);
     if (metaLines.length) lines.push("", "Metadata", ...metaLines);
     try {
-      await navigator.clipboard.writeText(lines.join("\n"));
+      await copyText(lines.join("\n"));
       setCopied(true);
     } catch {
       // Clipboard write can fail on non-HTTPS or without user gesture.

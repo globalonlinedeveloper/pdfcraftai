@@ -36,6 +36,7 @@
 // Pattern matches PageEditorTool / PageGridTool / PdfSimpleOpsTool —
 // slot-based, generic over the consumer's parse-result type.
 
+import { copyText } from "@/lib/client/copy-text";
 import {
   useState,
   useCallback,
@@ -192,7 +193,7 @@ export function PdfReadOpsTool<TParsed>(
       const payload = props.jsonExport
         ? props.jsonExport(result.parsed)
         : result.parsed;
-      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      await copyText(JSON.stringify(payload, null, 2));
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

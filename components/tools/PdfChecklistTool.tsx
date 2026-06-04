@@ -11,6 +11,7 @@
 // parser fn. The component handles the boilerplate (drop, parse,
 // render checklist + headline + copy/CSV/JSON export, repeat).
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback } from "react";
 import type React from "react";
 import { I } from "@/components/icons/Icons";
@@ -158,7 +159,7 @@ export function PdfChecklistTool({
   const copyJson = async () => {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(
+      await copyText(
         JSON.stringify(
           { headline: result.headline, items: result.items },
           null,

@@ -14,6 +14,7 @@
 // 200-line components would mean three places to fix bugs. The
 // per-tool surface (URL, name, copy) lives in the wrapper.
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
@@ -188,7 +189,7 @@ export function PdfTextExportTool({ toolId, format }: PdfTextExportToolProps) {
   const copyOutput = async () => {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(result.output);
+      await copyText(result.output);
       setCopied(true);
     } catch {
       // Clipboard write requires HTTPS + user gesture. Silent fail.

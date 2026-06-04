@@ -19,6 +19,7 @@
 
 "use client";
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -545,7 +546,7 @@ function ResultCard({ result }: { result: GenerateResult }) {
 
   const copyMarkdown = async () => {
     try {
-      await navigator.clipboard.writeText(result.markdown);
+      await copyText(result.markdown);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {

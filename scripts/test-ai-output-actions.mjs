@@ -95,10 +95,10 @@ assert(
 // ---------------------------------------------------------------------
 
 assert(
-  /navigator\.clipboard\.writeText\s*\(/.test(COMP_SRC),
-  "Copy must use `navigator.clipboard.writeText(...)`. " +
-    "`document.execCommand('copy')` is deprecated, async-fails on " +
-    "cross-origin iframes, and is unreliable in sandboxed-tab contexts.",
+  /copyText\s*\(/.test(COMP_SRC),
+  "Copy must use the shared copyText() helper (lib/client/copy-text.ts) — " +
+    "Clipboard API first, execCommand fallback, surfaces failure. Calling " +
+    "navigator.clipboard.writeText directly skips the fallback.",
 );
 
 assert(

@@ -714,6 +714,9 @@ const SUITES = [
   // Pure static parse — no DB, no fetches — always last so a leak
   // failure shows up after the heavier suites have already passed.
   { name: "objecturl-revocation", file: "test-objecturl-revocation.mjs" },
+  // Every Copy button routes through the shared copyText() helper
+  // (Clipboard API → execCommand fallback) — no silent-fail writeText.
+  { name: "clipboard-helper", file: "test-clipboard-helper.mjs" },
   // M22 (#193, 2026-04-29): unit tests for lib/client/csv.ts. Pure
   // logic — escapeCsvField, csvRow, buildCsv. The downloadCsv helper
   // touches DOM globals so it's covered indirectly by the four

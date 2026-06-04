@@ -28,6 +28,7 @@ import { ToolHowItWorks } from "./ToolHowItWorks";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useTrackToolView } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
+import { copyText } from "@/lib/client/copy-text";
 
 type Result = {
   pageCount: number;
@@ -132,39 +133,17 @@ export function PageCountTool() {
 
   const copyCount = async () => {
     if (!result) return;
-    const text = String(result.pageCount);
-    // 1) Modern clipboard API (needs HTTPS + a user gesture).
     try {
-      await navigator.clipboard.writeText(text);
+      // Shared helper: Clipboard API → execCommand fallback → throws
+      // only if both fail (lib/client/copy-text.ts).
+      await copyText(String(result.pageCount));
       setCopied(true);
       setCopyFailed(false);
-      return;
     } catch {
-      // fall through to the legacy path
+      // Both paths failed — surface the manual-copy hint instead of
+      // silently doing nothing.
+      setCopyFailed(true);
     }
-    // 2) Legacy execCommand fallback (works in non-secure contexts /
-    //    when the async clipboard API is blocked by policy).
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      if (ok) {
-        setCopied(true);
-        setCopyFailed(false);
-        return;
-      }
-    } catch {
-      // ignore — surface the manual hint below
-    }
-    // 3) Both failed — tell the user how to copy manually instead of
-    //    silently doing nothing.
-    setCopyFailed(true);
   };
 
   const truncateFilename = (name: string, max = 48) => {

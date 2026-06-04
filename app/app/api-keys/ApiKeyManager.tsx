@@ -7,6 +7,7 @@
 
 "use client";
 
+import { copyText } from "@/lib/client/copy-text";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -69,7 +70,7 @@ export function ApiKeyManager({ initialKeys }: { initialKeys: KeyRow[] }) {
   async function copyRaw() {
     if (!freshKey) return;
     try {
-      await navigator.clipboard.writeText(freshKey.rawKey);
+      await copyText(freshKey.rawKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
