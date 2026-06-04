@@ -22,7 +22,6 @@ const CATALOG_COUNT = TOOLS.filter((t) => t.id !== "ai-chat").length;
 const POPULAR: Tool[] = POPULAR_TOOL_IDS
   .map((id) => TOOLS.find((t) => t.id === id))
   .filter((t): t is Tool => !!t && t.id !== "ai-chat");
-const EXAMPLES = ["combine", "shrink", "sign"];
 
 function synonymIds(qq: string): Set<string> {
   const out = new Set<string>();
@@ -103,15 +102,6 @@ export function ToolFilter() {
           )}
         </div>
 
-        {/* Example synonym chips (hidden while searching) */}
-        {!searching && (
-          <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-            <span className="muted" style={{ fontSize: 11.5 }}>Try</span>
-            {EXAMPLES.map((ex) => (
-              <button key={ex} type="button" className="tools-example-chip" onClick={() => setQ(ex)}>{ex}</button>
-            ))}
-          </div>
-        )}
 
         {/* Controls — filter group + Browse-by-task, height-matched */}
         <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
