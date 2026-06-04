@@ -1,0 +1,37 @@
+# .github/workflows/design-audit.yml — Playwright design/structure audit.
+# Full-page desktop+mobile screenshots of representative pages + structural
+# metrics across the whole sitemap. Manual only. Uploads design-audit/ artifact.
+name: design-audit
+on:
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Max pages for the structural scan (0 = all)"
+        required: false
+        default: "0"
+      url:
+        description: "Base URL"
+        required: false
+        default: "https://pdfcraftai.com"
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run design audit
+        env:
+          AUDIT_URL: ${{ github.event.inputs.url || 'https://pdfcraftai.com' }}
+          AUDIT_MAX: ${{ github.event.inputs.max || '0' }}
+        run: node scripts/design-audit.mjs
+      - name: Upload audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-audit
+          path: design-audit/
+          retention-days: 14
