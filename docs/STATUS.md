@@ -5,6 +5,35 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-04 (cont.) — Design/structure improvements (Playwright design-audit driven)
+
+Built `scripts/design-audit.mjs` + `.github/workflows/design-audit.yml` (full-scroll desktop+mobile
+screenshots of representative pages + structural-metrics scan across the sitemap: h1/heading-order,
+landmarks, mobile overflow, tap targets). Findings → fixes:
+
+- **/tools grouped into labelled `<h2>` category sections** (ToolFilter) — was a flat 113-card wall
+  (h2=0). Now Organize/Convert/Edit/Optimize/Security/AI sections. VERIFIED live (re-audit: tools-index
+  h2=6). Also fixed the h1->h3 skip on the index.
+- **`<main>` landmark added to 7 pages** (/about /bulk /changelog /contact /careers /status /gdpr) —
+  VERIFIED live (re-audit: missing-main 0/40).
+- **AdSlot headline `<h3>`→`<div>`** — the sponsored card's h3 sat right after the page `<h1>` creating an
+  h1->h3 skip on every page with an ad slot. VERIFIED live (re-audit: heading-order jumps 30→5).
+- **Footer → flex-wrap layout** (Footer.tsx) — the sitewide ~81px mobile horizontal overflow. Root cause
+  pinned via an audit "widest-element" probe: the footer rendered ~475px wide (4 content-sized columns +
+  40px gaps) on a 390px viewport. A first attempt (responsive `.footer-grid` CSS class + media queries)
+  did NOT take effect (computed grid-template-columns never matched the rule — cause unclear, likely a
+  cascade/specificity issue), so replaced with inline `flex-wrap` + `flex: 1 1 130px` + `minWidth: 0`
+  which collapses with NO media-query dependency. Commit 532ec20. **DEPLOY PENDING:** Hostinger
+  auto-pull jammed ~15 min at d793a5e (one commit behind) despite CI green + an empty-commit nudge;
+  last-source confirms the build pipeline hasn't advanced. Re-audit to confirm overflow→0 is queued for
+  once the pull catches up (or trigger hPanel → redeploy).
+
+Crawl #7 (post earlier fixes): 295/295 ok, 0 console errors, 0 broken images, 0 bottom-spacing gaps.
+tsc + aggregator (7575/0) green on every commit. Commits: f88ceaa (grouping + main + AdSlot),
+532ec20 (footer flex-wrap), + design-audit tooling (7f25bd5, d793a5e).
+
+---
+
 ## 2026-06-04 (cont.) — Bottom-spacing regression + sitewide fix, Playwright-verified on every page
 
 User reported empty gaps on tool pages. Two distinct causes, both fixed sitewide:
