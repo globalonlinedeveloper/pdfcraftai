@@ -5,6 +5,20 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-04 (cont.) — /tools header polish (prototype-approved, 5 fixes)
+
+Per user visual feedback, refined the /tools header (commit 2c4bf1e; mocked via the visualize widget +
+approved before coding): (1) placeholder -> clean "Search 112 tools…" + a clickable "Try: combine ·
+shrink · sign" example-chip row (teaches the synonym search); (2) "Browse by task" now 44px,
+height-matched to the search box + filter group on its own controls row; (3) "What's a credit?"
+restyled with the accent Coin icon + spacing; (4) jump-bar native scrollbar hidden (scrollbar-width:
+none + ::-webkit-scrollbar display:none) with a right-edge fade (linear-gradient to --bg) signalling
+more categories; (5) single divider in the search/filter state — the first results section omits its
+top border so it no longer doubles with the sticky header's bottom border. Live design-audit (2c4bf1e):
+h1=1, h2=12, jumps=0, overflow=0 desktop+mobile. tsc 0, aggregator 7576/0.
+
+---
+
 ## 2026-06-04 (cont.) — /tools findability upgrade (P0/P1/P2) shipped + verified
 
 Implemented the /tools improvement plan in ToolFilter.tsx + lib/tool-sections.ts (commit ac43b5e):
