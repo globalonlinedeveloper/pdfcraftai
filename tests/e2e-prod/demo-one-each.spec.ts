@@ -29,6 +29,31 @@ const EMAIL = process.env.PROD_E2E_TEST_EMAIL;
 const PASSWORD = process.env.PROD_E2E_TEST_PASSWORD;
 const AI_OK = process.env.PROD_E2E_AI_BUDGET_OK === "yes";
 
+// Proven generic primary-action driver (mirrors all-tools-execution.spec.ts,
+// whose ai-summarize test passes). The first demo run used a naive button
+// selector that didn't trigger the /api/ai POST on the summarize runner.
+const ACTION = /summari[sz]e|simplif|explain|extract|generate|\brun\b|^apply$|review|improve|audit|translate|rewrite|convert|analy[sz]e|detect|proofread|paraphrase|condense|expand|^create|build|make|process|^start$/i;
+const NOT_ACTION = /sign ?in|log ?in|sign ?up|register|google|reset|clear|cancel|remove|back|upgrade|buy|pricing|menu|close|new chat|learn more|how it works|download|copy|sample|feedback|report a|share/i;
+async function clickPrimaryAction(page: Page): Promise<void> {
+  const buttons = page.locator("button:visible, a[role=button]:visible");
+  const n = await buttons.count();
+  for (let i = 0; i < n; i++) {
+    const b = buttons.nth(i);
+    const name = ((await b.textContent()) || "").trim();
+    if (!name || NOT_ACTION.test(name) || !ACTION.test(name)) continue;
+    if (!(await b.isEnabled())) continue;
+    try { await b.click({ timeout: 4000 }); return; } catch { /* */ }
+  }
+  const primaries = page.locator("button.btn-primary:visible");
+  for (let i = 0; i < (await primaries.count()); i++) {
+    const b = primaries.nth(i);
+    const name = ((await b.textContent()) || "").trim();
+    if (NOT_ACTION.test(name)) continue;
+    if (!(await b.isEnabled())) continue;
+    try { await b.click({ timeout: 4000 }); return; } catch { /* */ }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // NON-AI (free) tool: Merge PDFs — full input + output validation
 // ---------------------------------------------------------------------------
@@ -89,7 +114,7 @@ test.describe("AI summarize", () => {
   test.skip(!AI_OK, "AI: PROD_E2E_AI_BUDGET_OK!=yes (spends credits)");
 
   test("AI ai-summarize — 5pg input -> verified summary output", async ({ page }) => {
-    test.setTimeout(150_000);
+    test.setTimeout(110_000);
 
     // login (requires prod TEST MODE so Turnstile always-passes)
     let loggedIn = false;
@@ -113,15 +138,10 @@ test.describe("AI summarize", () => {
 
     // ACT + capture the AI API status
     const aiResp = page
-      .waitForResponse((r) => /\/api\/ai\//.test(r.url()) && r.request().method() === "POST", { timeout: 120_000 })
+      .waitForResponse((r) => /\/api\/ai\//.test(r.url()) && r.request().method() === "POST", { timeout: 75_000 })
       .then((r) => r.status())
       .catch(() => -1);
-    await page
-      .getByRole("button", { name: /summari[sz]e|generate|run|^create|process/i })
-      .or(page.locator("button.btn-primary:visible"))
-      .first()
-      .click({ timeout: 8000 })
-      .catch(() => {});
+    await clickPrimaryAction(page);
     const status = await aiResp;
     test.info().annotations.push({ type: "ai-status", description: `/api/ai status ${status}` });
 
