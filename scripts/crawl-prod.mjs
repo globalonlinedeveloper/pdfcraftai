@@ -47,7 +47,7 @@ async function visit(browser, url) {
   page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text().slice(0, 200)); });
   page.on("pageerror", (e) => pageErrors.push((e.message || String(e)).slice(0, 200)));
   page.on("response", (r) => { if (r.status() >= 400) failedReq.push(`${r.status()} ${r.url().slice(0, 160)}`); });
-  let status = 0, ok = false, scrollH = 0, brokenImgs = 0, err = null;
+  let status = 0, ok = false, scrollH = 0, brokenImgs = 0, bottomGap = -1, err = null;
   try {
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     status = resp ? resp.status() : 0;
@@ -57,12 +57,31 @@ async function visit(browser, url) {
     await page.waitForTimeout(300);
     scrollH = await page.evaluate(() => document.body.scrollHeight);
     brokenImgs = await page.evaluate(() => [...document.images].filter((i) => i.complete && i.naturalWidth === 0).length);
+    // Bottom spacing check: empty vertical space between the last rendered
+    // content element and the footer (catches the empty-spacer / over-reserve
+    // gaps). Returns px gap, or -1 if no footer.
+    bottomGap = await page.evaluate(() => {
+      const footer = document.querySelector("footer");
+      if (!footer) return -1;
+      const footerTop = footer.getBoundingClientRect().top + window.scrollY;
+      let maxBottom = 0;
+      for (const el of document.body.querySelectorAll("*")) {
+        if (el === footer || footer.contains(el) || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+        const txt = (el.textContent || "").trim();
+        if (!txt) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) continue;
+        const bottom = r.bottom + window.scrollY;
+        if (bottom <= footerTop + 1 && bottom > maxBottom) maxBottom = bottom;
+      }
+      return Math.round(footerTop - maxBottom);
+    });
     const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 400));
     const errored = /something went wrong|application error|could not be found|page not found|500 -|internal server error/i.test(bodyText);
     ok = status >= 200 && status < 400 && !errored;
   } catch (e) { err = (e.message || String(e)).split("\n")[0].slice(0, 200); }
   await ctx.close();
-  return { url, status, ok, scrollH, consoleErrors, pageErrors, failedReq, brokenImgs, err };
+  return { url, status, ok, scrollH, consoleErrors, pageErrors, failedReq, brokenImgs, bottomGap, err };
 }
 
 (async () => {
@@ -77,7 +96,7 @@ async function visit(browser, url) {
       const r = await visit(browser, u);
       results.push(r);
       const tag = r.ok ? "ok " : "BAD";
-      console.log(`[${results.length}/${urls.length}] ${tag} ${String(r.status).padEnd(3)} ce=${r.consoleErrors.length} pe=${r.pageErrors.length} 4xx=${r.failedReq.length} img=${r.brokenImgs} ${(r.url.replace(BASE, "") || "/")}${r.err ? " ERR:" + r.err : ""}`);
+      console.log(`[${results.length}/${urls.length}] ${tag} ${String(r.status).padEnd(3)} ce=${r.consoleErrors.length} pe=${r.pageErrors.length} 4xx=${r.failedReq.length} img=${r.brokenImgs} gap=${r.bottomGap} ${(r.url.replace(BASE, "") || "/")}${r.err ? " ERR:" + r.err : ""}`);
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
@@ -93,6 +112,11 @@ async function visit(browser, url) {
   if (withConsole.length) { console.log(`\n-- console / page errors (${withConsole.length}) --`); withConsole.slice(0, 50).forEach((r) => console.log(`  ${r.url}\n     ${[...r.pageErrors, ...r.consoleErrors].slice(0, 2).join("\n     ")}`)); }
   if (withBroken.length) { console.log(`\n-- broken images (${withBroken.length}) --`); withBroken.forEach((r) => console.log(`  ${r.url}  (${r.brokenImgs})`)); }
   if (with4xx.length) { console.log(`\n-- pages with failed (>=400) sub-requests (${with4xx.length}) --`); with4xx.slice(0, 40).forEach((r) => console.log(`  ${r.url} :: ${r.failedReq.slice(0, 3).join(" ; ")}`)); }
+  const GAP_THRESHOLD = 180;
+  const withGap = results.filter((r) => r.bottomGap > GAP_THRESHOLD).sort((a, b) => b.bottomGap - a.bottomGap);
+  console.log(`\n-- bottom spacing gaps > ${GAP_THRESHOLD}px (${withGap.length}) --`);
+  withGap.slice(0, 40).forEach((r) => console.log(`  gap=${r.bottomGap}px  ${r.url.replace(BASE, "") || "/"}`));
+  if (!withGap.length) console.log("  none — bottom spacing is clean on every page");
   console.log(`\nReport written: crawl-report.json`);
   process.exit(0); // report-only: do not fail the job on findings
 })().catch((e) => { console.error("CRAWL FATAL:", e); process.exit(1); });
