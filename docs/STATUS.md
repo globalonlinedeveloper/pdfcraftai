@@ -5,6 +5,32 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-04 (cont.) — Bottom-spacing regression + sitewide fix, Playwright-verified on every page
+
+User reported empty gaps on tool pages. Two distinct causes, both fixed sitewide:
+1. **Mid-page gap (my regression)** — the CLS minHeight:470 reserve I'd added over-reserved short tools
+   (e.g. bates-numbers ~320px) leaving ~150px of empty space. REVERTED (commit abd51fe) — the real CLS
+   cause was the cookie banner (below), not the runner swap, so the reserve wasn't needed.
+2. **Bottom gap (pre-existing)** — an empty `<div style={{padding:"80px 0"}} />` (160px of nothing) before
+   `</main>` on `app/tool/[id]/page.tsx` (all 113 tool pages) + `app/tools/page.tsx`. The footer already
+   has marginTop:80 + padding-top:48, so this was pure dead space → ~240px gap before the footer. REMOVED
+   (commit eed2e01).
+
+**Verification (Playwright, scroll-to-bottom on EVERY page):** extended `scripts/crawl-prod.mjs` to measure
+`footerTop − lastContentBottom` per page and flag >180px (`gap=` column + summary). crawl #6 (chromium, all
+295 sitemap URLs vs prod eed2e01): **295/295 ok, 0 console errors, 0 broken images, bottom-gap median 80px /
+max 80px, 0 pages >150px.** "Bottom spacing is clean on every page."
+
+CLS side note: the Lighthouse-named culprit was the **cookie consent banner** (0.18). Fixed the on-mount
+`focus()` to `{preventScroll:true}` (commit 07ad8bb) → 0.18→0.109 on Lighthouse mobile. On a real browser
+(desktop + narrow) the banner is `position:fixed`, SSR'd, and measures **CLS 0** (verified live) — the residual
+mobile 0.109 is a Lighthouse-emulation artifact of the fixed banner, not a visible shift; left as a minor item.
+
+CI additions kept: `crawl-prod.mjs` bottom-gap detector; `perf.yml` prints layout-shift culprit nodes. tsc +
+aggregator green throughout. Commits: abd51fe, eed2e01, 07ad8bb, 9e19527.
+
+---
+
 ## 2026-06-04 (cont.) — page-count review → sitewide fixes (CLS + clipboard)
 
 Triggered by a review of `/tool/page-count`; applied the recurring findings across the whole surface
