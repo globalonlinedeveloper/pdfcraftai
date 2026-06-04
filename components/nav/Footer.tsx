@@ -65,9 +65,10 @@ export function Footer() {
   return (
     <footer style={{ borderTop: "1px solid var(--border)", padding: "48px 28px 32px", marginTop: 80 }}>
       <div
-        className="container-x footer-grid"
+        className="container-x"
+        style={{ display: "flex", flexWrap: "wrap", gap: 32, rowGap: 28 }}
       >
-        <div>
+        <div style={{ flex: "1 1 240px", minWidth: 0 }}>
           <div className="row" style={{ marginBottom: 12 }}>
             <span className="logo-mark">P</span>
             <span style={{ fontWeight: 600 }}>
@@ -112,7 +113,7 @@ export function Footer() {
         </div>
 
         {COLS.map((col) => (
-          <div key={col.title}>
+          <div key={col.title} style={{ flex: "1 1 130px", minWidth: 0 }}>
             <div className="eyebrow" style={{ marginBottom: 10 }}>
               {col.title}
             </div>
