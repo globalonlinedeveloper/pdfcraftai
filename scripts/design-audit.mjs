@@ -68,9 +68,11 @@ async function metrics(page) {
       }
     }
     wide.sort((a, b) => b.w - a.w);
-    const footerEl = document.querySelector(".footer-grid");
-    const footerCols = footerEl ? getComputedStyle(footerEl).gridTemplateColumns : "n/a";
-    const widest = { topWide: wide.slice(0, 4), footerCols };
+    const widest = { topWide: wide.slice(0, 3) };
+    // SEO structural signals
+    const metaDesc = (document.querySelector('meta[name="description"]')?.getAttribute("content") || "").length;
+    const hasCanonical = !!document.querySelector('link[rel="canonical"]');
+    const titleLen = (document.title || "").length;
     // tiny tap targets (interactive elements < 40px in the smaller dimension)
     let tinyTargets = 0;
     for (const el of q("a, button, input, [role=button]")) {
@@ -87,7 +89,7 @@ async function metrics(page) {
       if (fs && fs < 12) tinyFont++;
     }
     return {
-      vw, widest, h1: h1.length, h2: h2.length, h3: h3.length, headingOrderJumps: orderJumps,
+      vw, widest, metaDesc, hasCanonical, titleLen, h1: h1.length, h2: h2.length, h3: h3.length, headingOrderJumps: orderJumps,
       h1Text: (h1[0] && h1[0].textContent || "").trim().slice(0, 60),
       landmarks, toolAboveFold, overflowX, tinyTargets, tinyFont,
       scrollH: document.body.scrollHeight,
@@ -140,18 +142,26 @@ async function run() {
   } catch (e) { console.log("sitemap fetch failed:", (e.message || e).slice(0, 100)); }
   const limit = process.env.AUDIT_MAX ? +process.env.AUDIT_MAX : urls.length;
   urls = urls.slice(0, limit);
-  console.log(`\n-- structural scan of ${urls.length} pages (mobile 390) --`);
+  console.log(`\n-- structural scan of ${urls.length} pages (mobile 390, full scroll, reused context) --`);
+  // Reuse ONE context + page across all URLs (per-URL newContext was the
+  // bottleneck that timed out at 295). Full scroll-to-bottom on every page.
+  const sctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const spage = await sctx.newPage();
+  let n = 0;
   for (const u of urls) {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
-    const page = await ctx.newPage();
+    n++;
     try {
-      await page.goto(u, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await page.waitForTimeout(400);
-      const m = await metrics(page);
-      report.all.push({ url: u.replace(BASE, "") || "/", h1: m.h1, h2: m.h2, headingOrderJumps: m.headingOrderJumps, landmarks: m.landmarks, overflowX: m.overflowX, tinyTargets: m.tinyTargets, toolAboveFold: m.toolAboveFold });
+      await spage.goto(u, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await scrollToBottom(spage);
+      const m = await metrics(spage);
+      report.all.push({ url: u.replace(BASE, "") || "/", h1: m.h1, h2: m.h2,
+        headingOrderJumps: m.headingOrderJumps, landmarks: m.landmarks, overflowX: m.overflowX,
+        tinyTargets: m.tinyTargets, toolAboveFold: m.toolAboveFold, metaDesc: m.metaDesc,
+        hasCanonical: m.hasCanonical, titleLen: m.titleLen, scrollH: m.scrollH });
+      if (n % 25 === 0) console.log(`  …${n}/${urls.length}`);
     } catch (e) { report.all.push({ url: u.replace(BASE, ""), err: (e.message || e).slice(0, 80) }); }
-    await ctx.close();
   }
+  await sctx.close();
   await browser.close();
 
   writeFileSync(`${OUT}/metrics.json`, JSON.stringify(report, null, 2));
@@ -168,7 +178,15 @@ async function run() {
   console.log(`mobile horizontal overflow (>2px): ${overflow.length}  | missing <main>: ${noMain.length}`);
   if (overflow.length) overflow.slice(0, 25).forEach((r) => console.log(`  overflowX=${r.overflowX}px  ${r.url}`));
   if (multiH1.length) multiH1.slice(0, 15).forEach((r) => console.log(`  h1=${r.h1}  ${r.url}`));
-  if (jumps.length) jumps.slice(0, 15).forEach((r) => console.log(`  jumps=${r.headingOrderJumps}  ${r.url}`));
+  if (jumps.length) jumps.slice(0, 20).forEach((r) => console.log(`  jumps=${r.headingOrderJumps}  ${r.url}`));
+  const noDesc = a.filter((r) => (r.metaDesc || 0) < 20 && !r.err);
+  const noCanon = a.filter((r) => r.hasCanonical === false && !r.err);
+  const badTitle = a.filter((r) => (r.titleLen || 0) < 10 && !r.err);
+  console.log(`SEO: missing/short meta-description: ${noDesc.length}  | missing canonical: ${noCanon.length}  | short <title>: ${badTitle.length}`);
+  if (noDesc.length) noDesc.slice(0, 15).forEach((r) => console.log(`  desc=${r.metaDesc}  ${r.url}`));
+  if (noCanon.length) noCanon.slice(0, 15).forEach((r) => console.log(`  no-canonical  ${r.url}`));
+  const maxOv = a.filter((r)=>(r.overflowX||0)>2).sort((x,y)=>y.overflowX-x.overflowX);
+  console.log(`mobile overflow worst: ${maxOv.slice(0,5).map(r=>r.overflowX+"px "+r.url).join(" | ") || "none"}`);
   console.log(`\nReport: design-audit/metrics.json + ${report.shots.length} screenshots`);
 }
 run().catch((e) => { console.error(e); process.exit(1); });
