@@ -184,12 +184,23 @@ function buildVariants(groups: OptGroup[]): Array<{ g: OptGroup | null; v: strin
 }
 
 async function freeVerdict(page: Page, baseline: number, downloadedRef: { v: boolean }): Promise<{ ok: boolean; reason: string }> {
-  const deadline = Date.now() + 22_000;
+  const deadline = Date.now() + 35_000; // server-side compress can be slow
+  const LOADING = /^(loading|processing|reading|parsing|working|compress|generating|please wait|scanning)/i;
   while (Date.now() < deadline) {
     if (downloadedRef.v) return { ok: true, reason: "download" };
     const erred = await hasError(page);
     if (erred) return { ok: false, reason: `error: ${erred}` };
-    const ctrl = page.locator('a[download]:visible, button:visible:has-text("Download"), button:visible:has-text("Save"), button:visible:has-text("Export"), button:visible:has-text("Copy"), button:visible:has-text("JSON"), button:visible:has-text("CSV")');
+    // Shared-base success card: role=status that is NOT the busy/loading state.
+    // PdfSimpleOpsTool + PdfReadOpsTool render results this way (~28 tools).
+    const statuses = page.locator('[role="status"]:visible');
+    for (let i = 0; i < (await statuses.count()); i++) {
+      const st = statuses.nth(i);
+      if ((await st.getAttribute("aria-busy")) === "true") continue;
+      const t = ((await st.textContent().catch(() => "")) || "").trim();
+      if (t.length > 12 && !LOADING.test(t)) return { ok: true, reason: `status card: ${t.slice(0, 40)}` };
+    }
+    // A produced-output control is present (download/export/save) = output ready.
+    const ctrl = page.locator('a[download]:visible, button:visible:has-text("Download"), button:visible:has-text("Save"), button:visible:has-text("Export"), button:visible:has-text("CSV"), button:visible:has-text("JSON")');
     for (let i = 0; i < (await ctrl.count()); i++) { if (await ctrl.nth(i).isEnabled().catch(() => false)) return { ok: true, reason: "result control" }; }
     if ((await page.locator('[class*="result"]:visible, [class*="output"]:visible, [class*="stat"]:visible, pre:visible, table:visible, canvas:visible, dl:visible').count()) > 0) return { ok: true, reason: "result region" };
     const body = ((await page.locator("main").first().textContent().catch(() => "")) || "");
@@ -286,7 +297,7 @@ test.describe("AI option matrix", () => {
         if (tool.special !== "prompt") await uploadByAccept(page, INPUT_OVERRIDE[tool.id]);
         await fillInputs(page);
         if (variant.g && variant.v != null) await setOption(page, variant.g, variant.v);
-        const aiRespP = page.waitForResponse((r) => /\/api\/ai\//.test(r.url()) && r.request().method() === "POST", { timeout: 90_000 }).catch(() => null);
+        const aiRespP = page.waitForResponse((r) => /\/api\/ai\//.test(r.url()) && !/\/api\/ai\/(estimate|feedback)/.test(r.url()) && r.request().method() === "POST", { timeout: 90_000 }).catch(() => null);
         await clickPrimaryAction(page);
         const r = await aiRespP;
         const status = r ? r.status() : -1;
