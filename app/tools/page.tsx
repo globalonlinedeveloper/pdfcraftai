@@ -163,8 +163,6 @@ export default function ToolsPage() {
           </div>
         </div>
       </section>
-
-      <div style={{ padding: "80px 0" }} />
     </main>
   );
 }

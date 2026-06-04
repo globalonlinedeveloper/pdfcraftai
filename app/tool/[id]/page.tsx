@@ -681,8 +681,6 @@ export default function ToolRunnerPage({ params }: Params) {
           <RelatedTools currentId={tool.id} group={tool.group} />
         </div>
       </section>
-
-      <div style={{ padding: "80px 0" }} />
     </main>
   );
 }
