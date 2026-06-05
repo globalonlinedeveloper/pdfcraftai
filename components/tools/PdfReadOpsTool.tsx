@@ -44,6 +44,7 @@ import {
 } from "react";
 import { I } from "@/components/icons/Icons";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolBusy } from "./Skeleton";
 import { humanSize } from "@/lib/client/pdf-utils";
 import { useTrackToolView } from "./useToolTracking";
 import { mapPdfOpError } from "@/lib/pdf/error-messages";
@@ -261,22 +262,7 @@ export function PdfReadOpsTool<TParsed>(
         </p>
       )}
 
-      {busy && (
-        <div
-          className="card"
-          style={{ padding: 16, background: "var(--bg-1)", display: "flex", gap: 12 }}
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <span className="pulse-soft" style={{ color: "var(--accent)" }}>
-            <I.Sparkle size={16} />
-          </span>
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>
-            {props.busyLabel}
-          </div>
-        </div>
-      )}
+      {busy && <ToolBusy label={props.busyLabel} />}
 
       {result && head && (
         <div

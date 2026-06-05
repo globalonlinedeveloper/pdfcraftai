@@ -1060,3 +1060,30 @@ h4 {
   padding: 0;
 }
 .tools-sort option { background: var(--bg-1); color: var(--fg); }
+
+/* Skeleton loading primitive (2026-06-05) — shared shimmer for tool "busy"
+   states (components/tools/Skeleton.tsx). Token-driven; the global
+   prefers-reduced-motion rule (G14 above) already disables the animation. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--fg) 9%, transparent),
+    transparent
+  );
+  animation: pdfcraft-skeleton 1.3s ease-in-out infinite;
+}
+@keyframes pdfcraft-skeleton {
+  100% {
+    transform: translateX(100%);
+  }
+}
