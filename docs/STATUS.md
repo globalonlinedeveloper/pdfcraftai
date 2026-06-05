@@ -5,6 +5,23 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-05 — Design tokens formalized (spacing + type scale) + contract guard
+
+Item #3 (design system), foundation slice — additive + zero visual regression. globals.css already had a
+full colour palette (both themes), radius, shadow, and width tokens; the gaps were a spacing scale and a
+type scale. Added `--space-1..16` (4..64px) and `--text-xs..4xl` (11..44px) to the :root/[data-theme=dark]
+block, with values matching the existing font-size/spacing distribution so adopting them
+(`fontSize: 14` -> `var(--text-base)`, `padding: 16` -> `var(--space-4)`) is a no-op visually. Nothing
+consumes them yet, so the rendered site is byte-identical — adoption across components is incremental
+follow-on (kept out of this commit to stay zero-regression). New `scripts/test-design-system.mjs` (62
+assertions) pins the whole token contract: every colour/radius/shadow/width/spacing/type token present in
+the base block, and the light theme overrides all core colour tokens (so the toggle can't silently break)
+while spacing/type stay theme-agnostic. Wired into the aggregator. (Light/dark toggle already exists — no
+work needed there; the only open theme question is whether to A/B light-as-default for new visitors,
+deferred.) tsc 0; aggregator 7739/0 across 138 suites.
+
+---
+
 ## 2026-06-05 — Favourites = registered-users-only, account-backed (DB)
 
 Per user: favourites should be a registered-user feature backed by the DB (not localStorage, not shown
