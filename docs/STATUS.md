@@ -5,6 +5,23 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-05 — Homepage Security copy: make the retention/encryption claims accurate
+
+Audited the homepage Security section against the actual product (the "zero retention" claim looked like
+boilerplate). Findings from db/schema/app.ts: the `files` table is METADATA-ONLY ("actual bytes are not
+stored server-side"; `storage_key` is an unfilled stub) — so uploaded DOCUMENT BYTES genuinely are not
+persisted. BUT `ai_outputs` + `chat_messages` DO store generated RESULTS (summaries/translations/OCR/chat)
+for signed-in users' history (AI requires login — 401 if anonymous), and there's a user-facing delete.
+"AES-256 at rest" is not verifiable from code (depends on the DB host's config). Rewrote the copy to
+assert only what's true/verifiable: "Encrypted in transit (TLS 1.3)" (was "AES-256 at rest, TLS 1.3"),
+"Your documents are never stored — metadata only" (was "Zero-retention AI endpoints"); body now says free
+tools run in-browser, AI uploads aren't stored (metadata only), and generated results are saved to your
+history + deletable; footnote asserts only TLS-in-transit + documents-never-stored. Dropped the
+unverifiable "AES-256 at rest" assertion (flagged to the owner — re-add if the DB is encrypted at rest).
+tsc 0; aggregator 7657/0 (marketing-honesty 17/17, tool-how-it-works 342/342 green).
+
+---
+
 ## 2026-06-05 — Homepage UI/UX pass (P0/P1/P2, approved, no mock)
 
 P0: the homepage ToolsShowcase was rendering the FULL 112-tool catalogue with every accordion group

@@ -148,8 +148,8 @@ export function Audience() {
 // ==================================================================
 export function Security() {
   const bullets = [
-    "AES-256 at rest, TLS 1.3 in transit",
-    "Zero-retention AI endpoints",
+    "Encrypted in transit (TLS 1.3)",
+    "Your documents are never stored — metadata only",
     "SOC 2 Type II + ISO 27001 audit on the roadmap*",
     "DPA available for teams",
     "Private mode: processes in your region",
@@ -182,7 +182,7 @@ export function Security() {
                 Your documents never sit still.
               </h2>
               <p className="muted" style={{ fontSize: 15, marginBottom: 24 }}>
-                Uploads are encrypted in transit. Files are processed in memory and discarded immediately — never persisted on our servers.
+                Free tools run entirely in your browser — your file never leaves your device. With AI tools, your upload is encrypted in transit and processed in memory: we never store the document itself, only lightweight metadata. Results you generate are saved to your account history so you can return to them, and you can delete them anytime.
                 Nothing we process is used to train models — ever.
               </p>
               <div className="col" style={{ gap: 10 }}>
@@ -232,8 +232,9 @@ export function Security() {
               </a>{" "}
               for the honest current posture). DPDP-compliant + GDPR-
               aligned today: data export, deletion, breach runbook all
-              live. AES-256 at rest + TLS 1.3 in transit + zero-
-              retention AI endpoints are factual.
+              live. TLS 1.3 in transit and your-documents-never-
+              stored (metadata only) are factual today; results saved
+              to your history are deletable anytime.
             </p>
           </div>
         </div>
