@@ -32,9 +32,17 @@ stat cards + no `value="→"`, the Top-up CTA + low-balance threshold, the Manag
 guard-required /app/receipts link), and the AI-outputs-with-files-fallback recent list. The existing
 `test-user-dashboard-v2.mjs` PII/cost wall stays green (113/0) — no forbidden columns, links + imports
 intact. tsc 0; aggregator **7850/0 across 141 suites**. Deployed `b30be2a`; verified healthy (db ok) and the
-rebuilt route 307-redirects anon to `/login?callbackUrl=…` (no 500). Auth-gated, so the standard
-logged-out Playwright audit can't reach the rendered page — an authenticated full-page capture is the
-outstanding visual check (offered to the user).
+rebuilt route 307-redirects anon to `/login?callbackUrl=…` (no 500). **Verified via an authenticated
+Playwright full-page capture** (commit `e3a3250` taught `scripts/design-audit.mjs` to log in as the
+prod-e2e account and shoot `AUTH_SHOT_PAGES`): the rebuilt dashboard renders exactly as designed at desktop
+(Quick start row, 3 real stat cards + Top up, Manage row, AI-runs Recent activity) with **overflowX=0**.
+
+**FINDING (pre-existing, separate from this change): `/app/*` mobile horizontal overflow.** The same
+authenticated capture at 390px showed ~199px overflow on the dashboard — root-caused to `AppShell`
+hard-coding `gridTemplateColumns: "240px 1fr"` with **no breakpoint**, so the 240px sidebar stays put on
+phones and pushes `<main>` off-screen (affects every logged-in page; there's an unused `menuOpen` state
+hinting a mobile drawer was intended). The dashboard content itself fits (desktop clean). Fix = collapse
+the AppShell sidebar to a drawer below ~768px — deferred unless prioritized.
 
 ---
 
