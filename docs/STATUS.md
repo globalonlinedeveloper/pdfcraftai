@@ -5,6 +5,28 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-05 — Unify tool loading to a shared Skeleton primitive
+
+Item #3 (design system), loading-state slice. Empty + error states were already standardized
+(ToolDropzone shared empty-state with validation/recovery; `lib/pdf/error-messages.ts` canonical error
+mapping consumed sitewide), so the only loading inconsistency left was the per-base inline "busy" card.
+The two shared tool bases — `PdfReadOpsTool` (13 inspector tools) and `PdfSimpleOpsTool` (13 single-shot
+ops) — each rendered their own ad-hoc busy card (`<div class="card"><span class="pulse-soft"><I.Sparkle/>
+{busyLabel}</div>`). Replaced both with a single token-driven `<ToolBusy label={busyLabel}/>` built on a
+new reusable `<Skeleton>` shimmer (`components/tools/Skeleton.tsx`). `ToolBusy` is `role=status` +
+`aria-live=polite` + `aria-busy` so screen readers announce progress; the shimmer itself is `aria-hidden`
+and honours `prefers-reduced-motion` via the global G14 rule. CSS is `.skeleton` + `.skeleton::after`
+(token-driven: `--bg-2` base, `color-mix(in oklab, var(--fg) 9%, transparent)` shimmer) + `@keyframes
+pdfcraft-skeleton`, all theme-aware. New `scripts/test-skeleton.mjs` (26 assertions) pins the primitive's
+exports, token usage (no raw hex/px), a11y semantics, the CSS+keyframes, and both bases' adoption (and that
+neither still uses the old `pulse-soft` card). Loading is transient so this is invisible on idle
+screenshots — zero idle-render change; 26 tools now share one busy state. tsc 0; aggregator 7766/0 across
+139 suites. Deployed `55f19e9` (clean build, first try); verified live — home/ /tools / a PdfReadOps
+consumer (/tool/page-count) / a PdfSimpleOps consumer (/tool/repair-pdf) all 200, and the
+`pdfcraft-skeleton` keyframe + `.skeleton` rule confirmed present in the prod CSS bundle.
+
+---
+
 ## 2026-06-05 — Design tokens formalized (spacing + type scale) + contract guard
 
 Item #3 (design system), foundation slice — additive + zero visual regression. globals.css already had a
