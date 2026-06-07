@@ -9,6 +9,7 @@ import { getSpendSummary } from "@/lib/user/queries";
 import { formatCredits, formatCount, formatRelative } from "@/lib/user/format";
 import { POPULAR_TOOL_IDS } from "@/lib/tool-sections";
 import { toolById, TOOL_STATS } from "@/lib/tools";
+import { GettingStarted } from "@/components/app/GettingStarted";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -153,6 +154,15 @@ export default async function DashboardPage() {
           Pick a tool to get started, or jump back into your recent work.
         </p>
       </header>
+
+      {/* First-run onboarding (upgrade plan #5) — self-hides once all three
+          activation steps are done or the user dismisses it. Driven by data
+          already loaded above (no extra queries). */}
+      <GettingStarted
+        emailVerified={!unverifiedEmail}
+        ranAiTool={recentRuns.length > 0}
+        hasFiles={recent.length > 0}
+      />
 
       {/* Quick start — one-click launcher (P0). The dashboard used to have no
           path to the core action (run a tool) once a user had files. */}

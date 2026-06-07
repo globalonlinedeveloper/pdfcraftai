@@ -57,6 +57,16 @@ assert(/href="\/app\/ai-history"/.test(src), "AI run rows link to /app/ai-histor
 assert(/KIND_LABEL/.test(src) && /function kindLabel/.test(src), "kind -> friendly label map present");
 assert(/formatRelative\(/.test(src), "rows show relative time");
 
+console.log("first-run onboarding checklist (#5):");
+const gs = fs.readFileSync(path.join(ROOT, "components/app/GettingStarted.tsx"), "utf8");
+assert(/^["']use client["'];/m.test(gs), "GettingStarted is a client component");
+assert(/localStorage\.(getItem|setItem)\(DISMISS_KEY/.test(gs) || /DISMISS_KEY/.test(gs), "dismissal persisted in localStorage");
+assert(/const allDone = steps\.every/.test(gs) && /if \(dismissed \|\| allDone\) return null/.test(gs), "self-hides once all steps done or dismissed");
+assert(/emailVerified/.test(gs) && /ranAiTool/.test(gs) && /hasFiles/.test(gs), "three activation steps");
+assert(/\/tools\?filter=ai/.test(gs), "AI-tool step links to the AI filter");
+assert(/import \{ GettingStarted \}/.test(src), "dashboard imports GettingStarted");
+assert(/<GettingStarted[\s\S]*emailVerified=\{!unverifiedEmail\}[\s\S]*ranAiTool=\{recentRuns\.length > 0\}[\s\S]*hasFiles=\{recent\.length > 0\}/.test(src), "dashboard wires the 3 steps from already-loaded data");
+
 console.log("");
 if (failed === 0) { console.log(`PASS — ${passed} assertions`); console.log(`${passed} passed, 0 failed`); process.exit(0); }
 else { console.error("FAIL:"); for (const m of failures) console.error(`  ${m}`); console.log(`${passed} passed, ${failed} failed`); process.exit(1); }
