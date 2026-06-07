@@ -35,6 +35,10 @@ jobs:
   dump:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Job-level env so the failure step's `if:` can evaluate the secret
+    # (a step-level env block is applied AFTER `if:` is checked).
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Resolve backup name
         id: meta
@@ -97,6 +101,27 @@ jobs:
             ${{ env.OUT }}.sha256
           retention-days: 90
           if-no-files-found: error
+
+      - name: Alert on failure (Slack, optional)
+        # Fires ONLY when the backup job failed AND a Slack webhook is
+        # configured. Success is silent — no news is good news. When the
+        # secret is unset the env is "" and this step is skipped, never
+        # failed, so the workflow works fine before Slack is wired up.
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          payload=$(cat <<EOF
+          {
+            "text": ":rotating_light: pdfcraftai.com DB backup FAILED",
+            "blocks": [
+              {"type": "header", "text": {"type": "plain_text", "text": "🚨 DB backup failed"}},
+              {"type": "section", "text": {"type": "mrkdwn", "text": "The nightly pdfcraftai.com database backup did not complete.\nRun: <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|view logs>\nTime: $(date -u +%FT%TZ)"}},
+              {"type": "context", "elements": [{"type": "mrkdwn", "text": "Check: is the Hostinger box reachable over SSH? Did the HOSTINGER_SSH_KEY secret change? See docs/DB_RESTORE.md."}]}
+            ]
+          }
+          EOF
+          )
+          curl -sS -X POST -H "Content-Type: application/json" \
+            --data "$payload" "$SLACK_WEBHOOK_URL" || true
 
       - name: Scrub key
         if: always()

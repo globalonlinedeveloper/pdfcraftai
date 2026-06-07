@@ -47,9 +47,18 @@ assert(/concurrency:/.test(wf), "A: concurrency guard so two dumps never overlap
 // B — exactly one secret, no DB password baked in
 const secretRefs = [...wf.matchAll(/secrets\.([A-Z0-9_]+)/g)].map((m) => m[1]);
 const uniqSecrets = [...new Set(secretRefs)];
+// HOSTINGER_SSH_KEY is the one REQUIRED secret; SLACK_WEBHOOK_URL is an
+// optional failure-alert webhook. Nothing else (esp. no DB credential) may
+// be referenced — DB creds are read from /proc at runtime.
+const ALLOWED_SECRETS = new Set(["HOSTINGER_SSH_KEY", "SLACK_WEBHOOK_URL"]);
 assert(
-  uniqSecrets.length === 1 && uniqSecrets[0] === "HOSTINGER_SSH_KEY",
-  `B: exactly one secret (HOSTINGER_SSH_KEY); found [${uniqSecrets.join(", ")}]`,
+  uniqSecrets.includes("HOSTINGER_SSH_KEY"),
+  "B: requires the HOSTINGER_SSH_KEY secret",
+);
+const unexpected = uniqSecrets.filter((x) => !ALLOWED_SECRETS.has(x));
+assert(
+  unexpected.length === 0,
+  `B: only the SSH key + optional Slack webhook may be referenced; unexpected [${unexpected.join(", ")}]`,
 );
 // DB creds must be read at runtime from /proc, never hardcoded.
 assert(/\/proc\/\$PID\/environ|\/proc\/\$\{?PID/.test(wf), "B: reads DB creds from /proc at runtime");
@@ -80,6 +89,13 @@ assert(/sha256sum/.test(wf), "D: records a sha256 checksum");
 assert(/upload-artifact@v4/.test(wf), "E: uploads an artifact");
 assert(/retention-days:\s*\d+/.test(wf), "E: sets a finite retention window");
 assert(/if-no-files-found:\s*error/.test(wf), "E: fails if no backup file was produced");
+
+// G — failure alert (Slack, optional, never fires on success)
+assert(/SLACK_WEBHOOK_URL:\s*\$\{\{\s*secrets\.SLACK_WEBHOOK_URL\s*\}\}/.test(wf), "G: job-level SLACK_WEBHOOK_URL env for the if: gate");
+assert(/if:\s*failure\(\)\s*&&\s*env\.SLACK_WEBHOOK_URL\s*!=\s*''/.test(wf), "G: alert gated on failure() AND a configured webhook");
+assert(/DB backup FAILED|DB backup failed/.test(wf), "G: alert names the failing job");
+// The alert must NOT swallow the job's failure status, and success stays silent.
+assert(!/if:\s*success\(\)[\s\S]*SLACK_WEBHOOK_URL/.test(wf), "G: no success-path Slack post (silent on success)");
 
 // F — key hygiene
 assert(/rm -f\s+~\/\.ssh\/id_ed25519/.test(wf), "F: scrubs the private key after use");
