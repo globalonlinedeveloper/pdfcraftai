@@ -40,6 +40,17 @@ the other crons — no GitHub secret needed.
 **Tests:** `test-post-deploy-verify.mjs` (35 assertions) wired into the aggregator →
 **8092 passed / 0 failed across 149 suites**; `tsc` clean.
 
+**SCOPE LESSON + VERIFIED.** First live run health-gated correctly but then ran
+`npm run test:prod-e2e` = the FULL 637-test battery (every tool × option-matrix × 2
+projects) and hit the 25-min cap. That exhaustive sweep is `all-tools.yml`/the weekly
+cadence's job — a per-deploy gate must be FAST. Fixed: the verifier now runs a curated
+set (`smoke + free-tool-execution + auth-flow + admin-flow`, + `ai-tool-execution` only
+when `include_ai`). Re-run **PROVEN GREEN** (commit `443230d`): health-gate waited for the
+new SHA to go live + settle, then **142 tests passed in 1.1 min** (~6.7 min total incl. the
+deploy wait); AI leg excluded, report uploaded, alert correctly skipped. Refill route also
+verified live (401 without/with-wrong secret; safe `configured:false` no-op with the
+correct secret). Final aggregator **8095 / 0 across 149 suites**.
+
 **OWNER ACTIONS (optional, to fully enable):**
 1. `E2E_REFILL_USER_IDS=6b303c3b-ddfd-48fc-9162-2556d077fece` (+ the admin id if you
    want it topped up too) in Hostinger env, and a cron-job.org GET to
