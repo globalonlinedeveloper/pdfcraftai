@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { BillingNav } from "@/components/app/billing/BillingNav";
 import { db, schema } from "@/db/client";
 import { desc, eq } from "drizzle-orm";
 import { I } from "@/components/icons/Icons";
@@ -152,6 +153,8 @@ export default async function BillingPage({
           you use them.
         </p>
       </header>
+
+      <BillingNav active="billing" />
 
       {banner && (
         <div

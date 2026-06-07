@@ -17,6 +17,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { BillingNav } from "@/components/app/billing/BillingNav";
 import { redirect } from "next/navigation";
 import { getRecentCreditLedger, getUserBalance } from "@/lib/user/queries";
 import {
@@ -59,6 +60,8 @@ export default async function CreditsPage() {
           Every add or spend against your account. Most recent {DEFAULT_LIMIT} entries.
         </p>
       </header>
+
+      <BillingNav active="credits" />
 
       {errors.map((e, i) => (
         <div

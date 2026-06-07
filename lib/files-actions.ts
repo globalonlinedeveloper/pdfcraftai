@@ -3,7 +3,7 @@
 import "server-only";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -102,4 +102,36 @@ export async function deleteFileAction(
   // existing paths above.
   revalidatePath("/app/ai-history");
   return { ok: true };
+}
+
+// --- Bulk delete (upgrade plan #6) ---
+
+const MAX_BULK_DELETE = 200;
+
+// Direct-args server action (called from the client multi-select UI, not a
+// form). Ownership is enforced by the `userId` clause — a caller can only ever
+// delete their OWN files, even if they fabricate ids. Idempotent: deleting an
+// id that's already gone is a no-op.
+export async function deleteFilesAction(
+  ids: string[]
+): Promise<{ ok: boolean; deleted: number; error?: string }> {
+  const userId = await requireUserId();
+  const clean = Array.isArray(ids)
+    ? [...new Set(ids.map((x) => String(x).trim()).filter(Boolean))].slice(0, MAX_BULK_DELETE)
+    : [];
+  if (clean.length === 0) return { ok: false, deleted: 0, error: "No files selected." };
+
+  try {
+    await db
+      .delete(schema.files)
+      .where(and(inArray(schema.files.id, clean), eq(schema.files.userId, userId)));
+  } catch (err) {
+    console.error("deleteFiles failed:", err);
+    return { ok: false, deleted: 0, error: "Could not delete the selected files." };
+  }
+
+  revalidatePath("/app/files");
+  revalidatePath("/app/dashboard");
+  revalidatePath("/app/ai-history");
+  return { ok: true, deleted: clean.length };
 }

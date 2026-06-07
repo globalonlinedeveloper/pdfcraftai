@@ -24,6 +24,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { BillingNav } from "@/components/app/billing/BillingNav";
 import { redirect } from "next/navigation";
 import { getReceipts } from "@/lib/user/queries";
 import {
@@ -69,6 +70,8 @@ export default async function ReceiptsPage() {
           .
         </p>
       </header>
+
+      <BillingNav active="receipts" />
 
       {error ? (
         <div

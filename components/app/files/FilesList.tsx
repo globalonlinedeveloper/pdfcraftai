@@ -1,20 +1,19 @@
 "use client";
 
-// Client-side findability for /app/files (2026-06-05). The page used to render
-// a flat, uncapped-feeling list of up to 100 rows with no search/sort — a heavy
-// user couldn't find a file and rows past the cap silently vanished. This owns
-// search-by-name + sort + source filter over the server-loaded rows, and
-// honestly surfaces "{shown} of {total}" with a cap note when total > loaded.
+// Client-side findability + bulk actions for /app/files.
+//   - search-by-name + sort + source filter over the server-loaded rows
+//   - honest "{shown} of {total}" with a cap note when total > loaded
+//   - multi-select + bulk delete (upgrade plan #6)
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { I } from "@/components/icons/Icons";
 import { toolById } from "@/lib/tools";
 import { DeleteFileButton } from "@/components/app/files/DeleteFileButton";
 import { OpenInChatButton } from "@/components/app/files/OpenInChatButton";
+import { deleteFilesAction } from "@/lib/files-actions";
 
-// AI tool ids whose outputs have a dedicated preview page (kept in sync with
-// the page-level set that was here before the extraction).
 const AI_PREVIEWABLE_TOOL_IDS = new Set<string>([
   "ai-summarize",
   "ai-translate",
@@ -45,6 +44,10 @@ export function FilesList({ rows, total }: { rows: FileRow[]; total: number }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [source, setSource] = useState<SourceFilter>("all");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -69,6 +72,24 @@ export function FilesList({ rows, total }: { rows: FileRow[]; total: number }) {
     { key: "upload", label: "Uploads" },
     { key: "tool", label: "Tool outputs" },
   ];
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+  const bulkDelete = () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} file${ids.length === 1 ? "" : "s"}? This can't be undone.`)) return;
+    startTransition(async () => {
+      await deleteFilesAction(ids);
+      exitSelect();
+      router.refresh();
+    });
+  };
 
   return (
     <section>
@@ -118,14 +139,27 @@ export function FilesList({ rows, total }: { rows: FileRow[]; total: number }) {
         </label>
       </div>
 
-      {/* Count line */}
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+      {/* Count + select controls */}
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
         <h2 style={{ fontSize: 16, letterSpacing: "-0.01em", margin: 0 }} role="status" aria-live="polite">
-          {searching ? `${view.length} of ${rows.length} shown` : `${total} file${total === 1 ? "" : "s"}`}
+          {selectMode ? `${selected.size} selected` : searching ? `${view.length} of ${rows.length} shown` : `${total} file${total === 1 ? "" : "s"}`}
         </h2>
-        {!searching && total > rows.length && (
-          <span className="subtle" style={{ fontSize: 12 }}>showing the {rows.length} most recent — search to find older</span>
-        )}
+        <div className="row" style={{ gap: 8 }}>
+          {!searching && !selectMode && total > rows.length && (
+            <span className="subtle" style={{ fontSize: 12 }}>showing the {rows.length} most recent — search to find older</span>
+          )}
+          {view.length > 0 && !selectMode && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSelectMode(true)}>Select</button>
+          )}
+          {selectMode && (
+            <>
+              <button type="button" className="btn btn-ghost btn-sm" disabled={pending} onClick={exitSelect}>Cancel</button>
+              <button type="button" className="btn btn-sm" disabled={pending || selected.size === 0} onClick={bulkDelete} style={{ background: "var(--red)", color: "#fff", border: "none", opacity: selected.size === 0 ? 0.5 : 1 }}>
+                {pending ? "Deleting…" : `Delete ${selected.size || ""}`.trim()}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {view.length === 0 ? (
@@ -136,23 +170,37 @@ export function FilesList({ rows, total }: { rows: FileRow[]; total: number }) {
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {view.map((f, i) => (
-            <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderTop: i === 0 ? "none" : "1px solid var(--border)" }}>
-              <span style={{ color: "var(--fg-subtle)" }}><I.File size={16} /></span>
-              <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                <div style={{ fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={f.name}>{f.name}</div>
-                <div className="subtle" style={{ fontSize: 12 }}>{humanSize(f.sizeBytes)} · {new Date(f.createdAt).toLocaleString()}</div>
+          {view.map((f, i) => {
+            const isSel = selected.has(f.id);
+            return (
+              <div
+                key={f.id}
+                onClick={selectMode ? () => toggle(f.id) : undefined}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderTop: i === 0 ? "none" : "1px solid var(--border)", cursor: selectMode ? "pointer" : "default", background: isSel ? "var(--accent-soft)" : "transparent" }}
+              >
+                {selectMode && (
+                  <input type="checkbox" checked={isSel} readOnly aria-label={`Select ${f.name}`} style={{ flexShrink: 0, width: 16, height: 16, accentColor: "var(--accent)" }} />
+                )}
+                <span style={{ color: "var(--fg-subtle)" }}><I.File size={16} /></span>
+                <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                  <div style={{ fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={f.name}>{f.name}</div>
+                  <div className="subtle" style={{ fontSize: 12 }}>{humanSize(f.sizeBytes)} · {new Date(f.createdAt).toLocaleString()}</div>
+                </div>
+                {!selectMode && (
+                  <>
+                    <SourceChip source={f.source} toolId={f.toolId} />
+                    {f.source === "tool" && f.toolId && AI_PREVIEWABLE_TOOL_IDS.has(f.toolId) ? (
+                      <Link href={`/app/files/${f.id}/preview`} aria-label="View" title="View" className="btn btn-ghost btn-sm" style={{ padding: 6, color: "var(--fg-muted)" }}>
+                        <I.Eye size={14} />
+                      </Link>
+                    ) : null}
+                    {f.mime === "application/pdf" ? <OpenInChatButton fileId={f.id} fileName={f.name} /> : null}
+                    <DeleteFileButton id={f.id} />
+                  </>
+                )}
               </div>
-              <SourceChip source={f.source} toolId={f.toolId} />
-              {f.source === "tool" && f.toolId && AI_PREVIEWABLE_TOOL_IDS.has(f.toolId) ? (
-                <Link href={`/app/files/${f.id}/preview`} aria-label="View" title="View" className="btn btn-ghost btn-sm" style={{ padding: 6, color: "var(--fg-muted)" }}>
-                  <I.Eye size={14} />
-                </Link>
-              ) : null}
-              {f.mime === "application/pdf" ? <OpenInChatButton fileId={f.id} fileName={f.name} /> : null}
-              <DeleteFileButton id={f.id} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
