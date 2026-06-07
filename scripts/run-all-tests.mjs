@@ -319,6 +319,12 @@ const SUITES = [
   // the rate-limited /api/errors ingest route, the error.tsx/global-error
   // /ClientErrorReporter reporting layer, and the /admin/errors viewer.
   { name: "error-tracker", file: "test-error-tracker.mjs" },
+  // db-backup-workflow pins #143 — the free, self-hosted mysqldump backup
+  // GitHub Action. Pure static-parse of the workflow YAML: one SSH-key
+  // secret + no hardcoded DB password, server-side consistent dump,
+  // integrity gates (size/gzip/marker), finite artifact retention, key
+  // scrubbed after use.
+  { name: "db-backup-workflow", file: "test-db-backup-workflow.mjs" },
   // prompt-safety pins Task #26 / PLAN_GAP_ANALYSIS SEV-0 — the
   // defense-in-depth layer against prompt injection on PDF→AI flows.
   // Covers: the lib/ai/prompt-safety.ts module contract (exports,

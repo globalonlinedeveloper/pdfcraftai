@@ -1,0 +1,103 @@
+# db-backup — free, self-hosted MariaDB backup (#143, 2026-06-07).
+#
+# No paid backup service. A scheduled GitHub Action SSHes into Hostinger,
+# runs `mysqldump | gzip` on the box (the DB only listens on 127.0.0.1, so
+# the dump MUST happen server-side), streams the compressed dump back to the
+# runner, and stores it as a retained workflow artifact. GitHub keeps the
+# artifact for `retention-days`, giving us off-box, versioned snapshots for
+# free.
+#
+# ── ONE-TIME OWNER SETUP ───────────────────────────────────────────────────
+# Add a single repo secret (Settings → Secrets and variables → Actions):
+#
+#   HOSTINGER_SSH_KEY  = the FULL private key body of .claude/id_ed25519_cowork
+#                        (the same ed25519 key Cowork already uses; paste the
+#                        whole "-----BEGIN OPENSSH PRIVATE KEY----- … END"
+#                        block, newlines and all).
+#
+# That's the ONLY secret needed — DB credentials are read on the server from
+# the running app's environment, so no DB password is ever stored in GitHub.
+# (Never commit the private key itself; it stays gitignored under .claude/.)
+# ───────────────────────────────────────────────────────────────────────────
+name: db-backup
+on:
+  schedule:
+    # 02:30 UTC daily (~08:00 IST) — quiet hours for IN-skewed traffic.
+    - cron: "30 2 * * *"
+  workflow_dispatch: {}
+
+# Never run two dumps at once (a manual run during the nightly slot, say).
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Resolve backup name
+        id: meta
+        run: echo "stamp=$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_OUTPUT"
+
+      - name: Install SSH key
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Pin the host key on first contact (avoids interactive prompt).
+          ssh-keyscan -p 65002 -H 212.85.28.206 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Dump + compress (server-side) and stream back
+        run: |
+          set -euo pipefail
+          OUT="pdfcraftai-${{ steps.meta.outputs.stamp }}.sql.gz"
+          # The whole pipeline runs ON the server; only the gzipped bytes
+          # cross the wire. DB creds are read from the live app's /proc env,
+          # so nothing sensitive is echoed or stored here.
+          ssh -i ~/.ssh/id_ed25519 -p 65002 \
+            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+            u692382124@212.85.28.206 'bash -s' > "$OUT" <<'REMOTE'
+          set -euo pipefail
+          PID=$(ps -fu u692382124 | grep -E "next-server" | grep -v grep | head -1 | awk '{print $2}')
+          if [ -z "${PID:-}" ]; then echo "no next-server process found" >&2; exit 1; fi
+          ENVF=/proc/$PID/environ
+          H=$(tr '\0' '\n' < "$ENVF" | grep '^MYSQL_HOST='     | head -1 | cut -d= -f2-)
+          U=$(tr '\0' '\n' < "$ENVF" | grep '^MYSQL_USER='     | head -1 | cut -d= -f2-)
+          P=$(tr '\0' '\n' < "$ENVF" | grep '^MYSQL_PASSWORD=' | head -1 | cut -d= -f2-)
+          D=$(tr '\0' '\n' < "$ENVF" | grep '^MYSQL_DATABASE=' | head -1 | cut -d= -f2-)
+          if [ -z "${P:-}" ] || [ -z "${D:-}" ]; then echo "could not resolve DB creds from /proc" >&2; exit 1; fi
+          mysqldump --single-transaction --quick --no-tablespaces \
+            --routines --events --default-character-set=utf8mb4 \
+            -h "$H" -u "$U" -p"$P" "$D" | gzip -c
+          REMOTE
+          # Fail loudly if the dump is suspiciously tiny (truncated / auth fail).
+          BYTES=$(wc -c < "$OUT")
+          echo "backup: $OUT ($BYTES bytes)"
+          if [ "$BYTES" -lt 10000 ]; then
+            echo "::error::backup is only $BYTES bytes — likely failed; not uploading a bad snapshot" >&2
+            head -c 400 "$OUT" || true
+            exit 1
+          fi
+          # Integrity: the gzip must decompress and end with mysqldump's marker.
+          if ! gzip -t "$OUT"; then echo "::error::gzip integrity check failed" >&2; exit 1; fi
+          if ! zcat "$OUT" | tail -5 | grep -q "Dump completed"; then
+            echo "::error::dump did not finish cleanly (no 'Dump completed' marker)" >&2
+            exit 1
+          fi
+          sha256sum "$OUT" | tee "$OUT.sha256"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ steps.meta.outputs.stamp }}
+          path: |
+            ${{ env.OUT }}
+            ${{ env.OUT }}.sha256
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Scrub key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

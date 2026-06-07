@@ -5,6 +5,46 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-08 — In-house error tracker + free DB backups (production-readiness)
+
+Two gaps from the production-readiness audit, both built FREE (no paid SaaS — owner directive
+"we cannot afford paid services other than AI API").
+
+**In-house error tracker (commit 76597c3).** DB-backed alternative to Sentry. One occurrence per
+row in a new `error_events` table; `/admin/errors` groups by `fingerprint` so distinct problems are
+ranked by frequency.
+- `migration 0031_error_events` — additive `CREATE TABLE IF NOT EXISTS`; `user_id` is a loose
+  varchar (NO FK) so logging never fails on a deleted user. **Applied to prod via SSH HEREDOC
+  before the deploy** (verified `SHOW COLUMNS` = 12 cols, 3 indexes, insert/delete smoke OK).
+- `lib/observability/capture.ts` — `captureError` (NEVER throws: insert wrapped in try/catch;
+  length-clamps every field), `captureServerError` (catch-block convenience), `fingerprintError`
+  (sha256 of message + top stack frame, digits stripped to `#` so occurrences group).
+- `app/api/errors/route.ts` — rate-limited (30/IP/60s → 429), zod-validated, length-capped client
+  ingest; `auth()` wrapped so anonymous reports still log; 204/400/429 contract.
+- Reporting layer: `app/error.tsx` + `app/global-error.tsx` (render-boundary digests) +
+  `components/observability/ClientErrorReporter.tsx` (window `error` + `unhandledrejection`, deduped
+  + capped 15/page, `keepalive` beacon), mounted once in the root layout.
+- `app/admin/errors/page.tsx` viewer + admin nav item; query wrapped so a bad column never
+  dark-holes the page.
+- `scripts/test-error-tracker.mjs` — 84 static-parse assertions, wired into the aggregator.
+
+**Free DB backup workflow (`.github/workflows/db-backup.yml`).** Scheduled GitHub Action (02:30 UTC
+daily + manual dispatch) SSHes into Hostinger, runs `mysqldump --single-transaction | gzip`
+server-side (DB only listens on 127.0.0.1), streams the gz back, and uploads it as a 90-day-retained
+artifact. DB creds are read at runtime from the live app's `/proc` env, so the owner adds **ONE**
+secret only — `HOSTINGER_SSH_KEY` (the existing ed25519 private key). Integrity gates: min-size,
+`gzip -t`, and the `Dump completed` marker; sha256 recorded; key scrubbed after use. Full pipeline
+dry-run validated end-to-end (442 KB gz, 37 tables, marker present). `scripts/test-db-backup-workflow.mjs`
+— 23 assertions, wired into the aggregator.
+
+**OWNER ACTION (one-time):** add repo secret `HOSTINGER_SSH_KEY` = the full private-key body of
+`.claude/id_ed25519_cowork` (GitHub → Settings → Secrets and variables → Actions). Until then the
+backup workflow will fail at the SSH step; everything else is live.
+
+Aggregator: **8049 passed / 0 failed across 148 suites**; `tsc --noEmit` clean.
+
+---
+
 ## 2026-06-05 — /app pages UX pass (files / usage / chat / settings)
 
 **Mobile-overflow fix (found via the authenticated capture).** The 6-page auth design-audit showed
