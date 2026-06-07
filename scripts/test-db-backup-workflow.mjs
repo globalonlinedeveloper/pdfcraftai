@@ -80,7 +80,11 @@ assert(/gzip -c/.test(wf), "C: compresses the dump");
 assert(/ssh\b[\s\S]*'bash -s'/.test(wf), "C: dump pipeline executes on the server over ssh");
 
 // D — integrity gates
-assert(/-lt 10000/.test(wf), "D: rejects a suspiciously tiny dump");
+assert(/\b10000\b/.test(wf) && /-lt 10000|-ge 10000/.test(wf), "D: rejects a suspiciously tiny dump (10KB floor)");
+// Resilience: a single transient blip (box mid-redeploy, momentary SSH
+// refusal) must not page a human — the dump retries before giving up.
+assert(/for n in 1 2|for n in 1 2 3|retry/i.test(wf), "D: retries the dump on a transient failure");
+assert(/sleep 30|sleep 20/.test(wf), "D: backs off between attempts");
 assert(/gzip -t/.test(wf), "D: verifies gzip integrity");
 assert(/Dump completed/.test(wf), "D: checks for mysqldump's completion marker");
 assert(/sha256sum/.test(wf), "D: records a sha256 checksum");

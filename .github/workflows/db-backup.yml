@@ -56,12 +56,14 @@ jobs:
         run: |
           set -euo pipefail
           OUT="pdfcraftai-${{ steps.meta.outputs.stamp }}.sql.gz"
-          # The whole pipeline runs ON the server; only the gzipped bytes
-          # cross the wire. DB creds are read from the live app's /proc env,
-          # so nothing sensitive is echoed or stored here.
-          ssh -i ~/.ssh/id_ed25519 -p 65002 \
-            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
-            u692382124@212.85.28.206 'bash -s' > "$OUT" <<'REMOTE'
+
+          # One dump attempt: the whole pipeline runs ON the server; only the
+          # gzipped bytes cross the wire. DB creds are read from the live app's
+          # /proc env, so nothing sensitive is echoed or stored here.
+          attempt() {
+            ssh -i ~/.ssh/id_ed25519 -p 65002 \
+              -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 \
+              u692382124@212.85.28.206 'bash -s' > "$OUT" <<'REMOTE'
           set -euo pipefail
           PID=$(ps -fu u692382124 | grep -E "next-server" | grep -v grep | head -1 | awk '{print $2}')
           if [ -z "${PID:-}" ]; then echo "no next-server process found" >&2; exit 1; fi
@@ -75,21 +77,39 @@ jobs:
             --routines --events --default-character-set=utf8mb4 \
             -h "$H" -u "$U" -p"$P" "$D" | gzip -c
           REMOTE
-          # Fail loudly if the dump is suspiciously tiny (truncated / auth fail).
-          BYTES=$(wc -c < "$OUT")
-          echo "backup: $OUT ($BYTES bytes)"
-          if [ "$BYTES" -lt 10000 ]; then
-            echo "::error::backup is only $BYTES bytes — likely failed; not uploading a bad snapshot" >&2
-            head -c 400 "$OUT" || true
+          }
+
+          # Validate one produced file: non-trivial size + gzip intact + the
+          # mysqldump completion marker. Returns non-zero if the dump is bad.
+          validate() {
+            local bytes
+            bytes=$(wc -c < "$OUT" 2>/dev/null || echo 0)
+            echo "  candidate: $OUT ($bytes bytes)"
+            [ "$bytes" -ge 10000 ] || { echo "  too small"; return 1; }
+            gzip -t "$OUT" 2>/dev/null || { echo "  gzip integrity failed"; return 1; }
+            zcat "$OUT" | tail -5 | grep -q "Dump completed" || { echo "  no completion marker"; return 1; }
+            return 0
+          }
+
+          # Retry once on a transient blip (e.g. the box mid-redeploy, a
+          # momentary SSH refusal). The scheduled 02:30 UTC run will normally
+          # hit a quiet, stable box; this just stops a single hiccup from
+          # paging a human.
+          ok=0
+          for n in 1 2; do
+            echo "Backup attempt $n…"
+            if attempt && validate; then ok=1; break; fi
+            echo "  attempt $n failed; waiting 30s before retry…"
+            sleep 30
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::backup failed after 2 attempts — not uploading a bad snapshot" >&2
+            head -c 400 "$OUT" 2>/dev/null || true
             exit 1
           fi
-          # Integrity: the gzip must decompress and end with mysqldump's marker.
-          if ! gzip -t "$OUT"; then echo "::error::gzip integrity check failed" >&2; exit 1; fi
-          if ! zcat "$OUT" | tail -5 | grep -q "Dump completed"; then
-            echo "::error::dump did not finish cleanly (no 'Dump completed' marker)" >&2
-            exit 1
-          fi
+
           sha256sum "$OUT" | tee "$OUT.sha256"
+          echo "OK: $OUT ($(wc -c < "$OUT") bytes)"
           echo "OUT=$OUT" >> "$GITHUB_ENV"
 
       - name: Upload backup artifact
