@@ -19,6 +19,7 @@ jobs:
             https://pdfcraftai.com/blog
             https://pdfcraftai.com/extract-emails-from-pdf
             https://pdfcraftai.com/tool/page-count
+          configPath: ./lighthouserc.json
           temporaryPublicStorage: true
           uploadArtifacts: true
       - name: Summarize scores

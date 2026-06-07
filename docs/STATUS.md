@@ -65,6 +65,39 @@ tsc 0; aggregator **7868/0 across 142 suites** (−4 = removed toggleId assertio
 
 ---
 
+## 2026-06-07 — Upgrade-plan batch (#4 funnel · #5 onboarding · #6 app depth · #9 perf budget)
+
+Acted on the owner-approved subset of `outputs/pdfcraftai-upgrade-plan.md` (#4,#5,#6,#8,#9). Shipped as
+sequential clean+tested commits:
+- **#4 Funnel** (`components/upsell/AiFreeCreditsUpsell.tsx`): logged-out visitors on an AI tool page now
+  see a value-forward "create a free account — 5 credits, no card" banner before the per-tool sign-in
+  wall. One self-gating client component injected once at the AI-tool page level (`!tool.free`) → covers
+  all 53 AI tools; CTAs preserve `callbackUrl`. Added to the credit-hardcode exemption (quotes the signup
+  grant, like SeoLandingPage).
+- **#5 Onboarding** (`components/app/GettingStarted.tsx`): dismissible first-run checklist on the dashboard
+  (verify email → run an AI tool → open a file); step state derived from data the dashboard already loads;
+  self-hides when complete or dismissed (localStorage).
+- **#6 App depth**: `deleteFilesAction(ids[])` batch server action (ownership-scoped, capped, idempotent)
+  + a FilesList **multi-select + bulk delete** mode (confirm + refresh). `BillingNav` shared 3-tab sub-nav
+  (Billing/Credits/Receipts) on each page — the **safe** unification (no risky route-merge on revenue
+  pages; the full merge stays deferred by design).
+- **#9 Performance**: `lighthouserc.json` budget wired into `perf.yml` — the Lighthouse run now **gates**
+  on regression (error floors on a11y/seo/best-practices/CLS; warn on the volatile perf-score/LCP/TBT)
+  instead of just printing scores.
+- **#8 Programmatic SEO — reported as content-gated, not faked.** The SEO *infrastructure* is already
+  comprehensive: FAQPage + HowTo + SoftwareApplication + BreadcrumbList JSON-LD on both tool pages and
+  landings, Organization + WebSite + SearchAction on the root, 100% tool-landing coverage, and a
+  Related-tools internal-link section on every landing. "Expansion" is therefore net-new *content*
+  (comparison/use-case/head-term prose), which auto-generated thin would *hurt* the strong footprint —
+  so it's flagged as a deliberate content effort, not shipped as filler.
+
+New guards: `test-ai-upsell.mjs` (9), dashboard-improvements +7 onboarding (35), `test-app-depth.mjs`
+(16), `test-perf-budget.mjs` (10). dashboard-v2 + supply-chain + credit-hardcode guards stay green.
+tsc 0; aggregator **7939/0 across 146 suites**. (Deferred upgrade items #1/#2/#3/#7/#10/#11/#12 moved to
+out-of-scope per owner.)
+
+---
+
 ## 2026-06-05 — AppShell responsive: mobile sidebar → off-canvas drawer (fixes /app/* overflow)
 
 Fixes the ~199px horizontal overflow the authenticated dashboard capture surfaced on phones. Root cause:
