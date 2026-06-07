@@ -63,11 +63,17 @@ const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
   );
 
   // C — runs the suite, AI leg gated
-  assert(/npm run test:prod-e2e/.test(wf), "C: runs the prod-E2E suite");
+  assert(/npx playwright test --config=playwright\.prod\.config\.ts/.test(wf), "C: runs the prod-E2E config");
+  // CURATED, fast health gate — NOT the full 637-test battery. Must scope to
+  // the verification specs and must NOT shell out to the exhaustive runner.
+  assert(/smoke\.spec\.ts/.test(wf) && /auth-flow\.spec\.ts/.test(wf) && /admin-flow\.spec\.ts/.test(wf), "C: scoped to curated specs (smoke+auth+admin)");
+  const wfNoComments = wf.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
+  assert(!/npm run test:prod-e2e/.test(wfNoComments), "C: does NOT invoke the full 637-test battery as a command");
+  assert(/ai-tool-execution\.spec\.ts/.test(wf), "C: AI leg spec present (added conditionally)");
   assert(/PROD_E2E_AI_BUDGET_OK:/.test(wf), "C: wires the AI-budget ack");
   assert(
-    /steps\.scope\.outputs\.ai == 'on'[\s\S]{0,80}PROD_E2E_AI_BUDGET_OK|PROD_E2E_AI_BUDGET_OK:\s*\$\{\{\s*steps\.scope\.outputs\.ai/.test(wf),
-    "C: AI leg only when scope == on (cost control)",
+    /AI_SCOPE.*=.*"on"|\$AI_SCOPE.*=.*on|"\$AI_SCOPE" = "on"/.test(wf),
+    "C: AI spec only added when scope == on (cost control)",
   );
   assert(/PROD_E2E_TEST_EMAIL:/.test(wf) && /PROD_E2E_ADMIN_OK:/.test(wf), "C: auth + admin-read legs wired");
 

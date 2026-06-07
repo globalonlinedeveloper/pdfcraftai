@@ -145,7 +145,18 @@ jobs:
           PROD_E2E_AI_BUDGET_OK: ${{ steps.scope.outputs.ai == 'on' && secrets.PROD_E2E_AI_BUDGET_OK || '' }}
           # Signup + payment MUTATIONS deliberately NOT injected here — those
           # need the global test.env window and live in prod-e2e.yml.
-        run: npm run test:prod-e2e
+          AI_SCOPE: ${{ steps.scope.outputs.ai }}
+        run: |
+          # CURATED post-deploy health gate — NOT the full 637-test battery
+          # (`npm run test:prod-e2e` runs every tool × option-matrix × 2
+          # projects; that exhaustive sweep is all-tools.yml / the weekly
+          # cadence's job). Here we want a FAST signal that the new build is
+          # healthy: anon smoke + a free-tool floor + auth + admin-read, plus
+          # the AI leg only when asked.
+          specs="smoke.spec.ts free-tool-execution.spec.ts auth-flow.spec.ts admin-flow.spec.ts"
+          if [ "$AI_SCOPE" = "on" ]; then specs="$specs ai-tool-execution.spec.ts"; fi
+          echo "Verification specs: $specs"
+          npx playwright test --config=playwright.prod.config.ts $specs
 
       - name: Upload Playwright report
         if: always()
