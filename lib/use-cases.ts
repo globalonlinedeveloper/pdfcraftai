@@ -30,7 +30,11 @@ export type UseCaseSlug =
   | "split-pdf-into-separate-documents"
   | "summarize-a-long-report-with-ai"
   | "prepare-exhibits-for-court-filing"
-  | "create-an-onboarding-pack-for-new-hires";
+  | "create-an-onboarding-pack-for-new-hires"
+  | "convert-deck-to-handout"
+  | "remove-metadata-before-publishing"
+  | "extract-images-from-a-pdf"
+  | "add-a-watermark-before-sharing-a-draft";
 
 export type UseCaseStep = {
   /** The specific pdfcraft ai tool ID this step uses. */
@@ -1437,6 +1441,319 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseData> = {
       },
     ],
     related: ["combine-receipts-for-expense-report", "fill-and-sign-pdf-form", "split-pdf-into-separate-documents"],
+  },
+
+  // ============================================================
+  // 17. Convert a slide deck to a printable handout
+  // ============================================================
+  "convert-deck-to-handout": {
+    slug: "convert-deck-to-handout",
+    h1: "How to turn a slide deck PDF into a printable handout",
+    sub: "Put 2, 4, or 6 slides per page, number them, and shrink the file for clean printing or sharing.",
+    audience: "Presenters, trainers, lecturers, and students turning slides into leave-behinds",
+    totalTime: "3 minutes",
+    steps: [
+      {
+        tool: "n-up-pdf",
+        title: "Place multiple slides per page",
+        detail:
+          "Open N-up and choose a layout — 2-up for readability, 4-up or 6-up to save paper. Each printed page now holds several slides in order.",
+      },
+      {
+        tool: "page-numbers",
+        title: "Add page numbers",
+        detail:
+          "Run Page Numbers so the handout is easy to reference — 'turn to page 4' works once the slides are laid out as handout pages.",
+      },
+      {
+        tool: "compress-pdf",
+        title: "Compress for email or printing",
+        detail:
+          "Decks are image-heavy. Compress trims the file so it emails cleanly and spools fast at the print shop.",
+      },
+    ],
+    whyItMatters:
+      "Slides are designed for a projector, not a page. Printed one-to-a-sheet, a deck wastes paper and reads like a flipbook; what an audience actually keeps is a tidy handout they can annotate. N-up rearranges the slides into a real handout — two, four, or six to a page, in order — and page numbers make it referenceable during the talk. Because the leave-behind is often what people revisit after a session, it's worth the two extra minutes to make it legible and light enough to email. And since N-up, Page Numbers, and Compress all run in your browser, an unreleased deck never leaves your device while you prepare it.",
+    pitfalls: [
+      {
+        title: "Going too dense for slides with small text",
+        detail:
+          "If your slides carry fine print or detailed charts, 2-up keeps them legible. 6-up is for high-level decks, not data-heavy ones.",
+      },
+      {
+        title: "Forgetting speaker notes are lost",
+        detail:
+          "A slides-only PDF doesn't carry your speaker notes. If the audience needs the narration, export notes pages from your slide tool first, then N-up that file.",
+      },
+    ],
+    tips: [
+      {
+        title: "2-up leaves room for notes",
+        detail:
+          "Two slides per page leaves margin for handwritten notes — a favourite layout for workshops and lectures.",
+      },
+      {
+        title: "Proof the layout before the print shop",
+        detail:
+          "Preview the N-up output first so you catch a cramped grid before you pay for a print run.",
+      },
+    ],
+    faq: [
+      {
+        q: "How many slides per page can I fit?",
+        a: "Common layouts are 2, 4, and 6 per page. 2-up is the most legible; 6-up is the most paper-efficient.",
+      },
+      {
+        q: "Will N-up reduce quality?",
+        a: "It rescales pages to fit the grid but doesn't re-compress your slides — text and vectors stay crisp. Run Compress separately only if you need a smaller file.",
+      },
+      {
+        q: "Is my deck uploaded?",
+        a: "No. N-up, Page Numbers, and Compress run in your browser, so an unreleased deck never leaves your device.",
+      },
+      {
+        q: "Can I keep the original slide numbers?",
+        a: "Page Numbers numbers the handout pages. If you need the original slide numbers too, keep them on the slides before you export to PDF.",
+      },
+    ],
+    related: ["thesis-combine-and-format", "create-an-onboarding-pack-for-new-hires", "compress-pdf-for-email"],
+  },
+
+  // ============================================================
+  // 18. Remove hidden metadata before publishing
+  // ============================================================
+  "remove-metadata-before-publishing": {
+    slug: "remove-metadata-before-publishing",
+    h1: "How to remove hidden metadata from a PDF before publishing",
+    sub: "Strip author names, software tags, and edit history before a document goes public.",
+    audience: "Journalists, researchers, and anyone publishing a PDF who doesn't want hidden data attached",
+    totalTime: "2 minutes",
+    steps: [
+      {
+        tool: "pdf-inspector",
+        title: "See what's actually in the file",
+        detail:
+          "Open PDF Inspector to view the document's metadata — author, creator software, creation and modification dates, and embedded properties you may not know are there.",
+      },
+      {
+        tool: "remove-metadata",
+        title: "Strip the metadata",
+        detail:
+          "Run Remove Metadata to clear the author, title, keywords, and producer fields so the published file carries no identifying trail.",
+      },
+      {
+        tool: "flatten-pdf",
+        title: "Flatten to drop layered data (optional)",
+        detail:
+          "If the PDF has form fields, annotations, or layers, flatten it so nothing interactive or hidden survives in the public copy.",
+      },
+    ],
+    whyItMatters:
+      "PDFs quietly carry more than their visible text: the author's real name, the organisation's software, timestamps, and sometimes earlier wording inside annotations or form fields. Publish without checking and you can leak who wrote a document or when — which matters for a source's safety, a blind peer review, or a confidential bid. PDF Inspector shows you exactly what's embedded, Remove Metadata clears the document properties, and Flatten removes the layered or interactive remnants. All three run in your browser, so the file never touches a server while you clean it. Metadata removal is a deliberate step — saving a file usually preserves (or even adds) metadata rather than stripping it.",
+    pitfalls: [
+      {
+        title: "Assuming 'Save As' strips metadata",
+        detail:
+          "Most editors preserve or even add metadata on save. Removing it is a deliberate action, not a side effect of saving.",
+      },
+      {
+        title: "Forgetting annotations and form fields",
+        detail:
+          "Metadata isn't only the document properties — comments and form data can carry names too. Flatten if the file has any.",
+      },
+      {
+        title: "Confusing metadata with visible content",
+        detail:
+          "Removing metadata doesn't hide sensitive text in the body. If you need to obscure content on the page, redact it as a separate step.",
+      },
+    ],
+    tips: [
+      {
+        title: "Inspect before AND after",
+        detail:
+          "Re-open PDF Inspector on the cleaned file to confirm the fields are actually empty before you publish.",
+      },
+      {
+        title: "Keep an internal master",
+        detail:
+          "Strip a copy for publication and keep the original, with its metadata, for your own records.",
+      },
+    ],
+    faq: [
+      {
+        q: "What metadata does a PDF carry?",
+        a: "Typically author, title, subject, keywords, the creating application, and creation/modification timestamps — plus anything left in annotations or form fields.",
+      },
+      {
+        q: "Is the file uploaded to clean it?",
+        a: "No. Inspector, Remove Metadata, and Flatten run in your browser, so a sensitive document never leaves your device.",
+      },
+      {
+        q: "Does this remove visible content too?",
+        a: "No — it clears hidden metadata. To obscure visible text on the page, use a redaction tool as well.",
+      },
+      {
+        q: "Will removing metadata break the PDF?",
+        a: "No. Clearing document properties doesn't affect the visible content; the file opens and prints exactly as before.",
+      },
+    ],
+    related: ["redact-pdf-before-sharing", "extract-images-from-a-pdf", "prepare-exhibits-for-court-filing"],
+  },
+
+  // ============================================================
+  // 19. Extract images from a PDF
+  // ============================================================
+  "extract-images-from-a-pdf": {
+    slug: "extract-images-from-a-pdf",
+    h1: "How to extract images from a PDF",
+    sub: "Pull every photo, chart, and figure out of a PDF as separate image files.",
+    audience: "Designers, content teams, and students reusing figures, photos, or charts from a PDF",
+    totalTime: "2 minutes",
+    steps: [
+      {
+        tool: "extract-images",
+        title: "Extract the embedded images",
+        detail:
+          "Open Extract Images and drop in the PDF. It pulls out the embedded raster images — photos, scanned figures, logos — as individual files you can download.",
+      },
+      {
+        tool: "pdf-to-png",
+        title: "Or render whole pages as images",
+        detail:
+          "If what you want is a chart drawn with vectors rather than a stored photo, render the page itself with PDF to PNG to capture exactly what's shown.",
+      },
+    ],
+    whyItMatters:
+      "Reusing a figure from a report, grabbing a photo from a brochure, lifting a chart for a slide — copy-and-paste out of a PDF viewer is lossy and fiddly. Extract Images lifts the original embedded assets at the resolution they were stored, so you get the real picture, not a screenshot of it. For graphics that aren't stored as images — many charts and logos are vectors — rendering the page to PNG captures the visual instead. Both run locally, so a proprietary deck or report stays on your device. One caveat that isn't technical: extracting an image doesn't grant you the right to republish it — check the source's licence before reusing someone else's work.",
+    pitfalls: [
+      {
+        title: "Embedded image vs. rendered page",
+        detail:
+          "A chart drawn with vectors isn't an 'image' inside the file, so Extract Images won't find it. Use PDF to PNG to capture the page as it looks.",
+      },
+      {
+        title: "Expecting editable graphics",
+        detail:
+          "Extracted images are flat rasters, not editable vectors. You can't re-colour a chart this way — you get the picture as it was stored.",
+      },
+      {
+        title: "Reuse rights",
+        detail:
+          "Pulling an image out doesn't give you permission to republish it. Check the source's licence before reusing someone else's figure.",
+      },
+    ],
+    tips: [
+      {
+        title: "Resolution comes from the source",
+        detail:
+          "Extracted images are only as sharp as they were stored. For a crisp result from a vector page, render at a higher DPI with PDF to PNG.",
+      },
+      {
+        title: "Batch a whole report in one pass",
+        detail:
+          "Extract Images handles a multi-page PDF at once — you don't have to go page by page.",
+      },
+    ],
+    faq: [
+      {
+        q: "Does it get every image?",
+        a: "It extracts the embedded raster images. Vector graphics (many charts and logos) aren't stored as images — render those pages with PDF to PNG instead.",
+      },
+      {
+        q: "What format are the extracted images?",
+        a: "They come out in standard image formats you can open and reuse anywhere.",
+      },
+      {
+        q: "Is the PDF uploaded?",
+        a: "No. Extract Images and PDF to PNG run in your browser, so the source file never leaves your device.",
+      },
+      {
+        q: "Can I extract from a scanned PDF?",
+        a: "Yes — a scanned page is itself an image, so it extracts directly. For the text on it, use an OCR tool instead.",
+      },
+    ],
+    related: ["remove-metadata-before-publishing", "convert-deck-to-handout", "extract-tables-from-financial-report"],
+  },
+
+  // ============================================================
+  // 20. Add a DRAFT / CONFIDENTIAL watermark before sharing
+  // ============================================================
+  "add-a-watermark-before-sharing-a-draft": {
+    slug: "add-a-watermark-before-sharing-a-draft",
+    h1: "How to add a DRAFT or CONFIDENTIAL watermark to a PDF",
+    sub: "Stamp a clear status or ownership mark across every page before you share a working document.",
+    audience: "Legal, business, and design teams sharing drafts or confidential files for review",
+    totalTime: "3 minutes",
+    steps: [
+      {
+        tool: "image-watermark",
+        title: "Add the watermark across every page",
+        detail:
+          "Open Watermark and place your text (DRAFT, CONFIDENTIAL, your company name) or a logo. Set the opacity and angle so it's clearly visible but doesn't block reading.",
+      },
+      {
+        tool: "stamp-pdf",
+        title: "Or stamp a specific mark or page",
+        detail:
+          "If you only need a mark on the cover or a specific stamp rather than a full-page wash, use Stamp to place it precisely.",
+      },
+      {
+        tool: "flatten-pdf",
+        title: "Flatten so the mark can't be removed",
+        detail:
+          "Flatten the file so the watermark is baked into the page and a recipient can't simply toggle off a layer.",
+      },
+    ],
+    whyItMatters:
+      "When you share a draft or a confidential file for review, an unmarked PDF can get forwarded, mistaken for final, or leaked with no trace of where it came from. A DRAFT or CONFIDENTIAL watermark sets expectations at a glance and signals ownership; flattening makes the mark durable so it survives forwarding. The sweet spot is a light, diagonal wash — clearly visible without obscuring the text reviewers need to read. Watermark, Stamp, and Flatten all run in your browser, so the document stays private while you mark it. One honest limit: a watermark labels and deters, but it isn't encryption — it doesn't control who can open the file.",
+    pitfalls: [
+      {
+        title: "Opacity so high it blocks the text",
+        detail:
+          "A heavy watermark makes the document hard to read and annoys reviewers. Aim for a light, diagonal wash that's visible but doesn't obscure content.",
+      },
+      {
+        title: "Skipping the flatten step",
+        detail:
+          "A watermark added as a layer or annotation can be removed by the recipient. Flatten so it becomes part of the page.",
+      },
+      {
+        title: "Treating a watermark as security",
+        detail:
+          "A watermark deters and labels; it doesn't encrypt. For real access control, that's a separate measure.",
+      },
+    ],
+    tips: [
+      {
+        title: "Diagonal, centred, around 30% opacity",
+        detail:
+          "That's the readable-but-unmistakable sweet spot for a full-page DRAFT or CONFIDENTIAL wash.",
+      },
+      {
+        title: "Match the mark to the stage",
+        detail:
+          "DRAFT for work-in-progress, CONFIDENTIAL for restricted distribution, your name or logo for ownership — pick the one that sets the right expectation.",
+      },
+    ],
+    faq: [
+      {
+        q: "Can the recipient remove the watermark?",
+        a: "Not if you flatten the file — the mark becomes part of the page. An un-flattened layer or annotation, by contrast, can be toggled off.",
+      },
+      {
+        q: "Is my document uploaded?",
+        a: "No. Watermark, Stamp, and Flatten run in your browser, so a confidential draft never leaves your device.",
+      },
+      {
+        q: "Can I use a logo instead of text?",
+        a: "Yes — the Watermark tool accepts an image, so you can wash your logo across the pages.",
+      },
+      {
+        q: "Does a watermark stop copying?",
+        a: "It labels and deters, but it isn't encryption or access control. Use it to set expectations, not to lock a file.",
+      },
+    ],
+    related: ["redact-pdf-before-sharing", "redline-contract-revisions", "remove-metadata-before-publishing"],
   },
 };
 

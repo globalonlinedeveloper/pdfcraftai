@@ -5,7 +5,7 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
-## 2026-06-08 — Content: use-case expansion 12 → 16 (backlog M86)
+## 2026-06-08 — Content: use-case expansion 12 → 20 (backlog M86)
 
 Auto-mode batch 9. The use-case ("job to be done") surface was the thinnest content area
 (12 pages vs 113 tools). Added 4 genuinely distinct, high-intent persona/job pages to
@@ -27,6 +27,13 @@ context, pitfalls, tips, 4-5 FAQ, internal-link related[]). Routes + sitemap aut
 from `USE_CASE_SLUGS = Object.keys(USE_CASES)`. tsc clean (the union↔record key match is
 type-enforced); aggregator 8317/0 across 155 suites (internal-links + sitemap +
 use-cases-index-jsonld guards confirm no broken refs).
+
+**Batch 10 (+4 more, 16 → 20):** convert-deck-to-handout (n-up → page-numbers →
+compress), remove-metadata-before-publishing (pdf-inspector → remove-metadata → flatten —
+privacy/OPSEC audience), extract-images-from-a-pdf (extract-images / pdf-to-png — content
+reuse, with a reuse-rights caveat), add-a-watermark-before-sharing-a-draft (image-watermark
+→ stamp → flatten — DRAFT/CONFIDENTIAL marking, honest "not encryption" note). All free
+client-side tools, all distinct audiences/workflows. tsc clean; aggregator 8317/0.
 
 ---
 
