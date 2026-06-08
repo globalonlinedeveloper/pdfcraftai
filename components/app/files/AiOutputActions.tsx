@@ -25,6 +25,7 @@
 "use client";
 
 import { copyText } from "@/lib/client/copy-text";
+import { toast } from "@/lib/client/toast";
 import { useState } from "react";
 import { I } from "@/components/icons/Icons";
 
@@ -79,6 +80,7 @@ export function AiOutputActions({ contentMd, kind, sourceName, generatedAtIso }:
       // app supports (Chrome/Safari/Firefox latest).
       await copyText(contentMd);
       setCopied(true);
+      toast("Copied to clipboard", { kind: "success" });
       setTimeout(() => setCopied(false), 1600);
     } catch (err) {
       // Clipboard write can fail on insecure-origin embeds (rare for
@@ -86,6 +88,7 @@ export function AiOutputActions({ contentMd, kind, sourceName, generatedAtIso }:
       // Don't crash the page — surface the failure as a non-toast
       // "Copy failed" state and log for debugging.
       console.warn("[AiOutputActions] clipboard write failed", err);
+      toast("Couldn\u2019t copy \u2014 select the text and copy manually", { kind: "error" });
       setCopied(false);
     }
   }
@@ -105,6 +108,7 @@ export function AiOutputActions({ contentMd, kind, sourceName, generatedAtIso }:
       // "remove this random `<a>` from `<body>`" cleanup step.
       a.click();
       setDownloaded(true);
+      toast("Download started", { kind: "success" });
       setTimeout(() => setDownloaded(false), 1600);
     } finally {
       // Always revoke the object URL — leaking these compounds

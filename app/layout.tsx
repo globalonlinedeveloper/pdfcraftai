@@ -9,6 +9,7 @@ import { CookieConsent } from "@/components/compliance/CookieConsent";
 import { WebVitalsReporter } from "@/components/analytics/WebVitalsReporter";
 import { PdfiumServiceWorker } from "@/components/PdfiumServiceWorker";
 import { ClientErrorReporter } from "@/components/observability/ClientErrorReporter";
+import { Toaster } from "@/components/ui/Toaster";
 import {
   CONSENT_COOKIE_NAME,
   analyticsAllowed,
@@ -297,6 +298,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             doesn't observe or report user activity. */}
         <PdfiumServiceWorker />
         <ClientErrorReporter />
+        <Toaster />
       </body>
     </html>
   );
