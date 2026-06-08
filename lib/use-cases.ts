@@ -38,7 +38,11 @@ export type UseCaseSlug =
   | "rotate-and-straighten-a-scanned-pdf"
   | "make-a-pdf-grayscale-for-printing"
   | "make-a-pdf-accessible-for-screen-readers"
-  | "convert-markdown-notes-to-pdf";
+  | "convert-markdown-notes-to-pdf"
+  | "scan-documents-with-your-phone-to-pdf"
+  | "prepare-a-pdf-for-an-e-reader"
+  | "turn-a-csv-export-into-a-pdf-report"
+  | "make-a-printable-booklet-from-a-pdf";
 
 export type UseCaseStep = {
   /** The specific pdfcraft ai tool ID this step uses. */
@@ -2062,6 +2066,310 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseData> = {
       },
     ],
     related: ["convert-research-papers-to-study-notes", "thesis-combine-and-format", "summarize-a-long-report-with-ai"],
+  },
+
+  // ============================================================
+  // 25. Scan documents with your phone into a PDF
+  // ============================================================
+  "scan-documents-with-your-phone-to-pdf": {
+    slug: "scan-documents-with-your-phone-to-pdf",
+    h1: "How to scan documents with your phone into a PDF",
+    sub: "Turn a few phone photos into one clean, shareable PDF — no scanner, no app to install.",
+    audience: "Anyone without a scanner who needs a PDF from photos of paper documents",
+    totalTime: "3 minutes",
+    steps: [
+      {
+        tool: "jpg-to-pdf",
+        title: "Convert the photos to PDF pages",
+        detail:
+          "Take a photo of each page, then drop them into Image to PDF. Each image becomes a page, in the order you add them.",
+      },
+      {
+        tool: "merge",
+        title: "Combine into one document (if needed)",
+        detail:
+          "If you converted batches separately, Merge stitches them into a single file. Drag the thumbnails to lock the page order before combining.",
+      },
+      {
+        tool: "compress-pdf",
+        title: "Compress so it sends easily",
+        detail:
+          "Phone photos are large. Compress gets the finished PDF under email and upload-portal limits without making the text unreadable.",
+      },
+    ],
+    whyItMatters:
+      "Plenty of forms, applications, and offices still want \"a PDF of the signed document,\" and not everyone has a scanner. Your phone is the scanner: photograph each page, convert the images to PDF, and you have a single file to send — no dedicated scanning app, no account. A few habits make the result look scanned rather than snapshotted: shoot straight down in good, even light against a contrasting surface so the page edges are clear. One honest note: this assembles photos into a PDF, it doesn't auto-crop, deskew, or boost contrast the way a dedicated scanner app might — so framing the shot well matters. Everything runs in your browser, so photos of IDs, contracts, or forms never leave your device.",
+    pitfalls: [
+      {
+        title: "Shooting at an angle",
+        detail:
+          "A page photographed on a slant looks unprofessional and can crop awkwardly. Hold the phone flat and square over the page.",
+      },
+      {
+        title: "Low light or busy backgrounds",
+        detail:
+          "Dim light makes text muddy; a cluttered surface makes the page edge hard to see. Use even light and a plain, contrasting surface.",
+      },
+    ],
+    tips: [
+      {
+        title: "Crop or rotate afterward if needed",
+        detail:
+          "If a page came out sideways or with extra background, run it through Rotate and Crop before sending.",
+      },
+      {
+        title: "Add pages in the right order as you go",
+        detail:
+          "Photograph and add pages in document order so you don't have to reshuffle later.",
+      },
+    ],
+    faq: [
+      {
+        q: "Do I need a scanning app?",
+        a: "No. Photograph the pages with your normal camera, then convert the images to PDF here — no app or account required.",
+      },
+      {
+        q: "Does it auto-straighten and enhance like a scanner app?",
+        a: "No — it assembles your photos into a PDF as-is. Frame each shot straight and well-lit; you can Rotate and Crop afterward if needed.",
+      },
+      {
+        q: "Are my photos uploaded?",
+        a: "No. Image to PDF, Merge, and Compress run in your browser, so photos of sensitive documents never leave your device.",
+      },
+      {
+        q: "Can I make the text searchable?",
+        a: "The photos are images, so run an OCR / make-searchable step afterward if you need to select or search the text.",
+      },
+    ],
+    related: ["combine-receipts-for-expense-report", "rotate-and-straighten-a-scanned-pdf", "ocr-old-archive"],
+  },
+
+  // ============================================================
+  // 26. Prepare a PDF for a Kindle / e-reader
+  // ============================================================
+  "prepare-a-pdf-for-an-e-reader": {
+    slug: "prepare-a-pdf-for-an-e-reader",
+    h1: "How to prepare a PDF for a Kindle or e-reader",
+    sub: "Crop the margins and slim the file so a PDF is actually readable on a small e-ink screen.",
+    audience: "Readers loading PDFs onto a Kindle, Kobo, reMarkable, or tablet",
+    totalTime: "4 minutes",
+    steps: [
+      {
+        tool: "crop-pdf",
+        title: "Crop the page margins",
+        detail:
+          "The biggest e-reader win: Crop the wide white margins so the actual text fills the small screen instead of shrinking to fit page-plus-margins.",
+      },
+      {
+        tool: "grayscale-pdf",
+        title: "Convert to grayscale (optional)",
+        detail:
+          "E-ink screens are greyscale anyway. Converting drops colour data the device can't show and makes rendering predictable.",
+      },
+      {
+        tool: "compress-pdf",
+        title: "Compress to fit the device",
+        detail:
+          "Run Compress so the file transfers quickly over USB or email-to-device and doesn't eat storage on a small reader.",
+      },
+    ],
+    whyItMatters:
+      "A PDF is a fixed-layout format designed for paper, which is exactly why it's painful on a small e-ink screen: the reader shrinks the whole page — generous margins included — until the text is too small to read, and you end up pinching and panning. Cropping the margins is the single change that makes the biggest difference, because it lets the device enlarge just the text column. Grayscale matches what e-ink can actually display, and Compress keeps the file small enough to move onto the device comfortably. One honest limit: this makes a PDF *more readable* on an e-reader, but a PDF still won't reflow text the way a native EPUB does — for true reflow you'd convert to EPUB. Everything runs in your browser, so your library stays on your device.",
+    pitfalls: [
+      {
+        title: "Cropping into the text",
+        detail:
+          "Trim the margins, not the content. Leave a small buffer so descenders and edge characters aren't clipped on every page.",
+      },
+      {
+        title: "Expecting reflowable text",
+        detail:
+          "A PDF stays fixed-layout even after cropping. If you want text that reflows to the screen size, convert to EPUB instead.",
+      },
+    ],
+    tips: [
+      {
+        title: "Crop once, apply to all pages",
+        detail:
+          "If every page shares the same margin, set the crop box once and apply it across the document for a consistent reading width.",
+      },
+      {
+        title: "Grayscale only if your reader is e-ink",
+        detail:
+          "On a colour tablet, skip grayscale; on a Kindle or Kobo it just matches what the screen shows anyway.",
+      },
+    ],
+    faq: [
+      {
+        q: "Why crop the margins?",
+        a: "E-readers scale the whole page to fit; wide margins waste that space and shrink the text. Cropping lets the device enlarge just the text column.",
+      },
+      {
+        q: "Will this make the PDF reflow like an ebook?",
+        a: "No — a PDF stays fixed-layout. Cropping makes it far more readable, but for true reflow you'd convert to EPUB.",
+      },
+      {
+        q: "Is my file uploaded?",
+        a: "No. Crop, Grayscale, and Compress run in your browser, so your reading material stays on your device.",
+      },
+      {
+        q: "Should I always convert to grayscale?",
+        a: "Only for e-ink readers, where the screen is greyscale anyway. On a colour tablet, leave the colour in.",
+      },
+    ],
+    related: ["make-a-pdf-grayscale-for-printing", "convert-research-papers-to-study-notes", "split-pdf-into-separate-documents"],
+  },
+
+  // ============================================================
+  // 27. Turn a CSV export into a PDF report
+  // ============================================================
+  "turn-a-csv-export-into-a-pdf-report": {
+    slug: "turn-a-csv-export-into-a-pdf-report",
+    h1: "How to turn a CSV export into a clean PDF report",
+    sub: "Render a spreadsheet export as a tidy, page-numbered PDF you can share or archive.",
+    audience: "Anyone with a CSV or spreadsheet export who needs a shareable, printable record",
+    totalTime: "3 minutes",
+    steps: [
+      {
+        tool: "csv-to-pdf",
+        title: "Render the CSV as a PDF table",
+        detail:
+          "Drop your .csv into CSV to PDF. The rows and columns lay out as a clean table across as many pages as the data needs.",
+      },
+      {
+        tool: "page-numbers",
+        title: "Add page numbers",
+        detail:
+          "Multi-page tables are easier to reference with numbers — run Page Numbers so 'see page 4' actually means something.",
+      },
+      {
+        tool: "merge",
+        title: "Combine several exports (optional)",
+        detail:
+          "If you have monthly or per-team CSVs, convert each and Merge them into one report in order.",
+      },
+    ],
+    whyItMatters:
+      "A CSV is built for machines — it opens differently in every spreadsheet app, anyone can quietly edit a cell, and it looks like noise to a non-technical reader. A PDF is built for people and for the record: it renders the same everywhere, it's awkward to alter, and it's what finance, clients, and auditors expect to receive and file. Turning a query result or an account export into a clean tabular PDF makes it shareable and archivable in one step. A practical note: very wide CSVs (lots of columns) can get cramped on a portrait page, so trim to the columns that matter before converting if the table is sprawling. CSV to PDF, Page Numbers, and Merge all run in your browser, so the underlying data never leaves your device.",
+    pitfalls: [
+      {
+        title: "Too many columns for the page",
+        detail:
+          "A wide export can squeeze on a portrait page. Drop the columns the reader doesn't need before converting, or expect a tighter layout.",
+      },
+      {
+        title: "Forgetting the header row",
+        detail:
+          "Make sure the CSV's first row is the column headers so the PDF table is labelled — an unlabelled grid of numbers helps no one.",
+      },
+    ],
+    tips: [
+      {
+        title: "Trim columns before converting",
+        detail:
+          "A focused 6-column report reads far better than a 30-column dump squeezed onto the page.",
+      },
+      {
+        title: "Merge monthly exports into one record",
+        detail:
+          "Convert each period's CSV and Merge them so the year lives in a single, page-numbered PDF.",
+      },
+    ],
+    faq: [
+      {
+        q: "Why not just send the CSV?",
+        a: "A CSV renders differently in every app and is trivially editable. A PDF looks the same everywhere, resists casual edits, and is what most people expect to file or print.",
+      },
+      {
+        q: "What if my CSV is very wide?",
+        a: "Lots of columns get cramped on a page. Trim to the columns that matter before converting for a readable report.",
+      },
+      {
+        q: "Is my data uploaded?",
+        a: "No. CSV to PDF, Page Numbers, and Merge run in your browser, so the underlying data never leaves your device.",
+      },
+      {
+        q: "Can I combine several CSVs?",
+        a: "Yes — convert each to PDF and Merge them in order into a single report.",
+      },
+    ],
+    related: ["extract-tables-from-financial-report", "merge-bank-statements-for-accountant", "summarize-a-long-report-with-ai"],
+  },
+
+  // ============================================================
+  // 28. Make a printable booklet from a PDF
+  // ============================================================
+  "make-a-printable-booklet-from-a-pdf": {
+    slug: "make-a-printable-booklet-from-a-pdf",
+    h1: "How to turn a PDF into a printable booklet",
+    sub: "Impose the pages so a printed stack folds into a correctly-ordered booklet.",
+    audience: "Anyone printing a program, zine, manual, menu, or order of service to fold",
+    totalTime: "5 minutes",
+    steps: [
+      {
+        tool: "page-numbers",
+        title: "Add page numbers first (optional)",
+        detail:
+          "If the booklet needs numbers, add them now — before imposition — so each logical page carries the right number.",
+      },
+      {
+        tool: "booklet-pdf",
+        title: "Impose the pages into booklet order",
+        detail:
+          "Booklet reorders and pairs the pages two-up so that when the printed sheets are folded and stacked, they read 1, 2, 3 in sequence.",
+      },
+      {
+        tool: "compress-pdf",
+        title: "Compress before the print run",
+        detail:
+          "Trim the file so it spools quickly at a shared or shop printer — handy when you're running multiple copies.",
+      },
+    ],
+    whyItMatters:
+      "Folding a stack of paper into a booklet only works if the pages are arranged in the right imposition: page 1 has to share a sheet with the last page, page 2 with the second-to-last, and so on, so that folding the stack produces a correct reading order. Working that out by hand is fiddly and easy to get wrong — one transposed sheet and the whole booklet is scrambled. Booklet does the imposition for you, pairing and ordering the pages two-up for fold-and-staple printing. Add page numbers before imposing so they land on the logical pages, and compress for a fast print run. To print it: use your printer's double-sided setting with short-edge binding, then fold and staple along the spine. Everything runs in your browser, so the document stays on your device.",
+    pitfalls: [
+      {
+        title: "Numbering after imposition",
+        detail:
+          "Add page numbers BEFORE Booklet. Number after imposition and the digits land on the physical sheet positions, not the logical pages.",
+      },
+      {
+        title: "Wrong duplex setting",
+        detail:
+          "Booklets need double-sided printing flipped on the SHORT edge. Long-edge flip prints the back pages upside down relative to the fold.",
+      },
+    ],
+    tips: [
+      {
+        title: "Page count in multiples of 4",
+        detail:
+          "Each folded sheet holds four pages, so booklets work cleanly in multiples of four. Add a blank page or two to round up if needed.",
+      },
+      {
+        title: "Print one test copy first",
+        detail:
+          "Run a single copy and fold it before committing to the full run — it's the fastest way to catch a duplex or order surprise.",
+      },
+    ],
+    faq: [
+      {
+        q: "What does 'imposition' mean?",
+        a: "Rearranging pages so that when sheets are printed two-up, folded, and stacked, they read in the correct order. Booklet handles it for you.",
+      },
+      {
+        q: "How do I print it?",
+        a: "Double-sided, flipped on the SHORT edge, then fold and staple along the spine. Run one test copy first to confirm.",
+      },
+      {
+        q: "Does the page count matter?",
+        a: "Booklets fold cleanest in multiples of four (four pages per folded sheet). Pad with a blank page or two if you're short.",
+      },
+      {
+        q: "Is my file uploaded?",
+        a: "No. Page Numbers, Booklet, and Compress run in your browser, so the document never leaves your device.",
+      },
+    ],
+    related: ["convert-deck-to-handout", "thesis-combine-and-format", "create-an-onboarding-pack-for-new-hires"],
   },
 };
 

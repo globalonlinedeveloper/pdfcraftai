@@ -5,11 +5,13 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
-## 2026-06-08 — Content: use-cases 20 → 24
+## 2026-06-08 — Content: use-cases 20 → 28
 
 Four more distinct persona/job use-case pages (no overlap with the existing 20):
 rotate-and-straighten-a-scanned-pdf, make-a-pdf-grayscale-for-printing,
-make-a-pdf-accessible-for-screen-readers, convert-markdown-notes-to-pdf. Full
+make-a-pdf-accessible-for-screen-readers, convert-markdown-notes-to-pdf. Full (batch 1); then scan-documents-with-your-phone-to-pdf,
+prepare-a-pdf-for-an-e-reader, turn-a-csv-export-into-a-pdf-report,
+make-a-printable-booklet-from-a-pdf (batch 2). Full
 UseCaseData each, verified free-tool IDs, honest about tool limits (e.g. Rotate is
 90° steps not arbitrary deskew; a scan needs OCR before accessibility). Routes +
 sitemap auto-generate. tsc clean; aggregator 8317/0.
