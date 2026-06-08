@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 import { cookies } from "next/headers";
 import { GeistSans } from "geist/font/sans";
@@ -88,6 +90,9 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // i18n phase 1: resolve locale + messages for the client provider.
+  const locale = await getLocale();
+  const messages = await getMessages();
   // Pre-resolve the session on the server so the client `<SessionProvider>`
   // hydrates with state already populated. Without this, next-auth/react
   // fires a `/api/auth/session` fetch on mount for every page hit, even
@@ -118,7 +123,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      lang="en"
+      lang={locale}
       data-theme="dark"
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
@@ -213,6 +218,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             } catch (_) {} })();`,
           }}
         />
+        <NextIntlClientProvider messages={messages}>
         <SessionProviderWrapper session={session}>
           <MarketingChrome>
             {/*
@@ -299,6 +305,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PdfiumServiceWorker />
         <ClientErrorReporter />
         <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

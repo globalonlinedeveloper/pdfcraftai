@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 
 import { execSync } from "node:child_process";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// next-intl (i18n phase 1): wraps the config to register the request module
+// (./i18n/request.ts). Single-locale "en", no i18n routing — URLs unchanged.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // --- Build-time deploy commit SHA ----------------------------------------
 //
@@ -514,4 +519,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

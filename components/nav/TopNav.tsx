@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -33,19 +34,19 @@ const NAV_BEFORE_CHAT: NavLink[] = [
   // the per-tool pages handle the actual user flow. Per-tool macros
   // (saved configs on each /tool/* runner) still work via the separate
   // lib/macro-actions.ts code path.
-  { href: "/tools", label: "Tools" },
+  { href: "/tools", label: "tools" },
 ];
 
 const NAV_AFTER_CHAT: NavLink[] = [
-  { href: "/pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
-  { href: "/help", label: "Help" },
+  { href: "/pricing", label: "pricing" },
+  { href: "/blog", label: "blog" },
+  { href: "/help", label: "help" },
 ];
 
 function buildNav(loggedIn: boolean): NavLink[] {
   return [
     ...NAV_BEFORE_CHAT,
-    { href: loggedIn ? "/app/chat" : "/chat-with-pdf", label: "Chat" },
+    { href: loggedIn ? "/app/chat" : "/chat-with-pdf", label: "chat" },
     ...NAV_AFTER_CHAT,
   ];
 }
@@ -59,6 +60,7 @@ function buildNav(loggedIn: boolean): NavLink[] {
  */
 export function TopNav() {
   const pathname = usePathname() ?? "/";
+  const t = useTranslations("nav");
   const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -130,7 +132,7 @@ export function TopNav() {
                 {item.eyebrow}
               </span>
             )}
-            {item.label}
+            {t(item.label)}
           </Link>
         ))}
       </nav>
@@ -301,7 +303,7 @@ export function TopNav() {
                   textDecoration: "none",
                 }}
               >
-                {item.label}
+                {t(item.label)}
               </Link>
             ))}
           </nav>
