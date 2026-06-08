@@ -135,6 +135,48 @@ const ok = (c, m) => { if (c) passed++; else { failed++; fails.push(m); } };
   ok(formatAmount(1000, "EUR") === "10.00 EUR", "formatAmount unknown currency → code only");
 }
 
+// ── low-credit decision (D33: crossing math — free users never fire) ──
+{
+  const mod = await import("../lib/email/low-credit-policy.ts");
+  const { lowCreditDecision } = mod;
+  const T = 50;
+  // spend crossing DOWN from >= threshold → claim
+  ok(lowCreditDecision({ newBalance: 45, delta: -10, threshold: T }) === "claim", "spend 55->45 crosses down → claim");
+  ok(lowCreditDecision({ newBalance: 49, delta: -1, threshold: T }) === "claim", "spend 50->49 crosses down → claim");
+  // spend while ALREADY below (no fresh crossing) → noop (no re-spam)
+  ok(lowCreditDecision({ newBalance: 35, delta: -10, threshold: T }) === "noop", "spend 45->35 already below → noop");
+  // spend staying at/above threshold → noop
+  ok(lowCreditDecision({ newBalance: 60, delta: -10, threshold: T }) === "noop", "spend 70->60 stays above → noop");
+  ok(lowCreditDecision({ newBalance: 50, delta: -10, threshold: T }) === "noop", "spend to exactly threshold (50) is not low → noop");
+  // KEY: a new free user's signup grant (delta>0, stays below) NEVER fires
+  ok(lowCreditDecision({ newBalance: 5, delta: 5, threshold: T }) === "noop", "free-user signup grant 0->5 → noop (never spam free users)");
+  // grant crossing back to >= threshold → rearm
+  ok(lowCreditDecision({ newBalance: 100, delta: 95, threshold: T }) === "rearm", "top-up 5->100 → rearm");
+  ok(lowCreditDecision({ newBalance: 50, delta: 50, threshold: T }) === "rearm", "top-up to exactly threshold → rearm");
+  // disabled threshold → always noop
+  ok(lowCreditDecision({ newBalance: 1, delta: -10, threshold: 0 }) === "noop", "threshold<=0 disables → noop");
+}
+
+// ── low-credit + payment-failed email builders ─────────────────────
+{
+  const mod = await import("../lib/email/templates.ts");
+  const { buildLowCreditEmail, buildPaymentFailedEmail } = mod;
+
+  const lc = buildLowCreditEmail({ balance: 12, threshold: 50 });
+  ok(/low/i.test(lc.subject), "low-credit subject says 'low'");
+  ok(lc.html.includes("12") && lc.html.includes("/pricing"), "low-credit html shows balance + pricing link");
+  ok(lc.text.includes("/pricing"), "low-credit text links to pricing");
+
+  const pf = buildPaymentFailedEmail({ packName: "Creator" });
+  ok(/payment/i.test(pf.subject) && /(didn|not)/i.test(pf.subject), "payment-failed subject conveys failure");
+  ok(/not charged/i.test(pf.html) && pf.html.includes("/pricing"), "payment-failed html: not charged + retry link");
+  ok(pf.html.includes("Creator"), "payment-failed names the pack when known");
+  const pfEvil = buildPaymentFailedEmail({ packName: "<i>x</i>" });
+  ok(!pfEvil.html.includes("<i>x</i>") && pfEvil.html.includes("&lt;i&gt;"), "payment-failed escapes a malicious pack name");
+  const pfNone = buildPaymentFailedEmail({ packName: null });
+  ok(typeof pfNone.subject === "string" && pfNone.html.includes("/pricing"), "payment-failed works with no pack name");
+}
+
 console.log("");
 if (failed === 0) {
   console.log(`PASS — ${passed} assertions (real runtime execution)`);

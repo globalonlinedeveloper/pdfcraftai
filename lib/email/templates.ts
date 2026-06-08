@@ -152,6 +152,77 @@ reply to this message and we'll look into it right away.
   return { subject, text, html: htmlShell(inner) };
 }
 
+// --- Low-credit nudge -----------------------------------------------------
+
+export function buildLowCreditEmail(opts: {
+  balance: number;
+  threshold: number;
+}): BuiltEmail {
+  const bal = opts.balance.toLocaleString("en-IN");
+
+  const subject = "You're running low on pdfcraft ai credits";
+
+  const text = `Heads up — you have ${bal} credits left on pdfcraft ai.
+
+That's enough for a few more AI runs, but topping up now means you won't
+get interrupted mid-task. Packs start at 100 credits and never expire
+(bonus credits aside).
+
+Top up here:
+${SITE}/pricing
+
+Reminder: all 60 free, no-signup tools stay free — credits are only for
+the AI tools.
+
+— pdfcraft ai · ${SITE.replace("https://", "")}`;
+
+  const inner = `  <h1>You're running low on credits</h1>
+  <p>Heads up — you have <strong>${bal} credits</strong> left. That's enough
+  for a few more AI runs, but topping up now means you won't get interrupted
+  mid-task. Packs start at 100 credits and don't expire.</p>
+  <p><a class="btn" href="${SITE}/pricing">Top up credits</a></p>
+  <p class="muted">All 60 free, no-signup tools stay free — credits are only
+  for the AI tools.</p>`;
+
+  return { subject, text, html: htmlShell(inner) };
+}
+
+// --- Payment failed (recovery nudge) --------------------------------------
+
+export function buildPaymentFailedEmail(opts: {
+  packName?: string | null;
+}): BuiltEmail {
+  const rawPack = (opts.packName ?? "").trim();
+  const packText = rawPack ? ` for the ${rawPack} pack` : "";
+  const packHtml = rawPack ? ` for the ${escapeHtml(rawPack)} pack` : "";
+
+  const subject = "Your pdfcraft ai payment didn't go through";
+
+  const text = `Your recent payment${packText} didn't complete, so no credits
+were added. Good news: your card was NOT charged.
+
+This usually happens from a bank decline, an expired card, or a closed
+checkout window — none of which need anything fixed on our side. You can
+try again whenever you're ready:
+${SITE}/pricing
+
+If the charge keeps failing, reply to this email and we'll help sort it out.
+
+— pdfcraft ai · ${SITE.replace("https://", "")}`;
+
+  const inner = `  <h1>Your payment didn't go through</h1>
+  <p>Your recent payment${packHtml} didn't complete, so no credits were added.
+  Good news: <strong>your card was not charged.</strong></p>
+  <p>This usually happens from a bank decline, an expired card, or a closed
+  checkout window — nothing that needs fixing on our side. You can try again
+  whenever you're ready:</p>
+  <p><a class="btn" href="${SITE}/pricing">Try again</a></p>
+  <p class="muted">If the charge keeps failing, just reply to this email and
+  we'll help sort it out.</p>`;
+
+  return { subject, text, html: htmlShell(inner) };
+}
+
 /** Format a minor-unit amount + currency into a human label. Assumes
  *  2-decimal presentment currencies (every Razorpay currency we use). */
 export function formatAmount(amountMinor: number, currency: string): string {

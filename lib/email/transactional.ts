@@ -27,6 +27,8 @@ import { eq } from "drizzle-orm";
 import { db, schema } from "@/db/client";
 import { sendEmail } from "@/lib/auth/smtp";
 import {
+  buildLowCreditEmail,
+  buildPaymentFailedEmail,
   buildReceiptEmail,
   buildWelcomeEmail,
   formatAmount,
@@ -128,6 +130,76 @@ export async function sendReceiptEmail(input: ReceiptInput): Promise<void> {
       JSON.stringify({
         event: "receipt_email_threw",
         userId: input.userId,
+        error: err instanceof Error ? err.message : String(err),
+        ts: new Date().toISOString(),
+      }),
+    );
+  }
+}
+
+/** Send the low-credit nudge. Caller (reconcileLowCreditNotice) only
+ *  invokes this on the genuine downward threshold crossing it has
+ *  already claimed atomically, so this fires once per draw-down
+ *  episode. Never throws. */
+export async function sendLowCreditEmail(
+  userId: string,
+  balance: number,
+  threshold: number,
+): Promise<void> {
+  try {
+    const user = await lookupUser(userId);
+    if (!user) return;
+    const { subject, text, html } = buildLowCreditEmail({ balance, threshold });
+    const res = await sendEmail({ to: user.email, subject, text, html });
+    if (!res.ok) {
+      console.warn(
+        JSON.stringify({
+          event: "low_credit_email_send_failed",
+          userId,
+          reason: res.error ?? "unknown",
+          ts: new Date().toISOString(),
+        }),
+      );
+    }
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        event: "low_credit_email_threw",
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+        ts: new Date().toISOString(),
+      }),
+    );
+  }
+}
+
+/** Send the payment-failed recovery nudge. Caller (handleFailed) fires
+ *  this only on the pending->failed transition, so a replayed webhook
+ *  never re-sends. Never throws. */
+export async function sendPaymentFailedEmail(
+  userId: string,
+  packName?: string | null,
+): Promise<void> {
+  try {
+    const user = await lookupUser(userId);
+    if (!user) return;
+    const { subject, text, html } = buildPaymentFailedEmail({ packName });
+    const res = await sendEmail({ to: user.email, subject, text, html });
+    if (!res.ok) {
+      console.warn(
+        JSON.stringify({
+          event: "payment_failed_email_send_failed",
+          userId,
+          reason: res.error ?? "unknown",
+          ts: new Date().toISOString(),
+        }),
+      );
+    }
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        event: "payment_failed_email_threw",
+        userId,
         error: err instanceof Error ? err.message : String(err),
         ts: new Date().toISOString(),
       }),

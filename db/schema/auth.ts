@@ -46,6 +46,11 @@ export const users = mysqlTable(
     signupIp: varchar("signup_ip", { length: 45 }),
     deviceFingerprint: varchar("device_fingerprint", { length: 64 }),
     emailNormalized: varchar("email_normalized", { length: 254 }),
+    // Lifecycle D33 — low-credit nudge re-arm flag (migration 0032).
+    // Set when we email "you're running low"; cleared when a top-up
+    // pushes the balance back at/above LOW_CREDIT_THRESHOLD so the
+    // next draw-down can nudge again. NULL = armed / never nudged.
+    lowCreditNotifiedAt: timestamp("low_credit_notified_at", { fsp: 3 }),
     createdAt: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
     // Billing profile (Task #23 PART 2). See migration 0016.
     gstin: varchar("gstin", { length: 15 }),

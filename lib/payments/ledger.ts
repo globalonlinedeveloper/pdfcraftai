@@ -180,6 +180,20 @@ export async function grantCredits(
       return row?.balance ?? 0;
     });
 
+    // Low-credit nudge (D33): reconcile the notice posture on every
+    // applied balance change — claim+email on a downward threshold
+    // crossing (a spend), re-arm on a top-up. Dynamic import + self-
+    // contained fail-soft (same discipline as the receipt/referral
+    // side-effects); a notice must never block or fail the ledger write.
+    try {
+      const { reconcileLowCreditNotice } = await import(
+        "@/lib/email/low-credit"
+      );
+      await reconcileLowCreditNotice(input.userId, newBalance, input.delta);
+    } catch {
+      /* notice side-effect must never affect the grant result */
+    }
+
     return { applied: true, ledgerId, newBalance };
   } catch (err: unknown) {
     if (isDuplicateKeyError(err)) {
@@ -505,7 +519,12 @@ async function handleFailed(
   event: Extract<NormalizedPaymentEvent, { kind: "payment_failed" }>
 ): Promise<ApplyEventResult> {
   const [payment] = await db
-    .select({ id: schema.payments.id, status: schema.payments.status })
+    .select({
+      id: schema.payments.id,
+      status: schema.payments.status,
+      userId: schema.payments.userId,
+      packId: schema.payments.packId,
+    })
     .from(schema.payments)
     .where(eq(schema.payments.id, event.internalPaymentId))
     .limit(1);
@@ -523,6 +542,32 @@ async function handleFailed(
       .update(schema.payments)
       .set({ status: "failed", providerRef: event.providerRef })
       .where(eq(schema.payments.id, event.internalPaymentId));
+
+    // Payment-failed recovery email (D34-applicable). Fires ONLY on the
+    // genuine pending->failed flip, so a re-delivered failed webhook
+    // (status already "failed") never re-sends. Fail-soft dynamic import;
+    // an email hiccup must never 500 the webhook. NB: this is the
+    // one-time-pack recovery nudge — the subscription dunning state
+    // machine (lib/payments/dunning.ts) stays parked for Phase E since
+    // there are no live recurring plans to dun.
+    try {
+      const { sendPaymentFailedEmail } = await import(
+        "@/lib/email/transactional"
+      );
+      const packName =
+        CREDIT_PACKS.find((p) => p.id === payment.packId)?.name ?? null;
+      await sendPaymentFailedEmail(payment.userId, packName);
+    } catch (err) {
+      console.error(
+        JSON.stringify({
+          event: "payment_failed_email_dispatch_failed",
+          paymentId: payment.id,
+          userId: payment.userId,
+          error: err instanceof Error ? err.message : String(err),
+          ts: new Date().toISOString(),
+        }),
+      );
+    }
   }
   return { status: "processed" };
 }

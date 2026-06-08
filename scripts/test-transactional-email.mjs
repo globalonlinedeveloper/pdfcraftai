@@ -113,6 +113,63 @@ const read = (p) => {
   ok(/payment_captured_receipt_email_failed/.test(l), "receipt send is swallow-on-failure");
 }
 
+// ── F. low-credit nudge (D33) ──────────────────────────────────────
+{
+  const t = read("lib/email/templates.ts");
+  ok(t.includes("export function buildLowCreditEmail"), "templates: buildLowCreditEmail");
+  ok(t.includes("export function buildPaymentFailedEmail"), "templates: buildPaymentFailedEmail");
+
+  const pol = read("lib/email/low-credit-policy.ts");
+  ok(pol.length > 0, "lib/email/low-credit-policy.ts exists");
+  ok(!/^import\s+["']server-only["']/m.test(pol), "policy is pure (no server-only)");
+  ok(!/^import[^\n]*from\s+["']@\/db\/client["']/m.test(pol), "policy is pure (no db import)");
+  ok(/export function lowCreditDecision/.test(pol), "policy exports lowCreditDecision");
+  ok(/export function lowCreditThreshold/.test(pol), "policy exports lowCreditThreshold");
+  // crossing-from-above guard present (free users never fire)
+  ok(/pre >= threshold && newBalance < threshold/.test(pol), "policy claims only on downward crossing from >= threshold");
+
+  const lc = read("lib/email/low-credit.ts");
+  ok(/export async function reconcileLowCreditNotice/.test(lc), "reconcileLowCreditNotice exported");
+  ok(/isNull\(schema\.users\.lowCreditNotifiedAt\)/.test(lc), "claim scoped to notified_at IS NULL (once-only)");
+  ok(/isNotNull\(schema\.users\.lowCreditNotifiedAt\)/.test(lc), "rearm clears the flag");
+  ok(/affectedRows/.test(lc) && /sendLowCreditEmail/.test(lc), "sends only when it wins the atomic claim");
+  ok(/low_credit_reconcile_threw/.test(lc), "reconcile is fail-soft");
+
+  const x = read("lib/email/transactional.ts");
+  ok(x.includes("export async function sendLowCreditEmail"), "sendLowCreditEmail exported");
+  ok(/low_credit_email_threw/.test(x), "sendLowCreditEmail is fail-soft");
+
+  // grantCredits chokepoint hook
+  const l = read("lib/payments/ledger.ts");
+  ok(/import\(\s*["']@\/lib\/email\/low-credit["']/.test(l), "grantCredits dynamic-imports reconcileLowCreditNotice");
+  ok(/reconcileLowCreditNotice\(input\.userId, newBalance, input\.delta\)/.test(l), "reconcile gets newBalance + delta");
+}
+
+// ── G. payment-failed recovery email (D34-applicable) ──────────────
+{
+  const x = read("lib/email/transactional.ts");
+  ok(x.includes("export async function sendPaymentFailedEmail"), "sendPaymentFailedEmail exported");
+  ok(/payment_failed_email_threw/.test(x), "sendPaymentFailedEmail is fail-soft");
+
+  const l = read("lib/payments/ledger.ts");
+  // hook lives inside the pending->failed branch, dynamic import, fail-soft
+  ok(/sendPaymentFailedEmail\(payment\.userId/.test(l), "handleFailed sends recovery email with userId");
+  ok(/payment_failed_email_dispatch_failed/.test(l), "recovery email dispatch is swallow-on-failure");
+  // handleFailed must select userId + packId now
+  ok(/userId: schema\.payments\.userId/.test(l) && /packId: schema\.payments\.packId/.test(l), "handleFailed selects userId + packId");
+}
+
+// ── H. migration 0032 + schema (additive, nullable) ────────────────
+{
+  const mig = read("db/migrations/0032_users_low_credit_notice.sql");
+  ok(mig.length > 0, "migration 0032 exists");
+  ok(/ADD COLUMN `low_credit_notified_at` timestamp\(3\) NULL/.test(mig), "0032 adds nullable timestamp(3)");
+  ok(!/\bDROP\b|\bMODIFY\b|NOT NULL/.test(mig.replace(/--.*$/gm, "")), "0032 is additive-only (no DROP/MODIFY/NOT NULL in SQL)");
+
+  const sch = read("db/schema/auth.ts");
+  ok(/lowCreditNotifiedAt: timestamp\("low_credit_notified_at"/.test(sch), "schema has lowCreditNotifiedAt field");
+}
+
 console.log("");
 if (fail === 0) {
   console.log(`transactional-email: ${pass} passed, ${fail} failed`);

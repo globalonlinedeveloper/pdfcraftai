@@ -5,6 +5,36 @@ _Future Claude sessions: read this AFTER `CLAUDE.md` and BEFORE starting new wor
 
 ---
 
+## 2026-06-08 — Lifecycle emails 2: low-credit nudge + payment-failed recovery (D33/D34)
+
+Auto-mode batch 8, completing the lifecycle-email set. Both on the existing SMTP transport.
+
+- **Low-credit nudge (D33)** — emails a purchaser ONCE when a spend crosses their balance
+  DOWN through `LOW_CREDIT_THRESHOLD` (default 50). Pure decision in
+  `lib/email/low-credit-policy.ts` (`lowCreditDecision` → claim/rearm/noop): only fires on a
+  genuine downward crossing from ≥threshold, so a **free-trial user (starts at 5 credits)
+  never triggers it** — their only sub-threshold balance comes from a grant (delta>0), which
+  is never a "claim". `reconcileLowCreditNotice` (lib/email/low-credit.ts) does the atomic
+  claim (UPDATE scoped to `low_credit_notified_at IS NULL` → send only if it wins) and re-arms
+  (clears the flag) on a top-up. Hooked into `grantCredits` — the single chokepoint for every
+  balance change — via dynamic import + fail-soft, so it can never affect a ledger write.
+  Migration `0032_users_low_credit_notice.sql` (additive nullable `low_credit_notified_at`,
+  applied to prod via SSH before push).
+- **Payment-failed recovery (D34, applicable form)** — `handleFailed` now emails "your card
+  wasn't charged, try again" + `/pricing` on the genuine pending→failed flip (naturally
+  idempotent vs webhook replays). **The subscription dunning state machine
+  (`lib/payments/dunning.ts`) stays parked for Phase E** — it's correctly subscription-scoped
+  and there are no live recurring plans to dun, so wiring it now would be building for a flow
+  that doesn't exist. This is the one-time-pack-appropriate recovery instead.
+
+**Tests:** static guard extended to 65 assertions (purity of the policy layer, the once-only
+atomic claim, the crossing-from-above guard, both new senders fail-soft, the two ledger hooks,
+migration shape) + behavioral up to 58 (9 `lowCreditDecision` cases incl. the free-user
+no-spam case + the two new builders w/ escaping). Aggregator **8317/0 across 155 suites**;
+tsc clean. `LOW_CREDIT_THRESHOLD` env (default 50) — set ≤0 to disable.
+
+---
+
 ## 2026-06-08 — Lifecycle emails: welcome + receipt (backlog D31/D32)
 
 Auto-mode batch 7. The SMTP transport (`lib/auth/smtp.ts`) already powered verification +
