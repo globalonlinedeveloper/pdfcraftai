@@ -19,6 +19,7 @@ const COLS: Col[] = [
       ["Bulk", "/bulk"],
       ["Pricing", "/pricing"],
       ["Changelog", "/changelog"],
+      ["Roadmap", "/roadmap"],
     ],
   },
   {

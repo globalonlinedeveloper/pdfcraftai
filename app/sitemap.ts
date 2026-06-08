@@ -38,6 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/enterprise`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/bulk`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/changelog`, lastModified: LAST_MODIFIED, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${SITE_URL}/roadmap`, lastModified: LAST_MODIFIED, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/contact`, lastModified: LAST_MODIFIED, changeFrequency: "yearly", priority: 0.4 },
     { url: `${SITE_URL}/careers`, lastModified: LAST_MODIFIED, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE_URL}/status`, lastModified: LAST_MODIFIED, changeFrequency: "weekly", priority: 0.3 },
