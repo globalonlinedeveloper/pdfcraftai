@@ -338,6 +338,11 @@ const SUITES = [
   { name: "batch1-trust-seo", file: "test-batch1-trust-seo.mjs" },
   { name: "toast-system", file: "test-toast-system.mjs" },
   { name: "usage-export", file: "test-usage-export.mjs" },
+  // behavioral-units pins #126 — REAL runtime tests (Node 22 strip-types)
+  // of the open-redirect guard (sanitizeCallbackUrl) + toast(). Executes
+  // the actual TS, not static-parse, with zero new deps (no Vitest weight
+  // on the fragile deploy pipeline).
+  { name: "behavioral-units", file: "test-behavioral-units.mjs" },
   // prompt-safety pins Task #26 / PLAN_GAP_ANALYSIS SEV-0 — the
   // defense-in-depth layer against prompt injection on PDF→AI flows.
   // Covers: the lib/ai/prompt-safety.ts module contract (exports,
