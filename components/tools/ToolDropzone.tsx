@@ -73,6 +73,25 @@ export function ToolDropzone({
    * watermarked." Clears on next drop or after 6 seconds.
    */
   const [notice, setNotice] = useState<string | null>(null);
+  // 2026-06-08 — "Try a sample" kills the empty-state stall: a visitor
+  // can try any tool without hunting for a PDF. Loads the bundled
+  // /sample.pdf (same-origin, no upload) through the normal file path.
+  // Purely additive — it never affects drag/click upload.
+  const [sampleLoading, setSampleLoading] = useState(false);
+  async function loadSample() {
+    if (disabled || sampleLoading) return;
+    setSampleLoading(true);
+    try {
+      const res = await fetch("/sample.pdf", { cache: "force-cache" });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      handleList([new File([blob], "sample.pdf", { type: "application/pdf" })]);
+    } catch {
+      /* network blip — silently no-op; the dropzone still works */
+    } finally {
+      setSampleLoading(false);
+    }
+  }
 
   function handleList(list: FileList | File[]) {
     setError(null);
@@ -183,6 +202,20 @@ export function ToolDropzone({
           }}
         />
       </div>
+
+      {!disabled && (
+        <div style={{ textAlign: "center", marginTop: 10 }}>
+          <button
+            type="button"
+            onClick={loadSample}
+            disabled={sampleLoading}
+            className="btn btn-sm btn-ghost"
+            style={{ fontSize: 13 }}
+          >
+            {sampleLoading ? "Loading sample…" : "No file? Try a sample PDF"}
+          </button>
+        </div>
+      )}
 
       {error && (() => {
         const { message, recovery } = makeError(error);
