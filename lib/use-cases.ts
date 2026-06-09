@@ -2374,3 +2374,15 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseData> = {
 };
 
 export const USE_CASE_SLUGS = Object.keys(USE_CASES) as UseCaseSlug[];
+
+/**
+ * L84 — reverse index of steps[].tool: every use-case whose workflow uses
+ * `toolId`. Powers the "Use cases for this tool" cross-links on /tool/<id>,
+ * giving the use-case pages inbound links from the high-authority tool pages
+ * (reciprocal to the use-case → tool links the steps already create).
+ */
+export function useCasesForTool(toolId: string): UseCaseData[] {
+  return USE_CASE_SLUGS.map((slug) => USE_CASES[slug]).filter((uc) =>
+    uc.steps.some((step) => step.tool === toolId),
+  );
+}

@@ -26,6 +26,7 @@ import {
 } from "@/components/marketing/PageCountLongform";
 import { ToolRunnerLongform } from "@/components/marketing/ToolRunnerLongform";
 import { TOOL_LONGFORMS } from "@/lib/tool-longforms";
+import { useCasesForTool } from "@/lib/use-cases";
 import { TOOLS, toolById } from "@/lib/tools";
 import { TOOL_INTROS } from "@/lib/tool-intros";
 import { findSeoForTool } from "@/lib/seo-pages";
@@ -692,6 +693,7 @@ export default function ToolRunnerPage({ params }: Params) {
               context for users + passes PageRank between related
               pages. Renders for ALL tools (free + AI). */}
           <RelatedTools currentId={tool.id} group={tool.group} />
+          <RelatedUseCases toolId={tool.id} />
         </div>
       </section>
     </main>
@@ -733,6 +735,56 @@ function ToolIntroPanel({ id }: { id: string }) {
           </>
         )}
       </p>
+    </section>
+  );
+}
+
+function RelatedUseCases({ toolId }: { toolId: string }) {
+  // L84 — link this tool out to the step-by-step use-cases that employ
+  // it. Reciprocal to the use-case → tool links; gives the use-case
+  // pages inbound links from high-authority tool pages + helps users
+  // discover real workflows. Up to 6; prefetch={false} for the same
+  // thread-cap reason as RelatedTools below.
+  const cases = useCasesForTool(toolId).slice(0, 6);
+  if (cases.length === 0) return null;
+  return (
+    <section style={{ marginTop: 40 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 4px" }}>
+        Use cases for this tool
+      </h2>
+      <p className="muted" style={{ fontSize: 13, marginTop: 0, marginBottom: 16 }}>
+        Step-by-step workflows that put this tool to work.
+      </p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {cases.map((uc) => (
+          <Link
+            key={uc.slug}
+            href={`/use-cases/${uc.slug}`}
+            prefetch={false}
+            className="card"
+            style={{
+              padding: 14,
+              textDecoration: "none",
+              color: "inherit",
+              display: "block",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
+              {uc.h1}
+            </div>
+            <div className="muted" style={{ fontSize: 12, lineHeight: 1.4 }}>
+              {uc.sub}
+            </div>
+          </Link>
+        ))}
+      </div>
     </section>
   );
 }
